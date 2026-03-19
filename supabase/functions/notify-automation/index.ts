@@ -1,5 +1,5 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
-import { createClient } from 'supabase'
+import { createClient } from 'jsr:@supabase/supabase-js@2.45.4'
 import { corsHeaders } from '../_shared/cors.ts'
 
 const WEBHOOK_SECRET = 'super-secret-webhook-key-123'
