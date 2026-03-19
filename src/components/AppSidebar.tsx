@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Users, BarChart3, Settings, Building2 } from 'lucide-react'
+import { LayoutDashboard, Users, BarChart3, Settings, Building2, CheckSquare } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   Sidebar,
@@ -14,6 +14,7 @@ import {
 
 const MENU_ITEMS = [
   { title: 'Dashboard', icon: LayoutDashboard, url: '/' },
+  { title: 'Demandas', icon: CheckSquare, url: '/demandas' },
   { title: 'Clientes', icon: Users, url: '#' },
   { title: 'Relatórios', icon: BarChart3, url: '#' },
   { title: 'Configurações', icon: Settings, url: '#' },
