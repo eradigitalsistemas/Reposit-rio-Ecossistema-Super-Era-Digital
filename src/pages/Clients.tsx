@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Table,
@@ -13,11 +14,32 @@ import useClientStore from '@/stores/useClientStore'
 import useAuthStore from '@/stores/useAuthStore'
 import { Trash2, ShieldAlert, Building2, Phone, Mail, FileText, Eye } from 'lucide-react'
 import { AddClientModal } from '@/components/AddClientModal'
+import { supabase } from '@/lib/supabase/client'
 
 export default function Clients() {
   const { clients, deleteClient } = useClientStore()
   const { role } = useAuthStore()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const fetchActiveUsers = async () => {
+      if (role !== 'Admin') return
+      try {
+        const { error } = await supabase
+          .from('usuarios')
+          .select('id', { count: 'exact' })
+          .eq('ativo', true)
+
+        if (error) {
+          console.error('Erro ao buscar usuários ativos:', error)
+        }
+      } catch (err) {
+        console.error('Erro de conexão ao buscar usuários ativos:', err)
+      }
+    }
+
+    fetchActiveUsers()
+  }, [role])
 
   if (role !== 'Admin') {
     return (
