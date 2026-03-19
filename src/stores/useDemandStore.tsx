@@ -43,7 +43,9 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
     if (!user) return
     const { data, error } = await supabase
       .from('demandas')
-      .select('*, responsavel:usuarios(nome)')
+      .select(
+        '*, responsavel:usuarios(nome), logs_auditoria(acao, usuario_id, dados_novos, data_criacao)',
+      )
       .order('data_criacao', { ascending: false })
 
     if (error) {
@@ -53,18 +55,36 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
     if (data) {
       setDemands(
-        data.map((d: any) => ({
-          id: d.id,
-          title: d.titulo,
-          description: d.descricao || '',
-          priority: d.prioridade as DemandPriority,
-          status: d.status as DemandStatus,
-          dueDate: d.data_vencimento || '',
-          assignee: d.responsavel?.nome || 'Não Atribuído',
-          assigneeId: d.responsavel_id,
-          responses: [],
-          createdAt: d.data_criacao,
-        })),
+        data.map((d: any) => {
+          const logs = d.logs_auditoria || []
+          const sortedLogs = logs.sort(
+            (a: any, b: any) =>
+              new Date(b.data_criacao).getTime() - new Date(a.data_criacao).getTime(),
+          )
+          const latestPriorityChange = sortedLogs.find(
+            (l: any) => l.acao === 'Alteração de Prioridade',
+          )
+
+          const systemEscalated =
+            latestPriorityChange &&
+            latestPriorityChange.usuario_id === null &&
+            latestPriorityChange.dados_novos?.prioridade === 'Urgente' &&
+            d.prioridade === 'Urgente'
+
+          return {
+            id: d.id,
+            title: d.titulo,
+            description: d.descricao || '',
+            priority: d.prioridade as DemandPriority,
+            status: d.status as DemandStatus,
+            dueDate: d.data_vencimento || '',
+            assignee: d.responsavel?.nome || 'Não Atribuído',
+            assigneeId: d.responsavel_id,
+            responses: [],
+            createdAt: d.data_criacao,
+            systemEscalated: !!systemEscalated,
+          }
+        }),
       )
     }
   }, [user])
@@ -138,13 +158,12 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
   const updateStatus = useCallback(
     async (demandId: string, status: DemandStatus) => {
-      // Optimistic
       setDemands((prev) => prev.map((d) => (d.id === demandId ? { ...d, status } : d)))
 
       const { error } = await supabase.from('demandas').update({ status }).eq('id', demandId)
       if (error) {
         toast({ title: 'Erro', description: 'Erro ao atualizar status.', variant: 'destructive' })
-        fetchDemands() // Revert
+        fetchDemands()
       }
     },
     [fetchDemands],

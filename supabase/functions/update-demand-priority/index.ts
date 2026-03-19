@@ -8,57 +8,51 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const authHeader = req.headers.get('Authorization')
-    const token = authHeader?.replace('Bearer ', '')
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     const cronSecret = req.headers.get('x-cron-secret')
+    const authHeader = req.headers.get('Authorization')
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: authHeader ? { Authorization: authHeader } : {} } },
-    )
+    const token = authHeader?.replace('Bearer ', '')
+    const isCron = cronSecret === 'super-secret-cron-key-123'
+    const isServiceRole = token === serviceRoleKey
 
-    const serviceRoleClient = createClient(Deno.env.get('SUPABASE_URL') ?? '', serviceRoleKey ?? '')
-
-    let userId = null
-    let isGlobal = false
-
-    if (token === serviceRoleKey || cronSecret === 'super-secret-cron-key-123') {
-      isGlobal = true
-    } else if (authHeader) {
-      const {
-        data: { user },
-        error: authError,
-      } = await supabaseClient.auth.getUser()
-      if (authError || !user) {
-        throw new Error('Unauthorized')
-      }
-      userId = user.id
-    } else {
-      throw new Error('Unauthorized')
+    if (!isCron && !isServiceRole) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
     }
 
-    const now = new Date()
-    const startOfToday = new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
-    )
-    const endOfToday = new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999),
+    const serviceRoleClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      serviceRoleKey ?? '',
+      { auth: { persistSession: false } },
     )
 
-    let query = serviceRoleClient
+    const now = new Date().toISOString()
+
+    const { data: demandsToUpdate, error: fetchError } = await serviceRoleClient
+      .from('demandas')
+      .select('id')
+      .eq('prioridade', 'Pode Ficar para Amanhã')
+      .neq('status', 'Concluído')
+      .lte('data_vencimento', now)
+
+    if (fetchError) throw fetchError
+
+    if (!demandsToUpdate || demandsToUpdate.length === 0) {
+      return new Response(JSON.stringify({ updated: 0, data: [] }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    const ids = demandsToUpdate.map((d) => d.id)
+
+    const { data, error } = await serviceRoleClient
       .from('demandas')
       .update({ prioridade: 'Urgente' })
-      .eq('prioridade', 'Pode Ficar para Amanhã')
-      .gte('data_vencimento', startOfToday.toISOString())
-      .lte('data_vencimento', endOfToday.toISOString())
-
-    if (!isGlobal && userId) {
-      query = query.eq('usuario_id', userId)
-    }
-
-    const { data, error } = await query.select()
+      .in('id', ids)
+      .select()
 
     if (error) throw error
 

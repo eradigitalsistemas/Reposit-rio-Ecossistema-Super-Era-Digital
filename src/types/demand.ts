@@ -21,6 +21,7 @@ export interface Demand {
   createdAt: string
   clientId?: string
   category?: DemandCategory
+  systemEscalated?: boolean
 }
 
 export interface DemandNotification {

@@ -1,7 +1,7 @@
 import { Demand } from '@/types/demand'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Calendar, Trash2 } from 'lucide-react'
+import { AlertTriangle, Calendar, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
 import useDemandStore from '@/stores/useDemandStore'
 import useAuthStore from '@/stores/useAuthStore'
@@ -29,7 +29,7 @@ export function DemandCard({ demand }: Props) {
   const isOverdue = new Date(demand.dueDate) < new Date() && demand.status !== 'Concluído'
 
   return (
-    <Card className="hover:border-primary/50 transition-colors group relative">
+    <Card className="hover:border-primary/50 transition-colors group relative bg-background">
       <CardContent className="p-3">
         {role === 'Admin' && (
           <Button
@@ -49,7 +49,14 @@ export function DemandCard({ demand }: Props) {
             <h4 className="font-medium text-sm leading-tight text-foreground">{demand.title}</h4>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          {demand.systemEscalated && demand.priority === 'Urgente' && (
+            <Badge className="bg-red-600 hover:bg-red-700 text-white border-transparent w-fit flex items-center gap-1.5 px-2 py-0 h-5 text-[10px] font-medium tracking-wide">
+              <AlertTriangle className="w-3 h-3" />
+              Escalada Automaticamente
+            </Badge>
+          )}
+
+          <div className="flex flex-wrap gap-2 mt-0.5">
             <Badge
               variant="outline"
               className={`text-[10px] px-1.5 h-4 font-medium ${getPriorityColor(demand.priority)}`}
