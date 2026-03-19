@@ -10,13 +10,15 @@ import {
   Pencil,
   Trash2,
   Check,
+  CheckCircle,
+  Eye,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { DemandDetailsModal } from './DemandDetailsModal'
 import { EditDemandModal } from './EditDemandModal'
+import { CompleteDemandModal } from './CompleteDemandModal'
 import { useState } from 'react'
 import useDemandStore from '@/stores/useDemandStore'
-import useAuthStore from '@/stores/useAuthStore'
 import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
@@ -37,6 +39,7 @@ export function DemandCard({ demand }: DemandCardProps) {
   const [open, setOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [completeOpen, setCompleteOpen] = useState(false)
 
   const { acceptDemand, deleteDemand } = useDemandStore()
 
@@ -64,8 +67,17 @@ export function DemandCard({ demand }: DemandCardProps) {
 
   return (
     <>
-      <DemandDetailsModal open={open} onOpenChange={setOpen} demand={demand} />
+      <DemandDetailsModal
+        open={open}
+        onOpenChange={setOpen}
+        demand={demand}
+        onCompleteClick={() => {
+          setOpen(false)
+          setCompleteOpen(true)
+        }}
+      />
       <EditDemandModal open={editOpen} onOpenChange={setEditOpen} demand={demand} />
+      <CompleteDemandModal open={completeOpen} onOpenChange={setCompleteOpen} demand={demand} />
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent onClick={(e) => e.stopPropagation()}>
@@ -105,17 +117,31 @@ export function DemandCard({ demand }: DemandCardProps) {
             </h4>
 
             <div className="absolute right-2 top-2 flex items-center gap-1 bg-black/90 backdrop-blur-sm rounded-md p-0.5 border border-white/10 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10 shadow-sm">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-white/60 hover:text-primary hover:bg-primary/10"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setEditOpen(true)
-                }}
-              >
-                <Pencil className="h-3.5 w-3.5" />
-              </Button>
+              {demand.status !== 'Concluído' ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-white/60 hover:text-primary hover:bg-primary/10"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setEditOpen(true)
+                  }}
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-white/60 hover:text-primary hover:bg-primary/10"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setOpen(true)
+                  }}
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="icon"
@@ -169,18 +195,31 @@ export function DemandCard({ demand }: DemandCardProps) {
             )}
           </div>
 
-          {demand.status === 'Pendente' && (
-            <div className="mt-2 pt-3 border-t border-white/10">
+          {(demand.status === 'Pendente' || demand.status === 'Em Andamento') && (
+            <div className="mt-2 pt-3 border-t border-white/10 flex flex-col sm:flex-row gap-2">
+              {demand.status === 'Pendente' && (
+                <Button
+                  variant="outline"
+                  className="flex-1 h-10 sm:h-9 text-sm sm:text-xs font-bold transition-all shadow-none"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    acceptDemand(demand.id)
+                  }}
+                >
+                  <Check className="w-4 h-4 mr-2" />
+                  Aceitar
+                </Button>
+              )}
               <Button
                 variant="default"
-                className="w-full h-10 sm:h-9 text-sm sm:text-xs font-bold transition-all shadow-none"
+                className="flex-1 h-10 sm:h-9 text-sm sm:text-xs font-bold transition-all shadow-none bg-green-600 hover:bg-green-700 text-white"
                 onClick={(e) => {
                   e.stopPropagation()
-                  acceptDemand(demand.id)
+                  setCompleteOpen(true)
                 }}
               >
-                <Check className="w-4 h-4 mr-2" />
-                Aceitar Demanda
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Concluído
               </Button>
             </div>
           )}

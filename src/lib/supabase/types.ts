@@ -44,6 +44,7 @@ export type Database = {
       }
       demandas: {
         Row: {
+          anexos: Json | null
           data_criacao: string
           data_resposta: string | null
           data_vencimento: string | null
@@ -57,6 +58,7 @@ export type Database = {
           usuario_id: string
         }
         Insert: {
+          anexos?: Json | null
           data_criacao?: string
           data_resposta?: string | null
           data_vencimento?: string | null
@@ -70,6 +72,7 @@ export type Database = {
           usuario_id?: string
         }
         Update: {
+          anexos?: Json | null
           data_criacao?: string
           data_resposta?: string | null
           data_vencimento?: string | null
@@ -486,6 +489,7 @@ export const Constants = {
 //   responsavel_id: uuid (nullable)
 //   resposta: text (nullable)
 //   data_resposta: timestamp with time zone (nullable)
+//   anexos: jsonb (nullable, default: '[]'::jsonb)
 // Table: historico_leads
 //   id: uuid (not null, default: gen_random_uuid())
 //   lead_id: uuid (not null)

@@ -33,20 +33,22 @@ interface DemandDetailsModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   demand: Demand
+  onCompleteClick: () => void
 }
 
-export function DemandDetailsModal({ open, onOpenChange, demand }: DemandDetailsModalProps) {
-  const { acceptDemand, updateStatus, addResponse, addAttachments } = useDemandStore()
+export function DemandDetailsModal({
+  open,
+  onOpenChange,
+  demand,
+  onCompleteClick,
+}: DemandDetailsModalProps) {
+  const { acceptDemand, addResponse, addAttachments } = useDemandStore()
   const { user } = useAuthStore()
   const [responseText, setResponseText] = useState('')
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleAccept = () => acceptDemand(demand.id)
-  const handleComplete = () => {
-    updateStatus(demand.id, 'Concluído')
-    onOpenChange(false)
-  }
   const handleAddResponse = () => {
     if (responseText.trim()) {
       addResponse(demand.id, responseText)
@@ -99,7 +101,7 @@ export function DemandDetailsModal({ open, onOpenChange, demand }: DemandDetails
   }
 
   const canAccept = demand.status === 'Pendente' && demand.assigneeId !== user?.id
-  const canComplete = demand.status === 'Em Andamento' && demand.assigneeId === user?.id
+  const canComplete = demand.status === 'Pendente' || demand.status === 'Em Andamento'
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -197,30 +199,32 @@ export function DemandDetailsModal({ open, onOpenChange, demand }: DemandDetails
                   <Paperclip className="w-5 h-5 text-primary" />
                   Anexos
                 </h3>
-                <div>
-                  <input
-                    type="file"
-                    multiple
-                    className="hidden"
-                    ref={fileInputRef}
-                    onChange={handleFileUpload}
-                  />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-primary hover:text-primary/80 hover:bg-primary/10 gap-2 h-8"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                  >
-                    {uploading ? (
-                      <span className="animate-pulse">Enviando...</span>
-                    ) : (
-                      <>
-                        <Paperclip className="w-4 h-4" /> Adicionar
-                      </>
-                    )}
-                  </Button>
-                </div>
+                {demand.status !== 'Concluído' && (
+                  <div>
+                    <input
+                      type="file"
+                      multiple
+                      className="hidden"
+                      ref={fileInputRef}
+                      onChange={handleFileUpload}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-primary hover:text-primary/80 hover:bg-primary/10 gap-2 h-8"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                    >
+                      {uploading ? (
+                        <span className="animate-pulse">Enviando...</span>
+                      ) : (
+                        <>
+                          <Paperclip className="w-4 h-4" /> Adicionar
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
               </div>
               {demand.attachments && demand.attachments.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -288,29 +292,31 @@ export function DemandDetailsModal({ open, onOpenChange, demand }: DemandDetails
             <div className="space-y-4">
               <h3 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
                 <MessageSquare className="w-5 h-5 text-primary" />
-                Anotações Internas
+                {demand.status === 'Concluído' ? 'Observação Final' : 'Anotações Internas'}
               </h3>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Textarea
-                  placeholder="Adicione uma nota ou atualização..."
-                  value={responseText}
-                  onChange={(e) => setResponseText(e.target.value)}
-                  className="min-h-[80px] sm:min-h-[60px]"
-                />
-                <Button
-                  onClick={handleAddResponse}
-                  variant="default"
-                  className="sm:h-auto sm:px-6 w-full sm:w-auto"
-                >
-                  Adicionar
-                </Button>
-              </div>
+              {demand.status !== 'Concluído' && (
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Textarea
+                    placeholder="Adicione uma nota ou atualização..."
+                    value={responseText}
+                    onChange={(e) => setResponseText(e.target.value)}
+                    className="min-h-[80px] sm:min-h-[60px]"
+                  />
+                  <Button
+                    onClick={handleAddResponse}
+                    variant="default"
+                    className="sm:h-auto sm:px-6 w-full sm:w-auto"
+                  >
+                    Adicionar
+                  </Button>
+                </div>
+              )}
               {demand.responses && demand.responses.length > 0 && (
                 <div className="space-y-3 mt-4">
                   {demand.responses.map((resp, i) => (
                     <div
                       key={i}
-                      className="bg-[rgba(255,255,255,0.02)] p-3 sm:p-4 rounded-lg border border-white/10 text-white text-sm break-words"
+                      className="bg-[rgba(255,255,255,0.02)] p-3 sm:p-4 rounded-lg border border-white/10 text-white text-sm break-words whitespace-pre-wrap"
                     >
                       {resp}
                     </div>
@@ -340,9 +346,9 @@ export function DemandDetailsModal({ open, onOpenChange, demand }: DemandDetails
             )}
             {canComplete && (
               <Button
-                onClick={handleComplete}
+                onClick={onCompleteClick}
                 variant="default"
-                className="w-full sm:w-auto gap-2 h-11 sm:h-10"
+                className="w-full sm:w-auto gap-2 h-11 sm:h-10 bg-green-600 hover:bg-green-700 text-white shadow-none"
               >
                 <CheckCircle className="w-4 h-4" />
                 Concluir Tarefa

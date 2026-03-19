@@ -36,6 +36,11 @@ interface DemandStoreState {
   updateStatus: (demandId: string, status: DemandStatus) => Promise<void>
   deleteDemand: (demandId: string) => Promise<void>
   acceptDemand: (demandId: string) => Promise<void>
+  completeDemand: (
+    demandId: string,
+    resposta: string,
+    attachments: DemandAttachment[],
+  ) => Promise<void>
   addResponse: (demandId: string, text: string) => Promise<void>
   addAttachments: (demandId: string, attachments: DemandAttachment[]) => Promise<void>
   markNotificationsAsRead: () => void
@@ -98,7 +103,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             dueDate: d.data_vencimento || null,
             assignee: d.responsavel?.nome || 'Sem responsável',
             assigneeId: d.responsavel_id || null,
-            responses: [],
+            responses: d.resposta ? [d.resposta] : [],
             logs: mappedLogs,
             attachments: d.anexos || [],
             createdAt: d.data_criacao || new Date().toISOString(),
@@ -342,6 +347,54 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
     [user, userName],
   )
 
+  const completeDemand = useCallback(
+    async (demandId: string, resposta: string, newAttachments: DemandAttachment[]) => {
+      try {
+        const { data } = await supabase
+          .from('demandas')
+          .select('anexos')
+          .eq('id', demandId)
+          .single()
+        const updatedAttachments = [...(data?.anexos || []), ...newAttachments]
+
+        const { error } = await supabase
+          .from('demandas')
+          .update({
+            status: 'Concluído',
+            resposta,
+            data_resposta: new Date().toISOString(),
+            anexos: updatedAttachments,
+          })
+          .eq('id', demandId)
+
+        if (error) throw error
+
+        setDemands((prev) =>
+          prev.map((d) =>
+            d.id === demandId
+              ? {
+                  ...d,
+                  status: 'Concluído',
+                  responses: d.responses ? [...d.responses, resposta] : [resposta],
+                  attachments: updatedAttachments,
+                }
+              : d,
+          ),
+        )
+
+        toast({
+          title: 'Demanda Concluída',
+          description: 'A demanda foi finalizada com sucesso.',
+          className:
+            'bg-zinc-950 border-green-500/50 text-white shadow-[0_0_15px_rgba(34,197,94,0.2)]',
+        })
+      } catch (e) {
+        toast({ title: 'Erro', description: 'Erro ao concluir demanda.', variant: 'destructive' })
+      }
+    },
+    [],
+  )
+
   const addResponse = useCallback(
     async (demandId: string, text: string) => {
       const { error } = await supabase
@@ -390,6 +443,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       updateStatus,
       deleteDemand,
       acceptDemand,
+      completeDemand,
       addResponse,
       addAttachments,
       markNotificationsAsRead,
@@ -404,6 +458,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       updateStatus,
       deleteDemand,
       acceptDemand,
+      completeDemand,
       addResponse,
       addAttachments,
       markNotificationsAsRead,
