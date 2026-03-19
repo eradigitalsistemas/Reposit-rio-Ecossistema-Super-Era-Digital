@@ -1,0 +1,92 @@
+import { useState } from 'react'
+import { Plus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { useToast } from '@/hooks/use-toast'
+import useLeadStore from '@/stores/useLeadStore'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+
+export function AddLeadModal() {
+  const [open, setOpen] = useState(false)
+  const { addLead } = useLeadStore()
+  const { toast } = useToast()
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+
+    addLead({
+      name: formData.get('name') as string,
+      company: formData.get('company') as string,
+      email: formData.get('email') as string,
+      phone: formData.get('phone') as string,
+      notes: formData.get('notes') as string,
+      stage: 'leads',
+    })
+
+    setOpen(false)
+    toast({
+      title: 'Lead criado',
+      description: 'O novo lead foi adicionado ao pipeline com sucesso.',
+    })
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="gap-2">
+          <Plus className="w-4 h-4" />
+          Novo Lead
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <form onSubmit={handleSubmit}>
+          <DialogHeader>
+            <DialogTitle>Adicionar Novo Lead</DialogTitle>
+            <DialogDescription>
+              Preencha os dados abaixo para cadastrar um novo lead no pipeline.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="name">Nome completo *</Label>
+              <Input id="name" name="name" placeholder="Ex: João da Silva" required />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="company">Empresa</Label>
+              <Input id="company" name="company" placeholder="Ex: Acme Corp" />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="email">E-mail</Label>
+              <Input id="email" name="email" type="email" placeholder="joao@exemplo.com" />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="phone">Telefone</Label>
+              <Input id="phone" name="phone" placeholder="(00) 00000-0000" />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="notes">Observações</Label>
+              <Textarea id="notes" name="notes" placeholder="Detalhes adicionais..." />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit">Salvar Lead</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
