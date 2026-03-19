@@ -1,7 +1,7 @@
 import { Demand } from '@/types/demand'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { AlertTriangle, Calendar, Trash2 } from 'lucide-react'
+import { AlertTriangle, Calendar, Trash2, User } from 'lucide-react'
 import { format, isValid, parseISO } from 'date-fns'
 import useDemandStore from '@/stores/useDemandStore'
 import useAuthStore from '@/stores/useAuthStore'
@@ -12,7 +12,7 @@ interface Props {
 }
 
 export function DemandCard({ demand }: Props) {
-  const { deleteDemand } = useDemandStore()
+  const { deleteDemand, acceptDemand } = useDemandStore()
   const { role } = useAuthStore()
 
   const getPriorityColor = (priority: string) => {
@@ -50,8 +50,9 @@ export function DemandCard({ demand }: Props) {
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-2 right-2 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute top-2 right-2 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity z-10"
             onClick={(e) => {
+              e.preventDefault()
               e.stopPropagation()
               deleteDemand(demand.id)
             }}
@@ -74,7 +75,7 @@ export function DemandCard({ demand }: Props) {
             </Badge>
           )}
 
-          <div className="flex flex-wrap gap-2 mt-0.5">
+          <div className="flex flex-wrap items-center gap-2 mt-0.5">
             <Badge
               variant="outline"
               className={`text-[10px] px-1.5 h-4 font-medium transition-colors ${getPriorityColor(demand.priority)}`}
@@ -90,6 +91,26 @@ export function DemandCard({ demand }: Props) {
               </div>
             )}
           </div>
+
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-1">
+            <User className="w-3 h-3" />
+            <span className="truncate">{demand.assignee}</span>
+          </div>
+
+          {demand.status === 'Pendente' && (
+            <Button
+              variant="default"
+              size="sm"
+              className="w-full mt-1 h-8 text-xs font-semibold shadow-none bg-green-500/10 text-green-500 hover:bg-green-500/20 hover:text-green-400 border border-green-500/20 z-10"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                acceptDemand(demand.id)
+              }}
+            >
+              Aceitar
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useMemo, useCallback, useEffect } from 'react'
-import { Demand, DemandPriority, DemandStatus, DemandNotification } from '@/types/demand'
+import { Demand, DemandPriority, DemandStatus, DemandNotification, DemandLog } from '@/types/demand'
 import { toast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase/client'
 import useAuthStore from './useAuthStore'
@@ -14,10 +14,14 @@ interface DemandStoreState {
   collaborators: Collaborator[]
   notifications: DemandNotification[]
   addDemand: (
-    demand: Omit<Demand, 'id' | 'createdAt' | 'responses'> & { assigneeId?: string | null },
+    demand: Omit<Demand, 'id' | 'createdAt' | 'responses' | 'logs'> & {
+      assigneeId?: string | null
+    },
   ) => Promise<void>
   updateStatus: (demandId: string, status: DemandStatus) => Promise<void>
   deleteDemand: (demandId: string) => Promise<void>
+  acceptDemand: (demandId: string) => Promise<void>
+  addResponse: (demandId: string, text: string) => Promise<void>
   markNotificationsAsRead: () => void
 }
 
@@ -37,7 +41,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   const [demands, setDemands] = useState<Demand[]>([])
   const [collaborators, setCollaborators] = useState<Collaborator[]>([])
   const [notifications, setNotifications] = useState<DemandNotification[]>(mockNotifications)
-  const { user, role } = useAuthStore()
+  const { user, role, userName } = useAuthStore()
 
   const fetchDemands = useCallback(async () => {
     if (!user) return
@@ -45,7 +49,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       const { data, error } = await supabase
         .from('demandas')
         .select(
-          '*, responsavel:usuarios(nome), logs_auditoria(acao, usuario_id, dados_novos, data_criacao)',
+          '*, responsavel:usuarios(nome), logs_auditoria(id, acao, detalhes, usuario_id, dados_novos, data_criacao)',
         )
         .order('data_criacao', { ascending: false })
 
@@ -56,12 +60,21 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (data) {
         const parsedDemands = data.map((d: any) => {
-          const logs = Array.isArray(d.logs_auditoria) ? d.logs_auditoria : []
-          const sortedLogs = [...logs].sort((a: any, b: any) => {
+          const logsArray = Array.isArray(d.logs_auditoria) ? d.logs_auditoria : []
+          const sortedLogs = [...logsArray].sort((a: any, b: any) => {
             const dateA = a.data_criacao ? new Date(a.data_criacao).getTime() : 0
             const dateB = b.data_criacao ? new Date(b.data_criacao).getTime() : 0
             return dateB - dateA
           })
+
+          const mappedLogs: DemandLog[] = sortedLogs.map((l: any) => ({
+            id: l.id || crypto.randomUUID(),
+            acao: l.acao,
+            detalhes: l.detalhes,
+            createdAt: l.data_criacao,
+            usuario_id: l.usuario_id,
+          }))
+
           const latestPriorityChange = sortedLogs.find(
             (l: any) => l.acao === 'Alteração de Prioridade',
           )
@@ -82,7 +95,8 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             dueDate: d.data_vencimento || null,
             assignee: d.responsavel?.nome || 'Sem responsável',
             assigneeId: d.responsavel_id || null,
-            responses: [], // Kept as empty to be populated if needed
+            responses: [],
+            logs: mappedLogs,
             createdAt: d.data_criacao || new Date().toISOString(),
             systemEscalated: !!systemEscalated,
           }
@@ -123,7 +137,9 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
   const addDemand = useCallback(
     async (
-      newDemand: Omit<Demand, 'id' | 'createdAt' | 'responses'> & { assigneeId?: string | null },
+      newDemand: Omit<Demand, 'id' | 'createdAt' | 'responses' | 'logs'> & {
+        assigneeId?: string | null
+      },
     ) => {
       if (!user) return
 
@@ -165,6 +181,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
               assignee: (data as any).responsavel?.nome || 'Sem responsável',
               assigneeId: data.responsavel_id || null,
               responses: [],
+              logs: [],
               createdAt: data.data_criacao || new Date().toISOString(),
               systemEscalated: false,
             },
@@ -217,6 +234,70 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [])
 
+  const acceptDemand = useCallback(
+    async (demandId: string) => {
+      if (!user) return
+
+      setDemands((prev) =>
+        prev.map((d) =>
+          d.id === demandId
+            ? { ...d, status: 'Em Andamento', assigneeId: user.id, assignee: userName || 'Você' }
+            : d,
+        ),
+      )
+
+      try {
+        const { error } = await supabase
+          .from('demandas')
+          .update({
+            status: 'Em Andamento',
+            responsavel_id: user.id,
+          })
+          .eq('id', demandId)
+
+        if (error) throw error
+
+        toast({
+          title: 'Demanda Aceita',
+          description: 'A demanda foi movida para Em Andamento e atribuída a você.',
+          className:
+            'bg-zinc-950 border border-green-500/50 text-white shadow-[0_0_15px_rgba(34,197,94,0.2)]',
+        })
+        fetchDemands()
+      } catch (e) {
+        console.error(e)
+        toast({ title: 'Erro', description: 'Erro ao aceitar demanda.', variant: 'destructive' })
+        fetchDemands()
+      }
+    },
+    [user, userName, fetchDemands],
+  )
+
+  const addResponse = useCallback(
+    async (demandId: string, text: string) => {
+      if (!user) return
+      try {
+        const { error } = await supabase
+          .from('demandas')
+          .update({ resposta: text })
+          .eq('id', demandId)
+        if (error) throw error
+
+        toast({
+          title: 'Sucesso',
+          description: 'Resposta ou atualização adicionada ao histórico.',
+          className:
+            'bg-zinc-950 border border-green-500/50 text-white shadow-[0_0_15px_rgba(34,197,94,0.2)]',
+        })
+        fetchDemands()
+      } catch (e) {
+        console.error(e)
+        toast({ title: 'Erro', description: 'Erro ao adicionar resposta.', variant: 'destructive' })
+      }
+    },
+    [user, fetchDemands],
+  )
+
   const value = useMemo(
     () => ({
       demands,
@@ -225,6 +306,8 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       addDemand,
       updateStatus,
       deleteDemand,
+      acceptDemand,
+      addResponse,
       markNotificationsAsRead,
     }),
     [
@@ -234,6 +317,8 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       addDemand,
       updateStatus,
       deleteDemand,
+      acceptDemand,
+      addResponse,
       markNotificationsAsRead,
     ],
   )

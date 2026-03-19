@@ -19,8 +19,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Download, FilterX } from 'lucide-react'
+import { Download, FilterX, LayoutColumns } from 'lucide-react'
 import { exportToCSV, exportToPDF } from '@/utils/export'
+import { DemandStatus } from '@/types/demand'
 
 export default function Demands() {
   const { demands, collaborators } = useDemandStore()
@@ -29,31 +30,24 @@ export default function Demands() {
   const [collaboratorFilter, setCollaboratorFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string[]>([])
 
-  // Determine active columns (people)
   const activeColumns = useMemo(() => {
-    if (role === 'Admin') {
-      const allNames = collaborators.map((c) => c.nome)
-      allNames.push('Não Atribuído')
-      return collaboratorFilter === 'all' ? allNames : [collaboratorFilter]
+    if (statusFilter.length > 0) {
+      return statusFilter as DemandStatus[]
     }
-    return [userName, 'Não Atribuído']
-  }, [role, collaborators, collaboratorFilter, userName])
+    return ['Pendente', 'Em Andamento', 'Concluído'] as DemandStatus[]
+  }, [statusFilter])
 
   const filteredDemands = useMemo(() => {
     return demands.filter((d) => {
-      // If Colaborador, only see own or unassigned
       if (role !== 'Admin' && d.assignee !== userName && d.assignee !== 'Não Atribuído') {
         return false
       }
       if (role === 'Admin' && collaboratorFilter !== 'all' && d.assignee !== collaboratorFilter) {
         return false
       }
-      if (statusFilter.length > 0 && !statusFilter.includes(d.status)) {
-        return false
-      }
       return true
     })
-  }, [demands, role, userName, collaboratorFilter, statusFilter])
+  }, [demands, role, userName, collaboratorFilter])
 
   const hasFilters = (role === 'Admin' && collaboratorFilter !== 'all') || statusFilter.length > 0
 
@@ -72,8 +66,8 @@ export default function Demands() {
             </h1>
             <p className="text-muted-foreground text-sm mt-1">
               {role === 'Admin'
-                ? 'Acompanhe as tarefas e atribuições de toda a equipe'
-                : 'Acompanhe suas tarefas e atribuições'}
+                ? 'Acompanhe as tarefas e atribuições de toda a equipe no Kanban'
+                : 'Acompanhe suas tarefas e atribuições no Kanban'}
             </p>
           </div>
           {role === 'Admin' && <AddDemandModal />}
@@ -84,7 +78,7 @@ export default function Demands() {
             {role === 'Admin' && (
               <div className="space-y-2">
                 <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Responsável
+                  Filtrar por Responsável
                 </Label>
                 <Select value={collaboratorFilter} onValueChange={setCollaboratorFilter}>
                   <SelectTrigger className="w-full sm:w-[220px] bg-background">
@@ -104,8 +98,9 @@ export default function Demands() {
             )}
 
             <div className="space-y-2">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Status
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                <LayoutColumns className="w-3 h-3" />
+                Colunas Visíveis
               </Label>
               <ToggleGroup
                 type="multiple"
@@ -116,19 +111,19 @@ export default function Demands() {
               >
                 <ToggleGroupItem
                   value="Pendente"
-                  className="h-8 px-3 text-xs data-[state=on]:bg-slate-100 dark:data-[state=on]:bg-slate-800"
+                  className="h-8 px-3 text-xs data-[state=on]:bg-primary/20 data-[state=on]:text-primary border-transparent data-[state=on]:border-primary/30"
                 >
                   Pendente
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="Em Andamento"
-                  className="h-8 px-3 text-xs data-[state=on]:bg-blue-50 data-[state=on]:text-blue-600 dark:data-[state=on]:bg-blue-900/20 dark:data-[state=on]:text-blue-400"
+                  className="h-8 px-3 text-xs data-[state=on]:bg-blue-500/20 data-[state=on]:text-blue-400 border-transparent data-[state=on]:border-blue-500/30"
                 >
                   Em Andamento
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="Concluído"
-                  className="h-8 px-3 text-xs data-[state=on]:bg-emerald-50 data-[state=on]:text-emerald-600 dark:data-[state=on]:bg-emerald-900/20 dark:data-[state=on]:text-emerald-400"
+                  className="h-8 px-3 text-xs data-[state=on]:bg-emerald-500/20 data-[state=on]:text-emerald-400 border-transparent data-[state=on]:border-emerald-500/30"
                 >
                   Concluído
                 </ToggleGroupItem>
@@ -176,8 +171,8 @@ export default function Demands() {
             {activeColumns.map((colName) => (
               <DemandColumn
                 key={colName}
-                collaborator={colName}
-                demands={filteredDemands.filter((d) => d.assignee === colName)}
+                title={colName}
+                demands={filteredDemands.filter((d) => d.status === colName)}
               />
             ))}
           </div>

@@ -2,6 +2,14 @@ export type DemandPriority = 'Urgente' | 'Durante o Dia' | 'Pode Ficar para Aman
 export type DemandStatus = 'Pendente' | 'Em Andamento' | 'Concluído'
 export type DemandCategory = 'Serviço' | 'Dúvida' | 'Reclamação' | 'Outro'
 
+export interface DemandLog {
+  id: string
+  acao: string
+  detalhes: string | null
+  createdAt: string
+  usuario_id: string | null
+}
+
 export interface DemandResponse {
   id: string
   text: string
@@ -19,6 +27,7 @@ export interface Demand {
   assignee: string
   assigneeId?: string | null
   responses: DemandResponse[]
+  logs: DemandLog[]
   createdAt: string
   clientId?: string
   category?: DemandCategory
