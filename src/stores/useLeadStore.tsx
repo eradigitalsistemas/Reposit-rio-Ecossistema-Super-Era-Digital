@@ -7,7 +7,7 @@ import React, {
   useEffect,
   useRef,
 } from 'react'
-import { Lead, LeadStage } from '@/types/crm'
+import { Lead, LeadStage, InterestStatus } from '@/types/crm'
 import { toast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase/client'
 import useAuthStore from './useAuthStore'
@@ -48,7 +48,7 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
 
     if (data) {
       setLeads(
-        data.map((d) => ({
+        data.map((d: any) => ({
           id: d.id,
           name: d.nome,
           company: d.empresa || '',
@@ -56,6 +56,7 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
           phone: d.telefone || '',
           notes: d.observacoes || '',
           stage: d.estagio as LeadStage,
+          interestStatus: (d.status_interesse as InterestStatus) || 'Interessado',
           createdAt: d.data_criacao,
         })),
       )
@@ -82,8 +83,9 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
           telefone: newLead.phone,
           observacoes: newLead.notes,
           estagio: newLead.stage,
+          status_interesse: newLead.interestStatus,
           usuario_id: user.id,
-        })
+        } as any)
         .select()
         .single()
 
@@ -93,16 +95,18 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       if (data) {
+        const d = data as any
         setLeads((prev) => [
           {
-            id: data.id,
-            name: data.nome,
-            company: data.empresa || '',
-            email: data.email,
-            phone: data.telefone || '',
-            notes: data.observacoes || '',
-            stage: data.estagio as LeadStage,
-            createdAt: data.data_criacao,
+            id: d.id,
+            name: d.nome,
+            company: d.empresa || '',
+            email: d.email,
+            phone: d.telefone || '',
+            notes: d.observacoes || '',
+            stage: d.estagio as LeadStage,
+            interestStatus: (d.status_interesse as InterestStatus) || 'Interessado',
+            createdAt: d.data_criacao,
           },
           ...prev,
         ])
@@ -121,6 +125,7 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
       if (updates.phone !== undefined) dbUpdates.telefone = updates.phone
       if (updates.notes !== undefined) dbUpdates.observacoes = updates.notes
       if (updates.stage !== undefined) dbUpdates.estagio = updates.stage
+      if (updates.interestStatus !== undefined) dbUpdates.status_interesse = updates.interestStatus
 
       const { error } = await supabase.from('leads').update(dbUpdates).eq('id', id)
       if (error) {

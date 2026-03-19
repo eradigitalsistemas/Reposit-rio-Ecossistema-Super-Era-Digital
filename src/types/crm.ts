@@ -7,6 +7,8 @@ export type LeadStage =
   | 'pos_venda'
   | 'ativo'
 
+export type InterestStatus = 'Interessado' | 'Não Interessado'
+
 export interface Lead {
   id: string
   name: string
@@ -15,6 +17,7 @@ export interface Lead {
   phone: string
   notes: string
   stage: LeadStage
+  interestStatus: InterestStatus
   trainingStep?: 1 | 2 | 3
   createdAt: string
 }

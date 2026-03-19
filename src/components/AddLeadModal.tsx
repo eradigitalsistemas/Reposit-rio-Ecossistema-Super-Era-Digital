@@ -4,8 +4,16 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 import useLeadStore from '@/stores/useLeadStore'
+import { InterestStatus } from '@/types/crm'
 import {
   Dialog,
   DialogContent,
@@ -18,6 +26,7 @@ import {
 
 export function AddLeadModal() {
   const [open, setOpen] = useState(false)
+  const [interestStatus, setInterestStatus] = useState<InterestStatus>('Interessado')
   const { addLead } = useLeadStore()
   const { toast } = useToast()
 
@@ -32,9 +41,11 @@ export function AddLeadModal() {
       phone: formData.get('phone') as string,
       notes: formData.get('notes') as string,
       stage: 'leads',
+      interestStatus,
     })
 
     setOpen(false)
+    setInterestStatus('Interessado')
     toast({
       title: 'Lead criado',
       description: 'O novo lead foi adicionado ao Era Digital Vendas com sucesso.',
@@ -64,6 +75,21 @@ export function AddLeadModal() {
             <div className="grid gap-2">
               <Label htmlFor="name">Nome completo *</Label>
               <Input id="name" name="name" placeholder="Ex: João da Silva" required />
+            </div>
+            <div className="grid gap-2">
+              <Label>Status de Interesse *</Label>
+              <Select
+                value={interestStatus}
+                onValueChange={(v: InterestStatus) => setInterestStatus(v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Interessado">Interessado</SelectItem>
+                  <SelectItem value="Não Interessado">Não Interessado</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="company">Empresa</Label>

@@ -2,6 +2,7 @@ import { Lead } from '@/types/crm'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Building2, Mail, Phone } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { EditLeadModal } from './EditLeadModal'
 import { DeleteLeadAlert } from './DeleteLeadAlert'
 import { NewInteractionModal } from './NewInteractionModal'
@@ -48,6 +49,17 @@ export function KanbanCard({ lead }: KanbanCardProps) {
         )}
 
         <div className="flex flex-wrap gap-2 mt-1 sm:mt-1">
+          <Badge
+            variant="default"
+            className={cn(
+              'text-xs sm:text-[10px] px-2 sm:px-1.5 py-0.5 sm:py-0 h-6 sm:h-4 transition-colors font-semibold border-0 shadow-none hover:opacity-90',
+              lead.interestStatus === 'Não Interessado'
+                ? 'bg-red-600 text-white'
+                : 'bg-green-600 text-white',
+            )}
+          >
+            {lead.interestStatus || 'Interessado'}
+          </Badge>
           {lead.email && (
             <Badge
               variant="outline"
