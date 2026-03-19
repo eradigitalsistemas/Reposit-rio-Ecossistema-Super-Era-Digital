@@ -37,7 +37,7 @@ export function Header() {
       case '/configuracoes':
         return 'Configurações'
       default:
-        return 'Pipeline de Vendas'
+        return 'Era Digital Vendas'
     }
   })()
 

@@ -37,7 +37,7 @@ export function AddLeadModal() {
     setOpen(false)
     toast({
       title: 'Lead criado',
-      description: 'O novo lead foi adicionado ao pipeline com sucesso.',
+      description: 'O novo lead foi adicionado ao Era Digital Vendas com sucesso.',
     })
   }
 
@@ -54,7 +54,7 @@ export function AddLeadModal() {
           <DialogHeader>
             <DialogTitle>Adicionar Novo Lead</DialogTitle>
             <DialogDescription>
-              Preencha os dados abaixo para cadastrar um novo lead no pipeline.
+              Preencha os dados abaixo para cadastrar um novo lead no Era Digital Vendas.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">

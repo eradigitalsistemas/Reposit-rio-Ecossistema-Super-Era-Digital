@@ -22,7 +22,7 @@ import {
 import useAuthStore from '@/stores/useAuthStore'
 
 const MENU_ITEMS = [
-  { title: 'CRM', icon: LayoutDashboard, url: '/', roles: ['Admin', 'Colaborador'] },
+  { title: 'Era Digital Vendas', icon: LayoutDashboard, url: '/', roles: ['Admin', 'Colaborador'] },
   { title: 'Demandas', icon: CheckSquare, url: '/demandas', roles: ['Admin', 'Colaborador'] },
   { title: 'Colaboradores', icon: Users, url: '/colaboradores', roles: ['Admin'] },
   { title: 'Clientes Externos', icon: Building2, url: '/clientes', roles: ['Admin'] },
@@ -51,7 +51,7 @@ export function AppSidebar() {
           <div className="p-1 bg-primary/10 rounded-md ring-1 ring-primary/30">
             <Building2 className="w-5 h-5" />
           </div>
-          <span>CRM Pro</span>
+          <span>Era Digital</span>
         </Link>
       </SidebarHeader>
       <SidebarContent>
