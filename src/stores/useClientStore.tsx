@@ -39,10 +39,7 @@ export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
       .select('*')
       .order('data_criacao', { ascending: false })
 
-    if (error) {
-      console.error('Error fetching clients:', error)
-      return
-    }
+    if (error) return
 
     if (data) {
       setClients(
@@ -211,10 +208,6 @@ export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
           body: { action: 'add_metadata', cliente_id: clientId, document: newDoc },
         },
       )
-
-      if (fnErr || !fnData?.success) {
-        console.error('Edge function failed, falling back to direct db update', fnErr)
-      }
 
       setClients((prev) => {
         const newClients = [...prev]

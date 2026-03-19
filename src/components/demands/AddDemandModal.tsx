@@ -54,7 +54,6 @@ export function AddDemandModal() {
       const fileName = `${crypto.randomUUID()}_${sanitizedName}`
       const { data, error } = await supabase.storage.from('demandas_anexos').upload(fileName, file)
       if (error) {
-        console.error('Error uploading file:', error)
         continue
       }
       if (data) attachments.push({ name: file.name, url: data.path, type: file.type })

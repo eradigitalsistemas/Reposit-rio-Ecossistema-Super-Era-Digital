@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Table,
@@ -14,32 +13,11 @@ import useClientStore from '@/stores/useClientStore'
 import useAuthStore from '@/stores/useAuthStore'
 import { Trash2, ShieldAlert, Building2, Phone, Mail, FileText, Eye } from 'lucide-react'
 import { AddClientModal } from '@/components/AddClientModal'
-import { supabase } from '@/lib/supabase/client'
 
 export default function Clients() {
   const { clients, deleteClient } = useClientStore()
   const { role } = useAuthStore()
   const navigate = useNavigate()
-
-  useEffect(() => {
-    const fetchActiveUsers = async () => {
-      if (role !== 'Admin') return
-      try {
-        const { error } = await supabase
-          .from('usuarios')
-          .select('id', { count: 'exact' })
-          .eq('ativo', true)
-
-        if (error) {
-          console.error('Erro ao buscar usuários ativos:', error)
-        }
-      } catch (err) {
-        console.error('Erro de conexão ao buscar usuários ativos:', err)
-      }
-    }
-
-    fetchActiveUsers()
-  }, [role])
 
   if (role !== 'Admin') {
     return (
@@ -68,7 +46,6 @@ export default function Clients() {
         </div>
       </div>
 
-      {/* Desktop View */}
       <Card className="hidden md:flex flex-1 overflow-hidden flex-col border-white/10 bg-[rgba(255,255,255,0.05)] shadow-subtle">
         <CardContent className="p-0 overflow-auto flex-1">
           <Table>
@@ -136,7 +113,6 @@ export default function Clients() {
         </CardContent>
       </Card>
 
-      {/* Mobile View */}
       <div className="flex flex-col gap-4 md:hidden pb-6">
         {clients.map((client) => (
           <Card

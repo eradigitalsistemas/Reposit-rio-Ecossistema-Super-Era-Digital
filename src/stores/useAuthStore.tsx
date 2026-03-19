@@ -94,7 +94,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setUserName((prev) => (prev ? prev : data.nome || user.email || ''))
         }
       } catch (err) {
-        console.error('Error fetching user profile:', err)
+        // Silently handle
       } finally {
         if (isMounted) setLoading(false)
       }

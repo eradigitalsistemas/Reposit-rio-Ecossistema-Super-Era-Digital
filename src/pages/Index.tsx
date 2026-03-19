@@ -28,6 +28,7 @@ export default function Index() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let isMounted = true
     if (!user) return
 
     const fetchCounts = async () => {
@@ -43,20 +44,26 @@ export default function Index() {
           supabase.from('usuarios').select('*', { count: 'exact', head: true }).eq('ativo', true),
         ])
 
-        setCounts({
-          leads: leadsRes.count ?? 0,
-          demandas: demandasRes.count ?? 0,
-          clientes: clientesRes.count ?? 0,
-          colaboradores: colabRes.count ?? 0,
-        })
+        if (isMounted) {
+          setCounts({
+            leads: leadsRes.count ?? 0,
+            demandas: demandasRes.count ?? 0,
+            clientes: clientesRes.count ?? 0,
+            colaboradores: colabRes.count ?? 0,
+          })
+        }
       } catch (e) {
-        console.error(e)
+        // Silently handled in production
       } finally {
-        setLoading(false)
+        if (isMounted) setLoading(false)
       }
     }
 
     fetchCounts()
+
+    return () => {
+      isMounted = false
+    }
   }, [user])
 
   const cards = [

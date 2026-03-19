@@ -49,17 +49,17 @@ interface UserData {
 const leadsConfig: ChartConfig = {
   leads: { label: 'Leads', color: 'hsl(var(--primary))' },
   prospeccao: { label: 'Prospecção', color: 'hsl(var(--primary))' },
-  convertido: { label: 'Convertido', color: '#3b82f6' }, // Azul
+  convertido: { label: 'Convertido', color: '#3b82f6' },
   treinamento: { label: 'Em Treinamento', color: 'hsl(var(--primary))' },
-  finalizado: { label: 'Finalizado', color: '#ffffff' }, // Branco
+  finalizado: { label: 'Finalizado', color: '#ffffff' },
   pos_venda: { label: 'Pós Venda', color: 'hsl(var(--primary))' },
-  ativo: { label: 'Ativo', color: 'hsl(var(--primary))' }, // Verde
+  ativo: { label: 'Ativo', color: 'hsl(var(--primary))' },
 }
 
 const priorityConfig: ChartConfig = {
-  Urgente: { label: 'Urgente', color: '#ef4444' }, // Vermelho
-  'Durante o Dia': { label: 'Durante o Dia', color: '#eab308' }, // Amarelo
-  'Pode Ficar para Amanhã': { label: 'Ficar para Amanhã', color: 'hsl(var(--primary))' }, // Verde
+  Urgente: { label: 'Urgente', color: '#ef4444' },
+  'Durante o Dia': { label: 'Durante o Dia', color: '#eab308' },
+  'Pode Ficar para Amanhã': { label: 'Ficar para Amanhã', color: 'hsl(var(--primary))' },
 }
 
 export default function Reports() {
@@ -103,7 +103,6 @@ export default function Reports() {
         })
       } catch (err: any) {
         if (!isMounted) return
-        console.error(err)
         setError('Não foi possível carregar os dados. Tente novamente mais tarde.')
       } finally {
         if (isMounted) setLoading(false)

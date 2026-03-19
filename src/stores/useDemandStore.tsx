@@ -82,7 +82,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
       const { data, error } = await query
 
-      if (error) return console.error('Error fetching demands:', error)
+      if (error) return
 
       if (data) {
         const parsedDemands = data.map((d: any) => {
@@ -129,7 +129,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         setDemands(parsedDemands)
       }
     } catch (e) {
-      console.error(e)
+      // Silently handle
     }
   }, [user, role])
 
@@ -302,9 +302,11 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   const editDemand = useCallback(
     async (
       demandId: string,
-      updates: Partial<Omit<Demand, 'id' | 'createdAt' | 'responses' | 'logs'>> & {
-        attachments?: DemandAttachment[]
-      },
+      updates: Partial<
+        Omit<Demand, 'id' | 'createdAt' | 'responses' | 'logs'> & {
+          attachments?: DemandAttachment[]
+        }
+      >,
     ) => {
       try {
         const currentDemand = demands.find((d) => d.id === demandId)
