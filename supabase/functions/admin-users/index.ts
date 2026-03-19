@@ -44,16 +44,55 @@ Deno.serve(async (req: Request) => {
     const { action, payload } = await req.json()
 
     if (action === 'create_user') {
-      const { email, password, name, perfil } = payload
+      const { email, password, name, perfil, telefone } = payload
       const { data: newAuthUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
-        user_metadata: { full_name: name, perfil },
+        user_metadata: { full_name: name, perfil, telefone },
       })
       if (createError) throw createError
 
       return new Response(JSON.stringify({ user: newAuthUser.user }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    if (action === 'update_user') {
+      const { id, name, perfil, telefone, password } = payload
+
+      const updateData: any = {
+        user_metadata: { full_name: name, perfil, telefone },
+      }
+      if (password) {
+        updateData.password = password
+      }
+
+      const { error: updateAuthError } = await supabaseAdmin.auth.admin.updateUserById(
+        id,
+        updateData,
+      )
+      if (updateAuthError) throw updateAuthError
+
+      const { error: updateProfileError } = await supabaseAdmin
+        .from('usuarios')
+        .update({ nome: name, perfil, telefone })
+        .eq('id', id)
+
+      if (updateProfileError) throw updateProfileError
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    if (action === 'delete_user') {
+      const { id } = payload
+
+      const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(id)
+      if (deleteError) throw deleteError
+
+      return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
