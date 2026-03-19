@@ -38,13 +38,21 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-black flex flex-col">
       <header className="p-6 flex items-center">
-        <img src={logoImg} alt="Era Digital" className="h-8 w-auto object-contain" />
+        <img
+          src={logoImg}
+          alt="Era Digital"
+          className="h-12 w-auto object-contain brightness-0 invert"
+        />
       </header>
 
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-md space-y-8">
           <div className="flex flex-col items-center justify-center text-center">
-            <img src={logoImg} alt="Era Digital" className="h-16 w-auto object-contain mb-6" />
+            <img
+              src={logoImg}
+              alt="Era Digital"
+              className="h-24 w-auto object-contain mb-6 brightness-0 invert"
+            />
             <h2 className="text-2xl font-bold tracking-tight text-white">Acesso ao Sistema</h2>
             <p className="text-sm text-gray-400 mt-2">Entre com suas credenciais para continuar</p>
           </div>
@@ -86,7 +94,7 @@ export default function Login() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors"
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
               </div>
