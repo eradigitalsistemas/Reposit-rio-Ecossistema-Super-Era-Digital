@@ -11,7 +11,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import useClientStore from '@/stores/useClientStore'
 import useAuthStore from '@/stores/useAuthStore'
-import { Trash2, ShieldAlert, Building2, Phone, Mail, FileText } from 'lucide-react'
+import { Trash2, ShieldAlert, Building2, Phone, Mail, FileText, Eye } from 'lucide-react'
 import { AddClientModal } from '@/components/AddClientModal'
 
 export default function Clients() {
@@ -47,7 +47,7 @@ export default function Clients() {
       </div>
 
       {/* Desktop View */}
-      <Card className="hidden md:flex flex-1 overflow-hidden flex-col border-white/10 bg-[rgba(255,255,255,0.05)]">
+      <Card className="hidden md:flex flex-1 overflow-hidden flex-col border-white/10 bg-[rgba(255,255,255,0.05)] shadow-subtle">
         <CardContent className="p-0 overflow-auto flex-1">
           <Table>
             <TableHeader className="sticky top-0 bg-[rgba(15,15,15,0.95)] backdrop-blur-md z-10">
@@ -57,14 +57,14 @@ export default function Clients() {
                 <TableHead className="text-white/60">Email</TableHead>
                 <TableHead className="text-white/60">Telefone</TableHead>
                 <TableHead className="text-white/60">CNPJ</TableHead>
-                <TableHead className="w-[80px] text-right"></TableHead>
+                <TableHead className="w-[100px] text-right"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {clients.map((client) => (
                 <TableRow
                   key={client.id}
-                  className="cursor-pointer hover:bg-[rgba(255,255,255,0.05)] border-white/10"
+                  className="cursor-pointer hover:bg-[rgba(255,255,255,0.05)] border-white/10 transition-colors"
                   onClick={() => navigate(`/clientes/${client.id}`)}
                 >
                   <TableCell className="font-medium text-white">{client.name}</TableCell>
@@ -73,18 +73,32 @@ export default function Clients() {
                   <TableCell className="text-white/80">{client.phone}</TableCell>
                   <TableCell className="text-white/80">{client.cnpj}</TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-white/40 hover:bg-white/10 hover:text-white h-9 w-9 transition-colors"
-                      title="Excluir cliente"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        deleteClient(client.id)
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-white/40 hover:bg-primary/20 hover:text-primary h-9 w-9 transition-colors"
+                        title="Visualizar/Editar cliente"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          navigate(`/clientes/${client.id}`)
+                        }}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-white/40 hover:bg-white/10 hover:text-white h-9 w-9 transition-colors"
+                        title="Excluir cliente"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          deleteClient(client.id)
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -105,7 +119,7 @@ export default function Clients() {
         {clients.map((client) => (
           <Card
             key={client.id}
-            className="cursor-pointer border-white/10 hover:border-primary/50 bg-[rgba(255,255,255,0.05)] transition-colors"
+            className="cursor-pointer border-white/10 hover:border-primary/50 bg-[rgba(255,255,255,0.05)] transition-colors shadow-subtle"
             onClick={() => navigate(`/clientes/${client.id}`)}
           >
             <CardContent className="p-4 flex flex-col gap-3">
@@ -113,17 +127,30 @@ export default function Clients() {
                 <div className="font-semibold text-lg leading-tight pr-2 text-white">
                   {client.name}
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-white/40 hover:bg-white/10 hover:text-white -mr-2 -mt-2 shrink-0 transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    deleteClient(client.id)
-                  }}
-                >
-                  <Trash2 className="w-5 h-5" />
-                </Button>
+                <div className="flex gap-1 -mr-2 -mt-2 shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-white/40 hover:bg-primary/20 hover:text-primary transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      navigate(`/clientes/${client.id}`)
+                    }}
+                  >
+                    <Eye className="w-5 h-5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-white/40 hover:bg-white/10 hover:text-white transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      deleteClient(client.id)
+                    }}
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </Button>
+                </div>
               </div>
 
               <div className="space-y-1.5 mt-1">

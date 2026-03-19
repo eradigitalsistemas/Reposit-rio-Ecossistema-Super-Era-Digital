@@ -46,22 +46,21 @@ interface UserData {
   nome: string
 }
 
-// Keeping original colors for leads to maintain status consistency
+// Strictly avoiding non-black/white/green colors per standard rules
 const leadsConfig: ChartConfig = {
-  leads: { label: 'Leads', color: '#94a3b8' },
-  prospeccao: { label: 'Prospecção', color: '#f97316' },
-  convertido: { label: 'Convertido', color: '#6366f1' },
-  treinamento: { label: 'Em Treinamento', color: '#a855f7' },
-  finalizado: { label: 'Finalizado', color: '#10b981' },
-  pos_venda: { label: 'Pós Venda', color: '#f43f5e' },
-  ativo: { label: 'Ativo', color: '#0ea5e9' },
+  leads: { label: 'Leads', color: 'rgba(255,255,255,0.2)' },
+  prospeccao: { label: 'Prospecção', color: 'rgba(255,255,255,0.4)' },
+  convertido: { label: 'Convertido', color: 'hsl(var(--primary))' }, // Highlight positive outcome
+  treinamento: { label: 'Em Treinamento', color: 'rgba(255,255,255,0.6)' },
+  finalizado: { label: 'Finalizado', color: 'rgba(255,255,255,0.8)' },
+  pos_venda: { label: 'Pós Venda', color: 'rgba(255,255,255,1)' },
+  ativo: { label: 'Ativo', color: 'hsl(var(--primary))' }, // Highlight positive outcome
 }
 
-// Updated priority config to follow the Black/White/Green palette rule
 const priorityConfig: ChartConfig = {
-  Urgente: { label: 'Urgente', color: '#ffffff' },
-  'Durante o Dia': { label: 'Durante o Dia', color: 'hsl(142, 71%, 45%)' }, // Primary Green
-  'Pode Ficar para Amanhã': { label: 'Ficar para Amanhã', color: 'rgba(255,255,255,0.3)' }, // Grey
+  Urgente: { label: 'Urgente', color: '#ffffff' }, // Pure white for high contrast alert
+  'Durante o Dia': { label: 'Durante o Dia', color: 'hsl(var(--primary))' }, // Primary Green
+  'Pode Ficar para Amanhã': { label: 'Ficar para Amanhã', color: 'rgba(255,255,255,0.3)' }, // Subtle Grey
 }
 
 export default function Reports() {
@@ -181,7 +180,7 @@ export default function Reports() {
         id: stage,
         name: configItem?.label || stage,
         value: count,
-        fill: configItem?.color || '#94a3b8',
+        fill: configItem?.color || 'rgba(255,255,255,0.2)',
       }
     })
   }, [filteredLeads])
