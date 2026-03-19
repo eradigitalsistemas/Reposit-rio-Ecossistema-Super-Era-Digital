@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuthStore } from '@/stores/useAuthStore'
+import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,7 +13,6 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const { signIn } = useAuthStore()
   const navigate = useNavigate()
   const { toast } = useToast()
 
@@ -22,7 +21,7 @@ export default function Login() {
     setLoading(true)
 
     try {
-      const { error } = await signIn(email, password)
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) throw error
       navigate('/')
     } catch (error: any) {
