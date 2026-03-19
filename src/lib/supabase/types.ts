@@ -13,6 +13,7 @@ export type Database = {
         Row: {
           cnpj: string | null
           data_criacao: string
+          documentos: Json | null
           email: string
           empresa: string | null
           id: string
@@ -22,6 +23,7 @@ export type Database = {
         Insert: {
           cnpj?: string | null
           data_criacao?: string
+          documentos?: Json | null
           email: string
           empresa?: string | null
           id?: string
@@ -31,6 +33,7 @@ export type Database = {
         Update: {
           cnpj?: string | null
           data_criacao?: string
+          documentos?: Json | null
           email?: string
           empresa?: string | null
           id?: string
@@ -384,6 +387,7 @@ export const Constants = {
 //   telefone: text (nullable)
 //   cnpj: text (nullable)
 //   data_criacao: timestamp with time zone (not null, default: now())
+//   documentos: jsonb (nullable, default: '[]'::jsonb)
 // Table: demandas
 //   id: uuid (not null, default: gen_random_uuid())
 //   titulo: text (not null)
@@ -458,18 +462,9 @@ export const Constants = {
 //   Policy "Admins podem gerenciar tudo em demandas" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: is_admin()
 //     WITH CHECK: is_admin()
-//   Policy "Responsaveis podem atualizar demandas" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (auth.uid() = responsavel_id)
-//     WITH CHECK: (auth.uid() = responsavel_id)
-//   Policy "Responsaveis podem ver demandas" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (auth.uid() = responsavel_id)
-//   Policy "Usuarios gerenciam proprias demandas" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: (auth.uid() = usuario_id)
-//     WITH CHECK: (auth.uid() = usuario_id)
-//   Policy "Usuarios podem aceitar demandas nao atribuidas" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (responsavel_id IS NULL)
-//   Policy "Usuarios podem ver demandas nao atribuidas" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (responsavel_id IS NULL)
+//   Policy "Colaboradores acessam proprias demandas" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: ((auth.uid() = responsavel_id) OR (auth.uid() = usuario_id) OR is_admin())
+//     WITH CHECK: ((auth.uid() = responsavel_id) OR (auth.uid() = usuario_id) OR is_admin())
 // Table: leads
 //   Policy "Admins podem gerenciar tudo em leads" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: is_admin()
