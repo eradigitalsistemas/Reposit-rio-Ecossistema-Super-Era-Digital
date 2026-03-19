@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -10,6 +10,12 @@ import Collaborators from './pages/Collaborators'
 import Reports from './pages/Reports'
 import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
+
+import PortalLogin from './pages/portal/PortalLogin'
+import PortalLayout from './components/portal/PortalLayout'
+import PortalDemands from './pages/portal/PortalDemands'
+import PortalDocuments from './pages/portal/PortalDocuments'
+
 import { LeadProvider } from './stores/useLeadStore'
 import { DemandProvider } from './stores/useDemandStore'
 import { ClientProvider } from './stores/useClientStore'
@@ -25,6 +31,7 @@ const App = () => (
           <LeadProvider>
             <DemandProvider>
               <Routes>
+                {/* Internal CRM Routes */}
                 <Route element={<Layout />}>
                   <Route path="/" element={<Index />} />
                   <Route path="/demandas" element={<Demands />} />
@@ -33,6 +40,15 @@ const App = () => (
                   <Route path="/colaboradores" element={<Collaborators />} />
                   <Route path="/relatorios" element={<Reports />} />
                 </Route>
+
+                {/* External Portal Routes */}
+                <Route path="/portal/login" element={<PortalLogin />} />
+                <Route path="/portal" element={<PortalLayout />}>
+                  <Route index element={<Navigate to="/portal/demandas" replace />} />
+                  <Route path="demandas" element={<PortalDemands />} />
+                  <Route path="documentos" element={<PortalDocuments />} />
+                </Route>
+
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </DemandProvider>

@@ -1,5 +1,6 @@
 export type DemandPriority = 'Urgente' | 'Durante o Dia' | 'Pode Ficar para Amanhã'
 export type DemandStatus = 'Pendente' | 'Em Andamento' | 'Concluído'
+export type DemandCategory = 'Serviço' | 'Dúvida' | 'Reclamação' | 'Outro'
 
 export interface DemandResponse {
   id: string
@@ -18,6 +19,8 @@ export interface Demand {
   assignee: string
   responses: DemandResponse[]
   createdAt: string
+  clientId?: string
+  category?: DemandCategory
 }
 
 export interface DemandNotification {
@@ -28,4 +31,10 @@ export interface DemandNotification {
   read: boolean
 }
 
-export const COLLABORATORS = ['Ana Silva', 'Carlos Santos', 'Mariana Costa', 'João Oliveira']
+export const COLLABORATORS = [
+  'Ana Silva',
+  'Carlos Santos',
+  'Mariana Costa',
+  'João Oliveira',
+  'Não Atribuído',
+]

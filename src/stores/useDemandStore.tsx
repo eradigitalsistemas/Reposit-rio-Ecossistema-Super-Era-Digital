@@ -28,6 +28,8 @@ const mockDemands: Demand[] = [
     status: 'Em Andamento',
     dueDate: new Date().toISOString(),
     assignee: 'Ana Silva',
+    clientId: '1',
+    category: 'Serviço',
     responses: [
       {
         id: 'r1',

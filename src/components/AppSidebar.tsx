@@ -1,5 +1,12 @@
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Users, BarChart3, Building2, CheckSquare } from 'lucide-react'
+import {
+  LayoutDashboard,
+  Users,
+  BarChart3,
+  Building2,
+  CheckSquare,
+  ExternalLink,
+} from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -9,6 +16,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarFooter,
 } from '@/components/ui/sidebar'
 import useAuthStore from '@/stores/useAuthStore'
 
@@ -24,7 +32,7 @@ export function AppSidebar() {
   const location = useLocation()
   const { role } = useAuthStore()
 
-  const visibleItems = MENU_ITEMS.filter((item) => item.roles.includes(role))
+  const visibleItems = MENU_ITEMS.filter((item) => item.roles.includes(role as string))
 
   return (
     <Sidebar>
@@ -59,6 +67,22 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter className="p-4 border-t">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              variant="outline"
+              className="w-full justify-center text-primary border-primary/20 hover:bg-primary/5"
+            >
+              <Link to="/portal/login" className="flex items-center gap-2">
+                <ExternalLink className="w-4 h-4" />
+                <span>Portal do Cliente</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   )
 }
