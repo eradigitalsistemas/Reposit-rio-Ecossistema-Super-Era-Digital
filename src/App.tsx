@@ -3,6 +3,7 @@ import { Toaster } from '@/components/ui/toaster'
 import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import Index from './pages/Index'
+import Vendas from './pages/Vendas'
 import Login from './pages/Login'
 import Demands from './pages/Demands'
 import Clients from './pages/Clients'
@@ -41,6 +42,7 @@ const App = () => (
                   {/* Internal CRM Routes */}
                   <Route element={<Layout />}>
                     <Route path="/" element={<Index />} />
+                    <Route path="/vendas" element={<Vendas />} />
                     <Route path="/demandas" element={<Demands />} />
                     <Route path="/clientes" element={<Clients />} />
                     <Route path="/clientes/:id" element={<ClientProfile />} />

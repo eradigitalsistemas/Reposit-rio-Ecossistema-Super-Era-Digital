@@ -1,7 +1,9 @@
 {
   "_versions": {
-    "update-demand-priority": 1,
-    "admin-users": 1,
-    "notify-push": 1
+    "update-demand-priority": 2,
+    "admin-users": 2,
+    "notify-push": 1,
+    "notify-automation": 1,
+    "manage-client-documents": 1
   }
 }

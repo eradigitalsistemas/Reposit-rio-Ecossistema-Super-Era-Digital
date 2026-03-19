@@ -7,6 +7,7 @@ import {
   CheckSquare,
   ExternalLink,
   Settings as SettingsIcon,
+  Home,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -23,7 +24,13 @@ import {
 import useAuthStore from '@/stores/useAuthStore'
 
 const MENU_ITEMS = [
-  { title: 'Era Digital Vendas', icon: LayoutDashboard, url: '/', roles: ['Admin', 'Colaborador'] },
+  { title: 'Dashboard Geral', icon: Home, url: '/', roles: ['Admin', 'Colaborador'] },
+  {
+    title: 'Era Digital Vendas',
+    icon: LayoutDashboard,
+    url: '/vendas',
+    roles: ['Admin', 'Colaborador'],
+  },
   { title: 'Demandas', icon: CheckSquare, url: '/demandas', roles: ['Admin', 'Colaborador'] },
   { title: 'Colaboradores', icon: Users, url: '/colaboradores', roles: ['Admin'] },
   { title: 'Clientes Externos', icon: Building2, url: '/clientes', roles: ['Admin'] },

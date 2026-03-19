@@ -30,6 +30,10 @@ export function Header() {
 
   const pageTitle = (() => {
     switch (location.pathname) {
+      case '/':
+        return 'Dashboard Geral'
+      case '/vendas':
+        return 'Era Digital Vendas'
       case '/demandas':
         return 'Gestão de Demandas'
       case '/colaboradores':
@@ -65,7 +69,7 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-1 sm:gap-4 flex-1 justify-end">
-          {location.pathname === '/' && (
+          {location.pathname === '/vendas' && (
             <>
               <div className="md:hidden">
                 <Popover>
@@ -102,7 +106,7 @@ export function Header() {
             </>
           )}
 
-          {location.pathname === '/' && <AddLeadModal />}
+          {location.pathname === '/vendas' && <AddLeadModal />}
 
           <Popover
             open={popoverOpen}
