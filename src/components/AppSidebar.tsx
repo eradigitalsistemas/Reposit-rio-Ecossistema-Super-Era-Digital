@@ -1,6 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
 import { LayoutDashboard, Users, BarChart3, Settings, Building2, CheckSquare } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import {
   Sidebar,
   SidebarContent,
@@ -15,7 +14,7 @@ import {
 const MENU_ITEMS = [
   { title: 'Dashboard', icon: LayoutDashboard, url: '/' },
   { title: 'Demandas', icon: CheckSquare, url: '/demandas' },
-  { title: 'Clientes', icon: Users, url: '#' },
+  { title: 'Clientes', icon: Users, url: '/clientes' },
   { title: 'Relatórios', icon: BarChart3, url: '#' },
   { title: 'Configurações', icon: Settings, url: '#' },
 ]
@@ -37,7 +36,14 @@ export function AppSidebar() {
             <SidebarMenu>
               {MENU_ITEMS.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={location.pathname === item.url}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={
+                      location.pathname.startsWith(item.url) &&
+                      item.url !== '#' &&
+                      (item.url === '/' ? location.pathname === '/' : true)
+                    }
+                  >
                     <Link to={item.url} className="flex items-center gap-3">
                       <item.icon className="w-5 h-5" />
                       <span>{item.title}</span>
