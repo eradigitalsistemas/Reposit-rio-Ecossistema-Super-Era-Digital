@@ -23,6 +23,7 @@ import {
 import useDemandStore from '@/stores/useDemandStore'
 import { DemandPriority, DemandStatus, DemandAttachment } from '@/types/demand'
 import { supabase } from '@/lib/supabase/client'
+import { sanitizeFilename } from '@/lib/utils'
 
 export function AddDemandModal() {
   const [open, setOpen] = useState(false)
@@ -49,8 +50,13 @@ export function AddDemandModal() {
 
     const attachments: DemandAttachment[] = []
     for (const file of files) {
-      const fileName = `${crypto.randomUUID()}_${file.name}`
-      const { data } = await supabase.storage.from('demandas_anexos').upload(fileName, file)
+      const sanitizedName = sanitizeFilename(file.name)
+      const fileName = `${crypto.randomUUID()}_${sanitizedName}`
+      const { data, error } = await supabase.storage.from('demandas_anexos').upload(fileName, file)
+      if (error) {
+        console.error('Error uploading file:', error)
+        continue
+      }
       if (data) attachments.push({ name: file.name, url: data.path, type: file.type })
     }
 
