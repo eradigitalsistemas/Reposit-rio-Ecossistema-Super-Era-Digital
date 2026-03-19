@@ -1,8 +1,19 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
+import { corsHeaders } from '../_shared/cors.ts'
 
-Deno.serve(async () => {
-  return new Response(JSON.stringify({ message: 'Deprecated or unused function endpoint.' }), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
-  })
+Deno.serve(async (req: Request) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
+  try {
+    return new Response(JSON.stringify({ message: 'Hello from functions!' }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  } catch (error: any) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 400,
+    })
+  }
 })
