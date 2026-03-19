@@ -11,7 +11,15 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
-import { Calendar, User2, MessageSquare, History, CheckCircle, Clock } from 'lucide-react'
+import {
+  Calendar,
+  User2,
+  MessageSquare,
+  History,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+} from 'lucide-react'
 import { Demand } from '@/types/demand'
 import useDemandStore from '@/stores/useDemandStore'
 import useAuthStore from '@/stores/useAuthStore'
@@ -89,9 +97,28 @@ export function DemandDetailsModal({ open, onOpenChange, demand }: DemandDetails
                 </span>
                 <div className="flex items-center gap-2 font-medium text-sm sm:text-base text-white">
                   {demand.priority === 'Urgente' && (
-                    <div className="w-2 h-2 rounded-full bg-white" />
+                    <Badge className="bg-red-600 text-white hover:bg-red-700 border-transparent font-bold">
+                      <AlertCircle className="w-3.5 h-3.5 mr-1" />
+                      Urgente
+                    </Badge>
                   )}
-                  {demand.priority}
+                  {demand.priority === 'Durante o Dia' && (
+                    <Badge
+                      variant="outline"
+                      className="text-orange-400 bg-orange-500/10 border-orange-500/30 hover:bg-orange-500/20"
+                    >
+                      <Clock className="w-3.5 h-3.5 mr-1" />
+                      Durante o Dia
+                    </Badge>
+                  )}
+                  {demand.priority === 'Pode Ficar para Amanhã' && (
+                    <Badge
+                      variant="outline"
+                      className="text-white/70 bg-white/5 border-white/10 hover:bg-white/10"
+                    >
+                      Pode Ficar para Amanhã
+                    </Badge>
+                  )}
                 </div>
               </div>
               <div className="space-y-1">

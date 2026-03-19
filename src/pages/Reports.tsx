@@ -46,20 +46,19 @@ interface UserData {
   nome: string
 }
 
-// Strictly avoiding non-black/white/green colors per standard rules
 const leadsConfig: ChartConfig = {
   leads: { label: 'Leads', color: 'rgba(255,255,255,0.2)' },
   prospeccao: { label: 'Prospecção', color: 'rgba(255,255,255,0.4)' },
-  convertido: { label: 'Convertido', color: 'hsl(var(--primary))' }, // Highlight positive outcome
+  convertido: { label: 'Convertido', color: '#3b82f6' }, // Semantic Blue
   treinamento: { label: 'Em Treinamento', color: 'rgba(255,255,255,0.6)' },
-  finalizado: { label: 'Finalizado', color: 'rgba(255,255,255,0.8)' },
-  pos_venda: { label: 'Pós Venda', color: 'rgba(255,255,255,1)' },
-  ativo: { label: 'Ativo', color: 'hsl(var(--primary))' }, // Highlight positive outcome
+  finalizado: { label: 'Finalizado', color: '#0ea5e9' }, // Semantic Light Blue
+  pos_venda: { label: 'Pós Venda', color: 'rgba(255,255,255,0.8)' },
+  ativo: { label: 'Ativo', color: 'hsl(var(--primary))' }, // Primary Green
 }
 
 const priorityConfig: ChartConfig = {
-  Urgente: { label: 'Urgente', color: '#ffffff' }, // Pure white for high contrast alert
-  'Durante o Dia': { label: 'Durante o Dia', color: 'hsl(var(--primary))' }, // Primary Green
+  Urgente: { label: 'Urgente', color: '#ef4444' }, // Semantic Red
+  'Durante o Dia': { label: 'Durante o Dia', color: '#f97316' }, // Semantic Orange
   'Pode Ficar para Amanhã': { label: 'Ficar para Amanhã', color: 'rgba(255,255,255,0.3)' }, // Subtle Grey
 }
 

@@ -42,8 +42,8 @@ export const KANBAN_STAGES: StageConfig[] = [
   {
     id: 'convertido',
     title: 'Convertido',
-    color: 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20',
-    bgColor: 'border-indigo-500/50',
+    color: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+    bgColor: 'border-blue-500/50',
   },
   {
     id: 'treinamento',
@@ -54,8 +54,8 @@ export const KANBAN_STAGES: StageConfig[] = [
   {
     id: 'finalizado',
     title: 'Finalizado',
-    color: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
-    bgColor: 'border-emerald-500/50',
+    color: 'bg-sky-500/10 text-sky-400 border border-sky-500/20',
+    bgColor: 'border-sky-500/50',
   },
   {
     id: 'pos_venda',

@@ -43,11 +43,11 @@ export function DemandCard({ demand }: DemandCardProps) {
   const getPriorityColor = (p: string) => {
     switch (p) {
       case 'Urgente':
-        return 'text-black bg-white border-white/20 font-bold'
+        return 'bg-red-600 text-white border-red-600 font-bold shadow-[0_0_10px_rgba(220,38,38,0.4)]'
       case 'Durante o Dia':
-        return 'text-white bg-white/20 border-white/30'
+        return 'text-orange-400 bg-orange-500/10 border-orange-500/30'
       default:
-        return 'text-white/70 bg-transparent border-white/20'
+        return 'text-white/70 bg-white/5 border-white/10'
     }
   }
 
