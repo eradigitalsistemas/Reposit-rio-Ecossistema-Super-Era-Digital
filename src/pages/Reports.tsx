@@ -39,10 +39,6 @@ export default function Reports() {
     fetchData()
   }, [role])
 
-  if (role !== 'Admin') {
-    return <Navigate to="/" replace />
-  }
-
   // Filtering Logic
   const filterByDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -55,8 +51,14 @@ export default function Reports() {
     return true // allTime
   }
 
-  const filteredLeads = leadsData.filter((d) => filterByDate(d.data_criacao))
-  const filteredDemands = demandsData.filter((d) => filterByDate(d.data_criacao))
+  const filteredLeads = useMemo(
+    () => leadsData.filter((d) => filterByDate(d.data_criacao)),
+    [leadsData, dateFilter],
+  )
+  const filteredDemands = useMemo(
+    () => demandsData.filter((d) => filterByDate(d.data_criacao)),
+    [demandsData, dateFilter],
+  )
 
   // Leads Overview Chart Data
   const leadsChartData = useMemo(() => {
@@ -75,8 +77,6 @@ export default function Reports() {
     })
     return Object.entries(counts).map(([status, count]) => ({ name: status, value: count }))
   }, [filteredDemands])
-
-  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#64748b']
 
   // Team Productivity Data
   const teamData = useMemo(() => {
@@ -101,6 +101,12 @@ export default function Reports() {
     })
     return Object.entries(counts).map(([name, data]) => ({ name, ...data }))
   }, [filteredDemands, usersData])
+
+  if (role !== 'Admin') {
+    return <Navigate to="/" replace />
+  }
+
+  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#64748b']
 
   return (
     <div className="h-full w-full bg-slate-50/50 dark:bg-background flex flex-col p-6 overflow-y-auto">
