@@ -5,6 +5,7 @@ import { Building2, Mail, Phone } from 'lucide-react'
 import { EditLeadModal } from './EditLeadModal'
 import { DeleteLeadAlert } from './DeleteLeadAlert'
 import { NewInteractionModal } from './NewInteractionModal'
+import { LeadHistorySheet } from './LeadHistorySheet'
 
 interface KanbanCardProps {
   lead: Lead
@@ -28,11 +29,12 @@ export function KanbanCard({ lead }: KanbanCardProps) {
             {lead.stage === 'ativo' && (
               <div className="mt-1.5 sm:mt-1.5 h-2 w-2 rounded-full bg-primary shadow-[0_0_5px_rgba(34,197,94,0.8)] shrink-0" />
             )}
-            <h4 className="font-semibold sm:font-medium text-base sm:text-sm text-foreground leading-tight pr-12 sm:pr-14">
+            <h4 className="font-semibold sm:font-medium text-base sm:text-sm text-foreground leading-tight pr-24 sm:pr-24">
               {lead.name}
             </h4>
           </div>
           <div className="flex items-center gap-0.5 absolute right-2 top-2 sm:right-1.5 sm:top-1.5 bg-card/90 backdrop-blur-sm rounded-md px-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10">
+            <LeadHistorySheet lead={lead} />
             <EditLeadModal lead={lead} />
             <DeleteLeadAlert lead={lead} />
           </div>

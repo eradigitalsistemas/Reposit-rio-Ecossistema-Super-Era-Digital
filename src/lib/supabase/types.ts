@@ -408,6 +408,36 @@ export const Constants = {
 } as const
 
 // ====== DATABASE EXTENDED CONTEXT (auto-generated) ======
+// This section contains actual PostgreSQL column types, constraints, RLS policies,
+// functions, triggers, indexes and materialized views not present in the type definitions above.
+// IMPORTANT: The TypeScript types above map UUID, TEXT, VARCHAR all to "string".
+// Use the COLUMN TYPES section below to know the real PostgreSQL type for each column.
+// Always use the correct PostgreSQL type when writing SQL migrations.
+
+// --- COLUMN TYPES (actual PostgreSQL types) ---
+// Use this to know the real database type when writing migrations.
+// "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: clientes_externos
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: text (not null)
+//   empresa: text (nullable)
+//   email: text (not null)
+//   telefone: text (nullable)
+//   cnpj: text (nullable)
+//   data_criacao: timestamp with time zone (not null, default: now())
+//   documentos: jsonb (nullable, default: '[]'::jsonb)
+// Table: demandas
+//   id: uuid (not null, default: gen_random_uuid())
+//   titulo: text (not null)
+//   descricao: text (nullable)
+//   prioridade: text (not null)
+//   status: text (not null)
+//   data_criacao: timestamp with time zone (not null, default: now())
+//   data_vencimento: timestamp with time zone (nullable)
+//   usuario_id: uuid (not null, default: auth.uid())
+//   responsavel_id: uuid (nullable)
+//   resposta: text (nullable)
+//   data_resposta: timestamp with time zone (nullable)
 // Table: historico_leads
 //   id: uuid (not null, default: gen_random_uuid())
 //   lead_id: uuid (not null)
@@ -416,9 +446,288 @@ export const Constants = {
 //   forma_contato: text (not null)
 //   detalhes: text (not null)
 //   data_criacao: timestamp with time zone (not null, default: now())
+// Table: leads
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: text (not null)
+//   email: text (not null)
+//   telefone: text (nullable)
+//   empresa: text (nullable)
+//   estagio: text (not null)
+//   data_criacao: timestamp with time zone (not null, default: now())
+//   usuario_id: uuid (not null, default: auth.uid())
+//   observacoes: text (nullable, default: ''::text)
+// Table: logs_auditoria
+//   id: uuid (not null, default: gen_random_uuid())
+//   demanda_id: uuid (nullable)
+//   usuario_id: uuid (nullable)
+//   acao: text (not null)
+//   detalhes: text (nullable)
+//   dados_anteriores: jsonb (nullable)
+//   dados_novos: jsonb (nullable)
+//   data_criacao: timestamp with time zone (not null, default: now())
+// Table: push_subscriptions
+//   id: uuid (not null, default: gen_random_uuid())
+//   usuario_id: uuid (not null)
+//   subscription_data: jsonb (not null)
+//   created_at: timestamp with time zone (not null, default: now())
+// Table: usuarios
+//   id: uuid (not null)
+//   nome: text (not null, default: ''::text)
+//   email: text (not null)
+//   data_criacao: timestamp with time zone (not null, default: now())
+//   perfil: text (not null, default: 'colaborador'::text)
+//   ativo: boolean (not null, default: true)
 
 // --- CONSTRAINTS ---
+// Table: clientes_externos
+//   PRIMARY KEY clientes_externos_pkey: PRIMARY KEY (id)
+// Table: demandas
+//   PRIMARY KEY demandas_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY demandas_responsavel_id_fkey: FOREIGN KEY (responsavel_id) REFERENCES usuarios(id) ON DELETE SET NULL
+//   FOREIGN KEY demandas_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: historico_leads
-//   PRIMARY KEY historico_leads_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY historico_leads_lead_id_fkey: FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE
+//   PRIMARY KEY historico_leads_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY historico_leads_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: leads
+//   PRIMARY KEY leads_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY leads_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: logs_auditoria
+//   FOREIGN KEY logs_auditoria_demanda_id_fkey: FOREIGN KEY (demanda_id) REFERENCES demandas(id) ON DELETE SET NULL
+//   PRIMARY KEY logs_auditoria_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY logs_auditoria_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
+// Table: push_subscriptions
+//   PRIMARY KEY push_subscriptions_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY push_subscriptions_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+// Table: usuarios
+//   FOREIGN KEY usuarios_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
+//   PRIMARY KEY usuarios_pkey: PRIMARY KEY (id)
+
+// --- ROW LEVEL SECURITY POLICIES ---
+// Table: clientes_externos
+//   Policy "Admins_gerenciam_clientes_externos" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
+//     WITH CHECK: is_admin()
+// Table: demandas
+//   Policy "Admins podem gerenciar tudo em demandas" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
+//     WITH CHECK: is_admin()
+//   Policy "Colaboradores acessam proprias demandas" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: ((auth.uid() = responsavel_id) OR (auth.uid() = usuario_id) OR is_admin())
+//     WITH CHECK: ((auth.uid() = responsavel_id) OR (auth.uid() = usuario_id) OR is_admin())
+// Table: historico_leads
+//   Policy "Admins podem gerenciar tudo em historico_leads" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
+//     WITH CHECK: is_admin()
+//   Policy "Usuarios gerenciam interacoes de seus leads" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM leads l   WHERE ((l.id = historico_leads.lead_id) AND (l.usuario_id = auth.uid()))))
+//     WITH CHECK: (EXISTS ( SELECT 1    FROM leads l   WHERE ((l.id = historico_leads.lead_id) AND (l.usuario_id = auth.uid()))))
+// Table: leads
+//   Policy "Admins podem gerenciar tudo em leads" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
+//     WITH CHECK: is_admin()
+//   Policy "Usuarios gerenciam proprios leads" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (auth.uid() = usuario_id)
+//     WITH CHECK: (auth.uid() = usuario_id)
+// Table: logs_auditoria
+//   Policy "Admins podem ver logs_auditoria" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
+// Table: push_subscriptions
+//   Policy "Enable delete for authenticated users" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: (auth.uid() = usuario_id)
+//   Policy "Enable insert for authenticated users" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: (auth.uid() = usuario_id)
+//   Policy "Enable select for authenticated users" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (auth.uid() = usuario_id)
+// Table: usuarios
+//   Policy "Admins podem atualizar usuarios" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
+//     WITH CHECK: is_admin()
+//   Policy "Admins podem deletar usuarios" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
+//   Policy "Usuarios podem atualizar o proprio perfil" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (auth.uid() = id)
+//     WITH CHECK: (auth.uid() = id)
+//   Policy "Usuarios podem ver perfis" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+
+// --- DATABASE FUNCTIONS ---
+// FUNCTION handle_new_user()
+//   CREATE OR REPLACE FUNCTION public.handle_new_user()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   BEGIN
+//     INSERT INTO public.usuarios (id, email, nome, perfil)
+//     VALUES (
+//       new.id,
+//       new.email,
+//       COALESCE(new.raw_user_meta_data->>'full_name', ''),
+//       COALESCE(new.raw_user_meta_data->>'perfil', 'colaborador')
+//     );
+//     RETURN new;
+//   END;
+//   $function$
+//
+// FUNCTION is_admin()
+//   CREATE OR REPLACE FUNCTION public.is_admin()
+//    RETURNS boolean
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//     v_perfil TEXT;
+//   BEGIN
+//     SELECT perfil INTO v_perfil FROM public.usuarios WHERE id = auth.uid();
+//     RETURN v_perfil = 'admin';
+//   END;
+//   $function$
+//
+// FUNCTION log_demanda_changes()
+//   CREATE OR REPLACE FUNCTION public.log_demanda_changes()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//       v_usuario_id UUID;
+//   BEGIN
+//       -- Try to get the current authenticated user's ID
+//       BEGIN
+//           v_usuario_id := auth.uid();
+//       EXCEPTION WHEN OTHERS THEN
+//           v_usuario_id := NULL;
+//       END;
+//
+//       IF TG_OP = 'INSERT' THEN
+//           INSERT INTO public.logs_auditoria (demanda_id, usuario_id, acao, detalhes, dados_novos)
+//           VALUES (NEW.id, v_usuario_id, 'Criação', 'Demanda criada', to_jsonb(NEW));
+//       ELSIF TG_OP = 'UPDATE' THEN
+//           IF NEW.status IS DISTINCT FROM OLD.status THEN
+//               INSERT INTO public.logs_auditoria (demanda_id, usuario_id, acao, detalhes, dados_anteriores, dados_novos)
+//               VALUES (NEW.id, v_usuario_id, 'Alteração de Status', 'Status alterado de ' || OLD.status || ' para ' || NEW.status, jsonb_build_object('status', OLD.status), jsonb_build_object('status', NEW.status));
+//           END IF;
+//
+//           IF NEW.prioridade IS DISTINCT FROM OLD.prioridade THEN
+//               INSERT INTO public.logs_auditoria (demanda_id, usuario_id, acao, detalhes, dados_anteriores, dados_novos)
+//               VALUES (NEW.id, v_usuario_id, 'Alteração de Prioridade', 'Prioridade alterada de ' || OLD.prioridade || ' para ' || NEW.prioridade, jsonb_build_object('prioridade', OLD.prioridade), jsonb_build_object('prioridade', NEW.prioridade));
+//           END IF;
+//
+//           IF NEW.responsavel_id IS DISTINCT FROM OLD.responsavel_id THEN
+//               INSERT INTO public.logs_auditoria (demanda_id, usuario_id, acao, detalhes, dados_anteriores, dados_novos)
+//               VALUES (NEW.id, v_usuario_id, 'Atribuição', 'Responsável alterado', jsonb_build_object('responsavel_id', OLD.responsavel_id), jsonb_build_object('responsavel_id', NEW.responsavel_id));
+//           END IF;
+//
+//           IF NEW.resposta IS DISTINCT FROM OLD.resposta AND NEW.resposta IS NOT NULL AND NEW.resposta != '' THEN
+//               INSERT INTO public.logs_auditoria (demanda_id, usuario_id, acao, detalhes, dados_anteriores, dados_novos)
+//               VALUES (NEW.id, v_usuario_id, 'Nova Mensagem', 'Nova nota interna adicionada', jsonb_build_object('resposta', OLD.resposta), jsonb_build_object('resposta', NEW.resposta));
+//           END IF;
+//       END IF;
+//       RETURN NEW;
+//   END;
+//   $function$
+//
+// FUNCTION trigger_demanda_push_notification()
+//   CREATE OR REPLACE FUNCTION public.trigger_demanda_push_notification()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//       -- Using the project URL from the environment config
+//       edge_function_url TEXT := 'https://fyiukfacrniwpzchpzpx.supabase.co/functions/v1/notify-push';
+//       payload JSONB;
+//       v_title TEXT;
+//       v_body TEXT;
+//       v_usuario_id UUID;
+//   BEGIN
+//       -- Scenario 1: Assignment
+//       IF NEW.responsavel_id IS NOT NULL AND (OLD.responsavel_id IS NULL OR NEW.responsavel_id != OLD.responsavel_id) THEN
+//           v_usuario_id := NEW.responsavel_id;
+//           v_title := 'Nova Demanda Atribuída';
+//           v_body := 'A demanda "' || NEW.titulo || '" foi atribuída a você.';
+//
+//           payload := jsonb_build_object('usuario_id', v_usuario_id, 'notification', jsonb_build_object('title', v_title, 'body', v_body));
+//           PERFORM net.http_post(
+//               url := edge_function_url,
+//               headers := '{"Content-Type": "application/json", "x-webhook-secret": "super-secret-webhook-key-123"}'::jsonb,
+//               body := payload
+//           );
+//       END IF;
+//
+//       -- Scenario 2: Escalation
+//       IF NEW.prioridade = 'Urgente' AND OLD.prioridade = 'Pode Ficar para Amanhã' AND NEW.responsavel_id IS NOT NULL THEN
+//           v_usuario_id := NEW.responsavel_id;
+//           v_title := 'Demanda Escalada para Urgente';
+//           v_body := 'A demanda "' || NEW.titulo || '" agora é Urgente.';
+//
+//           payload := jsonb_build_object('usuario_id', v_usuario_id, 'notification', jsonb_build_object('title', v_title, 'body', v_body));
+//           PERFORM net.http_post(
+//               url := edge_function_url,
+//               headers := '{"Content-Type": "application/json", "x-webhook-secret": "super-secret-webhook-key-123"}'::jsonb,
+//               body := payload
+//           );
+//       END IF;
+//
+//       RETURN NEW;
+//   END;
+//   $function$
+//
+// FUNCTION trigger_notify_automation()
+//   CREATE OR REPLACE FUNCTION public.trigger_notify_automation()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//       -- Using the project URL for Edge Functions
+//       edge_function_url TEXT := 'https://fyiukfacrniwpzchpzpx.supabase.co/functions/v1/notify-automation';
+//       payload JSONB;
+//   BEGIN
+//       IF TG_TABLE_NAME = 'demandas' THEN
+//           -- Check if the status has actually changed
+//           IF TG_OP = 'UPDATE' AND NEW.status IS DISTINCT FROM OLD.status THEN
+//               payload := jsonb_build_object(
+//                   'type', 'demand_status_change',
+//                   'record', to_jsonb(NEW),
+//                   'old_record', to_jsonb(OLD)
+//               );
+//
+//               -- Send async HTTP POST request
+//               PERFORM net.http_post(
+//                   url := edge_function_url,
+//                   headers := '{"Content-Type": "application/json", "x-webhook-secret": "super-secret-webhook-key-123"}'::jsonb,
+//                   body := payload
+//               );
+//           END IF;
+//       ELSIF TG_TABLE_NAME = 'clientes_externos' THEN
+//           -- Check if the documentos have been modified
+//           IF TG_OP = 'UPDATE' AND NEW.documentos IS DISTINCT FROM OLD.documentos THEN
+//               payload := jsonb_build_object(
+//                   'type', 'client_document_upload',
+//                   'record', to_jsonb(NEW),
+//                   'old_record', to_jsonb(OLD)
+//               );
+//
+//               -- Send async HTTP POST request
+//               PERFORM net.http_post(
+//                   url := edge_function_url,
+//                   headers := '{"Content-Type": "application/json", "x-webhook-secret": "super-secret-webhook-key-123"}'::jsonb,
+//                   body := payload
+//               );
+//           END IF;
+//       END IF;
+//
+//       RETURN NEW;
+//   END;
+//   $function$
+//
+
+// --- TRIGGERS ---
+// Table: clientes_externos
+//   on_cliente_documento_change_notify: CREATE TRIGGER on_cliente_documento_change_notify AFTER UPDATE OF documentos ON public.clientes_externos FOR EACH ROW EXECUTE FUNCTION trigger_notify_automation()
+// Table: demandas
+//   on_demanda_change_log: CREATE TRIGGER on_demanda_change_log AFTER INSERT OR UPDATE ON public.demandas FOR EACH ROW EXECUTE FUNCTION log_demanda_changes()
+//   on_demanda_push_notify: CREATE TRIGGER on_demanda_push_notify AFTER UPDATE ON public.demandas FOR EACH ROW EXECUTE FUNCTION trigger_demanda_push_notification()
+//   on_demanda_status_change_notify: CREATE TRIGGER on_demanda_status_change_notify AFTER UPDATE OF status ON public.demandas FOR EACH ROW EXECUTE FUNCTION trigger_notify_automation()

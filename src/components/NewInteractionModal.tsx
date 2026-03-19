@@ -50,13 +50,20 @@ export function NewInteractionModal({ lead }: NewInteractionModalProps) {
     const contatoNome = formData.get('contato_nome') as string
     const detalhes = formData.get('detalhes') as string
 
+    let finalDetalhes = detalhes
+    if (stage !== lead.stage) {
+      const oldStageTitle = KANBAN_STAGES.find((s) => s.id === lead.stage)?.title || lead.stage
+      const newStageTitle = KANBAN_STAGES.find((s) => s.id === stage)?.title || stage
+      finalDetalhes += `\n\n[Mudança de Fase: ${oldStageTitle} ➔ ${newStageTitle}]`
+    }
+
     try {
       const { error: insertError } = await supabase.from('historico_leads').insert({
         lead_id: lead.id,
         usuario_id: user.id,
         contato_nome: contatoNome,
         forma_contato: contactMethod,
-        detalhes: detalhes,
+        detalhes: finalDetalhes,
       })
 
       if (insertError) throw insertError
