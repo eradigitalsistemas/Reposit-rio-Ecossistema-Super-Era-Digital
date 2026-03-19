@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Search, Bell, Shield, LogOut, User } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -15,7 +16,7 @@ import { Badge } from '@/components/ui/badge'
 import useLeadStore from '@/stores/useLeadStore'
 import useDemandStore from '@/stores/useDemandStore'
 import useAuthStore from '@/stores/useAuthStore'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
 
 export function Header() {
@@ -23,6 +24,9 @@ export function Header() {
   const { notifications, markNotificationsAsRead } = useDemandStore()
   const { role, toggleRole, logout, userName } = useAuthStore()
   const location = useLocation()
+  const navigate = useNavigate()
+
+  const [popoverOpen, setPopoverOpen] = useState(false)
 
   const pageTitle = (() => {
     switch (location.pathname) {
@@ -97,7 +101,9 @@ export function Header() {
           {location.pathname === '/' && <AddLeadModal />}
 
           <Popover
+            open={popoverOpen}
             onOpenChange={(open) => {
+              setPopoverOpen(open)
               if (!open && unreadCount > 0) markNotificationsAsRead()
             }}
           >
@@ -141,7 +147,14 @@ export function Header() {
                     {notifications.map((n) => (
                       <div
                         key={n.id}
-                        className={`p-4 border-b border-border/50 last:border-0 flex flex-col gap-1 transition-colors ${
+                        onClick={() => {
+                          if (n.demandId) {
+                            navigate(`/demandas?highlight=${n.demandId}`)
+                            setPopoverOpen(false)
+                            if (unreadCount > 0) markNotificationsAsRead()
+                          }
+                        }}
+                        className={`p-4 border-b border-border/50 last:border-0 flex flex-col gap-1 transition-colors cursor-pointer ${
                           !n.read ? 'bg-primary/5 hover:bg-primary/10' : 'hover:bg-muted/50'
                         }`}
                       >

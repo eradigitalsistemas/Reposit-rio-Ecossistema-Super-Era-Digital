@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { DemandColumn } from '@/components/demands/DemandColumn'
 import { AddDemandModal } from '@/components/demands/AddDemandModal'
 import useDemandStore from '@/stores/useDemandStore'
@@ -22,6 +22,7 @@ import {
 import { Download, FilterX, Columns } from 'lucide-react'
 import { exportToCSV, exportToPDF } from '@/utils/export'
 import { DemandStatus } from '@/types/demand'
+import { useSearchParams } from 'react-router-dom'
 
 export default function Demands() {
   const { demands, collaborators } = useDemandStore()
@@ -29,6 +30,21 @@ export default function Demands() {
 
   const [collaboratorFilter, setCollaboratorFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string[]>([])
+
+  const [searchParams] = useSearchParams()
+  const highlightId = searchParams.get('highlight')
+
+  useEffect(() => {
+    if (highlightId) {
+      const timer = setTimeout(() => {
+        const el = document.getElementById(`demand-card-${highlightId}`)
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+      }, 300)
+      return () => clearTimeout(timer)
+    }
+  }, [highlightId, demands])
 
   const activeColumns = useMemo(() => {
     if (statusFilter.length > 0) {
@@ -177,6 +193,7 @@ export default function Demands() {
                 key={colName}
                 title={colName}
                 demands={filteredDemands.filter((d) => d.status === colName)}
+                highlightId={highlightId}
               />
             ))}
           </div>

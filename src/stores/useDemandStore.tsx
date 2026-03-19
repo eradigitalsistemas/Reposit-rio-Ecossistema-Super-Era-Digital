@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useState, useMemo, useCallback, useEffect } from 'react'
 import { Demand, DemandPriority, DemandStatus, DemandNotification, DemandLog } from '@/types/demand'
 import { toast } from '@/hooks/use-toast'
+import { ToastAction } from '@/components/ui/toast'
 import { supabase } from '@/lib/supabase/client'
 import useAuthStore from './useAuthStore'
+import { useNavigate } from 'react-router-dom'
 
 interface Collaborator {
   id: string
@@ -30,23 +32,14 @@ interface DemandStoreState {
   fetchCollaborators: () => Promise<void>
 }
 
-const mockNotifications: DemandNotification[] = [
-  {
-    id: 'n1',
-    title: 'Sistema de Notificações',
-    message: 'Bem-vindo! Você receberá alertas sobre demandas aqui.',
-    createdAt: new Date().toISOString(),
-    read: false,
-  },
-]
-
 const DemandContext = createContext<DemandStoreState | null>(null)
 
 export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   const [demands, setDemands] = useState<Demand[]>([])
   const [collaborators, setCollaborators] = useState<Collaborator[]>([])
-  const [notifications, setNotifications] = useState<DemandNotification[]>(mockNotifications)
+  const [notifications, setNotifications] = useState<DemandNotification[]>([])
   const { user, role, userName } = useAuthStore()
+  const navigate = useNavigate()
 
   const fetchDemands = useCallback(async () => {
     if (!user) return
@@ -134,15 +127,42 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [user])
 
+  const fetchNotifications = useCallback(async () => {
+    if (!user) return
+    try {
+      const { data, error } = await supabase
+        .from('notificacoes')
+        .select('*')
+        .eq('usuario_id', user.id)
+        .order('data_criacao', { ascending: false })
+        .limit(50)
+
+      if (!error && data) {
+        setNotifications(
+          data.map((n: any) => ({
+            id: n.id,
+            title: n.titulo,
+            message: n.mensagem,
+            read: n.lida,
+            createdAt: n.data_criacao,
+            demandId: n.demanda_id,
+          })),
+        )
+      }
+    } catch (e) {
+      console.error('Exception in fetchNotifications:', e)
+    }
+  }, [user])
+
   useEffect(() => {
     let isSubscribed = true
 
-    if (role && role !== 'Client') {
+    if (role && role !== 'Client' && user) {
       fetchDemands()
       fetchCollaborators()
+      fetchNotifications()
 
-      // Realtime subscription to reflect new or updated users immediately in UI dropdowns
-      const channel = supabase
+      const usersChannel = supabase
         .channel('usuarios-colab-changes')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'usuarios' }, () => {
           if (isSubscribed) {
@@ -151,16 +171,74 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         })
         .subscribe()
 
+      const notifChannel = supabase
+        .channel('notificacoes-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'notificacoes',
+            filter: `usuario_id=eq.${user.id}`,
+          },
+          (payload) => {
+            if (!isSubscribed) return
+            const newNotif = payload.new as any
+
+            setNotifications((prev) => [
+              {
+                id: newNotif.id,
+                title: newNotif.titulo,
+                message: newNotif.mensagem,
+                read: newNotif.lida,
+                createdAt: newNotif.data_criacao,
+                demandId: newNotif.demanda_id,
+              },
+              ...prev,
+            ])
+
+            toast({
+              title: newNotif.titulo,
+              description: newNotif.mensagem,
+              action: newNotif.demanda_id ? (
+                <ToastAction
+                  altText="Ver Demanda"
+                  onClick={() => navigate(`/demandas?highlight=${newNotif.demanda_id}`)}
+                >
+                  Ver
+                </ToastAction>
+              ) : undefined,
+            })
+          },
+        )
+        .subscribe()
+
       return () => {
         isSubscribed = false
-        supabase.removeChannel(channel)
+        supabase.removeChannel(usersChannel)
+        supabase.removeChannel(notifChannel)
       }
     }
-  }, [role, fetchDemands, fetchCollaborators])
+  }, [role, user, fetchDemands, fetchCollaborators, fetchNotifications, navigate])
 
-  const markNotificationsAsRead = useCallback(() => {
+  const markNotificationsAsRead = useCallback(async () => {
+    if (!user) return
+
+    const unreadNotifications = notifications.filter((n) => !n.read)
+    if (unreadNotifications.length === 0) return
+
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
-  }, [])
+
+    try {
+      await supabase
+        .from('notificacoes')
+        .update({ lida: true })
+        .eq('usuario_id', user.id)
+        .eq('lida', false)
+    } catch (e) {
+      console.error('Error marking notifications as read:', e)
+    }
+  }, [user, notifications])
 
   const addDemand = useCallback(
     async (

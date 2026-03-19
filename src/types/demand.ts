@@ -33,4 +33,5 @@ export interface DemandNotification {
   message: string
   createdAt: string
   read: boolean
+  demandId?: string
 }
