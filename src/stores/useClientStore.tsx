@@ -8,7 +8,8 @@ interface ClientStoreState {
   clients: Client[]
   addClient: (client: Omit<Client, 'id' | 'createdAt' | 'documents' | 'history'>) => Promise<void>
   updateClient: (id: string, data: Partial<Client>) => Promise<void>
-  addDocument: (clientId: string, doc: Omit<ClientDocument, 'id' | 'createdAt'>) => void
+  addDocument: (clientId: string, file: File | any) => Promise<void>
+  deleteDocument: (clientId: string, docId: string, path?: string) => Promise<void>
   deleteClient: (id: string) => Promise<void>
 }
 
@@ -21,7 +22,7 @@ export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchClients = useCallback(async () => {
     if (!user || role !== 'Admin') return
     const { data, error } = await supabase
-      .from('clientes_externos' as any) // Cast due to dynamic migration not in static types
+      .from('clientes_externos' as any)
       .select('*')
       .order('data_criacao', { ascending: false })
 
@@ -39,7 +40,7 @@ export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
           email: d.email,
           phone: d.telefone || '',
           cnpj: d.cnpj || '',
-          documents: [],
+          documents: d.documentos || [],
           history: [],
           createdAt: d.data_criacao,
         })),
@@ -111,26 +112,98 @@ export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
     setClients((prev) => prev.map((c) => (c.id === id ? { ...c, ...data } : c)))
   }, [])
 
-  const addDocument = useCallback(
-    (clientId: string, doc: Omit<ClientDocument, 'id' | 'createdAt'>) => {
-      // Mocking document addition since no table was specified for it in AC
+  const addDocument = useCallback(async (clientId: string, file: File | any) => {
+    if (!(file instanceof File)) {
+      // Fallback for mocked portal uploads
       setClients((prev) =>
         prev.map((c) => {
           if (c.id === clientId) {
             return {
               ...c,
               documents: [
-                ...c.documents,
-                { ...doc, id: Math.random().toString(), createdAt: new Date().toISOString() },
+                ...(c.documents || []),
+                {
+                  ...file,
+                  id: Math.random().toString(),
+                  createdAt: new Date().toISOString(),
+                },
               ],
             }
           }
           return c
         }),
       )
-    },
-    [],
-  )
+      return
+    }
+
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`
+    const filePath = `${clientId}/${fileName}`
+
+    const { error: uploadError } = await supabase.storage
+      .from('documentos_clientes')
+      .upload(filePath, file)
+
+    if (uploadError) {
+      toast({
+        title: 'Erro',
+        description: 'Erro ao fazer upload do arquivo.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    const newDoc: ClientDocument = {
+      id: Math.random().toString(),
+      name: file.name,
+      path: filePath,
+      type: file.type,
+      createdAt: new Date().toISOString(),
+    }
+
+    setClients((prev) => {
+      const newClients = [...prev]
+      const clientIndex = newClients.findIndex((c) => c.id === clientId)
+      if (clientIndex === -1) return prev
+
+      const currentDocs = newClients[clientIndex].documents || []
+      const updatedDocs = [...currentDocs, newDoc]
+
+      supabase
+        .from('clientes_externos' as any)
+        .update({ documentos: updatedDocs })
+        .eq('id', clientId)
+        .then()
+
+      newClients[clientIndex] = { ...newClients[clientIndex], documents: updatedDocs }
+      return newClients
+    })
+    toast({ title: 'Sucesso', description: 'Documento adicionado ao cliente.' })
+  }, [])
+
+  const deleteDocument = useCallback(async (clientId: string, docId: string, path?: string) => {
+    if (path) {
+      await supabase.storage.from('documentos_clientes').remove([path])
+    }
+
+    setClients((prev) => {
+      const newClients = [...prev]
+      const clientIndex = newClients.findIndex((c) => c.id === clientId)
+      if (clientIndex === -1) return prev
+
+      const updatedDocs = (newClients[clientIndex].documents || []).filter((d) => d.id !== docId)
+
+      supabase
+        .from('clientes_externos' as any)
+        .update({ documentos: updatedDocs })
+        .eq('id', clientId)
+        .then()
+
+      newClients[clientIndex] = { ...newClients[clientIndex], documents: updatedDocs }
+      return newClients
+    })
+    toast({ title: 'Sucesso', description: 'Documento excluído.' })
+  }, [])
 
   const deleteClient = useCallback(async (id: string) => {
     const { error } = await supabase
@@ -146,8 +219,8 @@ export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
   }, [])
 
   const value = useMemo(
-    () => ({ clients, addClient, updateClient, addDocument, deleteClient }),
-    [clients, addClient, updateClient, addDocument, deleteClient],
+    () => ({ clients, addClient, updateClient, addDocument, deleteDocument, deleteClient }),
+    [clients, addClient, updateClient, addDocument, deleteDocument, deleteClient],
   )
 
   return <ClientContext.Provider value={value}>{children}</ClientContext.Provider>

@@ -1,69 +1,227 @@
-import { useNavigate } from 'react-router-dom'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState, useEffect, useMemo } from 'react'
+import { Navigate } from 'react-router-dom'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, PieChart, Pie, Cell, Legend } from 'recharts'
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import useAuthStore from '@/stores/useAuthStore'
-import { BarChart, Users, CheckSquare, TrendingUp, ShieldAlert } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { supabase } from '@/lib/supabase/client'
+import { subDays, startOfMonth, endOfMonth } from 'date-fns'
 
 export default function Reports() {
   const { role } = useAuthStore()
-  const navigate = useNavigate()
+
+  const [dateFilter, setDateFilter] = useState('30days')
+  const [leadsData, setLeadsData] = useState<any[]>([])
+  const [demandsData, setDemandsData] = useState<any[]>([])
+  const [usersData, setUsersData] = useState<any[]>([])
+
+  useEffect(() => {
+    if (role !== 'Admin') return
+
+    const fetchData = async () => {
+      const [leadsRes, demandsRes, usersRes] = await Promise.all([
+        supabase.from('leads').select('estagio, data_criacao'),
+        supabase.from('demandas').select('status, responsavel_id, data_criacao'),
+        supabase.from('usuarios').select('id, nome'),
+      ])
+
+      if (leadsRes.data) setLeadsData(leadsRes.data)
+      if (demandsRes.data) setDemandsData(demandsRes.data)
+      if (usersRes.data) setUsersData(usersRes.data)
+    }
+    fetchData()
+  }, [role])
 
   if (role !== 'Admin') {
-    return (
-      <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-        <ShieldAlert className="w-12 h-12 text-destructive mb-4" />
-        <h2 className="text-xl font-semibold mb-2">Acesso Restrito</h2>
-        <p className="text-muted-foreground mb-6">
-          Apenas administradores possuem acesso ao painel de relatórios.
-        </p>
-        <Button onClick={() => navigate('/')} variant="default">
-          Voltar ao Início
-        </Button>
-      </div>
-    )
+    return <Navigate to="/" replace />
   }
 
-  const metrics = [
-    { title: 'Total de Leads', value: '1,234', icon: Users, trend: '+12%' },
-    { title: 'Demandas Concluídas', value: '456', icon: CheckSquare, trend: '+5%' },
-    { title: 'Taxa de Conversão', value: '23%', icon: TrendingUp, trend: '+2%' },
-    { title: 'Receita Estimada', value: 'R$ 45.000', icon: BarChart, trend: '+18%' },
-  ]
+  // Filtering Logic
+  const filterByDate = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    if (dateFilter === '30days') {
+      return date >= subDays(now, 30)
+    } else if (dateFilter === 'thisMonth') {
+      return date >= startOfMonth(now) && date <= endOfMonth(now)
+    }
+    return true // allTime
+  }
+
+  const filteredLeads = leadsData.filter((d) => filterByDate(d.data_criacao))
+  const filteredDemands = demandsData.filter((d) => filterByDate(d.data_criacao))
+
+  // Leads Overview Chart Data
+  const leadsChartData = useMemo(() => {
+    const counts: Record<string, number> = {}
+    filteredLeads.forEach((l) => {
+      counts[l.estagio] = (counts[l.estagio] || 0) + 1
+    })
+    return Object.entries(counts).map(([stage, count]) => ({ stage, count }))
+  }, [filteredLeads])
+
+  // Demands Status Chart Data
+  const demandsStatusData = useMemo(() => {
+    const counts: Record<string, number> = {}
+    filteredDemands.forEach((d) => {
+      counts[d.status] = (counts[d.status] || 0) + 1
+    })
+    return Object.entries(counts).map(([status, count]) => ({ name: status, value: count }))
+  }, [filteredDemands])
+
+  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#64748b']
+
+  // Team Productivity Data
+  const teamData = useMemo(() => {
+    const userMap = new Map(usersData.map((u) => [u.id, u.nome]))
+    const counts: Record<string, { concluido: number; andamento: number }> = {}
+
+    usersData.forEach((u) => {
+      counts[u.nome] = { concluido: 0, andamento: 0 }
+    })
+
+    filteredDemands.forEach((d) => {
+      if (d.responsavel_id) {
+        const userName = userMap.get(d.responsavel_id) || 'Desconhecido'
+        if (!counts[userName]) counts[userName] = { concluido: 0, andamento: 0 }
+
+        if (d.status === 'Concluído') {
+          counts[userName].concluido += 1
+        } else if (d.status === 'Em Andamento') {
+          counts[userName].andamento += 1
+        }
+      }
+    })
+    return Object.entries(counts).map(([name, data]) => ({ name, ...data }))
+  }, [filteredDemands, usersData])
 
   return (
     <div className="h-full w-full bg-slate-50/50 dark:bg-background flex flex-col p-6 overflow-y-auto">
-      <div className="mb-6 shrink-0">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Dashboard de Análises</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Acompanhe o desempenho das equipes e indicadores-chave.
-        </p>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 shrink-0 gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Dashboard de Relatórios
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Acompanhe métricas em tempo real de demandas, leads e produtividade.
+          </p>
+        </div>
+        <Select value={dateFilter} onValueChange={setDateFilter}>
+          <SelectTrigger className="w-[180px] bg-background">
+            <SelectValue placeholder="Período" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="30days">Últimos 30 Dias</SelectItem>
+            <SelectItem value="thisMonth">Este Mês</SelectItem>
+            <SelectItem value="allTime">Todo o Período</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        {metrics.map((metric) => (
-          <Card key={metric.title} className="hover:border-primary/30 transition-colors">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {metric.title}
-              </CardTitle>
-              <metric.icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">{metric.value}</div>
-              <p className="text-xs text-emerald-600 font-medium mt-1">
-                {metric.trend} em relação ao mês anterior
-              </p>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle>Leads por Estágio</CardTitle>
+            <CardDescription>Distribuição atual de leads no funil de vendas.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer
+              config={{ count: { label: 'Leads', color: 'hsl(var(--primary))' } }}
+              className="h-[300px] w-full"
+            >
+              <BarChart data={leadsChartData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                <XAxis
+                  dataKey="stage"
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="count" fill="var(--color-count)" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle>Status das Demandas</CardTitle>
+            <CardDescription>Proporção geral de demandas ativas e concluídas.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={{}} className="h-[300px] w-full">
+              <PieChart>
+                <Pie
+                  data={demandsStatusData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {demandsStatusData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Legend verticalAlign="bottom" height={36} />
+              </PieChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
       </div>
 
-      <Card className="flex-1 min-h-[400px]">
+      <Card className="shadow-sm mb-6">
         <CardHeader>
-          <CardTitle>Desempenho Geral</CardTitle>
+          <CardTitle>Produtividade da Equipe</CardTitle>
+          <CardDescription>Comparativo de tarefas por colaborador da plataforma.</CardDescription>
         </CardHeader>
-        <CardContent className="flex items-center justify-center h-[300px] text-muted-foreground border-2 border-dashed border-border rounded-xl m-6 mt-0 bg-muted/20">
-          O gráfico de detalhamento de conversões será renderizado aqui.
+        <CardContent>
+          <ChartContainer
+            config={{
+              concluido: { label: 'Concluído', color: '#10b981' },
+              andamento: { label: 'Em Andamento', color: '#3b82f6' },
+            }}
+            className="h-[350px] w-full"
+          >
+            <BarChart data={teamData}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+              <XAxis
+                dataKey="name"
+                tickLine={false}
+                axisLine={false}
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Legend />
+              <Bar dataKey="andamento" fill="var(--color-andamento)" stackId="a" />
+              <Bar
+                dataKey="concluido"
+                fill="var(--color-concluido)"
+                stackId="a"
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          </ChartContainer>
         </CardContent>
       </Card>
     </div>

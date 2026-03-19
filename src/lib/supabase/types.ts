@@ -9,6 +9,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      clientes_externos: {
+        Row: {
+          cnpj: string | null
+          data_criacao: string
+          email: string
+          empresa: string | null
+          id: string
+          nome: string
+          telefone: string | null
+        }
+        Insert: {
+          cnpj?: string | null
+          data_criacao?: string
+          email: string
+          empresa?: string | null
+          id?: string
+          nome: string
+          telefone?: string | null
+        }
+        Update: {
+          cnpj?: string | null
+          data_criacao?: string
+          email?: string
+          empresa?: string | null
+          id?: string
+          nome?: string
+          telefone?: string | null
+        }
+        Relationships: []
+      }
       demandas: {
         Row: {
           data_criacao: string
@@ -67,6 +97,7 @@ export type Database = {
           estagio: string
           id: string
           nome: string
+          observacoes: string | null
           telefone: string | null
           usuario_id: string
         }
@@ -77,6 +108,7 @@ export type Database = {
           estagio: string
           id?: string
           nome: string
+          observacoes?: string | null
           telefone?: string | null
           usuario_id?: string
         }
@@ -87,6 +119,7 @@ export type Database = {
           estagio?: string
           id?: string
           nome?: string
+          observacoes?: string | null
           telefone?: string | null
           usuario_id?: string
         }
@@ -343,6 +376,14 @@ export const Constants = {
 // --- COLUMN TYPES (actual PostgreSQL types) ---
 // Use this to know the real database type when writing migrations.
 // "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: clientes_externos
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: text (not null)
+//   empresa: text (nullable)
+//   email: text (not null)
+//   telefone: text (nullable)
+//   cnpj: text (nullable)
+//   data_criacao: timestamp with time zone (not null, default: now())
 // Table: demandas
 //   id: uuid (not null, default: gen_random_uuid())
 //   titulo: text (not null)
@@ -364,6 +405,7 @@ export const Constants = {
 //   estagio: text (not null)
 //   data_criacao: timestamp with time zone (not null, default: now())
 //   usuario_id: uuid (not null, default: auth.uid())
+//   observacoes: text (nullable, default: ''::text)
 // Table: logs_auditoria
 //   id: uuid (not null, default: gen_random_uuid())
 //   demanda_id: uuid (nullable)
@@ -387,6 +429,8 @@ export const Constants = {
 //   ativo: boolean (not null, default: true)
 
 // --- CONSTRAINTS ---
+// Table: clientes_externos
+//   PRIMARY KEY clientes_externos_pkey: PRIMARY KEY (id)
 // Table: demandas
 //   PRIMARY KEY demandas_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY demandas_responsavel_id_fkey: FOREIGN KEY (responsavel_id) REFERENCES usuarios(id) ON DELETE SET NULL
@@ -406,6 +450,10 @@ export const Constants = {
 //   PRIMARY KEY usuarios_pkey: PRIMARY KEY (id)
 
 // --- ROW LEVEL SECURITY POLICIES ---
+// Table: clientes_externos
+//   Policy "Admins_gerenciam_clientes_externos" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: is_admin()
+//     WITH CHECK: is_admin()
 // Table: demandas
 //   Policy "Admins podem gerenciar tudo em demandas" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: is_admin()

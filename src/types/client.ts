@@ -1,7 +1,8 @@
 export interface ClientDocument {
   id: string
   name: string
-  url: string
+  url?: string
+  path?: string
   type: string
   createdAt: string
 }
