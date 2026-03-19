@@ -8,11 +8,30 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import useClientStore from '@/stores/useClientStore'
+import useAuthStore from '@/stores/useAuthStore'
+import { Trash2, ShieldAlert } from 'lucide-react'
 
 export default function Clients() {
-  const { clients } = useClientStore()
+  const { clients, deleteClient } = useClientStore()
+  const { role } = useAuthStore()
   const navigate = useNavigate()
+
+  if (role !== 'Admin') {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+        <ShieldAlert className="w-12 h-12 text-destructive mb-4" />
+        <h2 className="text-xl font-semibold mb-2">Acesso Restrito</h2>
+        <p className="text-muted-foreground mb-6">
+          Apenas administradores podem acessar a gestão de clientes externos.
+        </p>
+        <Button onClick={() => navigate('/')} variant="default">
+          Voltar ao Início
+        </Button>
+      </div>
+    )
+  }
 
   return (
     <div className="h-full w-full bg-slate-50/50 dark:bg-background flex flex-col p-6 overflow-hidden">
@@ -33,6 +52,7 @@ export default function Clients() {
                 <TableHead>Email</TableHead>
                 <TableHead>Telefone</TableHead>
                 <TableHead>CNPJ</TableHead>
+                <TableHead className="w-[80px] text-right"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -47,11 +67,25 @@ export default function Clients() {
                   <TableCell>{client.email}</TableCell>
                   <TableCell>{client.phone}</TableCell>
                   <TableCell>{client.cnpj}</TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      title="Excluir cliente"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        deleteClient(client.id)
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
               {clients.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                     Nenhum cliente encontrado.
                   </TableCell>
                 </TableRow>

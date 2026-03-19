@@ -5,6 +5,7 @@ interface ClientStoreState {
   clients: Client[]
   updateClient: (id: string, data: Partial<Client>) => void
   addDocument: (clientId: string, doc: Omit<ClientDocument, 'id' | 'createdAt'>) => void
+  deleteClient: (id: string) => void
 }
 
 const mockClients: Client[] = [
@@ -99,9 +100,13 @@ export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
     [],
   )
 
+  const deleteClient = useCallback((id: string) => {
+    setClients((prev) => prev.filter((c) => c.id !== id))
+  }, [])
+
   const value = useMemo(
-    () => ({ clients, updateClient, addDocument }),
-    [clients, updateClient, addDocument],
+    () => ({ clients, updateClient, addDocument, deleteClient }),
+    [clients, updateClient, addDocument, deleteClient],
   )
 
   return <ClientContext.Provider value={value}>{children}</ClientContext.Provider>

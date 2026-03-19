@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { COLLABORATORS, DemandStatus } from '@/types/demand'
+import { COLLABORATORS } from '@/types/demand'
 import { DemandColumn } from '@/components/demands/DemandColumn'
 import { AddDemandModal } from '@/components/demands/AddDemandModal'
 import useDemandStore from '@/stores/useDemandStore'
+import useAuthStore from '@/stores/useAuthStore'
 import { Label } from '@/components/ui/label'
 import {
   Select,
@@ -24,18 +25,31 @@ import { exportToCSV, exportToPDF } from '@/utils/export'
 
 export default function Demands() {
   const { demands } = useDemandStore()
+  const { role, userName } = useAuthStore()
+
   const [collaboratorFilter, setCollaboratorFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string[]>([])
 
-  const filteredDemands = demands.filter((d) => {
-    if (collaboratorFilter !== 'all' && d.assignee !== collaboratorFilter) return false
-    if (statusFilter.length > 0 && !statusFilter.includes(d.status)) return false
+  const baseDemands = role === 'Admin' ? demands : demands.filter((d) => d.assignee === userName)
+
+  const filteredDemands = baseDemands.filter((d) => {
+    if (role === 'Admin' && collaboratorFilter !== 'all' && d.assignee !== collaboratorFilter) {
+      return false
+    }
+    if (statusFilter.length > 0 && !statusFilter.includes(d.status)) {
+      return false
+    }
     return true
   })
 
-  const activeCollaborators = collaboratorFilter === 'all' ? COLLABORATORS : [collaboratorFilter]
+  const activeCollaborators =
+    role === 'Admin'
+      ? collaboratorFilter === 'all'
+        ? COLLABORATORS
+        : [collaboratorFilter]
+      : [userName]
 
-  const hasFilters = collaboratorFilter !== 'all' || statusFilter.length > 0
+  const hasFilters = (role === 'Admin' && collaboratorFilter !== 'all') || statusFilter.length > 0
 
   const clearFilters = () => {
     setCollaboratorFilter('all')
@@ -51,7 +65,9 @@ export default function Demands() {
               Gestão de Demandas
             </h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Acompanhe as tarefas e atribuições de toda a equipe
+              {role === 'Admin'
+                ? 'Acompanhe as tarefas e atribuições de toda a equipe'
+                : 'Acompanhe suas tarefas e atribuições'}
             </p>
           </div>
           <AddDemandModal />
@@ -59,24 +75,26 @@ export default function Demands() {
 
         <div className="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-4 mb-6 bg-card p-4 rounded-xl border shrink-0">
           <div className="flex flex-wrap items-end gap-6 w-full lg:w-auto">
-            <div className="space-y-2">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Responsável
-              </Label>
-              <Select value={collaboratorFilter} onValueChange={setCollaboratorFilter}>
-                <SelectTrigger className="w-full sm:w-[220px] bg-background">
-                  <SelectValue placeholder="Todos os colaboradores" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os colaboradores</SelectItem>
-                  {COLLABORATORS.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {role === 'Admin' && (
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Responsável
+                </Label>
+                <Select value={collaboratorFilter} onValueChange={setCollaboratorFilter}>
+                  <SelectTrigger className="w-full sm:w-[220px] bg-background">
+                    <SelectValue placeholder="Todos os colaboradores" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os colaboradores</SelectItem>
+                    {COLLABORATORS.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">

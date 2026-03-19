@@ -1,8 +1,9 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, ShieldAlert } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import useClientStore from '@/stores/useClientStore'
+import useAuthStore from '@/stores/useAuthStore'
 import { ClientForm } from '@/components/clients/ClientForm'
 import { ClientHistory } from '@/components/clients/ClientHistory'
 import { ClientDocuments } from '@/components/clients/ClientDocuments'
@@ -11,6 +12,22 @@ export default function ClientProfile() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { clients } = useClientStore()
+  const { role } = useAuthStore()
+
+  if (role !== 'Admin') {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+        <ShieldAlert className="w-12 h-12 text-destructive mb-4" />
+        <h2 className="text-xl font-semibold mb-2">Acesso Restrito</h2>
+        <p className="text-muted-foreground mb-6">
+          Apenas administradores podem acessar o perfil de clientes.
+        </p>
+        <Button onClick={() => navigate('/')} variant="default">
+          Voltar ao Início
+        </Button>
+      </div>
+    )
+  }
 
   const client = clients.find((c) => c.id === id)
 

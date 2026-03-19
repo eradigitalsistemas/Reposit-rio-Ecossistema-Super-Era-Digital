@@ -1,4 +1,4 @@
-import { Search, Bell } from 'lucide-react'
+import { Search, Bell, Shield } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -14,16 +14,30 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Badge } from '@/components/ui/badge'
 import useLeadStore from '@/stores/useLeadStore'
 import useDemandStore from '@/stores/useDemandStore'
+import useAuthStore from '@/stores/useAuthStore'
 import { useLocation } from 'react-router-dom'
 import { format } from 'date-fns'
 
 export function Header() {
   const { searchQuery, setSearchQuery } = useLeadStore()
   const { notifications, markNotificationsAsRead } = useDemandStore()
+  const { role, toggleRole } = useAuthStore()
   const location = useLocation()
 
-  const isDemandas = location.pathname === '/demandas'
-  const pageTitle = isDemandas ? 'Gestão de Demandas' : 'Pipeline de Vendas'
+  const pageTitle = (() => {
+    switch (location.pathname) {
+      case '/demandas':
+        return 'Gestão de Demandas'
+      case '/colaboradores':
+        return 'Gestão de Colaboradores'
+      case '/clientes':
+        return 'Clientes Externos'
+      case '/relatorios':
+        return 'Relatórios e Métricas'
+      default:
+        return 'Pipeline de Vendas'
+    }
+  })()
 
   const unreadCount = notifications.filter((n) => !n.read).length
 
@@ -40,7 +54,7 @@ export function Header() {
         </Breadcrumb>
 
         <div className="flex items-center gap-4 flex-1 justify-end">
-          {!isDemandas && (
+          {location.pathname === '/' && (
             <div className="relative w-full max-w-sm hidden md:block">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -52,7 +66,17 @@ export function Header() {
               />
             </div>
           )}
-          {!isDemandas && <AddLeadModal />}
+          {location.pathname === '/' && <AddLeadModal />}
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleRole}
+            className="hidden sm:flex items-center gap-2 border-primary/20 hover:bg-primary/5 transition-colors"
+          >
+            <Shield className="w-4 h-4 text-primary" />
+            <span className="font-medium">{role}</span>
+          </Button>
 
           <Popover
             onOpenChange={(open) => {

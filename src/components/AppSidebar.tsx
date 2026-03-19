@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Users, BarChart3, Settings, Building2, CheckSquare } from 'lucide-react'
+import { LayoutDashboard, Users, BarChart3, Building2, CheckSquare } from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -10,17 +10,21 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
+import useAuthStore from '@/stores/useAuthStore'
 
 const MENU_ITEMS = [
-  { title: 'Dashboard', icon: LayoutDashboard, url: '/' },
-  { title: 'Demandas', icon: CheckSquare, url: '/demandas' },
-  { title: 'Clientes', icon: Users, url: '/clientes' },
-  { title: 'Relatórios', icon: BarChart3, url: '#' },
-  { title: 'Configurações', icon: Settings, url: '#' },
+  { title: 'CRM', icon: LayoutDashboard, url: '/', roles: ['Admin', 'Colaborador'] },
+  { title: 'Demandas', icon: CheckSquare, url: '/demandas', roles: ['Admin', 'Colaborador'] },
+  { title: 'Colaboradores', icon: Users, url: '/colaboradores', roles: ['Admin'] },
+  { title: 'Clientes Externos', icon: Building2, url: '/clientes', roles: ['Admin'] },
+  { title: 'Relatórios', icon: BarChart3, url: '/relatorios', roles: ['Admin'] },
 ]
 
 export function AppSidebar() {
   const location = useLocation()
+  const { role } = useAuthStore()
+
+  const visibleItems = MENU_ITEMS.filter((item) => item.roles.includes(role))
 
   return (
     <Sidebar>
@@ -34,7 +38,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent className="py-4">
             <SidebarMenu>
-              {MENU_ITEMS.map((item) => (
+              {visibleItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild

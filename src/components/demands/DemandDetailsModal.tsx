@@ -12,7 +12,9 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import useDemandStore from '@/stores/useDemandStore'
+import useAuthStore from '@/stores/useAuthStore'
 import { format } from 'date-fns'
+import { Trash2 } from 'lucide-react'
 
 export function DemandDetailsModal({
   demand,
@@ -21,13 +23,20 @@ export function DemandDetailsModal({
   demand: Demand
   children: React.ReactNode
 }) {
+  const [open, setOpen] = useState(false)
   const [response, setResponse] = useState('')
-  const { addResponse, updateStatus } = useDemandStore()
+  const { addResponse, updateStatus, deleteDemand } = useDemandStore()
+  const { role, userName } = useAuthStore()
 
   const handleAddResponse = () => {
     if (!response.trim()) return
-    addResponse(demand.id, response, 'Usuário Logado')
+    addResponse(demand.id, response, userName)
     setResponse('')
+  }
+
+  const handleDelete = () => {
+    deleteDemand(demand.id)
+    setOpen(false)
   }
 
   const priorityColors = {
@@ -39,11 +48,24 @@ export function DemandDetailsModal({
   }
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0">
         <DialogHeader className="p-6 pb-4 border-b">
-          <DialogTitle className="text-xl leading-tight">{demand.title}</DialogTitle>
+          <div className="flex justify-between items-start pr-6 w-full gap-4">
+            <DialogTitle className="text-xl leading-tight">{demand.title}</DialogTitle>
+            {role === 'Admin' && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleDelete}
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive shrink-0 -mr-4 -mt-2"
+                title="Excluir demanda"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </DialogHeader>
 
         <ScrollArea className="flex-1 p-6">

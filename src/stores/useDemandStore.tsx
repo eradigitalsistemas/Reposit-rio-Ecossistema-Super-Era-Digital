@@ -14,6 +14,7 @@ interface DemandStoreState {
   addDemand: (demand: Omit<Demand, 'id' | 'createdAt' | 'responses'>) => void
   addResponse: (demandId: string, response: string, author: string) => void
   updateStatus: (demandId: string, status: DemandStatus) => void
+  deleteDemand: (demandId: string) => void
   markNotificationsAsRead: () => void
 }
 
@@ -155,6 +156,15 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
     [demands, addNotification],
   )
 
+  const deleteDemand = useCallback((demandId: string) => {
+    setDemands((prev) => prev.filter((d) => d.id !== demandId))
+    toast({
+      title: 'Demanda Excluída',
+      description: 'A demanda foi removida com sucesso.',
+      variant: 'destructive',
+    })
+  }, [])
+
   const value = useMemo(
     () => ({
       demands,
@@ -162,9 +172,18 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       addDemand,
       addResponse,
       updateStatus,
+      deleteDemand,
       markNotificationsAsRead,
     }),
-    [demands, notifications, addDemand, addResponse, updateStatus, markNotificationsAsRead],
+    [
+      demands,
+      notifications,
+      addDemand,
+      addResponse,
+      updateStatus,
+      deleteDemand,
+      markNotificationsAsRead,
+    ],
   )
 
   return <DemandContext.Provider value={value}>{children}</DemandContext.Provider>
