@@ -27,7 +27,7 @@ import {
   isWithinInterval,
   isSameDay,
 } from 'date-fns'
-import { Users, CheckSquare, AlertTriangle, UserCheck } from 'lucide-react'
+import { Users, CheckSquare, AlertTriangle, UserCheck, Loader2 } from 'lucide-react'
 
 interface LeadData {
   estagio: string
@@ -39,7 +39,6 @@ interface DemandData {
   prioridade: string
   responsavel_id: string | null
   data_criacao: string
-  data_vencimento: string | null
 }
 
 interface UserData {
@@ -60,32 +59,51 @@ const leadsConfig: ChartConfig = {
 const priorityConfig: ChartConfig = {
   Urgente: { label: 'Urgente', color: '#ef4444' },
   'Durante o Dia': { label: 'Durante o Dia', color: '#f59e0b' },
-  'Pode Ficar para Amanhã': { label: 'Pode Ficar para Amanhã', color: '#3b82f6' },
+  'Pode Ficar para Amanhã': { label: 'Ficar para Amanhã', color: '#3b82f6' },
 }
 
 export default function Reports() {
   const { role } = useAuthStore()
 
   const [dateFilter, setDateFilter] = useState('thisMonth')
-  const [leadsData, setLeadsData] = useState<LeadData[]>([])
-  const [demandsData, setDemandsData] = useState<DemandData[]>([])
-  const [usersData, setUsersData] = useState<UserData[]>([])
+  const [data, setData] = useState<{ leads: LeadData[]; demands: DemandData[]; users: UserData[] }>(
+    {
+      leads: [],
+      demands: [],
+      users: [],
+    },
+  )
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (role !== 'Admin') return
 
     const fetchData = async () => {
-      const [leadsRes, demandsRes, usersRes] = await Promise.all([
-        supabase.from('leads').select('estagio, data_criacao'),
-        supabase
-          .from('demandas')
-          .select('status, prioridade, responsavel_id, data_criacao, data_vencimento'),
-        supabase.from('usuarios').select('id, nome'),
-      ])
+      setLoading(true)
+      setError(null)
+      try {
+        const [leadsRes, demandsRes, usersRes] = await Promise.all([
+          supabase.from('leads').select('estagio, data_criacao'),
+          supabase.from('demandas').select('status, prioridade, responsavel_id, data_criacao'),
+          supabase.from('usuarios').select('id, nome'),
+        ])
 
-      if (leadsRes.data) setLeadsData(leadsRes.data as LeadData[])
-      if (demandsRes.data) setDemandsData(demandsRes.data as DemandData[])
-      if (usersRes.data) setUsersData(usersRes.data as UserData[])
+        if (leadsRes.error) throw leadsRes.error
+        if (demandsRes.error) throw demandsRes.error
+        if (usersRes.error) throw usersRes.error
+
+        setData({
+          leads: leadsRes.data as LeadData[],
+          demands: demandsRes.data as DemandData[],
+          users: usersRes.data as UserData[],
+        })
+      } catch (err: any) {
+        console.error(err)
+        setError('Não foi possível carregar os dados. Tente novamente mais tarde.')
+      } finally {
+        setLoading(false)
+      }
     }
     fetchData()
   }, [role])
@@ -117,25 +135,23 @@ export default function Reports() {
   )
 
   const filteredLeads = useMemo(
-    () => leadsData.filter((d) => isDateInFilter(d.data_criacao)),
-    [leadsData, isDateInFilter],
+    () => data.leads.filter((d) => isDateInFilter(d.data_criacao)),
+    [data.leads, isDateInFilter],
   )
 
   const filteredDemands = useMemo(
-    () => demandsData.filter((d) => isDateInFilter(d.data_criacao)),
-    [demandsData, isDateInFilter],
+    () => data.demands.filter((d) => isDateInFilter(d.data_criacao)),
+    [data.demands, isDateInFilter],
   )
 
+  // KPIs
   const totalLeads = filteredLeads.length
 
   const demandsToday = useMemo(() => {
     const now = new Date()
-    return demandsData.filter((d) => {
-      const isCreatedToday = d.data_criacao ? isSameDay(new Date(d.data_criacao), now) : false
-      const isDueToday = d.data_vencimento ? isSameDay(new Date(d.data_vencimento), now) : false
-      return isCreatedToday || isDueToday
-    }).length
-  }, [demandsData])
+    return data.demands.filter((d) => d.data_criacao && isSameDay(new Date(d.data_criacao), now))
+      .length
+  }, [data.demands])
 
   const urgentesAberto = useMemo(
     () =>
@@ -145,12 +161,13 @@ export default function Reports() {
 
   const leadsConvertidos = useMemo(
     () =>
-      filteredLeads.filter(
-        (d) => d.estagio === 'convertido' || d.estagio === 'finalizado' || d.estagio === 'ativo',
+      filteredLeads.filter((d) =>
+        ['convertido', 'treinamento', 'finalizado', 'pos_venda', 'ativo'].includes(d.estagio),
       ).length,
     [filteredLeads],
   )
 
+  // Charts Data
   const leadsChartData = useMemo(() => {
     const counts: Record<string, number> = {}
     filteredLeads.forEach((l) => {
@@ -184,29 +201,56 @@ export default function Reports() {
   }, [filteredDemands])
 
   const teamData = useMemo(() => {
-    const userMap = new Map(usersData.map((u) => [u.id, u.nome]))
+    const userMap = new Map(data.users.map((u) => [u.id, u.nome]))
     const counts: Record<string, number> = {}
 
-    usersData.forEach((u) => {
+    data.users.forEach((u) => {
       counts[u.nome] = 0
     })
 
     filteredDemands.forEach((d) => {
       if (d.responsavel_id) {
         const userName = userMap.get(d.responsavel_id) || 'Não Atribuído'
-        if (counts[userName] !== undefined) {
-          counts[userName] += 1
-        } else {
-          counts[userName] = 1
-        }
+        counts[userName] = (counts[userName] || 0) + 1
       }
     })
-    return Object.entries(counts).map(([name, count]) => ({ name, count }))
-  }, [filteredDemands, usersData])
+    return Object.entries(counts)
+      .map(([name, count]) => ({ name, count }))
+      .filter((item) => item.count > 0 || data.users.some((u) => u.nome === item.name))
+  }, [filteredDemands, data.users])
 
   if (role !== 'Admin') {
     return <Navigate to="/" replace />
   }
+
+  if (loading) {
+    return (
+      <div className="h-full w-full bg-slate-50/50 dark:bg-background flex items-center justify-center p-6">
+        <div className="flex flex-col items-center gap-4 text-primary">
+          <Loader2 className="w-8 h-8 animate-spin" />
+          <p className="text-sm font-medium">Carregando relatórios...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="h-full w-full bg-slate-50/50 dark:bg-background flex items-center justify-center p-6">
+        <Card className="max-w-md w-full text-center p-6 border-destructive/50 bg-destructive/10">
+          <AlertTriangle className="w-10 h-10 text-destructive mx-auto mb-4" />
+          <h2 className="text-lg font-semibold text-destructive mb-2">Erro</h2>
+          <p className="text-sm text-destructive/80">{error}</p>
+        </Card>
+      </div>
+    )
+  }
+
+  const renderEmptyState = () => (
+    <div className="h-[300px] w-full flex items-center justify-center text-sm text-muted-foreground bg-muted/20 rounded-lg border border-dashed">
+      Nenhum dado encontrado para o período selecionado.
+    </div>
+  )
 
   return (
     <div className="h-full w-full bg-slate-50/50 dark:bg-background flex flex-col p-6 overflow-y-auto">
@@ -216,11 +260,11 @@ export default function Reports() {
             Dashboard de Relatórios
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Acompanhe métricas em tempo real de demandas, leads e produtividade.
+            Acompanhe métricas de conversão, produtividade da equipe e prioridades.
           </p>
         </div>
         <Select value={dateFilter} onValueChange={setDateFilter}>
-          <SelectTrigger className="w-[180px] bg-background">
+          <SelectTrigger className="w-[180px] bg-background shadow-sm">
             <SelectValue placeholder="Período" />
           </SelectTrigger>
           <SelectContent>
@@ -239,7 +283,7 @@ export default function Reports() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalLeads}</div>
-            <p className="text-xs text-muted-foreground">No período selecionado</p>
+            <p className="text-xs text-muted-foreground">Criados no período selecionado</p>
           </CardContent>
         </Card>
         <Card>
@@ -249,7 +293,7 @@ export default function Reports() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{demandsToday}</div>
-            <p className="text-xs text-muted-foreground">Criadas ou com vencimento hoje</p>
+            <p className="text-xs text-muted-foreground">Criadas hoje (Independente do filtro)</p>
           </CardContent>
         </Card>
         <Card>
@@ -259,7 +303,7 @@ export default function Reports() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{urgentesAberto}</div>
-            <p className="text-xs text-muted-foreground">Em aberto no período</p>
+            <p className="text-xs text-muted-foreground">Em aberto no período selecionado</p>
           </CardContent>
         </Card>
         <Card>
@@ -281,25 +325,29 @@ export default function Reports() {
             <CardDescription>Volume de leads por estágio do funil.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={leadsConfig} className="h-[300px] w-full">
-              <PieChart>
-                <Pie
-                  data={leadsChartData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {leadsChartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Pie>
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Legend verticalAlign="bottom" height={36} />
-              </PieChart>
-            </ChartContainer>
+            {leadsChartData.length === 0 ? (
+              renderEmptyState()
+            ) : (
+              <ChartContainer config={leadsConfig} className="h-[300px] w-full">
+                <PieChart>
+                  <Pie
+                    data={leadsChartData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {leadsChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Legend verticalAlign="bottom" height={36} />
+                </PieChart>
+              </ChartContainer>
+            )}
           </CardContent>
         </Card>
 
@@ -309,25 +357,29 @@ export default function Reports() {
             <CardDescription>Volume de tarefas por nível de prioridade.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={priorityConfig} className="h-[300px] w-full">
-              <PieChart>
-                <Pie
-                  data={demandsPriorityData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {demandsPriorityData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Pie>
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Legend verticalAlign="bottom" height={36} />
-              </PieChart>
-            </ChartContainer>
+            {demandsPriorityData.length === 0 ? (
+              renderEmptyState()
+            ) : (
+              <ChartContainer config={priorityConfig} className="h-[300px] w-full">
+                <PieChart>
+                  <Pie
+                    data={demandsPriorityData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {demandsPriorityData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Legend verticalAlign="bottom" height={36} />
+                </PieChart>
+              </ChartContainer>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -338,27 +390,34 @@ export default function Reports() {
           <CardDescription>Volume de demandas atribuídas por colaborador.</CardDescription>
         </CardHeader>
         <CardContent>
-          <ChartContainer
-            config={{ count: { label: 'Demandas', color: 'hsl(var(--primary))' } }}
-            className="h-[350px] w-full"
-          >
-            <BarChart data={teamData}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-              <XAxis
-                dataKey="name"
-                tickLine={false}
-                axisLine={false}
-                tick={{ fill: 'hsl(var(--muted-foreground))' }}
-              />
-              <YAxis
-                tickLine={false}
-                axisLine={false}
-                tick={{ fill: 'hsl(var(--muted-foreground))' }}
-              />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <Bar dataKey="count" fill="var(--color-count)" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ChartContainer>
+          {filteredDemands.length === 0 ? (
+            <div className="h-[350px] w-full flex items-center justify-center text-sm text-muted-foreground bg-muted/20 rounded-lg border border-dashed">
+              Nenhuma demanda encontrada para o período selecionado.
+            </div>
+          ) : (
+            <ChartContainer
+              config={{ count: { label: 'Demandas', color: 'hsl(var(--primary))' } }}
+              className="h-[350px] w-full"
+            >
+              <BarChart data={teamData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                <XAxis
+                  dataKey="name"
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                  allowDecimals={false}
+                />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="count" fill="var(--color-count)" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ChartContainer>
+          )}
         </CardContent>
       </Card>
     </div>
