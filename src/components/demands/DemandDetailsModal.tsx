@@ -28,6 +28,7 @@ import useDemandStore from '@/stores/useDemandStore'
 import useAuthStore from '@/stores/useAuthStore'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from '@/hooks/use-toast'
+import { sanitizeFilename } from '@/lib/utils'
 
 interface DemandDetailsModalProps {
   open: boolean
@@ -62,7 +63,8 @@ export function DemandDetailsModal({
     const newAttachments: DemandAttachment[] = []
 
     for (const file of Array.from(e.target.files)) {
-      const fileName = `${crypto.randomUUID()}_${file.name}`
+      const sanitizedName = sanitizeFilename(file.name)
+      const fileName = `${crypto.randomUUID()}_${sanitizedName}`
       const { data } = await supabase.storage.from('demandas_anexos').upload(fileName, file)
       if (data) {
         newAttachments.push({ name: file.name, url: data.path, type: file.type })

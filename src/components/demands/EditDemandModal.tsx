@@ -23,6 +23,8 @@ import { Demand, DemandPriority, DemandAttachment } from '@/types/demand'
 import { supabase } from '@/lib/supabase/client'
 import { format } from 'date-fns'
 import { Paperclip, X, File as FileIcon, Image as ImageIcon } from 'lucide-react'
+import { sanitizeFilename } from '@/lib/utils'
+import { toast } from '@/hooks/use-toast'
 
 interface EditDemandModalProps {
   open: boolean
@@ -52,6 +54,22 @@ export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalP
   const removeExistingFile = (index: number) =>
     setExistingAttachments((prev) => prev.filter((_, i) => i !== index))
 
+  const handleDownload = async (attachment: DemandAttachment) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('demandas_anexos')
+        .createSignedUrl(attachment.url, 3600)
+      if (error) throw error
+      window.open(data.signedUrl, '_blank')
+    } catch (err) {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível acessar o arquivo.',
+        variant: 'destructive',
+      })
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setLoading(true)
@@ -59,7 +77,8 @@ export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalP
     const attachments: DemandAttachment[] = [...existingAttachments]
 
     for (const file of newFiles) {
-      const fileName = `${crypto.randomUUID()}_${file.name}`
+      const sanitizedName = sanitizeFilename(file.name)
+      const fileName = `${crypto.randomUUID()}_${sanitizedName}`
       const { data } = await supabase.storage.from('demandas_anexos').upload(fileName, file)
       if (data) attachments.push({ name: file.name, url: data.path, type: file.type })
     }
@@ -190,15 +209,19 @@ export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalP
                       key={`ext-${i}`}
                       className="flex items-center justify-between bg-white/5 border border-white/10 rounded-md p-2 text-sm"
                     >
-                      <div className="flex items-center gap-2 overflow-hidden">
+                      <div className="flex items-center gap-2 overflow-hidden flex-1 pr-2">
                         {file.type.startsWith('image/') ? (
                           <ImageIcon className="w-4 h-4 shrink-0 text-white/50" />
                         ) : (
                           <FileIcon className="w-4 h-4 shrink-0 text-white/50" />
                         )}
-                        <span className="truncate text-primary hover:underline cursor-default">
+                        <button
+                          type="button"
+                          onClick={() => handleDownload(file)}
+                          className="truncate text-primary hover:underline text-left"
+                        >
                           {file.name}
-                        </span>
+                        </button>
                       </div>
                       <button
                         type="button"

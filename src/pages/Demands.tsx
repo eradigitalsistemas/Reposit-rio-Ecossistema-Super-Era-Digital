@@ -26,7 +26,7 @@ import { useSearchParams } from 'react-router-dom'
 
 export default function Demands() {
   const { demands, collaborators } = useDemandStore()
-  const { role, userName } = useAuthStore()
+  const { role, user } = useAuthStore()
 
   const [collaboratorFilter, setCollaboratorFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string[]>([])
@@ -55,7 +55,7 @@ export default function Demands() {
 
   const filteredDemands = useMemo(() => {
     return demands.filter((d) => {
-      if (role !== 'Admin' && d.assignee !== userName && d.assignee !== 'Não Atribuído') {
+      if (role !== 'Admin' && d.assigneeId !== user?.id) {
         return false
       }
       if (role === 'Admin' && collaboratorFilter !== 'all' && d.assignee !== collaboratorFilter) {
@@ -63,7 +63,7 @@ export default function Demands() {
       }
       return true
     })
-  }, [demands, role, userName, collaboratorFilter])
+  }, [demands, role, user?.id, collaboratorFilter])
 
   const hasFilters = (role === 'Admin' && collaboratorFilter !== 'all') || statusFilter.length > 0
 

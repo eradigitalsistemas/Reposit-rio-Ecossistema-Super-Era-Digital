@@ -59,12 +59,18 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchDemands = useCallback(async () => {
     if (!user) return
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('demandas')
         .select(
           '*, responsavel:usuarios(nome), logs_auditoria(id, acao, detalhes, usuario_id, dados_novos, data_criacao)',
         )
         .order('data_criacao', { ascending: false })
+
+      if (role !== 'Admin') {
+        query = query.eq('responsavel_id', user.id)
+      }
+
+      const { data, error } = await query
 
       if (error) return console.error('Error fetching demands:', error)
 
@@ -115,7 +121,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (e) {
       console.error(e)
     }
-  }, [user])
+  }, [user, role])
 
   const fetchCollaborators = useCallback(async () => {
     if (!user) return
@@ -241,30 +247,30 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             anexos: newDemand.attachments || [],
           })
           .select('*, responsavel:usuarios(nome)')
-          .single()
 
         if (error) throw error
-        if (data) {
+        if (data && data.length > 0) {
+          const d = data[0]
           setDemands((prev) => [
             {
-              id: data.id,
-              title: data.titulo,
-              description: data.descricao || '',
-              priority: data.prioridade as DemandPriority,
-              status: data.status as DemandStatus,
-              dueDate: data.data_vencimento,
-              assignee: (data as any).responsavel?.nome || 'Sem responsável',
-              assigneeId: data.responsavel_id,
+              id: d.id,
+              title: d.titulo,
+              description: d.descricao || '',
+              priority: d.prioridade as DemandPriority,
+              status: d.status as DemandStatus,
+              dueDate: d.data_vencimento,
+              assignee: (d as any).responsavel?.nome || 'Sem responsável',
+              assigneeId: d.responsavel_id,
               responses: [],
               logs: [],
-              attachments: data.anexos || [],
-              createdAt: data.data_criacao,
+              attachments: d.anexos || [],
+              createdAt: d.data_criacao,
               systemEscalated: false,
             },
             ...prev,
           ])
-          toast({ title: 'Nova Demanda Criada', description: `A tarefa foi adicionada.` })
         }
+        toast({ title: 'Nova Demanda Criada', description: `A tarefa foi adicionada.` })
       } catch (e) {
         toast({
           title: 'Erro',
@@ -284,14 +290,27 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       },
     ) => {
       try {
+        const currentDemand = demands.find((d) => d.id === demandId)
         const updateData: any = {}
+        let statusChangedToPending = false
+
         if (updates.title !== undefined) updateData.titulo = updates.title
         if (updates.description !== undefined) updateData.descricao = updates.description
         if (updates.priority !== undefined) updateData.prioridade = updates.priority
         if (updates.dueDate !== undefined) updateData.data_vencimento = updates.dueDate
-        if (updates.assigneeId !== undefined) updateData.responsavel_id = updates.assigneeId
-        if (updates.status !== undefined) updateData.status = updates.status
         if (updates.attachments !== undefined) updateData.anexos = updates.attachments
+
+        if (updates.assigneeId !== undefined) {
+          updateData.responsavel_id = updates.assigneeId
+          if (currentDemand && updates.assigneeId !== currentDemand.assigneeId) {
+            updateData.status = 'Pendente'
+            statusChangedToPending = true
+          }
+        }
+
+        if (updates.status !== undefined && !statusChangedToPending) {
+          updateData.status = updates.status
+        }
 
         const { error } = await supabase.from('demandas').update(updateData).eq('id', demandId)
         if (error) throw error
@@ -306,7 +325,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         })
       }
     },
-    [fetchDemands],
+    [fetchDemands, demands],
   )
 
   const updateStatus = useCallback(async (demandId: string, status: DemandStatus) => {
