@@ -1,15 +1,18 @@
-import { Building, Phone, Mail } from 'lucide-react'
+import { Building, Phone, Mail, Trash2 } from 'lucide-react'
 import { Lead } from '@/types/crm'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Button } from '@/components/ui/button'
 import useLeadStore from '@/stores/useLeadStore'
+import useAuthStore from '@/stores/useAuthStore'
 
 interface KanbanCardProps {
   lead: Lead
 }
 
 export function KanbanCard({ lead }: KanbanCardProps) {
-  const { updateTrainingStep } = useLeadStore()
+  const { updateTrainingStep, deleteLead } = useLeadStore()
+  const { role } = useAuthStore()
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
     e.dataTransfer.setData('leadId', lead.id)
@@ -29,15 +32,33 @@ export function KanbanCard({ lead }: KanbanCardProps) {
     }
   }
 
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    deleteLead(lead.id)
+  }
+
   return (
     <Card
       draggable
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
-      className="cursor-grab active:cursor-grabbing hover:border-primary/40 hover:shadow-md transition-all duration-150 animate-fade-in-up"
+      className="cursor-grab active:cursor-grabbing hover:border-primary/40 hover:shadow-md transition-all duration-150 animate-fade-in-up group relative"
     >
+      {role === 'Admin' && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10 z-10"
+          onClick={handleDelete}
+          title="Excluir Lead"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </Button>
+      )}
       <CardContent className="p-4 space-y-3">
-        <div className="font-semibold text-base leading-tight text-foreground">{lead.name}</div>
+        <div className="font-semibold text-base leading-tight text-foreground pr-6">
+          {lead.name}
+        </div>
 
         <div className="space-y-1.5 text-sm text-muted-foreground">
           {lead.company && (

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useMemo, useCallback } from 'react'
 import { Lead, LeadStage } from '@/types/crm'
+import { toast } from '@/hooks/use-toast'
 
 interface LeadStoreState {
   leads: Lead[]
@@ -8,6 +9,7 @@ interface LeadStoreState {
   addLead: (lead: Omit<Lead, 'id' | 'createdAt'>) => void
   moveLead: (id: string, newStage: LeadStage) => void
   updateTrainingStep: (id: string, step: 1 | 2 | 3) => void
+  deleteLead: (id: string) => void
 }
 
 const mockLeads: Lead[] = [
@@ -91,9 +93,26 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
     )
   }, [])
 
+  const deleteLead = useCallback((id: string) => {
+    setLeads((prev) => prev.filter((lead) => lead.id !== id))
+    toast({
+      title: 'Lead Excluído',
+      description: 'O lead foi removido com sucesso.',
+      variant: 'destructive',
+    })
+  }, [])
+
   const value = useMemo(
-    () => ({ leads, searchQuery, setSearchQuery, addLead, moveLead, updateTrainingStep }),
-    [leads, searchQuery, addLead, moveLead, updateTrainingStep],
+    () => ({
+      leads,
+      searchQuery,
+      setSearchQuery,
+      addLead,
+      moveLead,
+      updateTrainingStep,
+      deleteLead,
+    }),
+    [leads, searchQuery, addLead, moveLead, updateTrainingStep, deleteLead],
   )
 
   return <LeadContext.Provider value={value}>{children}</LeadContext.Provider>
