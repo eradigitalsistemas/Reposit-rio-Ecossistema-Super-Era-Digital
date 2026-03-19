@@ -44,7 +44,10 @@ export function AddLeadModal() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2 shrink-0 h-10 sm:h-10 w-10 sm:w-auto p-0 sm:px-4 sm:py-2">
+        <Button
+          variant="default"
+          className="gap-2 shrink-0 h-10 sm:h-10 w-10 sm:w-auto p-0 sm:px-4 sm:py-2 text-black font-bold"
+        >
           <Plus className="w-5 h-5 sm:w-4 sm:h-4" />
           <span className="hidden sm:inline">Novo Lead</span>
         </Button>
@@ -88,7 +91,11 @@ export function AddLeadModal() {
             >
               Cancelar
             </Button>
-            <Button type="submit" className="w-full sm:w-auto">
+            <Button
+              type="submit"
+              variant="default"
+              className="w-full sm:w-auto text-black font-bold"
+            >
               Salvar Lead
             </Button>
           </DialogFooter>

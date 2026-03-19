@@ -21,7 +21,7 @@ export function KanbanCard({ lead }: KanbanCardProps) {
     <Card
       draggable
       onDragStart={handleDragStart}
-      className="cursor-grab active:cursor-grabbing hover:border-primary/50 transition-all duration-200 bg-card border-border shadow-sm hover:shadow-[0_0_10px_rgba(34,197,94,0.1)] relative group touch-manipulation"
+      className="cursor-grab active:cursor-grabbing hover:border-primary/50 transition-all duration-200 bg-[rgba(255,255,255,0.05)] border-white/10 shadow-sm hover:shadow-[0_0_10px_rgba(34,197,94,0.1)] relative group touch-manipulation"
     >
       <CardContent className="p-4 sm:p-3 flex flex-col gap-2.5 sm:gap-2">
         <div className="flex justify-between items-start gap-2">
@@ -29,11 +29,11 @@ export function KanbanCard({ lead }: KanbanCardProps) {
             {lead.stage === 'ativo' && (
               <div className="mt-1.5 sm:mt-1.5 h-2 w-2 rounded-full bg-primary shadow-[0_0_5px_rgba(34,197,94,0.8)] shrink-0" />
             )}
-            <h4 className="font-semibold sm:font-medium text-base sm:text-sm text-foreground leading-tight pr-24 sm:pr-24">
+            <h4 className="font-semibold sm:font-medium text-base sm:text-sm text-white leading-tight pr-24 sm:pr-24">
               {lead.name}
             </h4>
           </div>
-          <div className="flex items-center gap-0.5 absolute right-2 top-2 sm:right-1.5 sm:top-1.5 bg-card/90 backdrop-blur-sm rounded-md px-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10">
+          <div className="flex items-center gap-0.5 absolute right-2 top-2 sm:right-1.5 sm:top-1.5 bg-black/90 backdrop-blur-sm rounded-md px-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10">
             <LeadHistorySheet lead={lead} />
             <EditLeadModal lead={lead} />
             <DeleteLeadAlert lead={lead} />
@@ -41,7 +41,7 @@ export function KanbanCard({ lead }: KanbanCardProps) {
         </div>
 
         {lead.company && (
-          <div className="flex items-center text-sm sm:text-xs text-muted-foreground mt-0.5">
+          <div className="flex items-center text-sm sm:text-xs text-white/60 mt-0.5">
             <Building2 className="w-4 h-4 sm:w-3 sm:h-3 mr-1.5 sm:mr-1 shrink-0" />
             <span className="truncate">{lead.company}</span>
           </div>
@@ -51,7 +51,7 @@ export function KanbanCard({ lead }: KanbanCardProps) {
           {lead.email && (
             <Badge
               variant="outline"
-              className="text-xs sm:text-[10px] px-2 sm:px-1.5 py-0.5 sm:py-0 h-6 sm:h-4 bg-transparent text-muted-foreground border-border group-hover:border-primary/30 transition-colors"
+              className="text-xs sm:text-[10px] px-2 sm:px-1.5 py-0.5 sm:py-0 h-6 sm:h-4 bg-transparent text-white/60 border-white/20 group-hover:border-primary/30 transition-colors"
             >
               <Mail className="w-3.5 h-3.5 sm:w-3 sm:h-3 mr-1" />
               Email
@@ -60,7 +60,7 @@ export function KanbanCard({ lead }: KanbanCardProps) {
           {lead.phone && (
             <Badge
               variant="outline"
-              className="text-xs sm:text-[10px] px-2 sm:px-1.5 py-0.5 sm:py-0 h-6 sm:h-4 bg-transparent text-muted-foreground border-border group-hover:border-primary/30 transition-colors"
+              className="text-xs sm:text-[10px] px-2 sm:px-1.5 py-0.5 sm:py-0 h-6 sm:h-4 bg-transparent text-white/60 border-white/20 group-hover:border-primary/30 transition-colors"
             >
               <Phone className="w-3.5 h-3.5 sm:w-3 sm:h-3 mr-1" />
               Telefone

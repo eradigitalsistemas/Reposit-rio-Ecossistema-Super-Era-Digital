@@ -67,10 +67,10 @@ export default function Collaborators() {
 
   if (role !== 'Admin') {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-        <ShieldAlert className="w-12 h-12 text-destructive mb-4" />
+      <div className="flex flex-col items-center justify-center h-full p-6 text-center bg-background text-white">
+        <ShieldAlert className="w-12 h-12 text-white/50 mb-4" />
         <h2 className="text-xl font-semibold mb-2">Acesso Restrito</h2>
-        <p className="text-muted-foreground mb-6">
+        <p className="text-white/60 mb-6">
           Apenas administradores podem acessar a gestão de colaboradores.
         </p>
         <Button onClick={() => navigate('/')}>Voltar ao Início</Button>
@@ -99,24 +99,28 @@ export default function Collaborators() {
   }
 
   return (
-    <div className="h-full w-full bg-slate-50/50 dark:bg-background flex flex-col p-4 sm:p-6 overflow-y-auto sm:overflow-hidden">
+    <div className="h-full w-full bg-background flex flex-col p-4 sm:p-6 overflow-y-auto sm:overflow-hidden">
       <div className="mb-6 shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Equipe e Acessos</h1>
-          <p className="text-muted-foreground text-sm mt-1">
+          <h1 className="text-2xl font-bold tracking-tight text-white">Equipe e Acessos</h1>
+          <p className="text-white/60 text-sm mt-1">
             Gerencie os colaboradores, departamentos e níveis de acesso ao sistema.
           </p>
         </div>
-        <Button onClick={handleCreate} className="w-full sm:w-auto">
+        <Button
+          variant="default"
+          onClick={handleCreate}
+          className="w-full sm:w-auto text-black font-bold"
+        >
           <Plus className="w-4 h-4 mr-2" />
           Novo Colaborador
         </Button>
       </div>
 
-      <Card className="hidden md:flex flex-1 overflow-hidden flex-col">
+      <Card className="hidden md:flex flex-1 overflow-hidden flex-col bg-[rgba(255,255,255,0.02)] border-white/10 shadow-subtle">
         <CardContent className="p-0 overflow-auto flex-1">
           <Table>
-            <TableHeader className="sticky top-0 bg-background z-10">
+            <TableHeader className="sticky top-0 bg-black/40 backdrop-blur-md z-10">
               <TableRow>
                 <TableHead>Nome</TableHead>
                 <TableHead>Email</TableHead>
@@ -127,21 +131,21 @@ export default function Collaborators() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={4} className="text-center py-8 text-white/40">
                     Carregando...
                   </TableCell>
                 </TableRow>
               ) : users.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={4} className="text-center py-8 text-white/40">
                     Nenhum colaborador encontrado.
                   </TableCell>
                 </TableRow>
               ) : (
                 users.map((user) => (
-                  <TableRow key={user.id} className="hover:bg-muted/50 transition-colors">
-                    <TableCell className="font-medium">{user.nome}</TableCell>
-                    <TableCell className="text-muted-foreground">{user.email}</TableCell>
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium text-white">{user.nome}</TableCell>
+                    <TableCell className="text-white/60">{user.email}</TableCell>
                     <TableCell>
                       <Badge variant={user.perfil === 'admin' ? 'default' : 'secondary'}>
                         {user.perfil === 'admin' ? 'Admin' : 'Colaborador'}
@@ -154,24 +158,27 @@ export default function Collaborators() {
                           size="icon"
                           onClick={() => handleView(user)}
                           title="Ver Detalhes"
+                          className="hover:text-primary hover:bg-primary/10"
                         >
-                          <Eye className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+                          <Eye className="w-4 h-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => handleEdit(user)}
                           title="Editar"
+                          className="hover:text-primary hover:bg-primary/10"
                         >
-                          <Pencil className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+                          <Pencil className="w-4 h-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => handleDelete(user)}
                           title="Remover"
+                          className="hover:text-primary hover:bg-primary/10"
                         >
-                          <Trash2 className="w-4 h-4 text-destructive hover:text-destructive/80" />
+                          <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
                     </TableCell>
@@ -186,13 +193,13 @@ export default function Collaborators() {
       {/* Mobile View */}
       <div className="flex flex-col gap-4 md:hidden pb-6">
         {loading ? (
-          <div className="text-center py-8 text-muted-foreground">Carregando...</div>
+          <div className="text-center py-8 text-white/40">Carregando...</div>
         ) : (
           users.map((user) => (
-            <Card key={user.id}>
+            <Card key={user.id} className="bg-[rgba(255,255,255,0.05)] border-white/10">
               <CardContent className="p-4 flex flex-col gap-3">
                 <div className="flex justify-between items-start gap-2">
-                  <div className="font-semibold text-lg leading-tight">{user.nome}</div>
+                  <div className="font-semibold text-lg leading-tight text-white">{user.nome}</div>
                   <Badge
                     variant={user.perfil === 'admin' ? 'default' : 'secondary'}
                     className="shrink-0"
@@ -201,23 +208,33 @@ export default function Collaborators() {
                   </Badge>
                 </div>
                 <div className="space-y-1.5 mt-1">
-                  <div className="text-sm flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <div className="text-sm flex items-center gap-2 text-white/60">
+                    <Mail className="w-4 h-4 shrink-0" />
                     <span className="truncate">{user.email}</span>
                   </div>
                 </div>
-                <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t">
-                  <Button variant="outline" size="sm" onClick={() => handleView(user)}>
+                <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-white/10">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleView(user)}
+                    className="hover:text-primary"
+                  >
                     <Eye className="w-4 h-4" />
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => handleEdit(user)}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEdit(user)}
+                    className="hover:text-primary"
+                  >
                     <Pencil className="w-4 h-4" />
                   </Button>
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
                     onClick={() => handleDelete(user)}
-                    className="text-destructive border-destructive hover:bg-destructive/10"
+                    className="hover:text-primary"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>

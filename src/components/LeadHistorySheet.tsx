@@ -125,7 +125,7 @@ export function LeadHistorySheet({ lead }: LeadHistorySheetProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 text-muted-foreground hover:text-primary"
+          className="h-7 w-7 text-white/60 hover:text-primary hover:bg-white/10"
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => e.stopPropagation()}
         >
@@ -137,7 +137,7 @@ export function LeadHistorySheet({ lead }: LeadHistorySheetProps) {
         className="w-[95vw] sm:max-w-md flex flex-col gap-0 p-0"
         onPointerDown={(e) => e.stopPropagation()}
       >
-        <div className="p-6 pb-4 border-b border-border">
+        <div className="p-6 pb-4 border-b border-white/10">
           <SheetHeader>
             <SheetTitle>Histórico do Lead</SheetTitle>
             <SheetDescription>Linha do tempo de interações com {lead.name}</SheetDescription>
@@ -147,22 +147,20 @@ export function LeadHistorySheet({ lead }: LeadHistorySheetProps) {
         <ScrollArea className="flex-1 p-6">
           {loading ? (
             <div className="flex justify-center items-center py-8">
-              <span className="text-sm text-muted-foreground animate-pulse">
-                Carregando histórico...
-              </span>
+              <span className="text-sm text-white/40 animate-pulse">Carregando histórico...</span>
             </div>
           ) : (
-            <div className="relative border-l border-border ml-3 space-y-6 pb-6">
+            <div className="relative border-l border-white/10 ml-3 space-y-6 pb-6">
               {history.map((item) => (
                 <div key={item.id} className="relative pl-6">
                   <div className="absolute -left-[5px] top-1 h-2.5 w-2.5 rounded-full border-2 border-background bg-primary shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
 
                   <div className="flex flex-col gap-2">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4">
-                      <h4 className="text-sm font-semibold text-foreground leading-none mt-0.5">
+                      <h4 className="text-sm font-semibold text-white leading-none mt-0.5">
                         {item.title}
                       </h4>
-                      <time className="text-xs text-muted-foreground whitespace-nowrap flex items-center gap-1 shrink-0">
+                      <time className="text-xs text-white/60 whitespace-nowrap flex items-center gap-1 shrink-0">
                         <Clock className="w-3 h-3" />
                         {formatTimelineDate(item.date)}
                       </time>
@@ -171,13 +169,13 @@ export function LeadHistorySheet({ lead }: LeadHistorySheetProps) {
                     {item.type === 'interaction' && (
                       <div className="flex flex-wrap gap-2 mt-1">
                         {item.contact && (
-                          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-secondary/50 text-xs text-secondary-foreground border border-border/50">
+                          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[rgba(255,255,255,0.05)] text-xs text-white border border-white/10">
                             <User className="w-3 h-3" />
                             {item.contact}
                           </div>
                         )}
                         {item.method && (
-                          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-secondary/50 text-xs text-secondary-foreground border border-border/50">
+                          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[rgba(255,255,255,0.05)] text-xs text-white border border-white/10">
                             {getMethodIcon(item.method)}
                             {item.method}
                           </div>
@@ -185,7 +183,7 @@ export function LeadHistorySheet({ lead }: LeadHistorySheetProps) {
                       </div>
                     )}
 
-                    <div className="text-sm text-muted-foreground bg-secondary/20 p-3 rounded-lg border border-border/50 mt-1 whitespace-pre-wrap">
+                    <div className="text-sm text-white/70 bg-[rgba(255,255,255,0.02)] p-3 rounded-lg border border-white/10 mt-1 whitespace-pre-wrap">
                       {item.details}
                     </div>
                   </div>

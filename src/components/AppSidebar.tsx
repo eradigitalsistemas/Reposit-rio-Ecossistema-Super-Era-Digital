@@ -51,14 +51,14 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="h-16 flex items-center px-6 border-b border-border bg-sidebar shrink-0">
+      <SidebarHeader className="h-16 flex items-center px-6 border-b border-white/10 bg-sidebar shrink-0">
         <Link
           to="/"
           onClick={handleLinkClick}
-          className="flex items-center gap-2 font-bold text-lg text-primary hover:text-primary/80 transition-colors"
+          className="flex items-center gap-2 font-bold text-lg text-white hover:text-white/80 transition-colors"
         >
-          <div className="p-1 bg-primary/10 rounded-md ring-1 ring-primary/30">
-            <Building2 className="w-5 h-5" />
+          <div className="p-1 bg-white/10 rounded-md ring-1 ring-white/30">
+            <Building2 className="w-5 h-5 text-white" />
           </div>
           <span>Era Digital</span>
         </Link>
@@ -81,7 +81,7 @@ export function AppSidebar() {
                     <Link
                       to={item.url}
                       onClick={handleLinkClick}
-                      className="flex items-center gap-3"
+                      className="flex items-center gap-3 text-white/80 hover:text-white"
                     >
                       <item.icon className="w-5 h-5" />
                       <span className="text-base md:text-sm font-medium">{item.title}</span>
@@ -93,13 +93,13 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="p-4 border-t border-border shrink-0 mt-auto pb-8 md:pb-4">
+      <SidebarFooter className="p-4 border-t border-white/10 shrink-0 mt-auto pb-8 md:pb-4">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
               variant="outline"
-              className="w-full justify-center text-primary border-primary/20 hover:bg-primary/10 transition-colors h-12 md:h-10"
+              className="w-full justify-center text-white border-white/20 hover:bg-white/10 transition-colors h-12 md:h-10"
             >
               <Link
                 to="/portal/login"

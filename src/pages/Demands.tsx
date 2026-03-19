@@ -73,14 +73,14 @@ export default function Demands() {
   }
 
   return (
-    <div className="flex flex-col flex-1 h-full w-full bg-slate-50/50 dark:bg-background overflow-hidden min-h-0">
+    <div className="flex flex-col flex-1 h-full w-full bg-background overflow-hidden min-h-0">
       <div className="flex flex-col flex-1 p-4 sm:p-6 min-h-0">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 shrink-0 gap-4">
           <div>
-            <h1 className="text-2xl sm:text-2xl font-bold tracking-tight text-foreground">
+            <h1 className="text-2xl sm:text-2xl font-bold tracking-tight text-white">
               Gestão de Demandas
             </h1>
-            <p className="text-muted-foreground text-sm mt-1">
+            <p className="text-white/60 text-sm mt-1">
               {role === 'Admin'
                 ? 'Acompanhe as tarefas e atribuições de toda a equipe'
                 : 'Acompanhe suas tarefas e atribuições no Kanban'}
@@ -89,15 +89,15 @@ export default function Demands() {
           <div className="w-full sm:w-auto">{role === 'Admin' && <AddDemandModal />}</div>
         </div>
 
-        <div className="flex flex-col xl:flex-row items-start xl:items-end justify-between gap-4 mb-6 bg-card p-4 rounded-xl border shrink-0">
+        <div className="flex flex-col xl:flex-row items-start xl:items-end justify-between gap-4 mb-6 bg-[rgba(255,255,255,0.05)] border-white/10 p-4 rounded-xl border shrink-0">
           <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-end gap-4 sm:gap-6 w-full xl:w-auto">
             {role === 'Admin' && (
               <div className="space-y-2 w-full sm:w-auto">
-                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <Label className="text-xs font-semibold text-white/60 uppercase tracking-wider">
                   Filtrar por Responsável
                 </Label>
                 <Select value={collaboratorFilter} onValueChange={setCollaboratorFilter}>
-                  <SelectTrigger className="w-full sm:w-[220px] bg-background h-11 sm:h-10">
+                  <SelectTrigger className="w-full sm:w-[220px] h-11 sm:h-10">
                     <SelectValue placeholder="Todos os colaboradores" />
                   </SelectTrigger>
                   <SelectContent>
@@ -114,7 +114,7 @@ export default function Demands() {
             )}
 
             <div className="space-y-2 w-full sm:w-auto">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+              <Label className="text-xs font-semibold text-white/60 uppercase tracking-wider flex items-center gap-1">
                 <Columns className="w-3 h-3" />
                 Colunas Visíveis
               </Label>
@@ -123,23 +123,23 @@ export default function Demands() {
                 variant="outline"
                 value={statusFilter}
                 onValueChange={setStatusFilter}
-                className="bg-background rounded-md min-h-[40px] p-1 border justify-start flex-wrap sm:flex-nowrap w-full"
+                className="bg-black/50 rounded-md min-h-[40px] p-1 border border-white/10 justify-start flex-wrap sm:flex-nowrap w-full"
               >
                 <ToggleGroupItem
                   value="Pendente"
-                  className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none data-[state=on]:bg-primary/20 data-[state=on]:text-primary border-transparent data-[state=on]:border-primary/30"
+                  className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none text-white/60 data-[state=on]:bg-white/10 data-[state=on]:text-white border-transparent data-[state=on]:border-white/20"
                 >
                   Pendente
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="Em Andamento"
-                  className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none data-[state=on]:bg-blue-500/20 data-[state=on]:text-blue-400 border-transparent data-[state=on]:border-blue-500/30"
+                  className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none text-white/60 data-[state=on]:bg-white/10 data-[state=on]:text-white border-transparent data-[state=on]:border-white/20"
                 >
                   Em Andamento
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="Concluído"
-                  className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none data-[state=on]:bg-emerald-500/20 data-[state=on]:text-emerald-400 border-transparent data-[state=on]:border-emerald-500/30"
+                  className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none text-white/60 data-[state=on]:bg-white/10 data-[state=on]:text-white border-transparent data-[state=on]:border-white/20"
                 >
                   Concluído
                 </ToggleGroupItem>
@@ -151,7 +151,7 @@ export default function Demands() {
                 variant="ghost"
                 size="sm"
                 onClick={clearFilters}
-                className="h-11 sm:h-10 text-muted-foreground hover:text-foreground w-full sm:w-auto mb-[1px]"
+                className="h-11 sm:h-10 text-white/60 hover:text-white hover:bg-white/10 w-full sm:w-auto mb-[1px]"
               >
                 <FilterX className="w-4 h-4 mr-2" />
                 Limpar
@@ -161,10 +161,7 @@ export default function Demands() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="secondary"
-                className="gap-2 bg-background border shadow-sm hover:bg-muted w-full xl:w-auto"
-              >
+              <Button variant="outline" className="gap-2 w-full xl:w-auto">
                 <Download className="w-4 h-4" />
                 Exportar Relatório
               </Button>

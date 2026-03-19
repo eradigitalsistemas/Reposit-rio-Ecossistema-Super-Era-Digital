@@ -29,44 +29,46 @@ export default function CollaboratorViewModal({ open, onOpenChange, user }: Prop
         </DialogHeader>
         <div className="space-y-6 py-4">
           <div className="flex items-center gap-4">
-            <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+            <div className="h-16 w-16 bg-white/10 rounded-full flex items-center justify-center text-white">
               <UserIcon className="h-8 w-8" />
             </div>
             <div>
-              <h3 className="text-xl font-semibold leading-none mb-2">{user.nome}</h3>
+              <h3 className="text-xl font-semibold leading-none mb-2 text-white">{user.nome}</h3>
               <Badge variant={user.perfil === 'admin' ? 'default' : 'secondary'}>
                 {user.perfil === 'admin' ? 'Admin' : 'Colaborador'}
               </Badge>
             </div>
           </div>
 
-          <div className="grid gap-4 border-t pt-4">
-            <div className="flex items-center gap-3 text-sm">
-              <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+          <div className="grid gap-4 border-t border-white/10 pt-4">
+            <div className="flex items-center gap-3 text-sm text-white">
+              <Mail className="h-4 w-4 text-white/50 shrink-0" />
               <span className="font-medium truncate">{user.email}</span>
             </div>
-            <div className="flex items-center gap-3 text-sm">
-              <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
+            <div className="flex items-center gap-3 text-sm text-white">
+              <Phone className="h-4 w-4 text-white/50 shrink-0" />
               <span className="font-medium">{user.telefone || 'Não informado'}</span>
             </div>
-            <div className="flex items-center gap-3 text-sm">
-              <Shield className="h-4 w-4 text-muted-foreground shrink-0" />
+            <div className="flex items-center gap-3 text-sm text-white">
+              <Shield className="h-4 w-4 text-white/50 shrink-0" />
               <span className="font-medium capitalize">Perfil: {user.perfil}</span>
             </div>
-            <div className="flex items-center gap-3 text-sm">
-              <Activity className="h-4 w-4 text-muted-foreground shrink-0" />
+            <div className="flex items-center gap-3 text-sm text-white">
+              <Activity className="h-4 w-4 text-white/50 shrink-0" />
               <span className="font-medium">Status: {user.ativo ? 'Ativo' : 'Inativo'}</span>
             </div>
-            <div className="flex items-center gap-3 text-sm">
-              <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
-              <span className="font-medium text-muted-foreground">
+            <div className="flex items-center gap-3 text-sm text-white/60">
+              <Calendar className="h-4 w-4 text-white/50 shrink-0" />
+              <span className="font-medium">
                 Criado em {new Date(user.data_criacao).toLocaleDateString('pt-BR')}
               </span>
             </div>
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={() => onOpenChange(false)}>Fechar</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Fechar
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

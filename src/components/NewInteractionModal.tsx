@@ -92,9 +92,9 @@ export function NewInteractionModal({ lead }: NewInteractionModalProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
-          variant="outline"
+          variant="default"
           size="sm"
-          className="w-full mt-2 sm:mt-3 h-8 text-xs gap-1.5"
+          className="w-full mt-2 sm:mt-3 h-8 text-xs gap-1.5 font-bold text-black"
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => e.stopPropagation()}
         >

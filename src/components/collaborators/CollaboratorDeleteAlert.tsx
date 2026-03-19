@@ -74,7 +74,7 @@ export default function CollaboratorDeleteAlert({ open, onOpenChange, onSuccess,
               handleDelete()
             }}
             disabled={loading}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className="bg-white text-black hover:bg-white/90 font-bold"
           >
             {loading ? 'Removendo...' : 'Sim, remover acesso'}
           </AlertDialogAction>

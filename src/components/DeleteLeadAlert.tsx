@@ -27,7 +27,7 @@ export function DeleteLeadAlert({ lead }: DeleteLeadAlertProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 text-muted-foreground hover:text-destructive"
+          className="h-7 w-7 text-white/60 hover:text-primary hover:bg-white/10"
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => e.stopPropagation()}
         >
@@ -49,7 +49,7 @@ export function DeleteLeadAlert({ lead }: DeleteLeadAlertProps) {
               e.stopPropagation()
               deleteLead(lead.id)
             }}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className="bg-white text-black hover:bg-white/90"
           >
             Excluir
           </AlertDialogAction>

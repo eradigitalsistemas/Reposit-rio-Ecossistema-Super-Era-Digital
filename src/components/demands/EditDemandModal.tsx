@@ -139,7 +139,12 @@ export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalP
             >
               Cancelar
             </Button>
-            <Button type="submit" className="w-full sm:w-auto h-11 sm:h-10" disabled={loading}>
+            <Button
+              type="submit"
+              variant="default"
+              className="w-full sm:w-auto h-11 sm:h-10"
+              disabled={loading}
+            >
               Salvar Alterações
             </Button>
           </DialogFooter>

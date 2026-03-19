@@ -47,101 +47,103 @@ export function DemandDetailsModal({ open, onOpenChange, demand }: DemandDetails
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] sm:max-w-2xl flex flex-col max-h-[90vh] p-0 sm:p-0 overflow-hidden">
+      <DialogContent className="w-[95vw] sm:max-w-2xl flex flex-col max-h-[90vh] p-0 sm:p-0 overflow-hidden bg-[rgba(20,20,20,0.95)]">
         <div className="flex flex-col h-full">
-          <DialogHeader className="p-4 sm:p-6 border-b shrink-0 bg-background sticky top-0 z-10">
+          <DialogHeader className="p-4 sm:p-6 border-b border-white/10 shrink-0 bg-black/40 sticky top-0 z-10">
             <div className="flex items-center gap-2 mb-2 pr-8">
               <Badge
                 variant="outline"
-                className="bg-primary/10 text-primary border-primary/20 h-auto py-0.5 text-xs sm:text-xs"
+                className="bg-white/10 text-white border-white/20 h-auto py-0.5 text-xs sm:text-xs"
               >
                 #{demand.id.toUpperCase().slice(0, 8)}
               </Badge>
               <Badge
                 variant="outline"
-                className="text-muted-foreground h-auto py-0.5 text-xs sm:text-xs"
+                className="text-white/60 h-auto py-0.5 text-xs sm:text-xs border-white/10"
               >
                 {demand.status}
               </Badge>
             </div>
-            <DialogTitle className="text-xl sm:text-2xl font-bold pr-6">{demand.title}</DialogTitle>
-            <DialogDescription className="text-sm sm:text-base mt-2 whitespace-pre-wrap break-words max-h-32 overflow-y-auto">
+            <DialogTitle className="text-xl sm:text-2xl font-bold text-white pr-6">
+              {demand.title}
+            </DialogTitle>
+            <DialogDescription className="text-sm sm:text-base mt-2 whitespace-pre-wrap break-words max-h-32 overflow-y-auto text-white/70">
               {demand.description || 'Nenhuma descrição fornecida.'}
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 bg-muted/20 p-4 rounded-xl border">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 bg-[rgba(255,255,255,0.02)] p-4 rounded-xl border border-white/10">
               <div className="space-y-1">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">
                   Responsável
                 </span>
-                <div className="flex items-center gap-2 font-medium text-sm sm:text-base">
-                  <User2 className="w-4 h-4 sm:w-4 sm:h-4 text-muted-foreground" />
+                <div className="flex items-center gap-2 font-medium text-sm sm:text-base text-white">
+                  <User2 className="w-4 h-4 sm:w-4 sm:h-4 text-white/50" />
                   {demand.assignee}
                 </div>
               </div>
               <div className="space-y-1">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">
                   Prioridade
                 </span>
-                <div className="flex items-center gap-2 font-medium text-sm sm:text-base">
+                <div className="flex items-center gap-2 font-medium text-sm sm:text-base text-white">
                   {demand.priority === 'Urgente' && (
-                    <div className="w-2 h-2 rounded-full bg-red-500" />
+                    <div className="w-2 h-2 rounded-full bg-white" />
                   )}
                   {demand.priority}
                 </div>
               </div>
               <div className="space-y-1">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">
                   Criado em
                 </span>
-                <div className="flex items-center gap-2 font-medium text-sm sm:text-base">
-                  <Calendar className="w-4 h-4 text-muted-foreground" />
+                <div className="flex items-center gap-2 font-medium text-sm sm:text-base text-white">
+                  <Calendar className="w-4 h-4 text-white/50" />
                   {format(new Date(demand.createdAt), 'dd/MM/yyyy')}
                 </div>
               </div>
               <div className="space-y-1">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">
                   Vencimento
                 </span>
-                <div className="flex items-center gap-2 font-medium text-sm sm:text-base">
-                  <Clock className="w-4 h-4 text-muted-foreground" />
+                <div className="flex items-center gap-2 font-medium text-sm sm:text-base text-white">
+                  <Clock className="w-4 h-4 text-white/50" />
                   {demand.dueDate ? format(new Date(demand.dueDate), 'dd/MM/yyyy') : 'Sem data'}
                 </div>
               </div>
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+              <h3 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
                 <History className="w-5 h-5 text-primary" />
                 Histórico e Auditoria
               </h3>
-              <div className="space-y-3 pl-2 sm:pl-4 border-l-2 border-border/50">
+              <div className="space-y-3 pl-2 sm:pl-4 border-l-2 border-white/10">
                 {demand.logs && demand.logs.length > 0 ? (
                   demand.logs.map((log) => (
                     <div key={log.id} className="relative pl-4 sm:pl-6 pb-2">
-                      <div className="absolute -left-[21px] sm:-left-[25px] top-1 w-3 h-3 bg-muted border-2 border-background rounded-full" />
+                      <div className="absolute -left-[21px] sm:-left-[25px] top-1 w-3 h-3 bg-black border-2 border-white rounded-full" />
                       <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 mb-1">
-                        <span className="font-semibold text-sm">{log.acao}</span>
-                        <span className="text-xs text-muted-foreground hidden sm:block">•</span>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="font-semibold text-sm text-white">{log.acao}</span>
+                        <span className="text-xs text-white/40 hidden sm:block">•</span>
+                        <span className="text-xs text-white/40">
                           {format(new Date(log.createdAt), 'dd/MM/yyyy HH:mm')}
                         </span>
                       </div>
-                      <p className="text-sm text-muted-foreground break-words">{log.detalhes}</p>
+                      <p className="text-sm text-white/70 break-words">{log.detalhes}</p>
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-muted-foreground ml-4">Nenhum histórico registrado.</p>
+                  <p className="text-sm text-white/50 ml-4">Nenhum histórico registrado.</p>
                 )}
               </div>
             </div>
 
-            <Separator />
+            <Separator className="bg-white/10" />
 
             <div className="space-y-4">
-              <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+              <h3 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
                 <MessageSquare className="w-5 h-5 text-primary" />
                 Anotações Internas
               </h3>
@@ -153,7 +155,11 @@ export function DemandDetailsModal({ open, onOpenChange, demand }: DemandDetails
                   onChange={(e) => setResponseText(e.target.value)}
                   className="min-h-[80px] sm:min-h-[60px]"
                 />
-                <Button onClick={handleAddResponse} className="sm:h-auto sm:px-6 w-full sm:w-auto">
+                <Button
+                  onClick={handleAddResponse}
+                  variant="default"
+                  className="sm:h-auto sm:px-6 w-full sm:w-auto"
+                >
                   Adicionar
                 </Button>
               </div>
@@ -163,7 +169,7 @@ export function DemandDetailsModal({ open, onOpenChange, demand }: DemandDetails
                   {demand.responses.map((resp, i) => (
                     <div
                       key={i}
-                      className="bg-muted/30 p-3 sm:p-4 rounded-lg border text-sm break-words"
+                      className="bg-[rgba(255,255,255,0.02)] p-3 sm:p-4 rounded-lg border border-white/10 text-white text-sm break-words"
                     >
                       {resp}
                     </div>
@@ -173,7 +179,7 @@ export function DemandDetailsModal({ open, onOpenChange, demand }: DemandDetails
             </div>
           </div>
 
-          <div className="p-4 sm:p-6 border-t bg-muted/10 shrink-0 sticky bottom-0 z-10 flex flex-col sm:flex-row gap-3 justify-end">
+          <div className="p-4 sm:p-6 border-t border-white/10 bg-black/40 shrink-0 sticky bottom-0 z-10 flex flex-col sm:flex-row gap-3 justify-end">
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}
@@ -184,7 +190,8 @@ export function DemandDetailsModal({ open, onOpenChange, demand }: DemandDetails
             {canAccept && (
               <Button
                 onClick={handleAccept}
-                className="w-full sm:w-auto gap-2 h-11 sm:h-10 bg-primary/20 text-primary hover:bg-primary/30 hover:text-primary shadow-none"
+                variant="default"
+                className="w-full sm:w-auto gap-2 h-11 sm:h-10 shadow-none"
               >
                 <User2 className="w-4 h-4" />
                 Assumir Demanda
@@ -193,7 +200,8 @@ export function DemandDetailsModal({ open, onOpenChange, demand }: DemandDetails
             {canComplete && (
               <Button
                 onClick={handleComplete}
-                className="w-full sm:w-auto gap-2 h-11 sm:h-10 bg-emerald-600 hover:bg-emerald-700 text-white"
+                variant="default"
+                className="w-full sm:w-auto gap-2 h-11 sm:h-10"
               >
                 <CheckCircle className="w-4 h-4" />
                 Concluir Tarefa

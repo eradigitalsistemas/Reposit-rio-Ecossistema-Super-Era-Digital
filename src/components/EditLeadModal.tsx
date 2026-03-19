@@ -46,7 +46,7 @@ export function EditLeadModal({ lead }: EditLeadModalProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 text-muted-foreground hover:text-primary"
+          className="h-7 w-7 text-white/60 hover:text-primary hover:bg-white/10"
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => e.stopPropagation()}
         >
@@ -97,7 +97,11 @@ export function EditLeadModal({ lead }: EditLeadModalProps) {
             >
               Cancelar
             </Button>
-            <Button type="submit" className="w-full sm:w-auto">
+            <Button
+              type="submit"
+              variant="default"
+              className="w-full sm:w-auto text-black font-bold"
+            >
               Salvar Alterações
             </Button>
           </DialogFooter>

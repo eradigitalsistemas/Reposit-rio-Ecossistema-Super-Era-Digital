@@ -214,6 +214,51 @@ export type Database = {
           },
         ]
       }
+      notificacoes: {
+        Row: {
+          data_criacao: string
+          demanda_id: string | null
+          id: string
+          lida: boolean
+          mensagem: string
+          titulo: string
+          usuario_id: string
+        }
+        Insert: {
+          data_criacao?: string
+          demanda_id?: string | null
+          id?: string
+          lida?: boolean
+          mensagem: string
+          titulo: string
+          usuario_id: string
+        }
+        Update: {
+          data_criacao?: string
+          demanda_id?: string | null
+          id?: string
+          lida?: boolean
+          mensagem?: string
+          titulo?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'notificacoes_demanda_id_fkey'
+            columns: ['demanda_id']
+            isOneToOne: false
+            referencedRelation: 'demandas'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'notificacoes_usuario_id_fkey'
+            columns: ['usuario_id']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       push_subscriptions: {
         Row: {
           created_at: string
@@ -468,6 +513,14 @@ export const Constants = {
 //   dados_anteriores: jsonb (nullable)
 //   dados_novos: jsonb (nullable)
 //   data_criacao: timestamp with time zone (not null, default: now())
+// Table: notificacoes
+//   id: uuid (not null, default: gen_random_uuid())
+//   usuario_id: uuid (not null)
+//   titulo: text (not null)
+//   mensagem: text (not null)
+//   lida: boolean (not null, default: false)
+//   demanda_id: uuid (nullable)
+//   data_criacao: timestamp with time zone (not null, default: now())
 // Table: push_subscriptions
 //   id: uuid (not null, default: gen_random_uuid())
 //   usuario_id: uuid (not null)
@@ -500,6 +553,10 @@ export const Constants = {
 //   FOREIGN KEY logs_auditoria_demanda_id_fkey: FOREIGN KEY (demanda_id) REFERENCES demandas(id) ON DELETE SET NULL
 //   PRIMARY KEY logs_auditoria_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY logs_auditoria_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
+// Table: notificacoes
+//   FOREIGN KEY notificacoes_demanda_id_fkey: FOREIGN KEY (demanda_id) REFERENCES demandas(id) ON DELETE CASCADE
+//   PRIMARY KEY notificacoes_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY notificacoes_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 // Table: push_subscriptions
 //   PRIMARY KEY push_subscriptions_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY push_subscriptions_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
@@ -536,6 +593,14 @@ export const Constants = {
 // Table: logs_auditoria
 //   Policy "Admins podem ver logs_auditoria" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: is_admin()
+// Table: notificacoes
+//   Policy "Sistema pode inserir notificacoes" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Usuarios podem atualizar proprias notificacoes" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (auth.uid() = usuario_id)
+//     WITH CHECK: (auth.uid() = usuario_id)
+//   Policy "Usuarios podem ver proprias notificacoes" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (auth.uid() = usuario_id)
 // Table: push_subscriptions
 //   Policy "Enable delete for authenticated users" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (auth.uid() = usuario_id)
@@ -747,11 +812,35 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION trigger_nova_notificacao_demanda()
+//   CREATE OR REPLACE FUNCTION public.trigger_nova_notificacao_demanda()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   BEGIN
+//       -- Scenario 1: New demand assigned
+//       IF TG_OP = 'INSERT' AND NEW.responsavel_id IS NOT NULL THEN
+//           INSERT INTO public.notificacoes (usuario_id, titulo, mensagem, demanda_id)
+//           VALUES (NEW.responsavel_id, 'Nova Demanda Atribuída', 'A demanda "' || NEW.titulo || '" foi atribuída a você.', NEW.id);
+//       END IF;
+//
+//       -- Scenario 2: Existing demand reassigned
+//       IF TG_OP = 'UPDATE' AND NEW.responsavel_id IS NOT NULL AND NEW.responsavel_id IS DISTINCT FROM OLD.responsavel_id THEN
+//           INSERT INTO public.notificacoes (usuario_id, titulo, mensagem, demanda_id)
+//           VALUES (NEW.responsavel_id, 'Nova Demanda Atribuída', 'A demanda "' || NEW.titulo || '" foi atribuída a você.', NEW.id);
+//       END IF;
+//
+//       RETURN NEW;
+//   END;
+//   $function$
+//
 
 // --- TRIGGERS ---
 // Table: clientes_externos
 //   on_cliente_documento_change_notify: CREATE TRIGGER on_cliente_documento_change_notify AFTER UPDATE OF documentos ON public.clientes_externos FOR EACH ROW EXECUTE FUNCTION trigger_notify_automation()
 // Table: demandas
+//   on_demanda_atribuida_notificacao: CREATE TRIGGER on_demanda_atribuida_notificacao AFTER INSERT OR UPDATE ON public.demandas FOR EACH ROW EXECUTE FUNCTION trigger_nova_notificacao_demanda()
 //   on_demanda_change_log: CREATE TRIGGER on_demanda_change_log AFTER INSERT OR UPDATE ON public.demandas FOR EACH ROW EXECUTE FUNCTION log_demanda_changes()
 //   on_demanda_push_notify: CREATE TRIGGER on_demanda_push_notify AFTER UPDATE ON public.demandas FOR EACH ROW EXECUTE FUNCTION trigger_demanda_push_notification()
 //   on_demanda_status_change_notify: CREATE TRIGGER on_demanda_status_change_notify AFTER UPDATE OF status ON public.demandas FOR EACH ROW EXECUTE FUNCTION trigger_notify_automation()

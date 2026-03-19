@@ -151,7 +151,7 @@ export default function CollaboratorFormModal({
               <Label htmlFor="senha">
                 Senha{' '}
                 {initialData && (
-                  <span className="text-muted-foreground text-xs font-normal">
+                  <span className="text-white/40 text-xs font-normal">
                     (deixe em branco para manter)
                   </span>
                 )}
@@ -182,13 +182,18 @@ export default function CollaboratorFormModal({
           <DialogFooter>
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button
+              type="submit"
+              variant="default"
+              disabled={loading}
+              className="text-black font-bold"
+            >
               {loading ? 'Salvando...' : 'Salvar'}
             </Button>
           </DialogFooter>

@@ -55,9 +55,9 @@ export function AddDemandModal() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2 w-full sm:w-auto h-11 sm:h-10">
+        <Button variant="default" className="gap-2 w-full sm:w-auto h-11 sm:h-10 text-black">
           <Plus className="w-5 h-5 sm:w-4 sm:h-4" />
-          <span className="sm:inline">Nova Demanda</span>
+          <span className="sm:inline font-bold">Nova Demanda</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="w-[95vw] sm:max-w-[500px]">
@@ -140,7 +140,11 @@ export function AddDemandModal() {
             >
               Cancelar
             </Button>
-            <Button type="submit" className="w-full sm:w-auto h-11 sm:h-10">
+            <Button
+              type="submit"
+              variant="default"
+              className="w-full sm:w-auto h-11 sm:h-10 text-black font-bold"
+            >
               Criar Demanda
             </Button>
           </DialogFooter>
