@@ -6,7 +6,15 @@ Deno.serve(async (req: Request) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  return new Response(JSON.stringify({ message: 'Hello from functions!' }), {
-    headers: { 'Content-Type': 'application/json', ...corsHeaders },
-  })
+  try {
+    return new Response(JSON.stringify({ message: 'Hello from functions!' }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
+    })
+  } catch (error: any) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 400,
+    })
+  }
 })
