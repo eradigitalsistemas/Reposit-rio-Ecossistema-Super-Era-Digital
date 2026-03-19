@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react'
 import { User, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase/client'
-import { toast } from '@/hooks/use-toast'
 
 export type Role = 'Admin' | 'Colaborador' | 'Client' | null
 
@@ -29,20 +28,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [clientId, setClientId] = useState<string | null>(null)
 
   useEffect(() => {
+    let isMounted = true
+
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session)
-      setUser(session?.user ?? null)
+    } = supabase.auth.onAuthStateChange((event, currentSession) => {
+      if (!isMounted) return
+      setSession(currentSession)
+      setUser(currentSession?.user ?? null)
+      if (event === 'SIGNED_OUT') {
+        setRole(null)
+        setUserName('')
+        setClientId(null)
+        setLoading(false)
+      }
     })
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      if (!session) setLoading(false)
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (!isMounted) return
+      if (error || !session) {
+        setSession(null)
+        setUser(null)
+        setLoading(false)
+      } else {
+        setSession(session)
+        setUser(session.user)
+      }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      isMounted = false
+      subscription.unsubscribe()
+    }
   }, [])
 
   useEffect(() => {
@@ -50,15 +67,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const fetchProfile = async () => {
       if (!user) {
-        if (role !== 'Client') {
-          setRole(null)
-          setUserName('')
+        if (isMounted && role !== 'Client') {
+          setLoading(false)
         }
-        if (isMounted) setLoading(false)
         return
       }
 
-      // If they are mocked as a client portal user, skip fetching CRM profile
       if (role === 'Client') {
         if (isMounted) setLoading(false)
         return
@@ -74,8 +88,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (error) throw error
 
         if (isMounted && data) {
-          setRole(data.perfil === 'admin' ? 'Admin' : 'Colaborador')
-          setUserName(data.nome || user.email || '')
+          setRole((prev) =>
+            prev === 'Client' ? 'Client' : data.perfil === 'admin' ? 'Admin' : 'Colaborador',
+          )
+          setUserName((prev) => (prev ? prev : data.nome || user.email || ''))
         }
       } catch (err) {
         console.error('Error fetching user profile:', err)
@@ -84,15 +100,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     }
 
-    fetchProfile()
+    if (user && role !== 'Client') {
+      setLoading(true)
+      fetchProfile()
+    } else if (!user && role !== 'Client') {
+      if (isMounted) setLoading(false)
+    }
 
     return () => {
       isMounted = false
     }
-  }, [user, role])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
 
   const toggleRole = () => {
-    // Keeping this for demo purposes, though in a real app role is strictly DB driven
     if (role === 'Admin') {
       setRole('Colaborador')
     } else if (role === 'Colaborador') {

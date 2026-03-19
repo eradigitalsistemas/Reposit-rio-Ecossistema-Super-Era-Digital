@@ -44,7 +44,7 @@ export default function Demands() {
       }, 300)
       return () => clearTimeout(timer)
     }
-  }, [highlightId, demands])
+  }, [highlightId])
 
   const activeColumns = useMemo(() => {
     if (statusFilter.length > 0) {

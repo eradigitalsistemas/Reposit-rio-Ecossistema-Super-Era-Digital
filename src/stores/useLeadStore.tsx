@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useState, useMemo, useCallback, useEffect } from 'react'
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useMemo,
+  useCallback,
+  useEffect,
+  useRef,
+} from 'react'
 import { Lead, LeadStage } from '@/types/crm'
 import { toast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase/client'
@@ -20,6 +28,7 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
   const [leads, setLeads] = useState<Lead[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const { user, role } = useAuthStore()
+  const hasFetched = useRef(false)
 
   const fetchLeads = useCallback(async () => {
     if (!user) return
@@ -54,10 +63,11 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
   }, [user])
 
   useEffect(() => {
-    if (role && role !== 'Client') {
+    if (role && role !== 'Client' && !hasFetched.current && user) {
+      hasFetched.current = true
       fetchLeads()
     }
-  }, [role, fetchLeads])
+  }, [role, user, fetchLeads])
 
   const addLead = useCallback(
     async (newLead: Omit<Lead, 'id' | 'createdAt'>) => {
@@ -126,7 +136,6 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
 
   const moveLead = useCallback(
     async (id: string, newStage: LeadStage) => {
-      // Optimistic update
       setLeads((prev) => prev.map((lead) => (lead.id === id ? { ...lead, stage: newStage } : lead)))
 
       const { error } = await supabase.from('leads').update({ estagio: newStage }).eq('id', id)
@@ -136,7 +145,7 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
           description: 'Erro ao atualizar estágio do lead.',
           variant: 'destructive',
         })
-        fetchLeads() // Revert on error
+        fetchLeads()
       }
     },
     [fetchLeads],

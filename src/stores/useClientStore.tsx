@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useState, useMemo, useCallback, useEffect } from 'react'
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useMemo,
+  useCallback,
+  useEffect,
+  useRef,
+} from 'react'
 import { Client, ClientDocument } from '@/types/client'
 import { supabase } from '@/lib/supabase/client'
 import useAuthStore from './useAuthStore'
@@ -22,6 +30,7 @@ const ClientContext = createContext<ClientStoreState | null>(null)
 export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
   const [clients, setClients] = useState<Client[]>([])
   const { user, role } = useAuthStore()
+  const hasFetched = useRef(false)
 
   const fetchClients = useCallback(async () => {
     if (!user || role !== 'Admin') return
@@ -53,8 +62,11 @@ export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
   }, [user, role])
 
   useEffect(() => {
-    fetchClients()
-  }, [fetchClients])
+    if (user && role === 'Admin' && !hasFetched.current) {
+      hasFetched.current = true
+      fetchClients()
+    }
+  }, [user, role, fetchClients])
 
   const addClient = useCallback(
     async (newClient: Omit<Client, 'id' | 'createdAt' | 'documents' | 'history'>) => {
@@ -193,7 +205,6 @@ export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
         createdAt: new Date().toISOString(),
       }
 
-      // Call edge function to process metadata
       const { data: fnData, error: fnErr } = await supabase.functions.invoke(
         'manage-client-documents',
         {
@@ -232,7 +243,6 @@ export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
 
   const deleteDocument = useCallback(async (clientId: string, docId: string, path?: string) => {
     if (path) {
-      // Try deleting from both legacy and new buckets safely
       await supabase.storage.from('documentos-clientes').remove([path])
       await supabase.storage.from('documentos_clientes').remove([path])
     }

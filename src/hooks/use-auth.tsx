@@ -22,19 +22,28 @@ export const CoreAuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let isMounted = true
+
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session)
-      setUser(session?.user ?? null)
+    } = supabase.auth.onAuthStateChange((event, currentSession) => {
+      if (!isMounted) return
+      setSession(currentSession)
+      setUser(currentSession?.user ?? null)
       setLoading(false)
     })
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
+
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      if (!isMounted) return
+      setSession(currentSession)
+      setUser(currentSession?.user ?? null)
       setLoading(false)
     })
-    return () => subscription.unsubscribe()
+
+    return () => {
+      isMounted = false
+      subscription.unsubscribe()
+    }
   }, [])
 
   return (

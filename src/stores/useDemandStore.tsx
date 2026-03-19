@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useState, useMemo, useCallback, useEffect } from 'react'
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useMemo,
+  useCallback,
+  useEffect,
+  useRef,
+} from 'react'
 import {
   Demand,
   DemandPriority,
@@ -55,6 +63,8 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   const [notifications, setNotifications] = useState<DemandNotification[]>([])
   const { user, role, userName } = useAuthStore()
   const navigate = useNavigate()
+
+  const hasFetched = useRef(false)
 
   const fetchDemands = useCallback(async () => {
     if (!user) return
@@ -157,7 +167,9 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     let isSubscribed = true
-    if (role && role !== 'Client' && user) {
+
+    if (role && role !== 'Client' && user && !hasFetched.current) {
+      hasFetched.current = true
       fetchDemands()
       fetchCollaborators()
       fetchNotifications()
@@ -168,6 +180,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           if (isSubscribed) fetchCollaborators()
         })
         .subscribe()
+
       const notifChannel = supabase
         .channel('notificacoes-changes')
         .on(
@@ -213,6 +226,10 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         supabase.removeChannel(usersChannel)
         supabase.removeChannel(notifChannel)
       }
+    }
+
+    return () => {
+      isSubscribed = false
     }
   }, [role, user, fetchDemands, fetchCollaborators, fetchNotifications, navigate])
 

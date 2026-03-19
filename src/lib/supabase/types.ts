@@ -577,9 +577,15 @@ export const Constants = {
 //   Policy "Admins podem gerenciar tudo em demandas" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: is_admin()
 //     WITH CHECK: is_admin()
-//   Policy "Colaboradores acessam proprias demandas" (ALL, PERMISSIVE) roles={authenticated}
+//   Policy "Colaboradores atualizam demandas" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: ((auth.uid() = responsavel_id) OR (auth.uid() = usuario_id) OR is_admin())
-//     WITH CHECK: ((auth.uid() = responsavel_id) OR (auth.uid() = usuario_id) OR is_admin())
+//     WITH CHECK: true
+//   Policy "Colaboradores deletam demandas" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((auth.uid() = responsavel_id) OR (auth.uid() = usuario_id) OR is_admin())
+//   Policy "Colaboradores inserem demandas" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "Colaboradores veem proprias demandas" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((auth.uid() = responsavel_id) OR is_admin())
 // Table: historico_leads
 //   Policy "Admins podem gerenciar tudo em historico_leads" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: is_admin()

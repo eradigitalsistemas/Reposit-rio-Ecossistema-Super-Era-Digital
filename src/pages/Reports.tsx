@@ -49,17 +49,17 @@ interface UserData {
 const leadsConfig: ChartConfig = {
   leads: { label: 'Leads', color: 'rgba(255,255,255,0.2)' },
   prospeccao: { label: 'Prospecção', color: 'rgba(255,255,255,0.4)' },
-  convertido: { label: 'Convertido', color: '#3b82f6' }, // Semantic Blue
+  convertido: { label: 'Convertido', color: '#3b82f6' },
   treinamento: { label: 'Em Treinamento', color: 'rgba(255,255,255,0.6)' },
-  finalizado: { label: 'Finalizado', color: '#ffffff' }, // Semantic White
+  finalizado: { label: 'Finalizado', color: '#ffffff' },
   pos_venda: { label: 'Pós Venda', color: 'rgba(255,255,255,0.8)' },
-  ativo: { label: 'Ativo', color: 'hsl(var(--primary))' }, // Primary Green
+  ativo: { label: 'Ativo', color: 'hsl(var(--primary))' },
 }
 
 const priorityConfig: ChartConfig = {
-  Urgente: { label: 'Urgente', color: '#ef4444' }, // Semantic Red
-  'Durante o Dia': { label: 'Durante o Dia', color: '#eab308' }, // High-contrast Yellow
-  'Pode Ficar para Amanhã': { label: 'Ficar para Amanhã', color: 'rgba(255,255,255,0.3)' }, // Subtle Grey
+  Urgente: { label: 'Urgente', color: '#ef4444' },
+  'Durante o Dia': { label: 'Durante o Dia', color: '#eab308' },
+  'Pode Ficar para Amanhã': { label: 'Ficar para Amanhã', color: 'rgba(255,255,255,0.3)' },
 }
 
 export default function Reports() {
@@ -78,6 +78,7 @@ export default function Reports() {
 
   useEffect(() => {
     if (role !== 'Admin') return
+    let isMounted = true
 
     const fetchData = async () => {
       setLoading(true)
@@ -89,6 +90,8 @@ export default function Reports() {
           supabase.from('usuarios').select('id, nome'),
         ])
 
+        if (!isMounted) return
+
         if (leadsRes.error) throw leadsRes.error
         if (demandsRes.error) throw demandsRes.error
         if (usersRes.error) throw usersRes.error
@@ -99,13 +102,18 @@ export default function Reports() {
           users: usersRes.data as UserData[],
         })
       } catch (err: any) {
+        if (!isMounted) return
         console.error(err)
         setError('Não foi possível carregar os dados. Tente novamente mais tarde.')
       } finally {
-        setLoading(false)
+        if (isMounted) setLoading(false)
       }
     }
     fetchData()
+
+    return () => {
+      isMounted = false
+    }
   }, [role])
 
   const filterInterval = useMemo(() => {
@@ -144,7 +152,6 @@ export default function Reports() {
     [data.demands, isDateInFilter],
   )
 
-  // KPIs
   const totalLeads = filteredLeads.length
 
   const demandsToday = useMemo(() => {
@@ -167,7 +174,6 @@ export default function Reports() {
     [filteredLeads],
   )
 
-  // Charts Data
   const leadsChartData = useMemo(() => {
     const counts: Record<string, number> = {}
     filteredLeads.forEach((l) => {

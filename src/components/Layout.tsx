@@ -4,6 +4,7 @@ import { AppSidebar } from './AppSidebar'
 import { Header } from './Header'
 import useAuthStore from '@/stores/useAuthStore'
 import { Loader2 } from 'lucide-react'
+import { ErrorBoundary } from './ErrorBoundary'
 
 export default function Layout() {
   const { role, loading, user } = useAuthStore()
@@ -33,7 +34,9 @@ export default function Layout() {
       <SidebarInset className="flex flex-col min-h-[100dvh] bg-slate-50/50 dark:bg-background w-full max-w-[100vw] overflow-hidden">
         <Header />
         <main className="flex-1 overflow-hidden relative w-full flex flex-col">
-          <Outlet />
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </main>
       </SidebarInset>
     </SidebarProvider>
