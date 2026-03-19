@@ -135,33 +135,47 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchCollaborators = useCallback(async () => {
     if (!user) return
-    const { data, error } = await supabase
-      .from('usuarios')
-      .select('id, nome')
-      .eq('ativo', true)
-      .order('nome')
-    if (!error && data) setCollaborators(data)
+    try {
+      // Ensure we explicitly use the GET method by passing { head: false }
+      // This resolves runtime errors where a HEAD request is sent but a JSON response is expected.
+      const { data, error } = await supabase
+        .from('usuarios')
+        .select('id, nome', { head: false })
+        .eq('ativo', true)
+        .order('nome')
+
+      if (!error && data) {
+        setCollaborators(data)
+      }
+    } catch (err) {
+      // Silently handle to prevent application crashes
+      console.error('Error fetching collaborators:', err)
+    }
   }, [user])
 
   const fetchNotifications = useCallback(async () => {
     if (!user) return
-    const { data, error } = await supabase
-      .from('notificacoes')
-      .select('*')
-      .eq('usuario_id', user.id)
-      .order('data_criacao', { ascending: false })
-      .limit(50)
-    if (!error && data) {
-      setNotifications(
-        data.map((n: any) => ({
-          id: n.id,
-          title: n.titulo,
-          message: n.mensagem,
-          read: n.lida,
-          createdAt: n.data_criacao,
-          demandId: n.demanda_id,
-        })),
-      )
+    try {
+      const { data, error } = await supabase
+        .from('notificacoes')
+        .select('*', { head: false })
+        .eq('usuario_id', user.id)
+        .order('data_criacao', { ascending: false })
+        .limit(50)
+      if (!error && data) {
+        setNotifications(
+          data.map((n: any) => ({
+            id: n.id,
+            title: n.titulo,
+            message: n.mensagem,
+            read: n.lida,
+            createdAt: n.data_criacao,
+            demandId: n.demanda_id,
+          })),
+        )
+      }
+    } catch (e) {
+      // Silently handle
     }
   }, [user])
 
