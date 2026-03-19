@@ -25,16 +25,20 @@ import { DemandPriority, DemandStatus } from '@/types/demand'
 
 export function AddDemandModal() {
   const [open, setOpen] = useState(false)
-  const { addDemand, collaborators } = useDemandStore()
+  const { addDemand, collaborators, fetchCollaborators } = useDemandStore()
 
-  // Pre-fetch collaborators if needed
+  // Pre-fetch collaborators to ensure we have the latest list when opening the modal
   useEffect(() => {
-    // Usually handled by the store in App/Layout
-  }, [])
+    if (open) {
+      fetchCollaborators()
+    }
+  }, [open, fetchCollaborators])
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
+
+    const assigneeIdStr = formData.get('assigneeId') as string
 
     addDemand({
       title: formData.get('title') as string,
@@ -42,7 +46,7 @@ export function AddDemandModal() {
       priority: formData.get('priority') as DemandPriority,
       status: formData.get('status') as DemandStatus,
       dueDate: formData.get('dueDate') as string,
-      assigneeId: formData.get('assigneeId') as string,
+      assigneeId: assigneeIdStr === 'none' ? null : assigneeIdStr,
     })
 
     setOpen(false)
@@ -102,7 +106,7 @@ export function AddDemandModal() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="assigneeId">Atribuir para</Label>
-                <Select name="assigneeId">
+                <Select name="assigneeId" defaultValue="none">
                   <SelectTrigger className="h-11 sm:h-10">
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>

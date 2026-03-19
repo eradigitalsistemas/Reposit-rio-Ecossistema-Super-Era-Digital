@@ -27,6 +27,7 @@ interface DemandStoreState {
   acceptDemand: (demandId: string) => Promise<void>
   addResponse: (demandId: string, text: string) => Promise<void>
   markNotificationsAsRead: () => void
+  fetchCollaborators: () => Promise<void>
 }
 
 const mockNotifications: DemandNotification[] = [
@@ -115,7 +116,12 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchCollaborators = useCallback(async () => {
     if (!user) return
     try {
-      const { data, error } = await supabase.from('usuarios').select('id, nome').eq('ativo', true)
+      const { data, error } = await supabase
+        .from('usuarios')
+        .select('id, nome')
+        .eq('ativo', true)
+        .order('nome')
+
       if (error) {
         console.error('Error fetching collaborators:', error)
         return
@@ -129,9 +135,26 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   }, [user])
 
   useEffect(() => {
+    let isSubscribed = true
+
     if (role && role !== 'Client') {
       fetchDemands()
       fetchCollaborators()
+
+      // Realtime subscription to reflect new or updated users immediately in UI dropdowns
+      const channel = supabase
+        .channel('usuarios-colab-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'usuarios' }, () => {
+          if (isSubscribed) {
+            fetchCollaborators()
+          }
+        })
+        .subscribe()
+
+      return () => {
+        isSubscribed = false
+        supabase.removeChannel(channel)
+      }
     }
   }, [role, fetchDemands, fetchCollaborators])
 
@@ -350,6 +373,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       acceptDemand,
       addResponse,
       markNotificationsAsRead,
+      fetchCollaborators,
     }),
     [
       demands,
@@ -362,6 +386,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       acceptDemand,
       addResponse,
       markNotificationsAsRead,
+      fetchCollaborators,
     ],
   )
 

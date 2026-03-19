@@ -251,6 +251,7 @@ export type Database = {
           id: string
           nome: string
           perfil: string
+          telefone: string | null
         }
         Insert: {
           ativo?: boolean
@@ -259,6 +260,7 @@ export type Database = {
           id: string
           nome?: string
           perfil?: string
+          telefone?: string | null
         }
         Update: {
           ativo?: boolean
@@ -267,6 +269,7 @@ export type Database = {
           id?: string
           nome?: string
           perfil?: string
+          telefone?: string | null
         }
         Relationships: []
       }
@@ -477,6 +480,7 @@ export const Constants = {
 //   data_criacao: timestamp with time zone (not null, default: now())
 //   perfil: text (not null, default: 'colaborador'::text)
 //   ativo: boolean (not null, default: true)
+//   telefone: text (nullable)
 
 // --- CONSTRAINTS ---
 // Table: clientes_externos
@@ -552,6 +556,25 @@ export const Constants = {
 //     USING: true
 
 // --- DATABASE FUNCTIONS ---
+// FUNCTION fix_auth_users_nulls()
+//   CREATE OR REPLACE FUNCTION public.fix_auth_users_nulls()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   BEGIN
+//     IF NEW.confirmation_token IS NULL THEN NEW.confirmation_token := ''; END IF;
+//     IF NEW.recovery_token IS NULL THEN NEW.recovery_token := ''; END IF;
+//     IF NEW.email_change_token_new IS NULL THEN NEW.email_change_token_new := ''; END IF;
+//     IF NEW.email_change IS NULL THEN NEW.email_change := ''; END IF;
+//     IF NEW.email_change_token_current IS NULL THEN NEW.email_change_token_current := ''; END IF;
+//     IF NEW.phone_change IS NULL THEN NEW.phone_change := ''; END IF;
+//     IF NEW.phone_change_token IS NULL THEN NEW.phone_change_token := ''; END IF;
+//     IF NEW.reauthentication_token IS NULL THEN NEW.reauthentication_token := ''; END IF;
+//     RETURN NEW;
+//   END;
+//   $function$
+//
 // FUNCTION handle_new_user()
 //   CREATE OR REPLACE FUNCTION public.handle_new_user()
 //    RETURNS trigger
@@ -559,12 +582,13 @@ export const Constants = {
 //    SECURITY DEFINER
 //   AS $function$
 //   BEGIN
-//     INSERT INTO public.usuarios (id, email, nome, perfil)
+//     INSERT INTO public.usuarios (id, email, nome, perfil, telefone)
 //     VALUES (
 //       new.id,
 //       new.email,
 //       COALESCE(new.raw_user_meta_data->>'full_name', ''),
-//       COALESCE(new.raw_user_meta_data->>'perfil', 'colaborador')
+//       COALESCE(new.raw_user_meta_data->>'perfil', 'colaborador'),
+//       new.raw_user_meta_data->>'telefone'
 //     );
 //     RETURN new;
 //   END;

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -29,8 +29,15 @@ interface EditDemandModalProps {
 }
 
 export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalProps) {
-  const { editDemand, collaborators } = useDemandStore()
+  const { editDemand, collaborators, fetchCollaborators } = useDemandStore()
   const [loading, setLoading] = useState(false)
+
+  // Fetch the latest active collaborators when opening the edit modal
+  useEffect(() => {
+    if (open) {
+      fetchCollaborators()
+    }
+  }, [open, fetchCollaborators])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
