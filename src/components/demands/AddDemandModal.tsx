@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import useDemandStore from '@/stores/useDemandStore'
-import { COLLABORATORS, DemandPriority, DemandStatus } from '@/types/demand'
+import { DemandPriority, DemandStatus } from '@/types/demand'
 import { Plus } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
@@ -33,21 +33,22 @@ export function AddDemandModal() {
   const [priority, setPriority] = useState<DemandPriority>('Durante o Dia')
   const [status, setStatus] = useState<DemandStatus>('Pendente')
   const [dueDate, setDueDate] = useState<Date>()
-  const [assignee, setAssignee] = useState<string>('')
+  const [assigneeId, setAssigneeId] = useState<string>('unassigned')
 
-  const { addDemand } = useDemandStore()
+  const { addDemand, collaborators } = useDemandStore()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!title || !assignee || !dueDate) return
+    if (!title || !dueDate) return
 
-    addDemand({
+    await addDemand({
       title,
       description,
       priority,
       status,
       dueDate: dueDate.toISOString(),
-      assignee,
+      assignee: '', // Will be mapped by backend/store
+      assigneeId: assigneeId === 'unassigned' ? '' : assigneeId,
     })
 
     setOpen(false)
@@ -56,7 +57,7 @@ export function AddDemandModal() {
     setPriority('Durante o Dia')
     setStatus('Pendente')
     setDueDate(undefined)
-    setAssignee('')
+    setAssigneeId('unassigned')
   }
 
   return (
@@ -143,14 +144,15 @@ export function AddDemandModal() {
             </div>
             <div className="space-y-2">
               <Label>Colaborador Responsável</Label>
-              <Select value={assignee} onValueChange={setAssignee} required>
+              <Select value={assigneeId} onValueChange={setAssigneeId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
-                  {COLLABORATORS.map((collab) => (
-                    <SelectItem key={collab} value={collab}>
-                      {collab}
+                  <SelectItem value="unassigned">Não Atribuído</SelectItem>
+                  {collaborators.map((collab) => (
+                    <SelectItem key={collab.id} value={collab.id}>
+                      {collab.nome}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -159,7 +161,7 @@ export function AddDemandModal() {
           </div>
 
           <div className="flex justify-end pt-4">
-            <Button type="submit" disabled={!title || !assignee || !dueDate}>
+            <Button type="submit" disabled={!title || !dueDate}>
               Salvar Demanda
             </Button>
           </div>

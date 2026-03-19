@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { COLLABORATORS } from '@/types/demand'
+import { useState, useMemo } from 'react'
 import { DemandColumn } from '@/components/demands/DemandColumn'
 import { AddDemandModal } from '@/components/demands/AddDemandModal'
 import useDemandStore from '@/stores/useDemandStore'
@@ -24,30 +23,37 @@ import { Download, FilterX } from 'lucide-react'
 import { exportToCSV, exportToPDF } from '@/utils/export'
 
 export default function Demands() {
-  const { demands } = useDemandStore()
+  const { demands, collaborators } = useDemandStore()
   const { role, userName } = useAuthStore()
 
   const [collaboratorFilter, setCollaboratorFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string[]>([])
 
-  const baseDemands = role === 'Admin' ? demands : demands.filter((d) => d.assignee === userName)
-
-  const filteredDemands = baseDemands.filter((d) => {
-    if (role === 'Admin' && collaboratorFilter !== 'all' && d.assignee !== collaboratorFilter) {
-      return false
+  // Determine active columns (people)
+  const activeColumns = useMemo(() => {
+    if (role === 'Admin') {
+      const allNames = collaborators.map((c) => c.nome)
+      allNames.push('Não Atribuído')
+      return collaboratorFilter === 'all' ? allNames : [collaboratorFilter]
     }
-    if (statusFilter.length > 0 && !statusFilter.includes(d.status)) {
-      return false
-    }
-    return true
-  })
+    return [userName, 'Não Atribuído']
+  }, [role, collaborators, collaboratorFilter, userName])
 
-  const activeCollaborators =
-    role === 'Admin'
-      ? collaboratorFilter === 'all'
-        ? COLLABORATORS
-        : [collaboratorFilter]
-      : [userName]
+  const filteredDemands = useMemo(() => {
+    return demands.filter((d) => {
+      // If Colaborador, only see own or unassigned
+      if (role !== 'Admin' && d.assignee !== userName && d.assignee !== 'Não Atribuído') {
+        return false
+      }
+      if (role === 'Admin' && collaboratorFilter !== 'all' && d.assignee !== collaboratorFilter) {
+        return false
+      }
+      if (statusFilter.length > 0 && !statusFilter.includes(d.status)) {
+        return false
+      }
+      return true
+    })
+  }, [demands, role, userName, collaboratorFilter, statusFilter])
 
   const hasFilters = (role === 'Admin' && collaboratorFilter !== 'all') || statusFilter.length > 0
 
@@ -70,7 +76,7 @@ export default function Demands() {
                 : 'Acompanhe suas tarefas e atribuições'}
             </p>
           </div>
-          <AddDemandModal />
+          {role === 'Admin' && <AddDemandModal />}
         </div>
 
         <div className="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-4 mb-6 bg-card p-4 rounded-xl border shrink-0">
@@ -86,11 +92,12 @@ export default function Demands() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos os colaboradores</SelectItem>
-                    {COLLABORATORS.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {c}
+                    {collaborators.map((c) => (
+                      <SelectItem key={c.id} value={c.nome}>
+                        {c.nome}
                       </SelectItem>
                     ))}
+                    <SelectItem value="Não Atribuído">Não Atribuído</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -166,11 +173,11 @@ export default function Demands() {
 
         <div className="flex-1 overflow-x-auto overflow-y-hidden">
           <div className="flex h-full items-start gap-4 pb-4 min-w-max">
-            {activeCollaborators.map((collaborator) => (
+            {activeColumns.map((colName) => (
               <DemandColumn
-                key={collaborator}
-                collaborator={collaborator}
-                demands={filteredDemands.filter((d) => d.assignee === collaborator)}
+                key={colName}
+                collaborator={colName}
+                demands={filteredDemands.filter((d) => d.assignee === colName)}
               />
             ))}
           </div>

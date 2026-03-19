@@ -1,68 +1,25 @@
-import React, { createContext, useContext, useState, useMemo, useCallback } from 'react'
-import {
-  Demand,
-  DemandPriority,
-  DemandStatus,
-  DemandResponse,
-  DemandNotification,
-} from '@/types/demand'
+import React, { createContext, useContext, useState, useMemo, useCallback, useEffect } from 'react'
+import { Demand, DemandPriority, DemandStatus, DemandNotification } from '@/types/demand'
 import { toast } from '@/hooks/use-toast'
+import { supabase } from '@/lib/supabase/client'
+import useAuthStore from './useAuthStore'
+
+interface Collaborator {
+  id: string
+  nome: string
+}
 
 interface DemandStoreState {
   demands: Demand[]
+  collaborators: Collaborator[]
   notifications: DemandNotification[]
-  addDemand: (demand: Omit<Demand, 'id' | 'createdAt' | 'responses'>) => void
-  addResponse: (demandId: string, response: string, author: string) => void
-  updateStatus: (demandId: string, status: DemandStatus) => void
-  deleteDemand: (demandId: string) => void
+  addDemand: (
+    demand: Omit<Demand, 'id' | 'createdAt' | 'responses'> & { assigneeId: string },
+  ) => Promise<void>
+  updateStatus: (demandId: string, status: DemandStatus) => Promise<void>
+  deleteDemand: (demandId: string) => Promise<void>
   markNotificationsAsRead: () => void
 }
-
-const mockDemands: Demand[] = [
-  {
-    id: '1',
-    title: 'Revisar contrato da Tech Corp',
-    description:
-      'Verificar cláusulas de rescisão e multas contratuais para evitar surpresas no próximo trimestre.',
-    priority: 'Urgente',
-    status: 'Em Andamento',
-    dueDate: new Date().toISOString(),
-    assignee: 'Ana Silva',
-    clientId: '1',
-    category: 'Serviço',
-    responses: [
-      {
-        id: 'r1',
-        text: 'Iniciei a revisão da primeira parte do documento. Até o final do dia envio meus apontamentos.',
-        createdAt: new Date(Date.now() - 3600000).toISOString(),
-        author: 'Ana Silva',
-      },
-    ],
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    title: 'Atualizar layout da página inicial',
-    description: 'Implementar novo design aprovado pelo cliente na última reunião.',
-    priority: 'Pode Ficar para Amanhã',
-    status: 'Pendente',
-    dueDate: new Date(Date.now() + 86400000 * 2).toISOString(),
-    assignee: 'Carlos Santos',
-    responses: [],
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: '3',
-    title: 'Aprovar orçamento de marketing',
-    description: 'Revisar os valores propostos pela agência para a campanha do próximo mês.',
-    priority: 'Durante o Dia',
-    status: 'Pendente',
-    dueDate: new Date(Date.now() + 86400000).toISOString(),
-    assignee: 'Mariana Costa',
-    responses: [],
-    createdAt: new Date().toISOString(),
-  },
-]
 
 const mockNotifications: DemandNotification[] = [
   {
@@ -77,92 +34,132 @@ const mockNotifications: DemandNotification[] = [
 const DemandContext = createContext<DemandStoreState | null>(null)
 
 export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
-  const [demands, setDemands] = useState<Demand[]>(mockDemands)
+  const [demands, setDemands] = useState<Demand[]>([])
+  const [collaborators, setCollaborators] = useState<Collaborator[]>([])
   const [notifications, setNotifications] = useState<DemandNotification[]>(mockNotifications)
+  const { user, role } = useAuthStore()
 
-  const addNotification = useCallback((title: string, message: string) => {
-    const newNotif: DemandNotification = {
-      id: Math.random().toString(36).substr(2, 9),
-      title,
-      message,
-      createdAt: new Date().toISOString(),
-      read: false,
+  const fetchDemands = useCallback(async () => {
+    if (!user) return
+    const { data, error } = await supabase
+      .from('demandas')
+      .select('*, responsavel:usuarios(nome)')
+      .order('data_criacao', { ascending: false })
+
+    if (error) {
+      console.error(error)
+      return
     }
-    setNotifications((prev) => [newNotif, ...prev])
-    toast({
-      title,
-      description: message,
-    })
-  }, [])
+
+    if (data) {
+      setDemands(
+        data.map((d: any) => ({
+          id: d.id,
+          title: d.titulo,
+          description: d.descricao || '',
+          priority: d.prioridade as DemandPriority,
+          status: d.status as DemandStatus,
+          dueDate: d.data_vencimento || '',
+          assignee: d.responsavel?.nome || 'Não Atribuído',
+          assigneeId: d.responsavel_id,
+          responses: [],
+          createdAt: d.data_criacao,
+        })),
+      )
+    }
+  }, [user])
+
+  const fetchCollaborators = useCallback(async () => {
+    if (!user) return
+    const { data } = await supabase.from('usuarios').select('id, nome').eq('ativo', true)
+    if (data) {
+      setCollaborators(data)
+    }
+  }, [user])
+
+  useEffect(() => {
+    if (role && role !== 'Client') {
+      fetchDemands()
+      fetchCollaborators()
+    }
+  }, [role, fetchDemands, fetchCollaborators])
 
   const markNotificationsAsRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
   }, [])
 
-  const addDemand = useCallback((newDemand: Omit<Demand, 'id' | 'createdAt' | 'responses'>) => {
-    const demand: Demand = {
-      ...newDemand,
-      id: Math.random().toString(36).substr(2, 9),
-      createdAt: new Date().toISOString(),
-      responses: [],
-    }
-    setDemands((prev) => [...prev, demand])
-    toast({
-      title: 'Nova Demanda Criada',
-      description: `A tarefa "${demand.title}" foi adicionada.`,
-    })
-  }, [])
+  const addDemand = useCallback(
+    async (newDemand: Omit<Demand, 'id' | 'createdAt' | 'responses'> & { assigneeId: string }) => {
+      if (!user) return
 
-  const addResponse = useCallback(
-    (demandId: string, text: string, author: string) => {
-      const demand = demands.find((d) => d.id === demandId)
-      if (demand) {
-        addNotification('Novo Comentário', `${author} respondeu em "${demand.title}".`)
+      const { data, error } = await supabase
+        .from('demandas')
+        .insert({
+          titulo: newDemand.title,
+          descricao: newDemand.description,
+          prioridade: newDemand.priority,
+          status: newDemand.status,
+          data_vencimento: newDemand.dueDate,
+          responsavel_id: newDemand.assigneeId || null,
+          usuario_id: user.id,
+        })
+        .select('*, responsavel:usuarios(nome)')
+        .single()
+
+      if (error) {
+        toast({
+          title: 'Erro',
+          description: 'Não foi possível criar a demanda.',
+          variant: 'destructive',
+        })
+        return
       }
 
-      setDemands((prev) =>
-        prev.map((d) => {
-          if (d.id === demandId) {
-            return {
-              ...d,
-              responses: [
-                ...d.responses,
-                {
-                  id: Math.random().toString(36).substr(2, 9),
-                  text,
-                  author,
-                  createdAt: new Date().toISOString(),
-                },
-              ],
-            }
-          }
-          return d
-        }),
-      )
+      if (data) {
+        setDemands((prev) => [
+          ...prev,
+          {
+            id: data.id,
+            title: data.titulo,
+            description: data.descricao || '',
+            priority: data.prioridade as DemandPriority,
+            status: data.status as DemandStatus,
+            dueDate: data.data_vencimento || '',
+            assignee: (data as any).responsavel?.nome || 'Não Atribuído',
+            responses: [],
+            createdAt: data.data_criacao,
+          },
+        ])
+        toast({ title: 'Nova Demanda Criada', description: `A tarefa foi adicionada.` })
+      }
     },
-    [demands, addNotification],
+    [user],
   )
 
   const updateStatus = useCallback(
-    (demandId: string, status: DemandStatus) => {
-      const demand = demands.find((d) => d.id === demandId)
-      if (demand && demand.status !== status) {
-        addNotification(
-          'Status Atualizado',
-          `A demanda "${demand.title}" foi movida para ${status}.`,
-        )
-      }
-
+    async (demandId: string, status: DemandStatus) => {
+      // Optimistic
       setDemands((prev) => prev.map((d) => (d.id === demandId ? { ...d, status } : d)))
+
+      const { error } = await supabase.from('demandas').update({ status }).eq('id', demandId)
+      if (error) {
+        toast({ title: 'Erro', description: 'Erro ao atualizar status.', variant: 'destructive' })
+        fetchDemands() // Revert
+      }
     },
-    [demands, addNotification],
+    [fetchDemands],
   )
 
-  const deleteDemand = useCallback((demandId: string) => {
+  const deleteDemand = useCallback(async (demandId: string) => {
+    const { error } = await supabase.from('demandas').delete().eq('id', demandId)
+    if (error) {
+      toast({ title: 'Erro', description: 'Erro ao excluir demanda.', variant: 'destructive' })
+      return
+    }
     setDemands((prev) => prev.filter((d) => d.id !== demandId))
     toast({
       title: 'Demanda Excluída',
-      description: 'A demanda foi removida com sucesso.',
+      description: 'A demanda foi removida.',
       variant: 'destructive',
     })
   }, [])
@@ -170,18 +167,18 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   const value = useMemo(
     () => ({
       demands,
+      collaborators,
       notifications,
       addDemand,
-      addResponse,
       updateStatus,
       deleteDemand,
       markNotificationsAsRead,
     }),
     [
       demands,
+      collaborators,
       notifications,
       addDemand,
-      addResponse,
       updateStatus,
       deleteDemand,
       markNotificationsAsRead,
@@ -193,8 +190,6 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
 export default function useDemandStore() {
   const context = useContext(DemandContext)
-  if (!context) {
-    throw new Error('useDemandStore must be used within a DemandProvider')
-  }
+  if (!context) throw new Error('useDemandStore must be used within a DemandProvider')
   return context
 }

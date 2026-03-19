@@ -3,26 +3,29 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from './AppSidebar'
 import { Header } from './Header'
 import useAuthStore from '@/stores/useAuthStore'
-import { useEffect } from 'react'
+import { Loader2 } from 'lucide-react'
 
 export default function Layout() {
-  const { role, setRole } = useAuthStore()
+  const { role, loading, user } = useAuthStore()
   const location = useLocation()
 
-  // Auto-login to Admin if role is completely null and they try to hit CRM
-  // (Provides a smoother demo experience if they log out of the portal and go to root)
-  useEffect(() => {
-    if (role === null && !location.pathname.startsWith('/portal')) {
-      setRole('Admin')
-    }
-  }, [role, setRole, location.pathname])
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  // Protect internal CRM
+  if (!user && role !== 'Client') {
+    return <Navigate to="/login" state={{ from: location }} replace />
+  }
 
   // Protect internal CRM from Client users
   if (role === 'Client') {
     return <Navigate to="/portal/demandas" replace />
   }
-
-  if (role === null) return null
 
   return (
     <SidebarProvider>

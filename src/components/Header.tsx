@@ -1,4 +1,4 @@
-import { Search, Bell, Shield } from 'lucide-react'
+import { Search, Bell, Shield, LogOut } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -21,7 +21,7 @@ import { format } from 'date-fns'
 export function Header() {
   const { searchQuery, setSearchQuery } = useLeadStore()
   const { notifications, markNotificationsAsRead } = useDemandStore()
-  const { role, toggleRole } = useAuthStore()
+  const { role, toggleRole, logout, userName } = useAuthStore()
   const location = useLocation()
 
   const pageTitle = (() => {
@@ -140,13 +140,19 @@ export function Header() {
           </Popover>
 
           <div className="h-6 w-px bg-border hidden sm:block" />
-          <Avatar className="h-9 w-9 border cursor-pointer hover:opacity-80 transition-opacity">
-            <AvatarImage
-              src="https://img.usecurling.com/ppl/thumbnail?gender=male&seed=3"
-              alt="User"
-            />
-            <AvatarFallback>AD</AvatarFallback>
-          </Avatar>
+
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium hidden sm:block">{userName}</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={logout}
+              className="text-muted-foreground hover:text-destructive"
+              title="Sair"
+            >
+              <LogOut className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
       </div>
     </header>

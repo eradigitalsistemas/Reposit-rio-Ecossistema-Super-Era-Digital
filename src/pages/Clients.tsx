@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import useClientStore from '@/stores/useClientStore'
 import useAuthStore from '@/stores/useAuthStore'
 import { Trash2, ShieldAlert } from 'lucide-react'
+import { AddClientModal } from '@/components/AddClientModal'
 
 export default function Clients() {
   const { clients, deleteClient } = useClientStore()
@@ -35,11 +36,14 @@ export default function Clients() {
 
   return (
     <div className="h-full w-full bg-slate-50/50 dark:bg-background flex flex-col p-6 overflow-hidden">
-      <div className="mb-6 shrink-0">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Clientes Externos</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Gerencie seus contatos externos e parceiros.
-        </p>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 shrink-0 gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Clientes Externos</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Gerencie seus contatos externos e parceiros.
+          </p>
+        </div>
+        <AddClientModal />
       </div>
 
       <Card className="flex-1 overflow-hidden flex flex-col">

@@ -1,105 +1,133 @@
-import React, { createContext, useContext, useState, useMemo, useCallback } from 'react'
+import React, { createContext, useContext, useState, useMemo, useCallback, useEffect } from 'react'
 import { Lead, LeadStage } from '@/types/crm'
 import { toast } from '@/hooks/use-toast'
+import { supabase } from '@/lib/supabase/client'
+import useAuthStore from './useAuthStore'
 
 interface LeadStoreState {
   leads: Lead[]
   searchQuery: string
   setSearchQuery: (query: string) => void
-  addLead: (lead: Omit<Lead, 'id' | 'createdAt'>) => void
-  moveLead: (id: string, newStage: LeadStage) => void
-  updateTrainingStep: (id: string, step: 1 | 2 | 3) => void
-  deleteLead: (id: string) => void
+  addLead: (lead: Omit<Lead, 'id' | 'createdAt'>) => Promise<void>
+  moveLead: (id: string, newStage: LeadStage) => Promise<void>
+  deleteLead: (id: string) => Promise<void>
 }
-
-const mockLeads: Lead[] = [
-  {
-    id: '1',
-    name: 'João Silva',
-    company: 'Tech Corp',
-    email: 'joao@tech.com',
-    phone: '(11) 99999-1111',
-    notes: '',
-    stage: 'leads',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    name: 'Maria Souza',
-    company: 'Design In',
-    email: 'maria@design.com',
-    phone: '(11) 98888-2222',
-    notes: '',
-    stage: 'prospeccao',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: '3',
-    name: 'Carlos Oliveira',
-    company: 'Agro Plus',
-    email: 'carlos@agro.com',
-    phone: '(11) 97777-3333',
-    notes: '',
-    stage: 'treinamento',
-    trainingStep: 2,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: '4',
-    name: 'Ana Costa',
-    company: 'Logistics SA',
-    email: 'ana@logistics.com',
-    phone: '(11) 96666-4444',
-    notes: '',
-    stage: 'convertido',
-    createdAt: new Date().toISOString(),
-  },
-]
 
 const LeadContext = createContext<LeadStoreState | null>(null)
 
 export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
-  const [leads, setLeads] = useState<Lead[]>(mockLeads)
+  const [leads, setLeads] = useState<Lead[]>([])
   const [searchQuery, setSearchQuery] = useState('')
+  const { user, role } = useAuthStore()
 
-  const addLead = useCallback((newLead: Omit<Lead, 'id' | 'createdAt'>) => {
-    const lead: Lead = {
-      ...newLead,
-      id: Math.random().toString(36).substr(2, 9),
-      createdAt: new Date().toISOString(),
-      ...(newLead.stage === 'treinamento' ? { trainingStep: 1 } : {}),
+  const fetchLeads = useCallback(async () => {
+    if (!user) return
+    const { data, error } = await supabase
+      .from('leads')
+      .select('*')
+      .order('data_criacao', { ascending: false })
+
+    if (error) {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar os leads.',
+        variant: 'destructive',
+      })
+      return
     }
-    setLeads((prev) => [lead, ...prev])
-  }, [])
 
-  const moveLead = useCallback((id: string, newStage: LeadStage) => {
-    setLeads((prev) =>
-      prev.map((lead) =>
-        lead.id === id
-          ? {
-              ...lead,
-              stage: newStage,
-              trainingStep:
-                newStage === 'treinamento' && !lead.trainingStep ? 1 : lead.trainingStep,
-            }
-          : lead,
-      ),
-    )
-  }, [])
+    if (data) {
+      setLeads(
+        data.map((d) => ({
+          id: d.id,
+          name: d.nome,
+          company: d.empresa || '',
+          email: d.email,
+          phone: d.telefone || '',
+          notes: d.observacoes || '',
+          stage: d.estagio as LeadStage,
+          createdAt: d.data_criacao,
+        })),
+      )
+    }
+  }, [user])
 
-  const updateTrainingStep = useCallback((id: string, step: 1 | 2 | 3) => {
-    setLeads((prev) =>
-      prev.map((lead) => (lead.id === id ? { ...lead, trainingStep: step } : lead)),
-    )
-  }, [])
+  useEffect(() => {
+    if (role && role !== 'Client') {
+      fetchLeads()
+    }
+  }, [role, fetchLeads])
 
-  const deleteLead = useCallback((id: string) => {
+  const addLead = useCallback(
+    async (newLead: Omit<Lead, 'id' | 'createdAt'>) => {
+      if (!user) return
+
+      const { data, error } = await supabase
+        .from('leads')
+        .insert({
+          nome: newLead.name,
+          empresa: newLead.company,
+          email: newLead.email,
+          telefone: newLead.phone,
+          observacoes: newLead.notes,
+          estagio: newLead.stage,
+          usuario_id: user.id,
+        })
+        .select()
+        .single()
+
+      if (error) {
+        toast({ title: 'Erro', description: 'Erro ao criar lead.', variant: 'destructive' })
+        return
+      }
+
+      if (data) {
+        setLeads((prev) => [
+          {
+            id: data.id,
+            name: data.nome,
+            company: data.empresa || '',
+            email: data.email,
+            phone: data.telefone || '',
+            notes: data.observacoes || '',
+            stage: data.estagio as LeadStage,
+            createdAt: data.data_criacao,
+          },
+          ...prev,
+        ])
+        toast({ title: 'Lead Criado', description: 'O lead foi adicionado com sucesso.' })
+      }
+    },
+    [user],
+  )
+
+  const moveLead = useCallback(
+    async (id: string, newStage: LeadStage) => {
+      // Optimistic update
+      setLeads((prev) => prev.map((lead) => (lead.id === id ? { ...lead, stage: newStage } : lead)))
+
+      const { error } = await supabase.from('leads').update({ estagio: newStage }).eq('id', id)
+      if (error) {
+        toast({
+          title: 'Erro',
+          description: 'Erro ao atualizar estágio do lead.',
+          variant: 'destructive',
+        })
+        fetchLeads() // Revert on error
+      }
+    },
+    [fetchLeads],
+  )
+
+  const deleteLead = useCallback(async (id: string) => {
+    const { error } = await supabase.from('leads').delete().eq('id', id)
+    if (error) {
+      toast({ title: 'Erro', description: 'Erro ao excluir lead.', variant: 'destructive' })
+      return
+    }
+
     setLeads((prev) => prev.filter((lead) => lead.id !== id))
-    toast({
-      title: 'Lead Excluído',
-      description: 'O lead foi removido com sucesso.',
-      variant: 'destructive',
-    })
+    toast({ title: 'Lead Excluído', description: 'O lead foi removido.', variant: 'destructive' })
   }, [])
 
   const value = useMemo(
@@ -109,10 +137,9 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
       setSearchQuery,
       addLead,
       moveLead,
-      updateTrainingStep,
       deleteLead,
     }),
-    [leads, searchQuery, addLead, moveLead, updateTrainingStep, deleteLead],
+    [leads, searchQuery, addLead, moveLead, deleteLead],
   )
 
   return <LeadContext.Provider value={value}>{children}</LeadContext.Provider>
@@ -120,8 +147,6 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
 
 export default function useLeadStore() {
   const context = useContext(LeadContext)
-  if (!context) {
-    throw new Error('useLeadStore must be used within a LeadProvider')
-  }
+  if (!context) throw new Error('useLeadStore must be used within a LeadProvider')
   return context
 }

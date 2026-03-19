@@ -3,6 +3,7 @@ import { Toaster } from '@/components/ui/toaster'
 import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import Index from './pages/Index'
+import Login from './pages/Login'
 import Demands from './pages/Demands'
 import Clients from './pages/Clients'
 import ClientProfile from './pages/ClientProfile'
@@ -31,6 +32,9 @@ const App = () => (
           <LeadProvider>
             <DemandProvider>
               <Routes>
+                {/* Public Auth Routes */}
+                <Route path="/login" element={<Login />} />
+
                 {/* Internal CRM Routes */}
                 <Route element={<Layout />}>
                   <Route path="/" element={<Index />} />
