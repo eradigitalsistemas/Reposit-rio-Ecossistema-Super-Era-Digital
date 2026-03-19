@@ -72,6 +72,16 @@
     padding: 0 !important;
     margin: 0 !important;
   }
+
+  /* WebKit Autofill overrides for Dark Mode */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px #000000 inset !important;
+    -webkit-text-fill-color: #ffffff !important;
+    caret-color: #ffffff !important;
+  }
 }
 
 @layer utilities {

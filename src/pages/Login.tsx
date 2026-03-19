@@ -73,7 +73,7 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
+                  className="bg-black border-zinc-700 text-white placeholder:text-zinc-500 focus:bg-black focus-visible:bg-black focus:border-primary focus:ring-1 focus:ring-primary"
                 />
               </div>
               <div className="space-y-2">
@@ -87,12 +87,12 @@ export default function Login() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="bg-zinc-800 border-zinc-700 text-white pr-10"
+                    className="bg-black border-zinc-700 text-white pr-10 focus:bg-black focus-visible:bg-black focus:border-primary focus:ring-1 focus:ring-primary"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors z-10"
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
