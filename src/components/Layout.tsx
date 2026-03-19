@@ -9,11 +9,6 @@ export default function Layout() {
   const { role, setRole } = useAuthStore()
   const location = useLocation()
 
-  // Protect internal CRM from Client users
-  if (role === 'Client') {
-    return <Navigate to="/portal/demandas" replace />
-  }
-
   // Auto-login to Admin if role is completely null and they try to hit CRM
   // (Provides a smoother demo experience if they log out of the portal and go to root)
   useEffect(() => {
@@ -21,6 +16,11 @@ export default function Layout() {
       setRole('Admin')
     }
   }, [role, setRole, location.pathname])
+
+  // Protect internal CRM from Client users
+  if (role === 'Client') {
+    return <Navigate to="/portal/demandas" replace />
+  }
 
   if (role === null) return null
 
