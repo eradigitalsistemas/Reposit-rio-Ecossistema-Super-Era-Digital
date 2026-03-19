@@ -51,14 +51,14 @@ const leadsConfig: ChartConfig = {
   prospeccao: { label: 'Prospecção', color: 'rgba(255,255,255,0.4)' },
   convertido: { label: 'Convertido', color: '#3b82f6' }, // Semantic Blue
   treinamento: { label: 'Em Treinamento', color: 'rgba(255,255,255,0.6)' },
-  finalizado: { label: 'Finalizado', color: '#0ea5e9' }, // Semantic Light Blue
+  finalizado: { label: 'Finalizado', color: '#ffffff' }, // Semantic White
   pos_venda: { label: 'Pós Venda', color: 'rgba(255,255,255,0.8)' },
   ativo: { label: 'Ativo', color: 'hsl(var(--primary))' }, // Primary Green
 }
 
 const priorityConfig: ChartConfig = {
   Urgente: { label: 'Urgente', color: '#ef4444' }, // Semantic Red
-  'Durante o Dia': { label: 'Durante o Dia', color: '#f97316' }, // Semantic Orange
+  'Durante o Dia': { label: 'Durante o Dia', color: '#eab308' }, // High-contrast Yellow
   'Pode Ficar para Amanhã': { label: 'Ficar para Amanhã', color: 'rgba(255,255,255,0.3)' }, // Subtle Grey
 }
 
@@ -343,7 +343,12 @@ export default function Reports() {
                     stroke="none"
                   >
                     {leadsChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={entry.fill}
+                        stroke={entry.id === 'finalizado' ? 'rgba(255,255,255,0.2)' : 'none'}
+                        strokeWidth={entry.id === 'finalizado' ? 1 : 0}
+                      />
                     ))}
                   </Pie>
                   <ChartTooltip content={<ChartTooltipContent />} />
