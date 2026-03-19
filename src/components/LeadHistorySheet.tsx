@@ -42,15 +42,22 @@ export function LeadHistorySheet({ lead }: LeadHistorySheetProps) {
   const fetchHistory = async () => {
     setLoading(true)
     try {
-      const { data, error } = await supabase
+      const { data: leadData, error: leadError } = await supabase
+        .from('leads')
+        .select('observacoes, data_criacao')
+        .eq('id', lead.id)
+        .single()
+
+      if (leadError) throw leadError
+
+      const { data: historyData, error: historyError } = await supabase
         .from('historico_leads')
         .select('*')
         .eq('lead_id', lead.id)
-        .order('data_criacao', { ascending: false })
 
-      if (error) throw error
+      if (historyError) throw historyError
 
-      const items: HistoryItem[] = (data || []).map((item) => ({
+      const items: HistoryItem[] = (historyData || []).map((item) => ({
         id: item.id,
         type: 'interaction',
         date: item.data_criacao,
@@ -63,12 +70,13 @@ export function LeadHistorySheet({ lead }: LeadHistorySheetProps) {
       items.push({
         id: `creation-${lead.id}`,
         type: 'creation',
-        date: lead.createdAt,
+        date: leadData.data_criacao,
         title: 'Lead criado',
-        details: `Lead adicionado ao sistema na fase inicial.`,
+        details: leadData.observacoes || 'Lead adicionado ao sistema na fase inicial.',
       })
 
-      items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      // Strict chronological order (oldest to newest)
+      items.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
       setHistory(items)
     } catch (error) {
