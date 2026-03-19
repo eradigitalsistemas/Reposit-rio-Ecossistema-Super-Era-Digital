@@ -18,6 +18,10 @@ interface DemandStoreState {
       assigneeId?: string | null
     },
   ) => Promise<void>
+  editDemand: (
+    demandId: string,
+    updates: Partial<Omit<Demand, 'id' | 'createdAt' | 'responses' | 'logs'>>,
+  ) => Promise<void>
   updateStatus: (demandId: string, status: DemandStatus) => Promise<void>
   deleteDemand: (demandId: string) => Promise<void>
   acceptDemand: (demandId: string) => Promise<void>
@@ -170,7 +174,6 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (data) {
           setDemands((prev) => [
-            ...prev,
             {
               id: data.id,
               title: data.titulo || 'Sem título',
@@ -185,6 +188,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
               createdAt: data.data_criacao || new Date().toISOString(),
               systemEscalated: false,
             },
+            ...prev,
           ])
           toast({ title: 'Nova Demanda Criada', description: `A tarefa foi adicionada.` })
         }
@@ -194,6 +198,42 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       }
     },
     [user],
+  )
+
+  const editDemand = useCallback(
+    async (
+      demandId: string,
+      updates: Partial<Omit<Demand, 'id' | 'createdAt' | 'responses' | 'logs'>>,
+    ) => {
+      try {
+        const updateData: any = {}
+        if (updates.title !== undefined) updateData.titulo = updates.title
+        if (updates.description !== undefined) updateData.descricao = updates.description
+        if (updates.priority !== undefined) updateData.prioridade = updates.priority
+        if (updates.dueDate !== undefined) updateData.data_vencimento = updates.dueDate
+        if (updates.assigneeId !== undefined) updateData.responsavel_id = updates.assigneeId
+        if (updates.status !== undefined) updateData.status = updates.status
+
+        const { error } = await supabase.from('demandas').update(updateData).eq('id', demandId)
+
+        if (error) {
+          console.error('Error updating demand:', error)
+          toast({
+            title: 'Erro',
+            description: 'Não foi possível atualizar a demanda.',
+            variant: 'destructive',
+          })
+          return
+        }
+
+        toast({ title: 'Demanda Atualizada', description: 'As alterações foram salvas.' })
+        fetchDemands()
+      } catch (e) {
+        console.error('Exception in editDemand:', e)
+        toast({ title: 'Erro', description: 'Ocorreu um erro inesperado.', variant: 'destructive' })
+      }
+    },
+    [fetchDemands],
   )
 
   const updateStatus = useCallback(
@@ -226,11 +266,11 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       setDemands((prev) => prev.filter((d) => d.id !== demandId))
       toast({
         title: 'Demanda Excluída',
-        description: 'A demanda foi removida.',
-        variant: 'destructive',
+        description: 'A demanda foi removida com sucesso.',
       })
     } catch (e) {
       console.error('Exception in deleteDemand:', e)
+      toast({ title: 'Erro', description: 'Ocorreu um erro inesperado.', variant: 'destructive' })
     }
   }, [])
 
@@ -304,6 +344,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       collaborators,
       notifications,
       addDemand,
+      editDemand,
       updateStatus,
       deleteDemand,
       acceptDemand,
@@ -315,6 +356,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       collaborators,
       notifications,
       addDemand,
+      editDemand,
       updateStatus,
       deleteDemand,
       acceptDemand,
