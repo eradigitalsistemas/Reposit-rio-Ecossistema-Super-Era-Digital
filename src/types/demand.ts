@@ -10,6 +10,12 @@ export interface DemandLog {
   usuario_id?: string
 }
 
+export interface DemandAttachment {
+  name: string
+  url: string
+  type: string
+}
+
 export interface Demand {
   id: string
   title: string
@@ -23,6 +29,7 @@ export interface Demand {
   category?: DemandCategory
   responses?: string[]
   logs?: DemandLog[]
+  attachments?: DemandAttachment[]
   createdAt: string
   systemEscalated?: boolean
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { format } from 'date-fns'
 import {
   Dialog,
@@ -19,10 +19,15 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
+  Paperclip,
+  File as FileIcon,
+  Image as ImageIcon,
 } from 'lucide-react'
-import { Demand } from '@/types/demand'
+import { Demand, DemandAttachment } from '@/types/demand'
 import useDemandStore from '@/stores/useDemandStore'
 import useAuthStore from '@/stores/useAuthStore'
+import { supabase } from '@/lib/supabase/client'
+import { toast } from '@/hooks/use-toast'
 
 interface DemandDetailsModalProps {
   open: boolean
@@ -31,23 +36,66 @@ interface DemandDetailsModalProps {
 }
 
 export function DemandDetailsModal({ open, onOpenChange, demand }: DemandDetailsModalProps) {
-  const { acceptDemand, updateStatus, addResponse } = useDemandStore()
+  const { acceptDemand, updateStatus, addResponse, addAttachments } = useDemandStore()
   const { user } = useAuthStore()
   const [responseText, setResponseText] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleAccept = () => {
-    acceptDemand(demand.id)
-  }
-
+  const handleAccept = () => acceptDemand(demand.id)
   const handleComplete = () => {
     updateStatus(demand.id, 'Concluído')
     onOpenChange(false)
   }
-
   const handleAddResponse = () => {
-    if (!responseText.trim()) return
-    addResponse(demand.id, responseText)
-    setResponseText('')
+    if (responseText.trim()) {
+      addResponse(demand.id, responseText)
+      setResponseText('')
+    }
+  }
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files?.length) return
+    setUploading(true)
+    const newAttachments: DemandAttachment[] = []
+
+    for (const file of Array.from(e.target.files)) {
+      const fileName = `${crypto.randomUUID()}_${file.name}`
+      const { data } = await supabase.storage.from('demandas_anexos').upload(fileName, file)
+      if (data) {
+        newAttachments.push({ name: file.name, url: data.path, type: file.type })
+      } else {
+        toast({
+          title: 'Erro',
+          description: `Falha ao anexar ${file.name}`,
+          variant: 'destructive',
+        })
+      }
+    }
+
+    if (newAttachments.length > 0) {
+      await addAttachments(demand.id, newAttachments)
+      toast({ title: 'Anexos adicionados', description: 'Arquivos foram salvos com sucesso.' })
+    }
+
+    setUploading(false)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const handleDownload = async (attachment: DemandAttachment) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('demandas_anexos')
+        .createSignedUrl(attachment.url, 3600)
+      if (error) throw error
+      window.open(data.signedUrl, '_blank')
+    } catch (err) {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível acessar o arquivo.',
+        variant: 'destructive',
+      })
+    }
   }
 
   const canAccept = demand.status === 'Pendente' && demand.assigneeId !== user?.id
@@ -141,6 +189,74 @@ export function DemandDetailsModal({ open, onOpenChange, demand }: DemandDetails
               </div>
             </div>
 
+            <Separator className="bg-white/10" />
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
+                  <Paperclip className="w-5 h-5 text-primary" />
+                  Anexos
+                </h3>
+                <div>
+                  <input
+                    type="file"
+                    multiple
+                    className="hidden"
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-primary hover:text-primary/80 hover:bg-primary/10 gap-2 h-8"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                  >
+                    {uploading ? (
+                      <span className="animate-pulse">Enviando...</span>
+                    ) : (
+                      <>
+                        <Paperclip className="w-4 h-4" /> Adicionar
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+              {demand.attachments && demand.attachments.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {demand.attachments.map((att, i) => (
+                    <button
+                      key={i}
+                      onClick={() => handleDownload(att)}
+                      className="flex items-center gap-3 bg-[rgba(255,255,255,0.02)] p-3 rounded-lg border border-white/10 hover:border-primary/50 hover:bg-primary/5 transition-all text-left group"
+                    >
+                      <div className="bg-white/5 p-2 rounded group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                        {att.type.startsWith('image/') ? (
+                          <ImageIcon className="w-5 h-5" />
+                        ) : (
+                          <FileIcon className="w-5 h-5" />
+                        )}
+                      </div>
+                      <div className="overflow-hidden flex-1">
+                        <p className="text-sm font-medium text-primary group-hover:text-primary/80 truncate transition-colors">
+                          {att.name}
+                        </p>
+                        <p className="text-xs text-white/50 uppercase">
+                          {att.type.split('/')[1] || 'FILE'}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-white/50 bg-white/5 p-4 rounded-lg border border-white/5 text-center">
+                  Nenhum anexo encontrado.
+                </p>
+              )}
+            </div>
+
+            <Separator className="bg-white/10" />
+
             <div className="space-y-4">
               <h3 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
                 <History className="w-5 h-5 text-primary" />
@@ -174,7 +290,6 @@ export function DemandDetailsModal({ open, onOpenChange, demand }: DemandDetails
                 <MessageSquare className="w-5 h-5 text-primary" />
                 Anotações Internas
               </h3>
-
               <div className="flex flex-col sm:flex-row gap-3">
                 <Textarea
                   placeholder="Adicione uma nota ou atualização..."
@@ -190,7 +305,6 @@ export function DemandDetailsModal({ open, onOpenChange, demand }: DemandDetails
                   Adicionar
                 </Button>
               </div>
-
               {demand.responses && demand.responses.length > 0 && (
                 <div className="space-y-3 mt-4">
                   {demand.responses.map((resp, i) => (

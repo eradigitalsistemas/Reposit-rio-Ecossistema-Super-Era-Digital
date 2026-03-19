@@ -1,5 +1,12 @@
 import React, { createContext, useContext, useState, useMemo, useCallback, useEffect } from 'react'
-import { Demand, DemandPriority, DemandStatus, DemandNotification, DemandLog } from '@/types/demand'
+import {
+  Demand,
+  DemandPriority,
+  DemandStatus,
+  DemandNotification,
+  DemandLog,
+  DemandAttachment,
+} from '@/types/demand'
 import { toast } from '@/hooks/use-toast'
 import { ToastAction } from '@/components/ui/toast'
 import { supabase } from '@/lib/supabase/client'
@@ -22,12 +29,15 @@ interface DemandStoreState {
   ) => Promise<void>
   editDemand: (
     demandId: string,
-    updates: Partial<Omit<Demand, 'id' | 'createdAt' | 'responses' | 'logs'>>,
+    updates: Partial<Omit<Demand, 'id' | 'createdAt' | 'responses' | 'logs'>> & {
+      attachments?: DemandAttachment[]
+    },
   ) => Promise<void>
   updateStatus: (demandId: string, status: DemandStatus) => Promise<void>
   deleteDemand: (demandId: string) => Promise<void>
   acceptDemand: (demandId: string) => Promise<void>
   addResponse: (demandId: string, text: string) => Promise<void>
+  addAttachments: (demandId: string, attachments: DemandAttachment[]) => Promise<void>
   markNotificationsAsRead: () => void
   fetchCollaborators: () => Promise<void>
 }
@@ -51,19 +61,16 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         )
         .order('data_criacao', { ascending: false })
 
-      if (error) {
-        console.error('Error fetching demands:', error)
-        return
-      }
+      if (error) return console.error('Error fetching demands:', error)
 
       if (data) {
         const parsedDemands = data.map((d: any) => {
-          const logsArray = Array.isArray(d.logs_auditoria) ? d.logs_auditoria : []
-          const sortedLogs = [...logsArray].sort((a: any, b: any) => {
-            const dateA = a.data_criacao ? new Date(a.data_criacao).getTime() : 0
-            const dateB = b.data_criacao ? new Date(b.data_criacao).getTime() : 0
-            return dateB - dateA
-          })
+          const sortedLogs = Array.isArray(d.logs_auditoria)
+            ? [...d.logs_auditoria].sort(
+                (a: any, b: any) =>
+                  new Date(b.data_criacao).getTime() - new Date(a.data_criacao).getTime(),
+              )
+            : []
 
           const mappedLogs: DemandLog[] = sortedLogs.map((l: any) => ({
             id: l.id || crypto.randomUUID(),
@@ -76,12 +83,10 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           const latestPriorityChange = sortedLogs.find(
             (l: any) => l.acao === 'Alteração de Prioridade',
           )
-
           const systemEscalated =
             latestPriorityChange &&
             latestPriorityChange.usuario_id === null &&
-            latestPriorityChange.dados_novos &&
-            latestPriorityChange.dados_novos.prioridade === 'Urgente' &&
+            latestPriorityChange.dados_novos?.prioridade === 'Urgente' &&
             d.prioridade === 'Urgente'
 
           return {
@@ -95,6 +100,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             assigneeId: d.responsavel_id || null,
             responses: [],
             logs: mappedLogs,
+            attachments: d.anexos || [],
             createdAt: d.data_criacao || new Date().toISOString(),
             systemEscalated: !!systemEscalated,
           }
@@ -102,61 +108,44 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         setDemands(parsedDemands)
       }
     } catch (e) {
-      console.error('Exception in fetchDemands:', e)
+      console.error(e)
     }
   }, [user])
 
   const fetchCollaborators = useCallback(async () => {
     if (!user) return
-    try {
-      const { data, error } = await supabase
-        .from('usuarios')
-        .select('id, nome')
-        .eq('ativo', true)
-        .order('nome')
-
-      if (error) {
-        console.error('Error fetching collaborators:', error)
-        return
-      }
-      if (data) {
-        setCollaborators(data)
-      }
-    } catch (e) {
-      console.error('Exception in fetchCollaborators:', e)
-    }
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('id, nome')
+      .eq('ativo', true)
+      .order('nome')
+    if (!error && data) setCollaborators(data)
   }, [user])
 
   const fetchNotifications = useCallback(async () => {
     if (!user) return
-    try {
-      const { data, error } = await supabase
-        .from('notificacoes')
-        .select('*')
-        .eq('usuario_id', user.id)
-        .order('data_criacao', { ascending: false })
-        .limit(50)
-
-      if (!error && data) {
-        setNotifications(
-          data.map((n: any) => ({
-            id: n.id,
-            title: n.titulo,
-            message: n.mensagem,
-            read: n.lida,
-            createdAt: n.data_criacao,
-            demandId: n.demanda_id,
-          })),
-        )
-      }
-    } catch (e) {
-      console.error('Exception in fetchNotifications:', e)
+    const { data, error } = await supabase
+      .from('notificacoes')
+      .select('*')
+      .eq('usuario_id', user.id)
+      .order('data_criacao', { ascending: false })
+      .limit(50)
+    if (!error && data) {
+      setNotifications(
+        data.map((n: any) => ({
+          id: n.id,
+          title: n.titulo,
+          message: n.mensagem,
+          read: n.lida,
+          createdAt: n.data_criacao,
+          demandId: n.demanda_id,
+        })),
+      )
     }
   }, [user])
 
   useEffect(() => {
     let isSubscribed = true
-
     if (role && role !== 'Client' && user) {
       fetchDemands()
       fetchCollaborators()
@@ -165,12 +154,9 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       const usersChannel = supabase
         .channel('usuarios-colab-changes')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'usuarios' }, () => {
-          if (isSubscribed) {
-            fetchCollaborators()
-          }
+          if (isSubscribed) fetchCollaborators()
         })
         .subscribe()
-
       const notifChannel = supabase
         .channel('notificacoes-changes')
         .on(
@@ -184,7 +170,6 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           (payload) => {
             if (!isSubscribed) return
             const newNotif = payload.new as any
-
             setNotifications((prev) => [
               {
                 id: newNotif.id,
@@ -196,13 +181,12 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
               },
               ...prev,
             ])
-
             toast({
               title: newNotif.titulo,
               description: newNotif.mensagem,
               action: newNotif.demanda_id ? (
                 <ToastAction
-                  altText="Ver Demanda"
+                  altText="Ver"
                   onClick={() => navigate(`/demandas?highlight=${newNotif.demanda_id}`)}
                 >
                   Ver
@@ -222,22 +206,13 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   }, [role, user, fetchDemands, fetchCollaborators, fetchNotifications, navigate])
 
   const markNotificationsAsRead = useCallback(async () => {
-    if (!user) return
-
-    const unreadNotifications = notifications.filter((n) => !n.read)
-    if (unreadNotifications.length === 0) return
-
+    if (!user || !notifications.some((n) => !n.read)) return
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
-
-    try {
-      await supabase
-        .from('notificacoes')
-        .update({ lida: true })
-        .eq('usuario_id', user.id)
-        .eq('lida', false)
-    } catch (e) {
-      console.error('Error marking notifications as read:', e)
-    }
+    await supabase
+      .from('notificacoes')
+      .update({ lida: true })
+      .eq('usuario_id', user.id)
+      .eq('lida', false)
   }, [user, notifications])
 
   const addDemand = useCallback(
@@ -247,7 +222,6 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       },
     ) => {
       if (!user) return
-
       try {
         const { data, error } = await supabase
           .from('demandas')
@@ -259,34 +233,27 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             data_vencimento: newDemand.dueDate || null,
             responsavel_id: newDemand.assigneeId || null,
             usuario_id: user.id,
+            anexos: newDemand.attachments || [],
           })
           .select('*, responsavel:usuarios(nome)')
           .single()
 
-        if (error) {
-          console.error('Error inserting demand:', error)
-          toast({
-            title: 'Erro',
-            description: 'Não foi possível criar a demanda.',
-            variant: 'destructive',
-          })
-          return
-        }
-
+        if (error) throw error
         if (data) {
           setDemands((prev) => [
             {
               id: data.id,
-              title: data.titulo || 'Sem título',
+              title: data.titulo,
               description: data.descricao || '',
-              priority: (data.prioridade as DemandPriority) || 'Pode Ficar para Amanhã',
-              status: (data.status as DemandStatus) || 'Pendente',
-              dueDate: data.data_vencimento || null,
+              priority: data.prioridade as DemandPriority,
+              status: data.status as DemandStatus,
+              dueDate: data.data_vencimento,
               assignee: (data as any).responsavel?.nome || 'Sem responsável',
-              assigneeId: data.responsavel_id || null,
+              assigneeId: data.responsavel_id,
               responses: [],
               logs: [],
-              createdAt: data.data_criacao || new Date().toISOString(),
+              attachments: data.anexos || [],
+              createdAt: data.data_criacao,
               systemEscalated: false,
             },
             ...prev,
@@ -294,8 +261,11 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           toast({ title: 'Nova Demanda Criada', description: `A tarefa foi adicionada.` })
         }
       } catch (e) {
-        console.error('Exception in addDemand:', e)
-        toast({ title: 'Erro', description: 'Ocorreu um erro inesperado.', variant: 'destructive' })
+        toast({
+          title: 'Erro',
+          description: 'Não foi possível criar a demanda.',
+          variant: 'destructive',
+        })
       }
     },
     [user],
@@ -304,7 +274,9 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   const editDemand = useCallback(
     async (
       demandId: string,
-      updates: Partial<Omit<Demand, 'id' | 'createdAt' | 'responses' | 'logs'>>,
+      updates: Partial<Omit<Demand, 'id' | 'createdAt' | 'responses' | 'logs'>> & {
+        attachments?: DemandAttachment[]
+      },
     ) => {
       try {
         const updateData: any = {}
@@ -314,71 +286,40 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         if (updates.dueDate !== undefined) updateData.data_vencimento = updates.dueDate
         if (updates.assigneeId !== undefined) updateData.responsavel_id = updates.assigneeId
         if (updates.status !== undefined) updateData.status = updates.status
+        if (updates.attachments !== undefined) updateData.anexos = updates.attachments
 
         const { error } = await supabase.from('demandas').update(updateData).eq('id', demandId)
-
-        if (error) {
-          console.error('Error updating demand:', error)
-          toast({
-            title: 'Erro',
-            description: 'Não foi possível atualizar a demanda.',
-            variant: 'destructive',
-          })
-          return
-        }
+        if (error) throw error
 
         toast({ title: 'Demanda Atualizada', description: 'As alterações foram salvas.' })
         fetchDemands()
       } catch (e) {
-        console.error('Exception in editDemand:', e)
-        toast({ title: 'Erro', description: 'Ocorreu um erro inesperado.', variant: 'destructive' })
+        toast({
+          title: 'Erro',
+          description: 'Não foi possível atualizar a demanda.',
+          variant: 'destructive',
+        })
       }
     },
     [fetchDemands],
   )
 
-  const updateStatus = useCallback(
-    async (demandId: string, status: DemandStatus) => {
-      setDemands((prev) => prev.map((d) => (d.id === demandId ? { ...d, status } : d)))
-
-      try {
-        const { error } = await supabase.from('demandas').update({ status }).eq('id', demandId)
-        if (error) {
-          console.error('Error updating status:', error)
-          toast({ title: 'Erro', description: 'Erro ao atualizar status.', variant: 'destructive' })
-          fetchDemands()
-        }
-      } catch (e) {
-        console.error('Exception in updateStatus:', e)
-        fetchDemands()
-      }
-    },
-    [fetchDemands],
-  )
+  const updateStatus = useCallback(async (demandId: string, status: DemandStatus) => {
+    setDemands((prev) => prev.map((d) => (d.id === demandId ? { ...d, status } : d)))
+    await supabase.from('demandas').update({ status }).eq('id', demandId)
+  }, [])
 
   const deleteDemand = useCallback(async (demandId: string) => {
-    try {
-      const { error } = await supabase.from('demandas').delete().eq('id', demandId)
-      if (error) {
-        console.error('Error deleting demand:', error)
-        toast({ title: 'Erro', description: 'Erro ao excluir demanda.', variant: 'destructive' })
-        return
-      }
+    const { error } = await supabase.from('demandas').delete().eq('id', demandId)
+    if (!error) {
       setDemands((prev) => prev.filter((d) => d.id !== demandId))
-      toast({
-        title: 'Demanda Excluída',
-        description: 'A demanda foi removida com sucesso.',
-      })
-    } catch (e) {
-      console.error('Exception in deleteDemand:', e)
-      toast({ title: 'Erro', description: 'Ocorreu um erro inesperado.', variant: 'destructive' })
+      toast({ title: 'Demanda Excluída', description: 'Removida com sucesso.' })
     }
   }, [])
 
   const acceptDemand = useCallback(
     async (demandId: string) => {
       if (!user) return
-
       setDemands((prev) =>
         prev.map((d) =>
           d.id === demandId
@@ -386,57 +327,57 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             : d,
         ),
       )
-
-      try {
-        const { error } = await supabase
-          .from('demandas')
-          .update({
-            status: 'Em Andamento',
-            responsavel_id: user.id,
-          })
-          .eq('id', demandId)
-
-        if (error) throw error
-
+      const { error } = await supabase
+        .from('demandas')
+        .update({ status: 'Em Andamento', responsavel_id: user.id })
+        .eq('id', demandId)
+      if (!error)
         toast({
           title: 'Demanda Aceita',
-          description: 'A demanda foi movida para Em Andamento e atribuída a você.',
+          description: 'Atribuída a você.',
           className:
-            'bg-zinc-950 border border-green-500/50 text-white shadow-[0_0_15px_rgba(34,197,94,0.2)]',
+            'bg-zinc-950 border-green-500/50 text-white shadow-[0_0_15px_rgba(34,197,94,0.2)]',
         })
-        fetchDemands()
-      } catch (e) {
-        console.error(e)
-        toast({ title: 'Erro', description: 'Erro ao aceitar demanda.', variant: 'destructive' })
-        fetchDemands()
-      }
     },
-    [user, userName, fetchDemands],
+    [user, userName],
   )
 
   const addResponse = useCallback(
     async (demandId: string, text: string) => {
-      if (!user) return
-      try {
-        const { error } = await supabase
-          .from('demandas')
-          .update({ resposta: text })
-          .eq('id', demandId)
-        if (error) throw error
-
+      const { error } = await supabase
+        .from('demandas')
+        .update({ resposta: text })
+        .eq('id', demandId)
+      if (!error) {
         toast({
           title: 'Sucesso',
-          description: 'Resposta ou atualização adicionada ao histórico.',
-          className:
-            'bg-zinc-950 border border-green-500/50 text-white shadow-[0_0_15px_rgba(34,197,94,0.2)]',
+          description: 'Anotação adicionada.',
+          className: 'bg-zinc-950 border-green-500/50 text-white',
         })
         fetchDemands()
-      } catch (e) {
-        console.error(e)
-        toast({ title: 'Erro', description: 'Erro ao adicionar resposta.', variant: 'destructive' })
       }
     },
-    [user, fetchDemands],
+    [fetchDemands],
+  )
+
+  const addAttachments = useCallback(
+    async (demandId: string, newAttachments: DemandAttachment[]) => {
+      try {
+        const { data } = await supabase
+          .from('demandas')
+          .select('anexos')
+          .eq('id', demandId)
+          .single()
+        const updatedAttachments = [...(data?.anexos || []), ...newAttachments]
+        await supabase.from('demandas').update({ anexos: updatedAttachments }).eq('id', demandId)
+        setDemands((prev) =>
+          prev.map((d) => (d.id === demandId ? { ...d, attachments: updatedAttachments } : d)),
+        )
+      } catch (e) {
+        toast({ title: 'Erro', description: 'Erro ao salvar anexos.', variant: 'destructive' })
+      }
+    },
+    [],
   )
 
   const value = useMemo(
@@ -450,6 +391,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       deleteDemand,
       acceptDemand,
       addResponse,
+      addAttachments,
       markNotificationsAsRead,
       fetchCollaborators,
     }),
@@ -463,6 +405,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       deleteDemand,
       acceptDemand,
       addResponse,
+      addAttachments,
       markNotificationsAsRead,
       fetchCollaborators,
     ],
