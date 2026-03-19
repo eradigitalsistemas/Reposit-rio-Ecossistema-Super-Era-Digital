@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, PieChart, Pie, Cell, Legend } from 'recharts'
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Cell } from 'recharts'
 import {
   ChartContainer,
   ChartTooltip,
@@ -47,19 +47,19 @@ interface UserData {
 }
 
 const leadsConfig: ChartConfig = {
-  leads: { label: 'Leads', color: 'rgba(255,255,255,0.2)' },
-  prospeccao: { label: 'Prospecção', color: 'rgba(255,255,255,0.4)' },
-  convertido: { label: 'Convertido', color: '#3b82f6' },
-  treinamento: { label: 'Em Treinamento', color: 'rgba(255,255,255,0.6)' },
-  finalizado: { label: 'Finalizado', color: '#ffffff' },
-  pos_venda: { label: 'Pós Venda', color: 'rgba(255,255,255,0.8)' },
-  ativo: { label: 'Ativo', color: 'hsl(var(--primary))' },
+  leads: { label: 'Leads', color: 'hsl(var(--primary))' },
+  prospeccao: { label: 'Prospecção', color: 'hsl(var(--primary))' },
+  convertido: { label: 'Convertido', color: '#3b82f6' }, // Azul
+  treinamento: { label: 'Em Treinamento', color: 'hsl(var(--primary))' },
+  finalizado: { label: 'Finalizado', color: '#ffffff' }, // Branco
+  pos_venda: { label: 'Pós Venda', color: 'hsl(var(--primary))' },
+  ativo: { label: 'Ativo', color: 'hsl(var(--primary))' }, // Verde
 }
 
 const priorityConfig: ChartConfig = {
-  Urgente: { label: 'Urgente', color: '#ef4444' },
-  'Durante o Dia': { label: 'Durante o Dia', color: '#eab308' },
-  'Pode Ficar para Amanhã': { label: 'Ficar para Amanhã', color: 'rgba(255,255,255,0.3)' },
+  Urgente: { label: 'Urgente', color: '#ef4444' }, // Vermelho
+  'Durante o Dia': { label: 'Durante o Dia', color: '#eab308' }, // Amarelo
+  'Pode Ficar para Amanhã': { label: 'Ficar para Amanhã', color: 'hsl(var(--primary))' }, // Verde
 }
 
 export default function Reports() {
@@ -185,7 +185,7 @@ export default function Reports() {
         id: stage,
         name: configItem?.label || stage,
         value: count,
-        fill: configItem?.color || 'rgba(255,255,255,0.2)',
+        fill: configItem?.color || 'hsl(var(--primary))',
       }
     })
   }, [filteredLeads])
@@ -201,7 +201,7 @@ export default function Reports() {
         id: priority,
         name: configItem?.label || priority,
         value: count,
-        fill: configItem?.color || 'rgba(255,255,255,0.3)',
+        fill: configItem?.color || 'hsl(var(--primary))',
       }
     })
   }, [filteredDemands])
@@ -337,33 +337,36 @@ export default function Reports() {
               renderEmptyState()
             ) : (
               <ChartContainer config={leadsConfig} className="h-[250px] sm:h-[300px] w-full">
-                <PieChart>
-                  <Pie
-                    data={leadsChartData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={90}
-                    paddingAngle={5}
-                    dataKey="value"
-                    stroke="none"
-                  >
-                    {leadsChartData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={entry.fill}
-                        stroke={entry.id === 'finalizado' ? 'rgba(255,255,255,0.2)' : 'none'}
-                        strokeWidth={entry.id === 'finalizado' ? 1 : 0}
-                      />
-                    ))}
-                  </Pie>
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Legend
-                    verticalAlign="bottom"
-                    height={36}
-                    wrapperStyle={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)' }}
+                <BarChart
+                  data={leadsChartData}
+                  margin={{ top: 20, right: 0, left: -20, bottom: 0 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="rgba(255,255,255,0.1)"
                   />
-                </PieChart>
+                  <XAxis
+                    dataKey="name"
+                    stroke="#ffffff"
+                    tickLine={false}
+                    axisLine={{ stroke: '#ffffff' }}
+                    tick={{ fill: '#ffffff', fontSize: 12 }}
+                  />
+                  <YAxis
+                    stroke="#ffffff"
+                    tickLine={false}
+                    axisLine={{ stroke: '#ffffff' }}
+                    tick={{ fill: '#ffffff', fontSize: 12 }}
+                    allowDecimals={false}
+                  />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={60}>
+                    {leadsChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
               </ChartContainer>
             )}
           </CardContent>
@@ -381,28 +384,36 @@ export default function Reports() {
               renderEmptyState()
             ) : (
               <ChartContainer config={priorityConfig} className="h-[250px] sm:h-[300px] w-full">
-                <PieChart>
-                  <Pie
-                    data={demandsPriorityData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={90}
-                    paddingAngle={5}
-                    dataKey="value"
-                    stroke="none"
-                  >
+                <BarChart
+                  data={demandsPriorityData}
+                  margin={{ top: 20, right: 0, left: -20, bottom: 0 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="rgba(255,255,255,0.1)"
+                  />
+                  <XAxis
+                    dataKey="name"
+                    stroke="#ffffff"
+                    tickLine={false}
+                    axisLine={{ stroke: '#ffffff' }}
+                    tick={{ fill: '#ffffff', fontSize: 12 }}
+                  />
+                  <YAxis
+                    stroke="#ffffff"
+                    tickLine={false}
+                    axisLine={{ stroke: '#ffffff' }}
+                    tick={{ fill: '#ffffff', fontSize: 12 }}
+                    allowDecimals={false}
+                  />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={60}>
                     {demandsPriorityData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.fill} />
                     ))}
-                  </Pie>
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Legend
-                    verticalAlign="bottom"
-                    height={36}
-                    wrapperStyle={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)' }}
-                  />
-                </PieChart>
+                  </Bar>
+                </BarChart>
               </ChartContainer>
             )}
           </CardContent>
@@ -435,14 +446,16 @@ export default function Reports() {
                   />
                   <XAxis
                     dataKey="name"
+                    stroke="#ffffff"
                     tickLine={false}
-                    axisLine={false}
-                    tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 12 }}
+                    axisLine={{ stroke: '#ffffff' }}
+                    tick={{ fill: '#ffffff', fontSize: 12 }}
                   />
                   <YAxis
+                    stroke="#ffffff"
                     tickLine={false}
-                    axisLine={false}
-                    tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 12 }}
+                    axisLine={{ stroke: '#ffffff' }}
+                    tick={{ fill: '#ffffff', fontSize: 12 }}
                     allowDecimals={false}
                   />
                   <ChartTooltip content={<ChartTooltipContent />} />
