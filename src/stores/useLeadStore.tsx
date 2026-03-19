@@ -9,6 +9,7 @@ interface LeadStoreState {
   searchQuery: string
   setSearchQuery: (query: string) => void
   addLead: (lead: Omit<Lead, 'id' | 'createdAt'>) => Promise<void>
+  updateLead: (id: string, updates: Partial<Omit<Lead, 'id' | 'createdAt'>>) => Promise<void>
   moveLead: (id: string, newStage: LeadStage) => Promise<void>
   deleteLead: (id: string) => Promise<void>
 }
@@ -101,6 +102,28 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
     [user],
   )
 
+  const updateLead = useCallback(
+    async (id: string, updates: Partial<Omit<Lead, 'id' | 'createdAt'>>) => {
+      const dbUpdates: any = {}
+      if (updates.name !== undefined) dbUpdates.nome = updates.name
+      if (updates.company !== undefined) dbUpdates.empresa = updates.company
+      if (updates.email !== undefined) dbUpdates.email = updates.email
+      if (updates.phone !== undefined) dbUpdates.telefone = updates.phone
+      if (updates.notes !== undefined) dbUpdates.observacoes = updates.notes
+      if (updates.stage !== undefined) dbUpdates.estagio = updates.stage
+
+      const { error } = await supabase.from('leads').update(dbUpdates).eq('id', id)
+      if (error) {
+        toast({ title: 'Erro', description: 'Erro ao atualizar lead.', variant: 'destructive' })
+        return
+      }
+
+      setLeads((prev) => prev.map((lead) => (lead.id === id ? { ...lead, ...updates } : lead)))
+      toast({ title: 'Lead Atualizado', description: 'O lead foi atualizado com sucesso.' })
+    },
+    [],
+  )
+
   const moveLead = useCallback(
     async (id: string, newStage: LeadStage) => {
       // Optimistic update
@@ -127,7 +150,7 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     setLeads((prev) => prev.filter((lead) => lead.id !== id))
-    toast({ title: 'Lead Excluído', description: 'O lead foi removido.', variant: 'destructive' })
+    toast({ title: 'Lead Excluído', description: 'O lead foi removido.' })
   }, [])
 
   const value = useMemo(
@@ -136,10 +159,11 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
       searchQuery,
       setSearchQuery,
       addLead,
+      updateLead,
       moveLead,
       deleteLead,
     }),
-    [leads, searchQuery, addLead, moveLead, deleteLead],
+    [leads, searchQuery, addLead, updateLead, moveLead, deleteLead],
   )
 
   return <LeadContext.Provider value={value}>{children}</LeadContext.Provider>

@@ -2,6 +2,9 @@ import { Lead } from '@/types/crm'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Building2, Mail, Phone } from 'lucide-react'
+import { EditLeadModal } from './EditLeadModal'
+import { DeleteLeadAlert } from './DeleteLeadAlert'
+import { NewInteractionModal } from './NewInteractionModal'
 
 interface KanbanCardProps {
   lead: Lead
@@ -21,12 +24,18 @@ export function KanbanCard({ lead }: KanbanCardProps) {
     >
       <CardContent className="p-4 sm:p-3 flex flex-col gap-2.5 sm:gap-2">
         <div className="flex justify-between items-start gap-2">
-          <h4 className="font-semibold sm:font-medium text-base sm:text-sm text-foreground leading-tight">
-            {lead.name}
-          </h4>
-          {lead.stage === 'ativo' && (
-            <div className="h-2.5 w-2.5 sm:h-2 sm:w-2 mt-0.5 sm:mt-0 rounded-full bg-primary shadow-[0_0_5px_rgba(34,197,94,0.8)] shrink-0" />
-          )}
+          <div className="flex items-start gap-2">
+            {lead.stage === 'ativo' && (
+              <div className="mt-1.5 sm:mt-1.5 h-2 w-2 rounded-full bg-primary shadow-[0_0_5px_rgba(34,197,94,0.8)] shrink-0" />
+            )}
+            <h4 className="font-semibold sm:font-medium text-base sm:text-sm text-foreground leading-tight pr-12 sm:pr-14">
+              {lead.name}
+            </h4>
+          </div>
+          <div className="flex items-center gap-0.5 absolute right-2 top-2 sm:right-1.5 sm:top-1.5 bg-card/90 backdrop-blur-sm rounded-md px-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10">
+            <EditLeadModal lead={lead} />
+            <DeleteLeadAlert lead={lead} />
+          </div>
         </div>
 
         {lead.company && (
@@ -56,6 +65,8 @@ export function KanbanCard({ lead }: KanbanCardProps) {
             </Badge>
           )}
         </div>
+
+        <NewInteractionModal lead={lead} />
       </CardContent>
     </Card>
   )
