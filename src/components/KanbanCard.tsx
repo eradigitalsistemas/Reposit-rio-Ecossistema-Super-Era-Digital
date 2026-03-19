@@ -1,79 +1,57 @@
 import { Lead } from '@/types/crm'
 import { Card, CardContent } from '@/components/ui/card'
-import { Mail, Phone, Building, Trash2 } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import useAuthStore from '@/stores/useAuthStore'
-import useLeadStore from '@/stores/useLeadStore'
-import { Button } from './ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Building2, Mail, Phone } from 'lucide-react'
 
 interface KanbanCardProps {
   lead: Lead
 }
 
 export function KanbanCard({ lead }: KanbanCardProps) {
-  const { role } = useAuthStore()
-  const { deleteLead } = useLeadStore()
-
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
     e.dataTransfer.setData('leadId', lead.id)
     e.dataTransfer.effectAllowed = 'move'
-    if (e.currentTarget) {
-      e.currentTarget.style.opacity = '0.5'
-    }
-  }
-
-  const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
-    if (e.currentTarget) {
-      e.currentTarget.style.opacity = '1'
-    }
   }
 
   return (
     <Card
       draggable
       onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      className={cn(
-        'group cursor-grab active:cursor-grabbing hover:border-primary/50 transition-colors bg-background relative',
-      )}
+      className="cursor-grab active:cursor-grabbing hover:border-primary/50 transition-all duration-200 bg-card border-border shadow-sm hover:shadow-[0_0_10px_rgba(34,197,94,0.1)] relative group"
     >
-      <CardContent className="p-3">
-        <div className="flex justify-between items-start mb-2 pr-6">
-          <h4 className="font-medium text-sm leading-tight text-foreground line-clamp-1">
-            {lead.name}
-          </h4>
+      <CardContent className="p-3 flex flex-col gap-2">
+        <div className="flex justify-between items-start">
+          <h4 className="font-medium text-sm text-foreground leading-tight">{lead.name}</h4>
+          {lead.stage === 'ativo' && (
+            <div className="h-2 w-2 rounded-full bg-primary shadow-[0_0_5px_rgba(34,197,94,0.8)]" />
+          )}
         </div>
 
-        {role === 'Admin' && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-2 right-2 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={(e) => {
-              e.stopPropagation()
-              deleteLead(lead.id)
-            }}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+        {lead.company && (
+          <div className="flex items-center text-xs text-muted-foreground">
+            <Building2 className="w-3 h-3 mr-1" />
+            {lead.company}
+          </div>
         )}
 
-        <div className="space-y-1.5 mt-2">
-          {lead.company && (
-            <div className="flex items-center text-xs text-muted-foreground">
-              <Building className="w-3 h-3 mr-1.5 shrink-0" />
-              <span className="truncate">{lead.company}</span>
-            </div>
+        <div className="flex flex-wrap gap-2 mt-1">
+          {lead.email && (
+            <Badge
+              variant="outline"
+              className="text-[10px] px-1.5 h-4 bg-transparent text-muted-foreground border-border group-hover:border-primary/30 transition-colors"
+            >
+              <Mail className="w-3 h-3 mr-1" />
+              Email
+            </Badge>
           )}
-          <div className="flex items-center text-xs text-muted-foreground">
-            <Mail className="w-3 h-3 mr-1.5 shrink-0" />
-            <span className="truncate">{lead.email}</span>
-          </div>
           {lead.phone && (
-            <div className="flex items-center text-xs text-muted-foreground">
-              <Phone className="w-3 h-3 mr-1.5 shrink-0" />
-              <span className="truncate">{lead.phone}</span>
-            </div>
+            <Badge
+              variant="outline"
+              className="text-[10px] px-1.5 h-4 bg-transparent text-muted-foreground border-border group-hover:border-primary/30 transition-colors"
+            >
+              <Phone className="w-3 h-3 mr-1" />
+              Telefone
+            </Badge>
           )}
         </div>
       </CardContent>

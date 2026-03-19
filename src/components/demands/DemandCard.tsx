@@ -18,15 +18,14 @@ export function DemandCard({ demand }: Props) {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'Urgente':
-        return 'text-rose-600 bg-rose-50 border-rose-200 dark:bg-rose-950/30 dark:border-rose-900'
+        return 'text-rose-400 bg-rose-500/10 border-rose-500/20'
       case 'Durante o Dia':
-        return 'text-amber-600 bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-900'
+        return 'text-amber-400 bg-amber-500/10 border-amber-500/20'
       default:
-        return 'text-emerald-600 bg-emerald-50 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-900'
+        return 'text-primary bg-primary/10 border-primary/20'
     }
   }
 
-  // Null safety and date validation
   let dueDateObj: Date | null = null
   let isOverdue = false
   let isValidDate = false
@@ -45,7 +44,7 @@ export function DemandCard({ demand }: Props) {
   }
 
   return (
-    <Card className="hover:border-primary/50 transition-colors group relative bg-background">
+    <Card className="hover:border-primary/50 transition-all duration-200 group relative bg-card border-border shadow-sm hover:shadow-[0_0_10px_rgba(34,197,94,0.1)]">
       <CardContent className="p-3">
         {role === 'Admin' && (
           <Button
@@ -69,7 +68,7 @@ export function DemandCard({ demand }: Props) {
           </div>
 
           {!!demand.systemEscalated && demand.priority === 'Urgente' && (
-            <Badge className="bg-red-600 hover:bg-red-700 text-white border-transparent w-fit flex items-center gap-1.5 px-2 py-0 h-5 text-[10px] font-medium tracking-wide">
+            <Badge className="bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 w-fit flex items-center gap-1.5 px-2 py-0 h-5 text-[10px] font-medium tracking-wide transition-colors">
               <AlertTriangle className="w-3 h-3" />
               Escalada Automaticamente
             </Badge>
@@ -78,7 +77,7 @@ export function DemandCard({ demand }: Props) {
           <div className="flex flex-wrap gap-2 mt-0.5">
             <Badge
               variant="outline"
-              className={`text-[10px] px-1.5 h-4 font-medium ${getPriorityColor(demand.priority)}`}
+              className={`text-[10px] px-1.5 h-4 font-medium transition-colors ${getPriorityColor(demand.priority)}`}
             >
               {demand.priority || 'Sem prioridade'}
             </Badge>

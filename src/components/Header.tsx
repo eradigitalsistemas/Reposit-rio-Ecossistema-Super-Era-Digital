@@ -44,7 +44,7 @@ export function Header() {
   const unreadCount = notifications.filter((n) => !n.read).length
 
   return (
-    <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-4 border-b bg-background px-6">
+    <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-4 border-b border-border bg-background/80 backdrop-blur-md px-6">
       <SidebarTrigger className="-ml-2 md:hidden" />
       <div className="flex-1 flex items-center justify-between">
         <Breadcrumb className="hidden sm:block">
@@ -62,7 +62,7 @@ export function Header() {
               <Input
                 type="search"
                 placeholder="Buscar leads..."
-                className="w-full bg-muted/50 pl-9"
+                className="w-full bg-muted/50 pl-9 border-border focus-visible:ring-primary focus-visible:border-primary transition-all duration-200"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -74,7 +74,7 @@ export function Header() {
             variant="outline"
             size="sm"
             onClick={toggleRole}
-            className="hidden sm:flex items-center gap-2 border-primary/20 hover:bg-primary/5 transition-colors"
+            className="hidden sm:flex items-center gap-2 border-primary/20 hover:bg-primary/10 hover:border-primary/50 transition-all duration-200"
           >
             <Shield className="w-4 h-4 text-primary" />
             <span className="font-medium">{role}</span>
@@ -89,21 +89,28 @@ export function Header() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative text-muted-foreground hover:text-foreground"
+                className="relative text-muted-foreground hover:text-primary transition-colors"
               >
                 <Bell className="h-5 w-5" />
                 {unreadCount > 0 && (
                   <span className="absolute top-2 right-2 flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                   </span>
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-80 p-0">
-              <div className="flex items-center justify-between p-4 border-b bg-muted/30">
-                <span className="font-semibold text-sm">Notificações</span>
-                {unreadCount > 0 && <Badge variant="secondary">{unreadCount} não lidas</Badge>}
+            <PopoverContent align="end" className="w-80 p-0 border-border">
+              <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30">
+                <span className="font-semibold text-sm text-foreground">Notificações</span>
+                {unreadCount > 0 && (
+                  <Badge
+                    variant="default"
+                    className="bg-primary/20 text-primary border-primary/30 hover:bg-primary/30"
+                  >
+                    {unreadCount} não lidas
+                  </Badge>
+                )}
               </div>
               <div className="max-h-[350px] overflow-y-auto">
                 {notifications.length === 0 ? (
@@ -124,7 +131,7 @@ export function Header() {
                             {n.title}
                           </span>
                           {!n.read && (
-                            <div className="h-1.5 w-1.5 bg-primary rounded-full shrink-0" />
+                            <div className="h-1.5 w-1.5 bg-primary rounded-full shadow-[0_0_5px_rgba(34,197,94,0.8)] shrink-0" />
                           )}
                         </div>
                         <span className="text-sm text-muted-foreground leading-snug">
@@ -149,7 +156,7 @@ export function Header() {
               variant="ghost"
               size="icon"
               onClick={logout}
-              className="text-muted-foreground hover:text-destructive"
+              className="text-muted-foreground hover:text-destructive transition-colors"
               title="Sair"
             >
               <LogOut className="h-5 w-5" />

@@ -20,7 +20,7 @@ export function KanbanBoard() {
   }, [leads, searchQuery])
 
   return (
-    <ScrollArea className="h-[calc(100vh-4rem)] w-full">
+    <ScrollArea className="h-[calc(100vh-4rem)] w-full bg-background">
       <div className="flex gap-4 p-6 min-w-max h-full pb-10 snap-x snap-mandatory overflow-x-auto">
         {(KANBAN_STAGES || []).map((stage) => {
           const stageLeads = filteredLeads.filter((lead) => lead.stage === stage.id)

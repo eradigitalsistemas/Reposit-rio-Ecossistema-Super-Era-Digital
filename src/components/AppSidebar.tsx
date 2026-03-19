@@ -43,9 +43,14 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="h-16 flex items-center px-6 border-b">
-        <Link to="/" className="flex items-center gap-2 font-bold text-lg text-primary">
-          <Building2 className="w-6 h-6" />
+      <SidebarHeader className="h-16 flex items-center px-6 border-b border-border bg-sidebar">
+        <Link
+          to="/"
+          className="flex items-center gap-2 font-bold text-lg text-primary hover:text-primary/80 transition-colors"
+        >
+          <div className="p-1 bg-primary/10 rounded-md ring-1 ring-primary/30">
+            <Building2 className="w-5 h-5" />
+          </div>
           <span>CRM Pro</span>
         </Link>
       </SidebarHeader>
@@ -62,6 +67,7 @@ export function AppSidebar() {
                       item.url !== '#' &&
                       (item.url === '/' ? location.pathname === '/' : true)
                     }
+                    className="transition-all duration-200"
                   >
                     <Link to={item.url} className="flex items-center gap-3">
                       <item.icon className="w-5 h-5" />
@@ -74,13 +80,13 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="p-4 border-t">
+      <SidebarFooter className="p-4 border-t border-border">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
               variant="outline"
-              className="w-full justify-center text-primary border-primary/20 hover:bg-primary/5"
+              className="w-full justify-center text-primary border-primary/20 hover:bg-primary/10 transition-colors"
             >
               <Link to="/portal/login" className="flex items-center gap-2">
                 <ExternalLink className="w-4 h-4" />

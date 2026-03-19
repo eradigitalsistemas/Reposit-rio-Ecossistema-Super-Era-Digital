@@ -36,7 +36,6 @@ export function KanbanColumn({ stage, leads }: KanbanColumnProps) {
 
   return (
     <div className="w-[300px] flex-shrink-0 flex flex-col h-full snap-center">
-      {/* Column Header */}
       <div
         className={cn(
           'px-4 py-3 rounded-t-lg font-semibold text-sm flex justify-between items-center',
@@ -46,26 +45,25 @@ export function KanbanColumn({ stage, leads }: KanbanColumnProps) {
         <span className="tracking-wide uppercase text-xs">{stage.title}</span>
         <Badge
           variant="secondary"
-          className="bg-black/10 text-inherit hover:bg-black/20 px-2 h-5 text-xs border-0"
+          className="bg-black/20 text-inherit hover:bg-black/30 px-2 h-5 text-xs border-0 transition-colors"
         >
           {leads.length}
         </Badge>
       </div>
 
-      {/* Column Body */}
       <div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={cn(
-          'flex-1 bg-slate-50 dark:bg-slate-900 border border-t-0 border-slate-200 dark:border-slate-800 rounded-b-lg p-3 overflow-y-auto space-y-3 transition-colors duration-200',
-          isDragOver && 'bg-slate-100 dark:bg-slate-800 border-dashed border-2',
+          'flex-1 bg-zinc-950/50 border border-t-0 border-border rounded-b-lg p-3 overflow-y-auto space-y-3 transition-all duration-200',
+          isDragOver && 'bg-zinc-900 border-dashed border-2',
           isDragOver && stage.bgColor,
         )}
       >
         {leads.length === 0 ? (
           <div className="h-full flex items-center justify-center min-h-[100px]">
-            <span className="text-sm text-muted-foreground text-center px-4 border border-dashed rounded-md p-4 w-full">
+            <span className="text-sm text-muted-foreground text-center px-4 border border-dashed border-border rounded-md p-4 w-full">
               Arraste leads para cá
             </span>
           </div>
