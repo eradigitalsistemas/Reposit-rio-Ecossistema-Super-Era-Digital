@@ -1,6 +1,12 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'jsr:@supabase/supabase-js@2.45.4'
-import { corsHeaders } from '../_shared/cors.ts'
+
+export const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
+}
 
 const WEBHOOK_SECRET = 'super-secret-webhook-key-123'
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') || 're_dummy_key_for_testing'
