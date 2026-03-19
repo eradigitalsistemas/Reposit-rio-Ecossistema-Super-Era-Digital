@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Upload, File as FileIcon, Download, Trash2, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Progress } from '@/components/ui/progress'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
@@ -17,6 +18,7 @@ import { supabase } from '@/lib/supabase/client'
 export function ClientDocuments({ client }: { client: Client }) {
   const { addDocument, deleteDocument } = useClientStore()
   const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({})
 
   useEffect(() => {
@@ -24,10 +26,20 @@ export function ClientDocuments({ client }: { client: Client }) {
       const urls: Record<string, string> = {}
       for (const doc of client.documents || []) {
         if (doc.path) {
-          const { data } = await supabase.storage
-            .from('documentos_clientes')
+          // Attempt to get url from the new bucket
+          let { data } = await supabase.storage
+            .from('documentos-clientes')
             .createSignedUrl(doc.path, 3600)
-          if (data) urls[doc.id] = data.signedUrl
+
+          // Fallback to legacy bucket if needed
+          if (!data?.signedUrl) {
+            const legacyRes = await supabase.storage
+              .from('documentos_clientes')
+              .createSignedUrl(doc.path, 3600)
+            data = legacyRes.data
+          }
+
+          if (data?.signedUrl) urls[doc.id] = data.signedUrl
         } else if (doc.url) {
           urls[doc.id] = doc.url
         }
@@ -41,8 +53,10 @@ export function ClientDocuments({ client }: { client: Client }) {
     const file = e.target.files?.[0]
     if (file) {
       setIsUploading(true)
-      await addDocument(client.id, file)
+      setUploadProgress(0)
+      await addDocument(client.id, file, (p) => setUploadProgress(p))
       setIsUploading(false)
+      setUploadProgress(0)
     }
     if (e.target) e.target.value = ''
   }
@@ -59,13 +73,15 @@ export function ClientDocuments({ client }: { client: Client }) {
         <CardHeader>
           <CardTitle>Upload de Documentos</CardTitle>
           <CardDescription>
-            Adicione novos arquivos ao perfil do cliente (Contratos, Propostas, etc).
+            Adicione novos arquivos ao perfil do cliente (Contratos, Identificação, etc).
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div
             className={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center transition-colors ${
-              isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-muted/50'
+              isUploading
+                ? 'opacity-50 cursor-not-allowed bg-muted/20'
+                : 'cursor-pointer hover:bg-muted/50'
             }`}
             onClick={() => !isUploading && document.getElementById('file-upload')?.click()}
           >
@@ -78,11 +94,23 @@ export function ClientDocuments({ client }: { client: Client }) {
               {isUploading ? 'Enviando arquivo...' : 'Clique para selecionar arquivos'}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Qualquer formato suportado (PDF, JPG, DOCX)
+              Apenas PDF, JPG ou PNG (Máximo 5MB)
             </p>
+
+            {isUploading && (
+              <div className="w-full max-w-xs mt-4">
+                <div className="flex justify-between text-xs mb-1 font-medium text-muted-foreground">
+                  <span>Progresso</span>
+                  <span>{uploadProgress}%</span>
+                </div>
+                <Progress value={uploadProgress} className="h-2" />
+              </div>
+            )}
+
             <input
               id="file-upload"
               type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
               className="hidden"
               onChange={handleFileUpload}
               disabled={isUploading}
@@ -100,7 +128,7 @@ export function ClientDocuments({ client }: { client: Client }) {
             <TableHeader>
               <TableRow>
                 <TableHead>Nome do Arquivo</TableHead>
-                <TableHead>Data de Upload</TableHead>
+                <TableHead>Data de Envio</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -111,10 +139,16 @@ export function ClientDocuments({ client }: { client: Client }) {
                     <FileIcon className="w-4 h-4 text-muted-foreground shrink-0" />
                     <span className="truncate max-w-[200px] sm:max-w-xs">{doc.name}</span>
                   </TableCell>
-                  <TableCell>{new Date(doc.createdAt).toLocaleDateString('pt-BR')}</TableCell>
+                  <TableCell>
+                    {new Date(doc.createdAt).toLocaleDateString('pt-BR')} às{' '}
+                    {new Date(doc.createdAt).toLocaleTimeString('pt-BR', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <Button variant="ghost" size="icon" asChild title="Baixar Arquivo">
+                      <Button variant="ghost" size="icon" asChild title="Download">
                         <a
                           href={signedUrls[doc.id] || '#'}
                           target="_blank"

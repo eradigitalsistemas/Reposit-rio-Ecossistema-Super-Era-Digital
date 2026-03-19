@@ -8,7 +8,11 @@ interface ClientStoreState {
   clients: Client[]
   addClient: (client: Omit<Client, 'id' | 'createdAt' | 'documents' | 'history'>) => Promise<void>
   updateClient: (id: string, data: Partial<Client>) => Promise<void>
-  addDocument: (clientId: string, file: File | any) => Promise<void>
+  addDocument: (
+    clientId: string,
+    file: File | any,
+    onProgress?: (p: number) => void,
+  ) => Promise<boolean>
   deleteDocument: (clientId: string, docId: string, path?: string) => Promise<void>
   deleteClient: (id: string) => Promise<void>
 }
@@ -112,77 +116,124 @@ export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
     setClients((prev) => prev.map((c) => (c.id === id ? { ...c, ...data } : c)))
   }, [])
 
-  const addDocument = useCallback(async (clientId: string, file: File | any) => {
-    if (!(file instanceof File)) {
-      // Fallback for mocked portal uploads
-      setClients((prev) =>
-        prev.map((c) => {
-          if (c.id === clientId) {
-            return {
-              ...c,
-              documents: [
-                ...(c.documents || []),
-                {
-                  ...file,
-                  id: Math.random().toString(),
-                  createdAt: new Date().toISOString(),
-                },
-              ],
+  const addDocument = useCallback(
+    async (clientId: string, file: File | any, onProgress?: (p: number) => void) => {
+      if (!(file instanceof File)) {
+        setClients((prev) =>
+          prev.map((c) => {
+            if (c.id === clientId) {
+              return {
+                ...c,
+                documents: [
+                  ...(c.documents || []),
+                  { ...file, id: Math.random().toString(), createdAt: new Date().toISOString() },
+                ],
+              }
             }
-          }
-          return c
-        }),
+            return c
+          }),
+        )
+        return true
+      }
+
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png']
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+          title: 'Formato Inválido',
+          description: 'Apenas arquivos PDF, JPG e PNG são suportados.',
+          variant: 'destructive',
+        })
+        return false
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: 'Arquivo muito grande',
+          description: 'O limite máximo é de 5MB.',
+          variant: 'destructive',
+        })
+        return false
+      }
+
+      let progressInterval: any
+      if (onProgress) {
+        let p = 0
+        progressInterval = setInterval(() => {
+          p += Math.random() * 15
+          if (p > 90) p = 90
+          onProgress(Math.floor(p))
+        }, 200)
+      }
+
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`
+      const filePath = `${clientId}/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('documentos-clientes')
+        .upload(filePath, file)
+
+      if (progressInterval) clearInterval(progressInterval)
+      if (onProgress) onProgress(100)
+
+      if (uploadError) {
+        toast({
+          title: 'Erro',
+          description: 'Erro ao fazer upload do arquivo.',
+          variant: 'destructive',
+        })
+        return false
+      }
+
+      const newDoc: ClientDocument = {
+        id: Math.random().toString(),
+        name: file.name,
+        path: filePath,
+        type: file.type,
+        createdAt: new Date().toISOString(),
+      }
+
+      // Call edge function to process metadata
+      const { data: fnData, error: fnErr } = await supabase.functions.invoke(
+        'manage-client-documents',
+        {
+          body: { action: 'add_metadata', cliente_id: clientId, document: newDoc },
+        },
       )
-      return
-    }
 
-    const fileExt = file.name.split('.').pop()
-    const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`
-    const filePath = `${clientId}/${fileName}`
+      if (fnErr || !fnData?.success) {
+        console.error('Edge function failed, falling back to direct db update', fnErr)
+      }
 
-    const { error: uploadError } = await supabase.storage
-      .from('documentos_clientes')
-      .upload(filePath, file)
+      setClients((prev) => {
+        const newClients = [...prev]
+        const clientIndex = newClients.findIndex((c) => c.id === clientId)
+        if (clientIndex === -1) return prev
 
-    if (uploadError) {
-      toast({
-        title: 'Erro',
-        description: 'Erro ao fazer upload do arquivo.',
-        variant: 'destructive',
+        const currentDocs = newClients[clientIndex].documents || []
+        const updatedDocs = [...currentDocs, newDoc]
+
+        if (fnErr || !fnData?.success) {
+          supabase
+            .from('clientes_externos' as any)
+            .update({ documentos: updatedDocs })
+            .eq('id', clientId)
+            .then()
+        }
+
+        newClients[clientIndex] = { ...newClients[clientIndex], documents: updatedDocs }
+        return newClients
       })
-      return
-    }
-
-    const newDoc: ClientDocument = {
-      id: Math.random().toString(),
-      name: file.name,
-      path: filePath,
-      type: file.type,
-      createdAt: new Date().toISOString(),
-    }
-
-    setClients((prev) => {
-      const newClients = [...prev]
-      const clientIndex = newClients.findIndex((c) => c.id === clientId)
-      if (clientIndex === -1) return prev
-
-      const currentDocs = newClients[clientIndex].documents || []
-      const updatedDocs = [...currentDocs, newDoc]
-
-      supabase
-        .from('clientes_externos' as any)
-        .update({ documentos: updatedDocs })
-        .eq('id', clientId)
-        .then()
-
-      newClients[clientIndex] = { ...newClients[clientIndex], documents: updatedDocs }
-      return newClients
-    })
-    toast({ title: 'Sucesso', description: 'Documento adicionado ao cliente.' })
-  }, [])
+      toast({ title: 'Sucesso', description: 'Documento adicionado ao cliente.' })
+      return true
+    },
+    [],
+  )
 
   const deleteDocument = useCallback(async (clientId: string, docId: string, path?: string) => {
     if (path) {
+      // Try deleting from both legacy and new buckets safely
+      await supabase.storage.from('documentos-clientes').remove([path])
       await supabase.storage.from('documentos_clientes').remove([path])
     }
 
