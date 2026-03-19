@@ -144,4 +144,24 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* Kanban Custom Scrollbar matching dark/green theme */
+  .kanban-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+  .kanban-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .kanban-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .kanban-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 6px;
+  }
+  .kanban-scrollbar:hover::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary) / 0.8);
+  }
 }
