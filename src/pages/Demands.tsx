@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Download, FilterX, LayoutColumns } from 'lucide-react'
+import { Download, FilterX, Columns } from 'lucide-react'
 import { exportToCSV, exportToPDF } from '@/utils/export'
 import { DemandStatus } from '@/types/demand'
 
@@ -99,7 +99,7 @@ export default function Demands() {
 
             <div className="space-y-2">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
-                <LayoutColumns className="w-3 h-3" />
+                <Columns className="w-3 h-3" />
                 Colunas Visíveis
               </Label>
               <ToggleGroup
