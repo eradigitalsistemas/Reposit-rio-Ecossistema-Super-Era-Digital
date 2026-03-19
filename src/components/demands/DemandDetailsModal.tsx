@@ -1,175 +1,202 @@
 import { useState } from 'react'
-import { Demand } from '@/types/demand'
+import { format } from 'date-fns'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  DialogDescription,
 } from '@/components/ui/dialog'
-import { Badge } from '@/components/ui/badge'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
+import { Calendar, User2, MessageSquare, History, CheckCircle, Clock } from 'lucide-react'
+import { Demand } from '@/types/demand'
 import useDemandStore from '@/stores/useDemandStore'
 import useAuthStore from '@/stores/useAuthStore'
-import { format } from 'date-fns'
-import { Trash2, User } from 'lucide-react'
 
-export function DemandDetailsModal({
-  demand,
-  children,
-}: {
+interface DemandDetailsModalProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
   demand: Demand
-  children: React.ReactNode
-}) {
-  const [open, setOpen] = useState(false)
-  const [response, setResponse] = useState('')
-  const { addResponse, updateStatus, deleteDemand, acceptDemand } = useDemandStore()
-  const { role } = useAuthStore()
+}
 
-  const handleAddResponse = () => {
-    if (!response.trim()) return
-    addResponse(demand.id, response)
-    setResponse('')
-  }
-
-  const handleDelete = () => {
-    deleteDemand(demand.id)
-    setOpen(false)
-  }
+export function DemandDetailsModal({ open, onOpenChange, demand }: DemandDetailsModalProps) {
+  const { acceptDemand, updateStatus, addResponse } = useDemandStore()
+  const { user } = useAuthStore()
+  const [responseText, setResponseText] = useState('')
 
   const handleAccept = () => {
     acceptDemand(demand.id)
   }
 
-  const priorityColors = {
-    Urgente: 'bg-red-500/10 text-red-500 border-red-500/20',
-    'Durante o Dia': 'bg-amber-500/10 text-amber-500 border-amber-500/20',
-    'Pode Ficar para Amanhã': 'bg-green-500/10 text-green-500 border-green-500/20',
+  const handleComplete = () => {
+    updateStatus(demand.id, 'Concluído')
+    onOpenChange(false)
   }
 
+  const handleAddResponse = () => {
+    if (!responseText.trim()) return
+    addResponse(demand.id, responseText)
+    setResponseText('')
+  }
+
+  const canAccept = demand.status === 'Pendente' && demand.assigneeId !== user?.id
+  const canComplete = demand.status === 'Em Andamento' && demand.assigneeId === user?.id
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 bg-zinc-950 border-border">
-        <DialogHeader className="p-6 pb-4 border-b border-border">
-          <div className="flex justify-between items-start pr-6 w-full gap-4">
-            <DialogTitle className="text-xl leading-tight text-foreground">
-              {demand.title}
-            </DialogTitle>
-            {role === 'Admin' && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleDelete}
-                className="text-destructive hover:bg-destructive/10 hover:text-destructive shrink-0 -mr-4 -mt-2"
-                title="Excluir demanda"
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="w-[95vw] sm:max-w-2xl flex flex-col max-h-[90vh] p-0 sm:p-0 overflow-hidden">
+        <div className="flex flex-col h-full">
+          <DialogHeader className="p-4 sm:p-6 border-b shrink-0 bg-background sticky top-0 z-10">
+            <div className="flex items-center gap-2 mb-2 pr-8">
+              <Badge
+                variant="outline"
+                className="bg-primary/10 text-primary border-primary/20 h-auto py-0.5 text-xs sm:text-xs"
               >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            )}
-          </div>
-        </DialogHeader>
+                #{demand.id.toUpperCase().slice(0, 8)}
+              </Badge>
+              <Badge
+                variant="outline"
+                className="text-muted-foreground h-auto py-0.5 text-xs sm:text-xs"
+              >
+                {demand.status}
+              </Badge>
+            </div>
+            <DialogTitle className="text-xl sm:text-2xl font-bold pr-6">{demand.title}</DialogTitle>
+            <DialogDescription className="text-sm sm:text-base mt-2 whitespace-pre-wrap break-words max-h-32 overflow-y-auto">
+              {demand.description || 'Nenhuma descrição fornecida.'}
+            </DialogDescription>
+          </DialogHeader>
 
-        <ScrollArea className="flex-1 p-6">
-          <div className="space-y-6 pb-4">
-            <div className="space-y-4">
-              <div className="flex gap-2 flex-wrap items-center">
-                <Badge variant="outline" className={priorityColors[demand.priority]}>
-                  {demand.priority}
-                </Badge>
-                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                  {demand.status}
-                </Badge>
-                <Badge variant="secondary" className="gap-1.5 bg-muted/50 border-border">
-                  <User className="w-3 h-3" />
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 bg-muted/20 p-4 rounded-xl border">
+              <div className="space-y-1">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Responsável
+                </span>
+                <div className="flex items-center gap-2 font-medium text-sm sm:text-base">
+                  <User2 className="w-4 h-4 sm:w-4 sm:h-4 text-muted-foreground" />
                   {demand.assignee}
-                </Badge>
-                {demand.status === 'Pendente' && (
-                  <Button
-                    size="sm"
-                    className="h-6 text-xs bg-green-500/10 text-green-500 hover:bg-green-500/20 border border-green-500/20 ml-auto"
-                    onClick={handleAccept}
-                  >
-                    Aceitar Demanda
-                  </Button>
-                )}
+                </div>
               </div>
+              <div className="space-y-1">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Prioridade
+                </span>
+                <div className="flex items-center gap-2 font-medium text-sm sm:text-base">
+                  {demand.priority === 'Urgente' && (
+                    <div className="w-2 h-2 rounded-full bg-red-500" />
+                  )}
+                  {demand.priority}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Criado em
+                </span>
+                <div className="flex items-center gap-2 font-medium text-sm sm:text-base">
+                  <Calendar className="w-4 h-4 text-muted-foreground" />
+                  {format(new Date(demand.createdAt), 'dd/MM/yyyy')}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Vencimento
+                </span>
+                <div className="flex items-center gap-2 font-medium text-sm sm:text-base">
+                  <Clock className="w-4 h-4 text-muted-foreground" />
+                  {demand.dueDate ? format(new Date(demand.dueDate), 'dd/MM/yyyy') : 'Sem data'}
+                </div>
+              </div>
+            </div>
 
-              <div className="bg-card p-4 rounded-xl border border-border shadow-sm">
-                <p className="text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed">
-                  {demand.description || 'Sem descrição detalhada.'}
-                </p>
-                {demand.dueDate && (
-                  <div className="text-xs text-muted-foreground mt-4 font-medium flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary/50" />
-                    Prazo: {format(new Date(demand.dueDate), 'dd/MM/yyyy')}
-                  </div>
+            <div className="space-y-4">
+              <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+                <History className="w-5 h-5 text-primary" />
+                Histórico e Auditoria
+              </h3>
+              <div className="space-y-3 pl-2 sm:pl-4 border-l-2 border-border/50">
+                {demand.logs && demand.logs.length > 0 ? (
+                  demand.logs.map((log) => (
+                    <div key={log.id} className="relative pl-4 sm:pl-6 pb-2">
+                      <div className="absolute -left-[21px] sm:-left-[25px] top-1 w-3 h-3 bg-muted border-2 border-background rounded-full" />
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 mb-1">
+                        <span className="font-semibold text-sm">{log.acao}</span>
+                        <span className="text-xs text-muted-foreground hidden sm:block">•</span>
+                        <span className="text-xs text-muted-foreground">
+                          {format(new Date(log.createdAt), 'dd/MM/yyyy HH:mm')}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground break-words">{log.detalhes}</p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground ml-4">Nenhum histórico registrado.</p>
                 )}
               </div>
             </div>
 
-            <div className="space-y-4 pt-4">
-              <h4 className="font-semibold text-sm text-foreground/90">Histórico de Atividades</h4>
-              {demand.logs.length === 0 ? (
-                <p className="text-sm text-muted-foreground bg-muted/10 p-4 rounded-lg border border-dashed border-border/50 text-center">
-                  Nenhum evento registrado ainda.
-                </p>
-              ) : (
-                <div className="space-y-5 relative before:absolute before:inset-0 before:ml-[11px] before:h-full before:w-[2px] before:bg-border/50 pl-1">
-                  {demand.logs.map((log) => (
-                    <div key={log.id} className="relative flex gap-4 items-start group">
-                      <div className="w-[22px] h-[22px] rounded-full bg-zinc-950 border-2 border-primary/80 shrink-0 mt-0.5 z-10 shadow-[0_0_8px_rgba(34,197,94,0.3)] group-hover:border-primary transition-colors flex items-center justify-center">
-                        <div className="w-2 h-2 rounded-full bg-primary" />
-                      </div>
-                      <div className="flex-1 bg-card/50 p-3.5 rounded-xl border border-border/60 shadow-sm transition-colors hover:bg-card hover:border-border">
-                        <div className="flex items-center justify-between text-xs mb-2">
-                          <span className="font-semibold text-foreground tracking-tight">
-                            {log.acao}
-                          </span>
-                          <span className="text-muted-foreground/80 font-medium">
-                            {format(new Date(log.createdAt), 'dd/MM/yyyy HH:mm')}
-                          </span>
-                        </div>
-                        {log.detalhes && (
-                          <p className="text-sm text-foreground/80 whitespace-pre-wrap leading-relaxed bg-background/50 p-2.5 rounded-lg border border-border/30">
-                            {log.detalhes}
-                          </p>
-                        )}
-                      </div>
+            <Separator />
+
+            <div className="space-y-4">
+              <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-primary" />
+                Anotações Internas
+              </h3>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Textarea
+                  placeholder="Adicione uma nota ou atualização..."
+                  value={responseText}
+                  onChange={(e) => setResponseText(e.target.value)}
+                  className="min-h-[80px] sm:min-h-[60px]"
+                />
+                <Button onClick={handleAddResponse} className="sm:h-auto sm:px-6 w-full sm:w-auto">
+                  Adicionar
+                </Button>
+              </div>
+
+              {demand.responses && demand.responses.length > 0 && (
+                <div className="space-y-3 mt-4">
+                  {demand.responses.map((resp, i) => (
+                    <div
+                      key={i}
+                      className="bg-muted/30 p-3 sm:p-4 rounded-lg border text-sm break-words"
+                    >
+                      {resp}
                     </div>
                   ))}
                 </div>
               )}
             </div>
           </div>
-        </ScrollArea>
 
-        <div className="p-4 border-t border-border bg-card flex gap-3 items-end">
-          <div className="flex-1">
-            <Textarea
-              value={response}
-              onChange={(e) => setResponse(e.target.value)}
-              placeholder="Adicione uma nota, resposta ou atualização..."
-              className="min-h-[80px] bg-background resize-none border-border focus-visible:ring-primary/50"
-            />
-          </div>
-          <div className="flex flex-col gap-2 shrink-0 w-[120px]">
+          <div className="p-4 sm:p-6 border-t bg-muted/10 shrink-0 sticky bottom-0 z-10 flex flex-col sm:flex-row gap-3 justify-end">
             <Button
-              onClick={handleAddResponse}
-              className="w-full shadow-[0_0_10px_rgba(34,197,94,0.2)]"
-              disabled={!response.trim()}
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="w-full sm:w-auto h-11 sm:h-10"
             >
-              Registrar
+              Fechar
             </Button>
-            {demand.status !== 'Concluído' && (
+            {canAccept && (
               <Button
-                variant="outline"
-                className="w-full border-border hover:bg-primary/10 hover:text-primary hover:border-primary/30"
-                onClick={() => updateStatus(demand.id, 'Concluído')}
+                onClick={handleAccept}
+                className="w-full sm:w-auto gap-2 h-11 sm:h-10 bg-primary/20 text-primary hover:bg-primary/30 hover:text-primary shadow-none"
               >
-                Concluir
+                <User2 className="w-4 h-4" />
+                Assumir Demanda
+              </Button>
+            )}
+            {canComplete && (
+              <Button
+                onClick={handleComplete}
+                className="w-full sm:w-auto gap-2 h-11 sm:h-10 bg-emerald-600 hover:bg-emerald-700 text-white"
+              >
+                <CheckCircle className="w-4 h-4" />
+                Concluir Tarefa
               </Button>
             )}
           </div>

@@ -11,7 +11,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import useClientStore from '@/stores/useClientStore'
 import useAuthStore from '@/stores/useAuthStore'
-import { Trash2, ShieldAlert } from 'lucide-react'
+import { Trash2, ShieldAlert, Building2, Phone, Mail, FileText } from 'lucide-react'
 import { AddClientModal } from '@/components/AddClientModal'
 
 export default function Clients() {
@@ -35,7 +35,7 @@ export default function Clients() {
   }
 
   return (
-    <div className="h-full w-full bg-slate-50/50 dark:bg-background flex flex-col p-6 overflow-hidden">
+    <div className="h-full w-full bg-slate-50/50 dark:bg-background flex flex-col p-4 sm:p-6 overflow-y-auto sm:overflow-hidden">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 shrink-0 gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Clientes Externos</h1>
@@ -43,10 +43,13 @@ export default function Clients() {
             Gerencie seus contatos externos e parceiros.
           </p>
         </div>
-        <AddClientModal />
+        <div className="w-full sm:w-auto">
+          <AddClientModal />
+        </div>
       </div>
 
-      <Card className="flex-1 overflow-hidden flex flex-col">
+      {/* Desktop View */}
+      <Card className="hidden md:flex flex-1 overflow-hidden flex-col">
         <CardContent className="p-0 overflow-auto flex-1">
           <Table>
             <TableHeader className="sticky top-0 bg-background z-10">
@@ -75,7 +78,7 @@ export default function Clients() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      className="text-destructive hover:bg-destructive/10 hover:text-destructive h-9 w-9"
                       title="Excluir cliente"
                       onClick={(e) => {
                         e.stopPropagation()
@@ -98,6 +101,62 @@ export default function Clients() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Mobile View */}
+      <div className="flex flex-col gap-4 md:hidden pb-6">
+        {clients.map((client) => (
+          <Card
+            key={client.id}
+            className="cursor-pointer hover:border-primary/50 transition-colors"
+            onClick={() => navigate(`/clientes/${client.id}`)}
+          >
+            <CardContent className="p-4 flex flex-col gap-3">
+              <div className="flex justify-between items-start">
+                <div className="font-semibold text-lg leading-tight pr-2">{client.name}</div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-destructive hover:bg-destructive/10 hover:text-destructive -mr-2 -mt-2 shrink-0"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    deleteClient(client.id)
+                  }}
+                >
+                  <Trash2 className="w-5 h-5" />
+                </Button>
+              </div>
+
+              <div className="space-y-1.5 mt-1">
+                <div className="text-sm text-muted-foreground flex items-center gap-2">
+                  <Building2 className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{client.company || 'Sem empresa informada'}</span>
+                </div>
+                <div className="text-sm flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <span className="truncate">{client.email}</span>
+                </div>
+                {client.phone && (
+                  <div className="text-sm flex items-center gap-2">
+                    <Phone className="w-4 h-4 text-muted-foreground shrink-0" />
+                    <span>{client.phone}</span>
+                  </div>
+                )}
+                {client.cnpj && (
+                  <div className="text-sm flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
+                    <span>{client.cnpj}</span>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+        {clients.length === 0 && (
+          <div className="text-center p-8 text-muted-foreground border rounded-lg bg-card">
+            Nenhum cliente encontrado.
+          </div>
+        )}
+      </div>
     </div>
   )
 }

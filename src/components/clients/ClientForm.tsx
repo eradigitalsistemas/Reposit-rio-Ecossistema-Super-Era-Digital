@@ -36,14 +36,14 @@ export function ClientForm({ client }: { client: Client }) {
   }
 
   return (
-    <Card className="max-w-2xl">
-      <CardHeader>
+    <Card className="max-w-2xl border-0 sm:border sm:shadow-sm">
+      <CardHeader className="px-0 sm:px-6">
         <CardTitle>Informações Gerais</CardTitle>
         <CardDescription>Atualize os dados de contato e informações da empresa.</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-0 sm:px-6">
         <form onSubmit={handleSave} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Nome</Label>
               <Input
@@ -80,7 +80,7 @@ export function ClientForm({ client }: { client: Client }) {
                 onChange={(e) => setFormData((p) => ({ ...p, phone: e.target.value }))}
               />
             </div>
-            <div className="space-y-2 col-span-2">
+            <div className="space-y-2 col-span-1 sm:col-span-2">
               <Label htmlFor="cnpj">CNPJ</Label>
               <Input
                 id="cnpj"
@@ -90,7 +90,9 @@ export function ClientForm({ client }: { client: Client }) {
             </div>
           </div>
           <div className="flex justify-end pt-4">
-            <Button type="submit">Salvar Alterações</Button>
+            <Button type="submit" className="w-full sm:w-auto">
+              Salvar Alterações
+            </Button>
           </div>
         </form>
       </CardContent>

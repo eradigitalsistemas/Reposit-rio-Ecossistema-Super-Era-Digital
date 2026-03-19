@@ -52,9 +52,9 @@ export default function PortalDemands() {
     addDemand({
       title,
       description,
-      priority: 'Durante o Dia', // Default for client submissions
+      priority: 'Durante o Dia',
       status: 'Pendente',
-      dueDate: new Date(Date.now() + 86400000 * 7).toISOString(), // + 7 days default
+      dueDate: new Date(Date.now() + 86400000 * 7).toISOString(),
       assignee: 'Não Atribuído',
       clientId,
       category,
@@ -104,20 +104,22 @@ export default function PortalDemands() {
     <div className="space-y-6 max-w-6xl mx-auto">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Olá, {userName.split(' ')[0]}</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+            Olá, {userName.split(' ')[0]}
+          </h1>
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
             Acompanhe o andamento das suas solicitações ou crie uma nova.
           </p>
         </div>
 
         <Dialog open={openNewDemand} onOpenChange={setOpenNewDemand}>
           <DialogTrigger asChild>
-            <Button className="gap-2 shadow-sm">
+            <Button className="gap-2 shadow-sm w-full sm:w-auto">
               <Plus className="w-4 h-4" />
               Nova Solicitação
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="w-[95vw] sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>Abrir Solicitação</DialogTitle>
               <DialogDescription>
@@ -137,7 +139,7 @@ export default function PortalDemands() {
               <div className="space-y-2">
                 <Label>Categoria</Label>
                 <Select value={category} onValueChange={(v: DemandCategory) => setCategory(v)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-11 md:h-10">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -159,14 +161,16 @@ export default function PortalDemands() {
                 />
               </div>
               <div className="flex justify-end pt-4">
-                <Button type="submit">Enviar Solicitação</Button>
+                <Button type="submit" className="w-full sm:w-auto">
+                  Enviar Solicitação
+                </Button>
               </div>
             </form>
           </DialogContent>
         </Dialog>
       </div>
 
-      <Card className="shadow-sm">
+      <Card className="shadow-sm hidden md:flex flex-col">
         <CardHeader className="bg-muted/30 border-b pb-4">
           <CardTitle className="text-lg">Suas Demandas Ativas</CardTitle>
         </CardHeader>
@@ -213,6 +217,38 @@ export default function PortalDemands() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Mobile View */}
+      <div className="grid grid-cols-1 gap-4 md:hidden pb-6">
+        <h2 className="text-lg font-semibold mb-2">Suas Demandas Ativas</h2>
+        {clientDemands.map((demand) => (
+          <Card key={demand.id}>
+            <CardContent className="p-4 flex flex-col gap-3">
+              <div className="flex justify-between items-start gap-2">
+                <div className="font-semibold text-base leading-tight">{demand.title}</div>
+                <div className="shrink-0 text-xs text-muted-foreground">
+                  #{demand.id.toUpperCase().slice(0, 6)}
+                </div>
+              </div>
+              <div className="flex items-center justify-between mt-2">
+                <div className="text-sm text-muted-foreground">{demand.category || 'Serviço'}</div>
+                <div className="flex items-center gap-2">
+                  {getStatusIcon(demand.status)}
+                  {getStatusBadge(demand.status)}
+                </div>
+              </div>
+              <div className="text-xs text-muted-foreground text-right mt-1 border-t pt-2">
+                Criado em: {format(new Date(demand.createdAt), 'dd/MM/yyyy')}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+        {clientDemands.length === 0 && (
+          <div className="text-center p-8 text-muted-foreground border rounded-lg bg-card">
+            Você ainda não possui solicitações abertas.
+          </div>
+        )}
+      </div>
     </div>
   )
 }

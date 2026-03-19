@@ -43,40 +43,61 @@ export default function ClientProfile() {
   }
 
   return (
-    <div className="h-full w-full bg-slate-50/50 dark:bg-background flex flex-col p-6 overflow-hidden">
-      <div className="flex items-center gap-4 mb-6 shrink-0">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/clientes')}>
+    <div className="h-full w-full bg-slate-50/50 dark:bg-background flex flex-col p-4 sm:p-6 overflow-hidden">
+      <div className="flex items-start sm:items-center gap-3 sm:gap-4 mb-6 shrink-0 flex-col sm:flex-row">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate('/clientes')}
+          className="shrink-0 hidden sm:flex"
+        >
           <ArrowLeft className="w-5 h-5" />
         </Button>
-        <div>
+        <div className="flex items-center gap-2 sm:hidden w-full">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/clientes')}
+            className="shrink-0 -ml-2"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <h1 className="text-xl font-bold tracking-tight text-foreground truncate">
+            {client.name}
+          </h1>
+        </div>
+        <div className="hidden sm:block">
           <h1 className="text-2xl font-bold tracking-tight text-foreground">{client.name}</h1>
           <p className="text-muted-foreground text-sm mt-1">{client.company} • Perfil do Cliente</p>
+        </div>
+        <div className="sm:hidden w-full pl-10 -mt-3">
+          <p className="text-muted-foreground text-xs">{client.company} • Perfil</p>
         </div>
       </div>
 
       <Tabs defaultValue="dados" className="flex-1 flex flex-col overflow-hidden">
-        <TabsList className="w-full justify-start border-b rounded-none bg-transparent h-12 p-0 space-x-6 shrink-0 mb-4">
+        <TabsList className="w-full justify-start border-b rounded-none bg-transparent h-auto min-h-[48px] p-0 space-x-2 sm:space-x-6 shrink-0 mb-4 overflow-x-auto flex-nowrap hide-scrollbar">
           <TabsTrigger
             value="dados"
-            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-0"
+            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none min-h-[48px] px-2 sm:px-0 whitespace-nowrap"
           >
             Dados Cadastrais
           </TabsTrigger>
           <TabsTrigger
             value="historico"
-            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-0"
+            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none min-h-[48px] px-2 sm:px-0 whitespace-nowrap"
           >
-            Histórico DEMANDAS
+            Histórico Demandas
           </TabsTrigger>
           <TabsTrigger
             value="documentos"
-            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-0"
+            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none min-h-[48px] px-2 sm:px-0 whitespace-nowrap"
           >
             Documentos
           </TabsTrigger>
         </TabsList>
 
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto pb-6 sm:pb-0">
           <TabsContent value="dados" className="m-0 h-full">
             <ClientForm client={client} />
           </TabsContent>

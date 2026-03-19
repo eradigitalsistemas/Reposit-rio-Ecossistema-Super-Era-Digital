@@ -247,13 +247,13 @@ export default function Reports() {
   }
 
   const renderEmptyState = () => (
-    <div className="h-[300px] w-full flex items-center justify-center text-sm text-muted-foreground bg-muted/20 rounded-lg border border-dashed">
+    <div className="h-[300px] w-full flex items-center justify-center text-sm text-muted-foreground bg-muted/20 rounded-lg border border-dashed p-4 text-center">
       Nenhum dado encontrado para o período selecionado.
     </div>
   )
 
   return (
-    <div className="h-full w-full bg-slate-50/50 dark:bg-background flex flex-col p-6 overflow-y-auto">
+    <div className="h-full w-full bg-slate-50/50 dark:bg-background flex flex-col p-4 sm:p-6 overflow-y-auto">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 shrink-0 gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
@@ -263,19 +263,21 @@ export default function Reports() {
             Acompanhe métricas de conversão, produtividade da equipe e prioridades.
           </p>
         </div>
-        <Select value={dateFilter} onValueChange={setDateFilter}>
-          <SelectTrigger className="w-[180px] bg-background shadow-sm">
-            <SelectValue placeholder="Período" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="today">Hoje</SelectItem>
-            <SelectItem value="thisWeek">Esta Semana</SelectItem>
-            <SelectItem value="thisMonth">Este Mês</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="w-full sm:w-auto">
+          <Select value={dateFilter} onValueChange={setDateFilter}>
+            <SelectTrigger className="w-full sm:w-[180px] bg-background shadow-sm h-11 sm:h-10">
+              <SelectValue placeholder="Período" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="today">Hoje</SelectItem>
+              <SelectItem value="thisWeek">Esta Semana</SelectItem>
+              <SelectItem value="thisMonth">Este Mês</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Leads</CardTitle>
@@ -283,7 +285,7 @@ export default function Reports() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalLeads}</div>
-            <p className="text-xs text-muted-foreground">Criados no período selecionado</p>
+            <p className="text-xs text-muted-foreground mt-1">Criados no período selecionado</p>
           </CardContent>
         </Card>
         <Card>
@@ -293,7 +295,9 @@ export default function Reports() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{demandsToday}</div>
-            <p className="text-xs text-muted-foreground">Criadas hoje (Independente do filtro)</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Criadas hoje (Independente do filtro)
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -303,7 +307,7 @@ export default function Reports() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{urgentesAberto}</div>
-            <p className="text-xs text-muted-foreground">Em aberto no período selecionado</p>
+            <p className="text-xs text-muted-foreground mt-1">Em aberto no período selecionado</p>
           </CardContent>
         </Card>
         <Card>
@@ -313,29 +317,29 @@ export default function Reports() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{leadsConvertidos}</div>
-            <p className="text-xs text-muted-foreground">No período selecionado</p>
+            <p className="text-xs text-muted-foreground mt-1">No período selecionado</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
         <Card className="shadow-sm">
           <CardHeader>
             <CardTitle>Distribuição de Leads</CardTitle>
             <CardDescription>Volume de leads por estágio do funil.</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-2 sm:px-6">
             {leadsChartData.length === 0 ? (
               renderEmptyState()
             ) : (
-              <ChartContainer config={leadsConfig} className="h-[300px] w-full">
+              <ChartContainer config={leadsConfig} className="h-[250px] sm:h-[300px] w-full">
                 <PieChart>
                   <Pie
                     data={leadsChartData}
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
-                    outerRadius={100}
+                    outerRadius={90}
                     paddingAngle={5}
                     dataKey="value"
                   >
@@ -344,7 +348,7 @@ export default function Reports() {
                     ))}
                   </Pie>
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <Legend verticalAlign="bottom" height={36} />
+                  <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '12px' }} />
                 </PieChart>
               </ChartContainer>
             )}
@@ -356,18 +360,18 @@ export default function Reports() {
             <CardTitle>Prioridade das Demandas</CardTitle>
             <CardDescription>Volume de tarefas por nível de prioridade.</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-2 sm:px-6">
             {demandsPriorityData.length === 0 ? (
               renderEmptyState()
             ) : (
-              <ChartContainer config={priorityConfig} className="h-[300px] w-full">
+              <ChartContainer config={priorityConfig} className="h-[250px] sm:h-[300px] w-full">
                 <PieChart>
                   <Pie
                     data={demandsPriorityData}
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
-                    outerRadius={100}
+                    outerRadius={90}
                     paddingAngle={5}
                     dataKey="value"
                   >
@@ -376,7 +380,7 @@ export default function Reports() {
                     ))}
                   </Pie>
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <Legend verticalAlign="bottom" height={36} />
+                  <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '12px' }} />
                 </PieChart>
               </ChartContainer>
             )}
@@ -389,34 +393,45 @@ export default function Reports() {
           <CardTitle>Produtividade da Equipe</CardTitle>
           <CardDescription>Volume de demandas atribuídas por colaborador.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-2 sm:px-6 overflow-x-auto">
           {filteredDemands.length === 0 ? (
-            <div className="h-[350px] w-full flex items-center justify-center text-sm text-muted-foreground bg-muted/20 rounded-lg border border-dashed">
+            <div className="h-[300px] sm:h-[350px] w-full flex items-center justify-center text-sm text-muted-foreground bg-muted/20 rounded-lg border border-dashed p-4 text-center">
               Nenhuma demanda encontrada para o período selecionado.
             </div>
           ) : (
-            <ChartContainer
-              config={{ count: { label: 'Demandas', color: 'hsl(var(--primary))' } }}
-              className="h-[350px] w-full"
-            >
-              <BarChart data={teamData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                <XAxis
-                  dataKey="name"
-                  tickLine={false}
-                  axisLine={false}
-                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                />
-                <YAxis
-                  tickLine={false}
-                  axisLine={false}
-                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                  allowDecimals={false}
-                />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="count" fill="var(--color-count)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ChartContainer>
+            <div className="min-w-[500px] w-full">
+              <ChartContainer
+                config={{ count: { label: 'Demandas', color: 'hsl(var(--primary))' } }}
+                className="h-[300px] sm:h-[350px] w-full"
+              >
+                <BarChart data={teamData} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="hsl(var(--border))"
+                  />
+                  <XAxis
+                    dataKey="name"
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                  />
+                  <YAxis
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                    allowDecimals={false}
+                  />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar
+                    dataKey="count"
+                    fill="var(--color-count)"
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={60}
+                  />
+                </BarChart>
+              </ChartContainer>
+            </div>
           )}
         </CardContent>
       </Card>

@@ -20,14 +20,16 @@ export function KanbanBoard() {
   }, [leads, searchQuery])
 
   return (
-    <ScrollArea className="h-[calc(100vh-4rem)] w-full bg-background">
-      <div className="flex gap-4 p-6 min-w-max h-full pb-10 snap-x snap-mandatory overflow-x-auto">
+    <ScrollArea className="flex-1 w-full bg-background h-[calc(100dvh-4rem)] sm:h-[calc(100vh-4rem)]">
+      <div className="flex gap-4 p-4 sm:p-6 min-w-max h-full pb-8 sm:pb-10 snap-x snap-mandatory overflow-x-auto hide-scrollbar">
         {(KANBAN_STAGES || []).map((stage) => {
           const stageLeads = filteredLeads.filter((lead) => lead.stage === stage.id)
           return <KanbanColumn key={stage.id} stage={stage} leads={stageLeads} />
         })}
+        {/* Spacer for the last element on mobile so it doesn't stick to the edge */}
+        <div className="w-2 sm:hidden shrink-0" />
       </div>
-      <ScrollBar orientation="horizontal" className="h-2.5" />
+      <ScrollBar orientation="horizontal" className="h-2.5 hidden sm:flex" />
     </ScrollArea>
   )
 }

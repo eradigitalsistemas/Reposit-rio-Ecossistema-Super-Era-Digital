@@ -18,6 +18,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarFooter,
+  useSidebar,
 } from '@/components/ui/sidebar'
 import useAuthStore from '@/stores/useAuthStore'
 
@@ -38,14 +39,22 @@ const MENU_ITEMS = [
 export function AppSidebar() {
   const location = useLocation()
   const { role } = useAuthStore()
+  const { setOpenMobile, isMobile } = useSidebar()
 
   const visibleItems = MENU_ITEMS.filter((item) => item.roles.includes(role as string))
 
+  const handleLinkClick = () => {
+    if (isMobile) {
+      setOpenMobile(false)
+    }
+  }
+
   return (
     <Sidebar>
-      <SidebarHeader className="h-16 flex items-center px-6 border-b border-border bg-sidebar">
+      <SidebarHeader className="h-16 flex items-center px-6 border-b border-border bg-sidebar shrink-0">
         <Link
           to="/"
+          onClick={handleLinkClick}
           className="flex items-center gap-2 font-bold text-lg text-primary hover:text-primary/80 transition-colors"
         >
           <div className="p-1 bg-primary/10 rounded-md ring-1 ring-primary/30">
@@ -54,7 +63,7 @@ export function AppSidebar() {
           <span>Era Digital</span>
         </Link>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="flex-1 overflow-y-auto">
         <SidebarGroup>
           <SidebarGroupContent className="py-4">
             <SidebarMenu>
@@ -67,11 +76,15 @@ export function AppSidebar() {
                       item.url !== '#' &&
                       (item.url === '/' ? location.pathname === '/' : true)
                     }
-                    className="transition-all duration-200"
+                    className="transition-all duration-200 h-12 md:h-10 px-4 md:px-2"
                   >
-                    <Link to={item.url} className="flex items-center gap-3">
+                    <Link
+                      to={item.url}
+                      onClick={handleLinkClick}
+                      className="flex items-center gap-3"
+                    >
                       <item.icon className="w-5 h-5" />
-                      <span>{item.title}</span>
+                      <span className="text-base md:text-sm font-medium">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -80,17 +93,21 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="p-4 border-t border-border">
+      <SidebarFooter className="p-4 border-t border-border shrink-0 mt-auto pb-8 md:pb-4">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
               variant="outline"
-              className="w-full justify-center text-primary border-primary/20 hover:bg-primary/10 transition-colors"
+              className="w-full justify-center text-primary border-primary/20 hover:bg-primary/10 transition-colors h-12 md:h-10"
             >
-              <Link to="/portal/login" className="flex items-center gap-2">
-                <ExternalLink className="w-4 h-4" />
-                <span>Portal do Cliente</span>
+              <Link
+                to="/portal/login"
+                onClick={handleLinkClick}
+                className="flex items-center gap-2"
+              >
+                <ExternalLink className="w-5 h-5 md:w-4 md:h-4" />
+                <span className="text-base md:text-sm font-medium">Portal do Cliente</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

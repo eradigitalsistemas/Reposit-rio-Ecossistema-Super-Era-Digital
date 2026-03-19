@@ -31,7 +31,6 @@ export default function PortalDocuments() {
     const file = e.target.files?.[0]
     if (!file || !clientId) return
 
-    // Simulate upload progress
     setIsUploading(true)
     setUploadProgress(0)
 
@@ -62,20 +61,20 @@ export default function PortalDocuments() {
   }
 
   const getFileIcon = (type: string) => {
-    return <FileText className="w-5 h-5 text-blue-500" />
+    return <FileText className="w-6 h-6 text-blue-500" />
   }
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Meus Documentos</h1>
-        <p className="text-muted-foreground mt-1">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Meus Documentos</h1>
+        <p className="text-muted-foreground mt-1 text-sm sm:text-base">
           Gerencie arquivos, propostas e contratos relacionados à sua conta.
         </p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6">
-        <div className="md:col-span-1 space-y-6">
+      <div className="grid lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-1 space-y-6 order-1">
           <Card className="shadow-sm border-dashed border-2">
             <CardHeader className="text-center pb-2">
               <CardTitle className="text-lg">Enviar Arquivo</CardTitle>
@@ -84,7 +83,7 @@ export default function PortalDocuments() {
             <CardContent className="flex flex-col items-center pb-6">
               {!isUploading ? (
                 <div
-                  className="w-full aspect-square max-h-48 rounded-xl bg-muted/50 flex flex-col items-center justify-center cursor-pointer hover:bg-muted transition-colors text-center p-4"
+                  className="w-full aspect-video sm:aspect-square max-h-48 rounded-xl bg-muted/50 flex flex-col items-center justify-center cursor-pointer hover:bg-muted transition-colors text-center p-4"
                   onClick={() => document.getElementById('portal-upload')?.click()}
                 >
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
@@ -103,7 +102,7 @@ export default function PortalDocuments() {
                   />
                 </div>
               ) : (
-                <div className="w-full aspect-square max-h-48 rounded-xl bg-muted/30 flex flex-col items-center justify-center p-6 text-center">
+                <div className="w-full aspect-video sm:aspect-square max-h-48 rounded-xl bg-muted/30 flex flex-col items-center justify-center p-6 text-center">
                   {uploadProgress < 100 ? (
                     <>
                       <Upload className="w-8 h-8 text-muted-foreground mb-4 animate-bounce" />
@@ -122,8 +121,9 @@ export default function PortalDocuments() {
           </Card>
         </div>
 
-        <div className="md:col-span-2">
-          <Card className="shadow-sm h-full flex flex-col">
+        <div className="lg:col-span-2 order-2">
+          {/* Desktop View */}
+          <Card className="shadow-sm h-full hidden md:flex flex-col">
             <CardHeader className="bg-muted/30 border-b pb-4 shrink-0">
               <CardTitle className="text-lg">Arquivos Salvos</CardTitle>
             </CardHeader>
@@ -145,7 +145,7 @@ export default function PortalDocuments() {
                             {getFileIcon(doc.type)}
                           </div>
                           <span
-                            className="truncate max-w-[200px] sm:max-w-xs block"
+                            className="truncate max-w-[200px] lg:max-w-xs block"
                             title={doc.name}
                           >
                             {doc.name}
@@ -181,6 +181,46 @@ export default function PortalDocuments() {
               </Table>
             </CardContent>
           </Card>
+
+          {/* Mobile View */}
+          <div className="grid grid-cols-1 gap-4 md:hidden pb-6">
+            <h2 className="text-lg font-semibold mb-2">Arquivos Salvos</h2>
+            {documents.map((doc) => (
+              <Card key={doc.id}>
+                <CardContent className="p-4 flex flex-col gap-3">
+                  <div className="flex items-start gap-3">
+                    <div className="p-3 bg-primary/10 text-primary rounded-xl shrink-0">
+                      {getFileIcon(doc.type)}
+                    </div>
+                    <div className="flex flex-col overflow-hidden w-full">
+                      <span className="font-semibold text-base truncate block" title={doc.name}>
+                        {doc.name}
+                      </span>
+                      <span className="text-xs text-muted-foreground mt-1">
+                        Adicionado em {format(new Date(doc.createdAt), 'dd/MM/yyyy')}
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    asChild
+                    className="w-full text-primary hover:text-primary mt-2"
+                  >
+                    <a href={doc.url} download={doc.name}>
+                      <Download className="w-4 h-4 mr-2" />
+                      Baixar Arquivo
+                    </a>
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+            {documents.length === 0 && (
+              <div className="text-center p-8 text-muted-foreground border rounded-lg bg-card">
+                Nenhum documento disponível.
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

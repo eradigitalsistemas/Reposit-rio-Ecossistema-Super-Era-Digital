@@ -58,30 +58,30 @@ export default function Demands() {
 
   return (
     <div className="h-full w-full bg-slate-50/50 dark:bg-background flex flex-col overflow-hidden">
-      <div className="flex flex-col flex-1 p-6">
-        <div className="flex items-center justify-between mb-6 shrink-0">
+      <div className="flex flex-col flex-1 p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 shrink-0 gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            <h1 className="text-2xl sm:text-2xl font-bold tracking-tight text-foreground">
               Gestão de Demandas
             </h1>
             <p className="text-muted-foreground text-sm mt-1">
               {role === 'Admin'
-                ? 'Acompanhe as tarefas e atribuições de toda a equipe no Kanban'
+                ? 'Acompanhe as tarefas e atribuições de toda a equipe'
                 : 'Acompanhe suas tarefas e atribuições no Kanban'}
             </p>
           </div>
-          {role === 'Admin' && <AddDemandModal />}
+          <div className="w-full sm:w-auto">{role === 'Admin' && <AddDemandModal />}</div>
         </div>
 
-        <div className="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-4 mb-6 bg-card p-4 rounded-xl border shrink-0">
-          <div className="flex flex-wrap items-end gap-6 w-full lg:w-auto">
+        <div className="flex flex-col xl:flex-row items-start xl:items-end justify-between gap-4 mb-6 bg-card p-4 rounded-xl border shrink-0">
+          <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-end gap-4 sm:gap-6 w-full xl:w-auto">
             {role === 'Admin' && (
-              <div className="space-y-2">
+              <div className="space-y-2 w-full sm:w-auto">
                 <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Filtrar por Responsável
                 </Label>
                 <Select value={collaboratorFilter} onValueChange={setCollaboratorFilter}>
-                  <SelectTrigger className="w-full sm:w-[220px] bg-background">
+                  <SelectTrigger className="w-full sm:w-[220px] bg-background h-11 sm:h-10">
                     <SelectValue placeholder="Todos os colaboradores" />
                   </SelectTrigger>
                   <SelectContent>
@@ -97,7 +97,7 @@ export default function Demands() {
               </div>
             )}
 
-            <div className="space-y-2">
+            <div className="space-y-2 w-full sm:w-auto">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
                 <Columns className="w-3 h-3" />
                 Colunas Visíveis
@@ -107,23 +107,23 @@ export default function Demands() {
                 variant="outline"
                 value={statusFilter}
                 onValueChange={setStatusFilter}
-                className="bg-background rounded-md h-10 p-1 border justify-start flex-wrap sm:flex-nowrap"
+                className="bg-background rounded-md min-h-[40px] p-1 border justify-start flex-wrap sm:flex-nowrap w-full"
               >
                 <ToggleGroupItem
                   value="Pendente"
-                  className="h-8 px-3 text-xs data-[state=on]:bg-primary/20 data-[state=on]:text-primary border-transparent data-[state=on]:border-primary/30"
+                  className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none data-[state=on]:bg-primary/20 data-[state=on]:text-primary border-transparent data-[state=on]:border-primary/30"
                 >
                   Pendente
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="Em Andamento"
-                  className="h-8 px-3 text-xs data-[state=on]:bg-blue-500/20 data-[state=on]:text-blue-400 border-transparent data-[state=on]:border-blue-500/30"
+                  className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none data-[state=on]:bg-blue-500/20 data-[state=on]:text-blue-400 border-transparent data-[state=on]:border-blue-500/30"
                 >
                   Em Andamento
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="Concluído"
-                  className="h-8 px-3 text-xs data-[state=on]:bg-emerald-500/20 data-[state=on]:text-emerald-400 border-transparent data-[state=on]:border-emerald-500/30"
+                  className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none data-[state=on]:bg-emerald-500/20 data-[state=on]:text-emerald-400 border-transparent data-[state=on]:border-emerald-500/30"
                 >
                   Concluído
                 </ToggleGroupItem>
@@ -135,7 +135,7 @@ export default function Demands() {
                 variant="ghost"
                 size="sm"
                 onClick={clearFilters}
-                className="h-10 text-muted-foreground hover:text-foreground mb-[1px]"
+                className="h-11 sm:h-10 text-muted-foreground hover:text-foreground w-full sm:w-auto mb-[1px]"
               >
                 <FilterX className="w-4 h-4 mr-2" />
                 Limpar
@@ -147,27 +147,31 @@ export default function Demands() {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="secondary"
-                className="gap-2 bg-background border shadow-sm hover:bg-muted w-full lg:w-auto"
+                className="gap-2 bg-background border shadow-sm hover:bg-muted w-full xl:w-auto"
               >
                 <Download className="w-4 h-4" />
                 Exportar Relatório
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuContent align="end" className="w-[90vw] max-w-[220px] sm:w-56">
               <DropdownMenuItem
                 onClick={() => exportToCSV(filteredDemands, `demandas_${Date.now()}.csv`)}
+                className="min-h-[44px]"
               >
                 Exportar como CSV
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => exportToPDF(filteredDemands)}>
+              <DropdownMenuItem
+                onClick={() => exportToPDF(filteredDemands)}
+                className="min-h-[44px]"
+              >
                 Exportar como PDF
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
 
-        <div className="flex-1 overflow-x-auto overflow-y-hidden">
-          <div className="flex h-full items-start gap-4 pb-4 min-w-max">
+        <div className="flex-1 overflow-x-auto overflow-y-hidden snap-x snap-mandatory hide-scrollbar pb-6">
+          <div className="flex h-full items-start gap-4 min-w-max [&>div]:!w-[85vw] sm:[&>div]:!w-[320px] [&>div]:!max-w-[400px] [&>div]:snap-center pr-4">
             {activeColumns.map((colName) => (
               <DemandColumn
                 key={colName}

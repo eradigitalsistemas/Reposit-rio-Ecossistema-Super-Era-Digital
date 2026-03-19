@@ -5,16 +5,9 @@ export type DemandCategory = 'Serviço' | 'Dúvida' | 'Reclamação' | 'Outro'
 export interface DemandLog {
   id: string
   acao: string
-  detalhes: string | null
+  detalhes: string
   createdAt: string
-  usuario_id: string | null
-}
-
-export interface DemandResponse {
-  id: string
-  text: string
-  createdAt: string
-  author: string
+  usuario_id?: string
 }
 
 export interface Demand {
@@ -26,11 +19,11 @@ export interface Demand {
   dueDate: string | null
   assignee: string
   assigneeId?: string | null
-  responses: DemandResponse[]
-  logs: DemandLog[]
-  createdAt: string
   clientId?: string
   category?: DemandCategory
+  responses?: string[]
+  logs?: DemandLog[]
+  createdAt: string
   systemEscalated?: boolean
 }
 
@@ -41,11 +34,3 @@ export interface DemandNotification {
   createdAt: string
   read: boolean
 }
-
-export const COLLABORATORS = [
-  'Ana Silva',
-  'Carlos Santos',
-  'Mariana Costa',
-  'João Oliveira',
-  'Não Atribuído',
-]

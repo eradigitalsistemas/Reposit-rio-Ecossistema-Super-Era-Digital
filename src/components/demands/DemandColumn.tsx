@@ -1,38 +1,32 @@
 import { Demand } from '@/types/demand'
 import { DemandCard } from './DemandCard'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { DemandDetailsModal } from './DemandDetailsModal'
+import { Badge } from '@/components/ui/badge'
 
-interface Props {
+interface DemandColumnProps {
   title: string
   demands: Demand[]
 }
 
-export function DemandColumn({ title, demands = [] }: Props) {
+export function DemandColumn({ title, demands }: DemandColumnProps) {
   return (
-    <div className="flex flex-col h-full max-h-full w-[350px] shrink-0 bg-zinc-950 rounded-xl border border-border">
-      <div className="flex items-center justify-between p-4 border-b border-border">
-        <h3 className="font-semibold text-sm text-foreground truncate pr-2">{title}</h3>
-        <span className="bg-background text-foreground shadow-sm text-xs font-semibold px-2.5 py-0.5 rounded-full border border-border shrink-0">
+    <div className="flex-1 min-w-[85vw] sm:min-w-[320px] max-w-[400px] bg-card rounded-xl border flex flex-col h-full snap-center shadow-sm">
+      <div className="p-4 border-b shrink-0 flex items-center justify-between">
+        <h3 className="font-semibold text-foreground text-lg sm:text-base tracking-tight">
+          {title}
+        </h3>
+        <Badge variant="secondary" className="px-2 font-medium text-sm sm:text-xs bg-muted">
           {demands.length}
-        </span>
+        </Badge>
       </div>
-      <ScrollArea className="flex-1 p-3">
-        <div className="flex flex-col gap-3 pb-4">
-          {demands.map((demand) => (
-            <DemandDetailsModal key={demand.id} demand={demand}>
-              <div className="cursor-pointer">
-                <DemandCard demand={demand} />
-              </div>
-            </DemandDetailsModal>
-          ))}
-          {demands.length === 0 && (
-            <div className="text-center py-8 text-sm text-muted-foreground border-2 border-dashed border-border rounded-lg">
-              Nenhuma demanda neste status
-            </div>
-          )}
-        </div>
-      </ScrollArea>
+      <div className="flex-1 p-3 overflow-y-auto space-y-3 bg-muted/20 hide-scrollbar">
+        {demands.length === 0 ? (
+          <div className="h-24 flex items-center justify-center border-2 border-dashed border-muted rounded-lg m-2">
+            <span className="text-sm text-muted-foreground font-medium">Sem demandas</span>
+          </div>
+        ) : (
+          demands.map((demand) => <DemandCard key={demand.id} demand={demand} />)
+        )}
+      </div>
     </div>
   )
 }

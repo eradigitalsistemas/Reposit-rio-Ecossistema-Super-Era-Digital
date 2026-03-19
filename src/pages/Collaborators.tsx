@@ -11,7 +11,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import useAuthStore from '@/stores/useAuthStore'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ShieldAlert } from 'lucide-react'
+import { ShieldAlert, Mail, Building2 } from 'lucide-react'
 
 export default function Collaborators() {
   const { role } = useAuthStore()
@@ -58,7 +58,7 @@ export default function Collaborators() {
   ]
 
   return (
-    <div className="h-full w-full bg-slate-50/50 dark:bg-background flex flex-col p-6 overflow-hidden">
+    <div className="h-full w-full bg-slate-50/50 dark:bg-background flex flex-col p-4 sm:p-6 overflow-y-auto sm:overflow-hidden">
       <div className="mb-6 shrink-0">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Equipe e Acessos</h1>
         <p className="text-muted-foreground text-sm mt-1">
@@ -66,7 +66,8 @@ export default function Collaborators() {
         </p>
       </div>
 
-      <Card className="flex-1 overflow-hidden flex flex-col">
+      {/* Desktop View */}
+      <Card className="hidden md:flex flex-1 overflow-hidden flex-col">
         <CardContent className="p-0 overflow-auto flex-1">
           <Table>
             <TableHeader className="sticky top-0 bg-background z-10">
@@ -94,6 +95,35 @@ export default function Collaborators() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Mobile View */}
+      <div className="flex flex-col gap-4 md:hidden pb-6">
+        {collaborators.map((collab) => (
+          <Card key={collab.id}>
+            <CardContent className="p-4 flex flex-col gap-3">
+              <div className="flex justify-between items-start gap-2">
+                <div className="font-semibold text-lg leading-tight">{collab.name}</div>
+                <Badge
+                  variant={collab.role === 'Admin' ? 'default' : 'secondary'}
+                  className="shrink-0"
+                >
+                  {collab.role}
+                </Badge>
+              </div>
+              <div className="space-y-1.5 mt-1">
+                <div className="text-sm flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <span className="truncate">{collab.email}</span>
+                </div>
+                <div className="text-sm flex items-center gap-2 text-muted-foreground">
+                  <Building2 className="w-4 h-4 shrink-0" />
+                  <span>{collab.department}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   )
 }

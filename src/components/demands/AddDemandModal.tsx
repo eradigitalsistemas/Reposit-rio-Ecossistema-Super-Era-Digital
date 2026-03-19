@@ -1,15 +1,9 @@
-import { useState } from 'react'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
+import { useState, useEffect } from 'react'
+import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -17,154 +11,135 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import useDemandStore from '@/stores/useDemandStore'
 import { DemandPriority, DemandStatus } from '@/types/demand'
-import { Plus } from 'lucide-react'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Calendar } from '@/components/ui/calendar'
-import { format } from 'date-fns'
-import { Calendar as CalendarIcon } from 'lucide-react'
-import { cn } from '@/lib/utils'
 
 export function AddDemandModal() {
   const [open, setOpen] = useState(false)
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [priority, setPriority] = useState<DemandPriority>('Durante o Dia')
-  const [status, setStatus] = useState<DemandStatus>('Pendente')
-  const [dueDate, setDueDate] = useState<Date>()
-  const [assigneeId, setAssigneeId] = useState<string>('unassigned')
-
   const { addDemand, collaborators } = useDemandStore()
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!title || !dueDate) return
+  // Pre-fetch collaborators if needed
+  useEffect(() => {
+    // Usually handled by the store in App/Layout
+  }, [])
 
-    await addDemand({
-      title,
-      description,
-      priority,
-      status,
-      dueDate: dueDate.toISOString(),
-      assignee: '', // Will be mapped by backend/store
-      assigneeId: assigneeId === 'unassigned' ? '' : assigneeId,
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+
+    addDemand({
+      title: formData.get('title') as string,
+      description: formData.get('description') as string,
+      priority: formData.get('priority') as DemandPriority,
+      status: formData.get('status') as DemandStatus,
+      dueDate: formData.get('dueDate') as string,
+      assigneeId: formData.get('assigneeId') as string,
     })
 
     setOpen(false)
-    setTitle('')
-    setDescription('')
-    setPriority('Durante o Dia')
-    setStatus('Pendente')
-    setDueDate(undefined)
-    setAssigneeId('unassigned')
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2">
-          <Plus className="w-4 h-4" />
-          Nova Demanda
+        <Button className="gap-2 w-full sm:w-auto h-11 sm:h-10">
+          <Plus className="w-5 h-5 sm:w-4 sm:h-4" />
+          <span className="sm:inline">Nova Demanda</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Criar Nova Demanda</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-          <div className="space-y-2">
-            <Label>Título</Label>
-            <Input
-              required
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Título da tarefa..."
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Descrição</Label>
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Detalhes da demanda..."
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Prioridade</Label>
-              <Select value={priority} onValueChange={(v: DemandPriority) => setPriority(v)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Urgente">Urgente</SelectItem>
-                  <SelectItem value="Durante o Dia">Durante o Dia</SelectItem>
-                  <SelectItem value="Pode Ficar para Amanhã">Pode Ficar para Amanhã</SelectItem>
-                </SelectContent>
-              </Select>
+      <DialogContent className="w-[95vw] sm:max-w-[500px]">
+        <form onSubmit={handleSubmit}>
+          <DialogHeader>
+            <DialogTitle>Criar Nova Demanda</DialogTitle>
+            <DialogDescription>
+              Adicione uma nova tarefa e atribua a um colaborador.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="title">Título *</Label>
+              <Input id="title" name="title" required />
             </div>
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <Select value={status} onValueChange={(v: DemandStatus) => setStatus(v)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Pendente">Pendente</SelectItem>
-                  <SelectItem value="Em Andamento">Em Andamento</SelectItem>
-                  <SelectItem value="Concluído">Concluído</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2 flex flex-col">
-              <Label>Prazo</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      'w-full justify-start text-left font-normal',
-                      !dueDate && 'text-muted-foreground',
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dueDate ? format(dueDate, 'dd/MM/yyyy') : <span>Selecione uma data</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={dueDate} onSelect={setDueDate} initialFocus />
-                </PopoverContent>
-              </Popover>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="priority">Prioridade</Label>
+                <Select name="priority" defaultValue="Pode Ficar para Amanhã">
+                  <SelectTrigger className="h-11 sm:h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Pode Ficar para Amanhã">Ficar para Amanhã</SelectItem>
+                    <SelectItem value="Durante o Dia">Durante o Dia</SelectItem>
+                    <SelectItem value="Urgente">Urgente</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="status">Status Inicial</Label>
+                <Select name="status" defaultValue="Pendente">
+                  <SelectTrigger className="h-11 sm:h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Pendente">Pendente</SelectItem>
+                    <SelectItem value="Em Andamento">Em Andamento</SelectItem>
+                    <SelectItem value="Concluído">Concluído</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Colaborador Responsável</Label>
-              <Select value={assigneeId} onValueChange={setAssigneeId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="unassigned">Não Atribuído</SelectItem>
-                  {collaborators.map((collab) => (
-                    <SelectItem key={collab.id} value={collab.id}>
-                      {collab.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="assigneeId">Atribuir para</Label>
+                <Select name="assigneeId">
+                  <SelectTrigger className="h-11 sm:h-10">
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Não Atribuído</SelectItem>
+                    {collaborators.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="dueDate">Data de Vencimento</Label>
+                <Input id="dueDate" name="dueDate" type="date" className="h-11 sm:h-10" />
+              </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="description">Descrição / Detalhes</Label>
+              <Textarea id="description" name="description" className="min-h-[100px]" />
             </div>
           </div>
-
-          <div className="flex justify-end pt-4">
-            <Button type="submit" disabled={!title || !dueDate}>
-              Salvar Demanda
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setOpen(false)}
+              className="w-full sm:w-auto mb-2 sm:mb-0 h-11 sm:h-10"
+            >
+              Cancelar
             </Button>
-          </div>
+            <Button type="submit" className="w-full sm:w-auto h-11 sm:h-10">
+              Criar Demanda
+            </Button>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

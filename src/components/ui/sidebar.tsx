@@ -1,4 +1,3 @@
-/* Sidebar Component primitives - A component that displays a sidebar (a sidebar that appears on the side of the screen) - from shadcn/ui (exposes Sidebar, SidebarProvider, SidebarTrigger, SidebarRail, SidebarInset, SidebarInput, SidebarHeader, SidebarFooter, SidebarSeparator, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarGroupAction, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarMenuButton) */
 import * as React from 'react'
 import { Slot } from '@radix-ui/react-slot'
 import { VariantProps, cva } from 'class-variance-authority'
@@ -22,7 +21,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 const SIDEBAR_COOKIE_NAME = 'sidebar_state'
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const SIDEBAR_WIDTH = '16rem'
-const SIDEBAR_WIDTH_MOBILE = '18rem'
+const SIDEBAR_WIDTH_MOBILE = '85vw' // Increased for better mobile touch area
 const SIDEBAR_WIDTH_ICON = '3rem'
 const SIDEBAR_KEYBOARD_SHORTCUT = 'b'
 
@@ -136,7 +135,7 @@ const SidebarProvider = React.forwardRef<
               } as React.CSSProperties
             }
             className={cn(
-              'group/sidebar-wrapper flex min-h-svh w-full has-[[data-variant=inset]]:bg-sidebar',
+              'group/sidebar-wrapper flex min-h-[100dvh] w-full has-[[data-variant=inset]]:bg-sidebar overflow-hidden',
               className,
             )}
             ref={ref}
@@ -193,7 +192,7 @@ const Sidebar = React.forwardRef<
           <SheetContent
             data-sidebar="sidebar"
             data-mobile="true"
-            className="w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
+            className="w-[--sidebar-width] max-w-[320px] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden flex flex-col h-[100dvh]"
             style={
               {
                 '--sidebar-width': SIDEBAR_WIDTH_MOBILE,
@@ -205,7 +204,7 @@ const Sidebar = React.forwardRef<
               <SheetTitle>Sidebar</SheetTitle>
               <SheetDescription>Displays the mobile sidebar.</SheetDescription>
             </SheetHeader>
-            <div className="flex h-full w-full flex-col">{children}</div>
+            {children}
           </SheetContent>
         </Sheet>
       )
@@ -220,7 +219,6 @@ const Sidebar = React.forwardRef<
         data-variant={variant}
         data-side={side}
       >
-        {/* This is what handles the sidebar gap on desktop */}
         <div
           className={cn(
             'relative w-[--sidebar-width] bg-transparent transition-[width] duration-200 ease-linear',
@@ -233,11 +231,10 @@ const Sidebar = React.forwardRef<
         />
         <div
           className={cn(
-            'fixed inset-y-0 z-10 hidden h-svh w-[--sidebar-width] transition-[left,right,width] duration-200 ease-linear md:flex',
+            'fixed inset-y-0 z-10 hidden h-[100dvh] w-[--sidebar-width] transition-[left,right,width] duration-200 ease-linear md:flex',
             side === 'left'
               ? 'left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]'
               : 'right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]',
-            // Adjust the padding for floating and inset variants.
             variant === 'floating' || variant === 'inset'
               ? 'p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+2px)]'
               : 'group-data-[collapsible=icon]:w-[--sidebar-width-icon] group-data-[side=left]:border-r group-data-[side=right]:border-l',
@@ -270,7 +267,7 @@ const SidebarTrigger = React.forwardRef<
       data-sidebar="trigger"
       variant="ghost"
       size="icon"
-      className={cn('h-7 w-7', className)}
+      className={cn('h-10 w-10 sm:h-8 sm:w-8', className)}
       onClick={(event) => {
         onClick?.(event)
         toggleSidebar()
@@ -278,7 +275,7 @@ const SidebarTrigger = React.forwardRef<
       {...props}
     >
       <span>
-        <PanelLeft />
+        <PanelLeft className="h-6 w-6 sm:h-5 sm:w-5" />
         <span className="sr-only">Toggle Sidebar</span>
       </span>
     </Button>
@@ -320,7 +317,7 @@ const SidebarInset = React.forwardRef<HTMLDivElement, React.ComponentProps<'main
       <main
         ref={ref}
         className={cn(
-          'relative flex w-full flex-1 flex-col bg-background',
+          'relative flex w-full flex-1 flex-col bg-background h-[100dvh] overflow-hidden',
           'md:peer-data-[variant=inset]:m-2 md:peer-data-[state=collapsed]:peer-data-[variant=inset]:ml-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow',
           className,
         )}
@@ -456,7 +453,6 @@ const SidebarGroupAction = React.forwardRef<
       data-sidebar="group-action"
       className={cn(
         'absolute right-3 top-3.5 flex aspect-square w-5 items-center justify-center rounded-md p-0 text-sidebar-foreground outline-none ring-sidebar-ring transition-transform hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0',
-        // Increases the hit area of the button on mobile.
         'after:absolute after:-inset-2 after:md:hidden',
         'group-data-[collapsible=icon]:hidden',
         className,
@@ -504,7 +500,7 @@ const SidebarMenuItem = React.forwardRef<HTMLLIElement, React.ComponentProps<'li
 SidebarMenuItem.displayName = 'SidebarMenuItem'
 
 const sidebarMenuButtonVariants = cva(
-  'peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
+  'peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:size-5 [&>svg]:shrink-0',
   {
     variants: {
       variant: {
@@ -599,7 +595,6 @@ const SidebarMenuAction = React.forwardRef<
       data-sidebar="menu-action"
       className={cn(
         'absolute right-1 top-1.5 flex aspect-square w-5 items-center justify-center rounded-md p-0 text-sidebar-foreground outline-none ring-sidebar-ring transition-transform hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 peer-hover/menu-button:text-sidebar-accent-foreground [&>svg]:size-4 [&>svg]:shrink-0',
-        // Increases the hit area of the button on mobile.
         'after:absolute after:-inset-2 after:md:hidden',
         'peer-data-[size=sm]/menu-button:top-1',
         'peer-data-[size=default]/menu-button:top-1.5',
@@ -641,7 +636,6 @@ const SidebarMenuSkeleton = React.forwardRef<
     showIcon?: boolean
   }
 >(({ className, showIcon = false, ...props }, ref) => {
-  // Random width between 50 to 90%.
   const width = React.useMemo(() => {
     return `${Math.floor(Math.random() * 40) + 50}%`
   }, [])

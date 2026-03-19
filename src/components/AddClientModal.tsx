@@ -36,12 +36,12 @@ export function AddClientModal() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2 shrink-0">
+        <Button className="gap-2 shrink-0 w-full sm:w-auto">
           <Plus className="w-4 h-4" />
           Novo Cliente
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="w-[95vw] sm:max-w-[500px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Adicionar Novo Cliente</DialogTitle>
@@ -62,7 +62,7 @@ export function AddClientModal() {
               <Label htmlFor="email">E-mail *</Label>
               <Input id="email" name="email" type="email" required />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="phone">Telefone</Label>
                 <Input id="phone" name="phone" />
@@ -74,10 +74,17 @@ export function AddClientModal() {
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setOpen(false)}
+              className="w-full sm:w-auto"
+            >
               Cancelar
             </Button>
-            <Button type="submit">Salvar Cliente</Button>
+            <Button type="submit" className="w-full sm:w-auto">
+              Salvar Cliente
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

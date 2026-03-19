@@ -44,17 +44,17 @@ export function AddLeadModal() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2">
-          <Plus className="w-4 h-4" />
-          Novo Lead
+        <Button className="gap-2 shrink-0 h-10 sm:h-10 w-10 sm:w-auto p-0 sm:px-4 sm:py-2">
+          <Plus className="w-5 h-5 sm:w-4 sm:h-4" />
+          <span className="hidden sm:inline">Novo Lead</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="w-[95vw] sm:max-w-[450px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Adicionar Novo Lead</DialogTitle>
             <DialogDescription>
-              Preencha os dados abaixo para cadastrar um novo lead no Era Digital Vendas.
+              Preencha os dados abaixo para cadastrar um novo lead.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -80,10 +80,17 @@ export function AddLeadModal() {
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setOpen(false)}
+              className="w-full sm:w-auto"
+            >
               Cancelar
             </Button>
-            <Button type="submit">Salvar Lead</Button>
+            <Button type="submit" className="w-full sm:w-auto">
+              Salvar Lead
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

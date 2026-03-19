@@ -35,7 +35,7 @@ export function KanbanColumn({ stage, leads }: KanbanColumnProps) {
   }
 
   return (
-    <div className="w-[300px] flex-shrink-0 flex flex-col h-full snap-center">
+    <div className="w-[85vw] sm:w-[300px] flex-shrink-0 flex flex-col h-full snap-center">
       <div
         className={cn(
           'px-4 py-3 rounded-t-lg font-semibold text-sm flex justify-between items-center',
@@ -56,7 +56,7 @@ export function KanbanColumn({ stage, leads }: KanbanColumnProps) {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={cn(
-          'flex-1 bg-zinc-950/50 border border-t-0 border-border rounded-b-lg p-3 overflow-y-auto space-y-3 transition-all duration-200',
+          'flex-1 bg-zinc-950/50 border border-t-0 border-border rounded-b-lg p-3 overflow-y-auto space-y-3 transition-all duration-200 hide-scrollbar',
           isDragOver && 'bg-zinc-900 border-dashed border-2',
           isDragOver && stage.bgColor,
         )}

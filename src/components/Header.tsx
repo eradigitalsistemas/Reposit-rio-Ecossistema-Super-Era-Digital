@@ -1,6 +1,6 @@
-import { Search, Bell, Shield, LogOut } from 'lucide-react'
+import { Search, Bell, Shield, LogOut, User } from 'lucide-react'
 import { Input } from '@/components/ui/input'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -44,41 +44,57 @@ export function Header() {
   const unreadCount = notifications.filter((n) => !n.read).length
 
   return (
-    <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-4 border-b border-border bg-background/80 backdrop-blur-md px-6">
+    <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-2 sm:gap-4 border-b border-border bg-background/80 backdrop-blur-md px-4 sm:px-6">
       <SidebarTrigger className="-ml-2 md:hidden" />
-      <div className="flex-1 flex items-center justify-between">
-        <Breadcrumb className="hidden sm:block">
+      <div className="flex-1 flex items-center justify-between gap-2">
+        <Breadcrumb className="hidden sm:block shrink-0">
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbPage className="text-lg font-semibold">{pageTitle}</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
+        <div className="sm:hidden font-semibold text-lg truncate w-full pl-2">{pageTitle}</div>
 
-        <div className="flex items-center gap-4 flex-1 justify-end">
+        <div className="flex items-center gap-1 sm:gap-4 flex-1 justify-end">
           {location.pathname === '/' && (
-            <div className="relative w-full max-w-sm hidden md:block">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Buscar leads..."
-                className="w-full bg-muted/50 pl-9 border-border focus-visible:ring-primary focus-visible:border-primary transition-all duration-200"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
+            <>
+              <div className="md:hidden">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon" className="text-muted-foreground h-10 w-10">
+                      <Search className="h-5 w-5" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[90vw] p-3 mr-4 mt-2">
+                    <div className="relative w-full">
+                      <Search className="absolute left-2.5 top-3.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="search"
+                        placeholder="Buscar leads..."
+                        className="w-full bg-muted/50 pl-9"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        autoFocus
+                      />
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="relative w-full max-w-sm hidden md:block">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Buscar leads..."
+                  className="w-full bg-muted/50 pl-9 border-border focus-visible:ring-primary focus-visible:border-primary transition-all duration-200"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </>
           )}
-          {location.pathname === '/' && <AddLeadModal />}
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={toggleRole}
-            className="hidden sm:flex items-center gap-2 border-primary/20 hover:bg-primary/10 hover:border-primary/50 transition-all duration-200"
-          >
-            <Shield className="w-4 h-4 text-primary" />
-            <span className="font-medium">{role}</span>
-          </Button>
+          {location.pathname === '/' && <AddLeadModal />}
 
           <Popover
             onOpenChange={(open) => {
@@ -89,7 +105,7 @@ export function Header() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative text-muted-foreground hover:text-primary transition-colors"
+                className="relative text-muted-foreground hover:text-primary transition-colors h-10 w-10 shrink-0"
               >
                 <Bell className="h-5 w-5" />
                 {unreadCount > 0 && (
@@ -100,7 +116,10 @@ export function Header() {
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-80 p-0 border-border">
+            <PopoverContent
+              align="end"
+              className="w-[90vw] sm:w-80 p-0 border-border mr-2 sm:mr-0 mt-1"
+            >
               <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30">
                 <span className="font-semibold text-sm text-foreground">Notificações</span>
                 {unreadCount > 0 && (
@@ -148,20 +167,41 @@ export function Header() {
             </PopoverContent>
           </Popover>
 
-          <div className="h-6 w-px bg-border hidden sm:block" />
+          <div className="h-6 w-px bg-border hidden sm:block mx-1" />
 
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium hidden sm:block">{userName}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={logout}
-              className="text-muted-foreground hover:text-destructive transition-colors"
-              title="Sair"
-            >
-              <LogOut className="h-5 w-5" />
-            </Button>
-          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" className="px-2 flex items-center gap-2 h-10 hover:bg-muted">
+                <Avatar className="h-7 w-7 border border-primary/20 bg-primary/10 text-primary font-medium text-xs">
+                  <AvatarFallback className="bg-transparent">
+                    {userName.substring(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="hidden sm:flex flex-col items-start text-left">
+                  <span className="text-sm font-medium leading-none max-w-[120px] truncate">
+                    {userName}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground mt-1">{role}</span>
+                </div>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-56 p-2 mt-1 mr-2 sm:mr-0">
+              <div className="flex flex-col space-y-2 p-3 border-b mb-2">
+                <span className="text-sm font-medium">{userName}</span>
+                <span className="text-xs text-muted-foreground">{role}</span>
+              </div>
+              <Button variant="ghost" className="w-full justify-start h-11" onClick={toggleRole}>
+                <Shield className="w-4 h-4 mr-2 text-primary" /> Alterar Visão
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-destructive hover:bg-destructive/10 hover:text-destructive h-11"
+                onClick={logout}
+              >
+                <LogOut className="w-4 h-4 mr-2" /> Sair
+              </Button>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
     </header>
