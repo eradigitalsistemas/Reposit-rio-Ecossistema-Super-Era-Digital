@@ -20,4 +20,12 @@ export interface Demand {
   createdAt: string
 }
 
+export interface DemandNotification {
+  id: string
+  title: string
+  message: string
+  createdAt: string
+  read: boolean
+}
+
 export const COLLABORATORS = ['Ana Silva', 'Carlos Santos', 'Mariana Costa', 'João Oliveira']

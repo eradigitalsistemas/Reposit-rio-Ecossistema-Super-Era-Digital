@@ -1,11 +1,20 @@
 import React, { createContext, useContext, useState, useMemo, useCallback } from 'react'
-import { Demand, DemandPriority, DemandStatus, DemandResponse } from '@/types/demand'
+import {
+  Demand,
+  DemandPriority,
+  DemandStatus,
+  DemandResponse,
+  DemandNotification,
+} from '@/types/demand'
+import { toast } from '@/hooks/use-toast'
 
 interface DemandStoreState {
   demands: Demand[]
+  notifications: DemandNotification[]
   addDemand: (demand: Omit<Demand, 'id' | 'createdAt' | 'responses'>) => void
   addResponse: (demandId: string, response: string, author: string) => void
   updateStatus: (demandId: string, status: DemandStatus) => void
+  markNotificationsAsRead: () => void
 }
 
 const mockDemands: Demand[] = [
@@ -52,10 +61,40 @@ const mockDemands: Demand[] = [
   },
 ]
 
+const mockNotifications: DemandNotification[] = [
+  {
+    id: 'n1',
+    title: 'Sistema de Notificações',
+    message: 'Bem-vindo! Você receberá alertas sobre demandas aqui.',
+    createdAt: new Date().toISOString(),
+    read: false,
+  },
+]
+
 const DemandContext = createContext<DemandStoreState | null>(null)
 
 export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   const [demands, setDemands] = useState<Demand[]>(mockDemands)
+  const [notifications, setNotifications] = useState<DemandNotification[]>(mockNotifications)
+
+  const addNotification = useCallback((title: string, message: string) => {
+    const newNotif: DemandNotification = {
+      id: Math.random().toString(36).substr(2, 9),
+      title,
+      message,
+      createdAt: new Date().toISOString(),
+      read: false,
+    }
+    setNotifications((prev) => [newNotif, ...prev])
+    toast({
+      title,
+      description: message,
+    })
+  }, [])
+
+  const markNotificationsAsRead = useCallback(() => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
+  }, [])
 
   const addDemand = useCallback((newDemand: Omit<Demand, 'id' | 'createdAt' | 'responses'>) => {
     const demand: Demand = {
@@ -65,44 +104,67 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       responses: [],
     }
     setDemands((prev) => [...prev, demand])
+    toast({
+      title: 'Nova Demanda Criada',
+      description: `A tarefa "${demand.title}" foi adicionada.`,
+    })
   }, [])
 
-  const addResponse = useCallback((demandId: string, text: string, author: string) => {
-    setDemands((prev) =>
-      prev.map((demand) => {
-        if (demand.id === demandId) {
-          return {
-            ...demand,
-            responses: [
-              ...demand.responses,
-              {
-                id: Math.random().toString(36).substr(2, 9),
-                text,
-                author,
-                createdAt: new Date().toISOString(),
-              },
-            ],
+  const addResponse = useCallback(
+    (demandId: string, text: string, author: string) => {
+      const demand = demands.find((d) => d.id === demandId)
+      if (demand) {
+        addNotification('Novo Comentário', `${author} respondeu em "${demand.title}".`)
+      }
+
+      setDemands((prev) =>
+        prev.map((d) => {
+          if (d.id === demandId) {
+            return {
+              ...d,
+              responses: [
+                ...d.responses,
+                {
+                  id: Math.random().toString(36).substr(2, 9),
+                  text,
+                  author,
+                  createdAt: new Date().toISOString(),
+                },
+              ],
+            }
           }
-        }
-        return demand
-      }),
-    )
-  }, [])
+          return d
+        }),
+      )
+    },
+    [demands, addNotification],
+  )
 
-  const updateStatus = useCallback((demandId: string, status: DemandStatus) => {
-    setDemands((prev) =>
-      prev.map((demand) => (demand.id === demandId ? { ...demand, status } : demand)),
-    )
-  }, [])
+  const updateStatus = useCallback(
+    (demandId: string, status: DemandStatus) => {
+      const demand = demands.find((d) => d.id === demandId)
+      if (demand && demand.status !== status) {
+        addNotification(
+          'Status Atualizado',
+          `A demanda "${demand.title}" foi movida para ${status}.`,
+        )
+      }
+
+      setDemands((prev) => prev.map((d) => (d.id === demandId ? { ...d, status } : d)))
+    },
+    [demands, addNotification],
+  )
 
   const value = useMemo(
     () => ({
       demands,
+      notifications,
       addDemand,
       addResponse,
       updateStatus,
+      markNotificationsAsRead,
     }),
-    [demands, addDemand, addResponse, updateStatus],
+    [demands, notifications, addDemand, addResponse, updateStatus, markNotificationsAsRead],
   )
 
   return <DemandContext.Provider value={value}>{children}</DemandContext.Provider>
