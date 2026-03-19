@@ -6,6 +6,7 @@ import {
   Building2,
   CheckSquare,
   ExternalLink,
+  Settings as SettingsIcon,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -26,6 +27,12 @@ const MENU_ITEMS = [
   { title: 'Colaboradores', icon: Users, url: '/colaboradores', roles: ['Admin'] },
   { title: 'Clientes Externos', icon: Building2, url: '/clientes', roles: ['Admin'] },
   { title: 'Relatórios', icon: BarChart3, url: '/relatorios', roles: ['Admin'] },
+  {
+    title: 'Configurações',
+    icon: SettingsIcon,
+    url: '/configuracoes',
+    roles: ['Admin', 'Colaborador'],
+  },
 ]
 
 export function AppSidebar() {

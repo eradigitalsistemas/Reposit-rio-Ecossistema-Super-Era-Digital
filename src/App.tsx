@@ -9,6 +9,7 @@ import Clients from './pages/Clients'
 import ClientProfile from './pages/ClientProfile'
 import Collaborators from './pages/Collaborators'
 import Reports from './pages/Reports'
+import Settings from './pages/Settings'
 import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
 
@@ -43,6 +44,7 @@ const App = () => (
                   <Route path="/clientes/:id" element={<ClientProfile />} />
                   <Route path="/colaboradores" element={<Collaborators />} />
                   <Route path="/relatorios" element={<Reports />} />
+                  <Route path="/configuracoes" element={<Settings />} />
                 </Route>
 
                 {/* External Portal Routes */}

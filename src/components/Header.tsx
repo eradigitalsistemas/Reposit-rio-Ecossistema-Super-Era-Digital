@@ -34,6 +34,8 @@ export function Header() {
         return 'Clientes Externos'
       case '/relatorios':
         return 'Relatórios e Métricas'
+      case '/configuracoes':
+        return 'Configurações'
       default:
         return 'Pipeline de Vendas'
     }
