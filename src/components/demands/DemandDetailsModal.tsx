@@ -86,22 +86,6 @@ export function DemandDetailsModal({
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
-  const handleDownload = async (attachment: DemandAttachment) => {
-    try {
-      const { data, error } = await supabase.storage
-        .from('demandas_anexos')
-        .createSignedUrl(attachment.url, 3600)
-      if (error) throw error
-      window.open(data.signedUrl, '_blank')
-    } catch (err) {
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível acessar o arquivo.',
-        variant: 'destructive',
-      })
-    }
-  }
-
   const canAccept = demand.status === 'Pendente' && demand.assigneeId !== user?.id
   const canComplete = demand.status === 'Pendente' || demand.status === 'Em Andamento'
 
@@ -296,29 +280,36 @@ export function DemandDetailsModal({
               </div>
               {demand.attachments && demand.attachments.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {demand.attachments.map((att, i) => (
-                    <button
-                      key={i}
-                      onClick={() => handleDownload(att)}
-                      className="flex items-center gap-3 bg-[rgba(255,255,255,0.02)] p-3 rounded-lg border border-white/10 hover:border-primary/50 hover:bg-primary/5 transition-all text-left group"
-                    >
-                      <div className="bg-white/5 p-2 rounded group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                        {att.type.startsWith('image/') ? (
-                          <ImageIcon className="w-5 h-5" />
-                        ) : (
-                          <FileIcon className="w-5 h-5" />
-                        )}
-                      </div>
-                      <div className="overflow-hidden flex-1">
-                        <p className="text-sm font-medium text-primary group-hover:text-primary/80 truncate transition-colors">
-                          {att.name}
-                        </p>
-                        <p className="text-xs text-white/50 uppercase">
-                          {att.type.split('/')[1] || 'FILE'}
-                        </p>
-                      </div>
-                    </button>
-                  ))}
+                  {demand.attachments.map((att, i) => {
+                    const fileUrl = supabase.storage.from('demandas_anexos').getPublicUrl(att.url)
+                      .data.publicUrl
+                    return (
+                      <a
+                        key={i}
+                        href={fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        download={att.name}
+                        className="flex items-center gap-3 bg-[rgba(255,255,255,0.02)] p-3 rounded-lg border border-white/10 hover:border-primary/50 hover:bg-primary/5 transition-all text-left group cursor-pointer"
+                      >
+                        <div className="bg-white/5 p-2 rounded group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                          {att.type.startsWith('image/') ? (
+                            <ImageIcon className="w-5 h-5" />
+                          ) : (
+                            <FileIcon className="w-5 h-5" />
+                          )}
+                        </div>
+                        <div className="overflow-hidden flex-1">
+                          <p className="text-sm font-medium text-primary group-hover:text-primary/80 truncate transition-colors">
+                            {att.name}
+                          </p>
+                          <p className="text-xs text-white/50 uppercase">
+                            {att.type.split('/')[1] || 'FILE'}
+                          </p>
+                        </div>
+                      </a>
+                    )
+                  })}
                 </div>
               ) : (
                 <p className="text-sm text-white/50 bg-white/5 p-4 rounded-lg border border-white/5 text-center">

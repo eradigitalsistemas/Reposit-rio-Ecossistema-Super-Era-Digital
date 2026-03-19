@@ -24,7 +24,6 @@ import { supabase } from '@/lib/supabase/client'
 import { format } from 'date-fns'
 import { Paperclip, X, File as FileIcon, Image as ImageIcon } from 'lucide-react'
 import { sanitizeFilename } from '@/lib/utils'
-import { toast } from '@/hooks/use-toast'
 
 interface EditDemandModalProps {
   open: boolean
@@ -53,22 +52,6 @@ export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalP
   const removeNewFile = (index: number) => setNewFiles((prev) => prev.filter((_, i) => i !== index))
   const removeExistingFile = (index: number) =>
     setExistingAttachments((prev) => prev.filter((_, i) => i !== index))
-
-  const handleDownload = async (attachment: DemandAttachment) => {
-    try {
-      const { data, error } = await supabase.storage
-        .from('demandas_anexos')
-        .createSignedUrl(attachment.url, 3600)
-      if (error) throw error
-      window.open(data.signedUrl, '_blank')
-    } catch (err) {
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível acessar o arquivo.',
-        variant: 'destructive',
-      })
-    }
-  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -204,34 +187,40 @@ export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalP
               </div>
               {(existingAttachments.length > 0 || newFiles.length > 0) && (
                 <div className="space-y-2 mt-1 max-h-32 overflow-y-auto pr-1">
-                  {existingAttachments.map((file, i) => (
-                    <div
-                      key={`ext-${i}`}
-                      className="flex items-center justify-between bg-white/5 border border-white/10 rounded-md p-2 text-sm"
-                    >
-                      <div className="flex items-center gap-2 overflow-hidden flex-1 pr-2">
-                        {file.type.startsWith('image/') ? (
-                          <ImageIcon className="w-4 h-4 shrink-0 text-white/50" />
-                        ) : (
-                          <FileIcon className="w-4 h-4 shrink-0 text-white/50" />
-                        )}
+                  {existingAttachments.map((file, i) => {
+                    const fileUrl = supabase.storage.from('demandas_anexos').getPublicUrl(file.url)
+                      .data.publicUrl
+                    return (
+                      <div
+                        key={`ext-${i}`}
+                        className="flex items-center justify-between bg-white/5 border border-white/10 rounded-md p-2 text-sm"
+                      >
+                        <div className="flex items-center gap-2 overflow-hidden flex-1 pr-2">
+                          {file.type.startsWith('image/') ? (
+                            <ImageIcon className="w-4 h-4 shrink-0 text-white/50" />
+                          ) : (
+                            <FileIcon className="w-4 h-4 shrink-0 text-white/50" />
+                          )}
+                          <a
+                            href={fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            download={file.name}
+                            className="truncate text-primary hover:underline text-left cursor-pointer"
+                          >
+                            {file.name}
+                          </a>
+                        </div>
                         <button
                           type="button"
-                          onClick={() => handleDownload(file)}
-                          className="truncate text-primary hover:underline text-left"
+                          onClick={() => removeExistingFile(i)}
+                          className="text-white/50 hover:text-white shrink-0 p-1"
                         >
-                          {file.name}
+                          <X className="w-4 h-4" />
                         </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => removeExistingFile(i)}
-                        className="text-white/50 hover:text-white shrink-0 p-1"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
+                    )
+                  })}
                   {newFiles.map((file, i) => (
                     <div
                       key={`new-${i}`}
