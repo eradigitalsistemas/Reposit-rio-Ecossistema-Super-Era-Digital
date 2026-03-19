@@ -4,7 +4,6 @@
     "admin-users": 2,
     "notify-push": 1,
     "notify-automation": 1,
-    "manage-client-documents": 1,
-    "functions": 7
+    "manage-client-documents": 1
   }
 }
