@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Navigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import {
@@ -9,18 +9,67 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, PieChart, Pie, Cell, Legend } from 'recharts'
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartConfig,
+} from '@/components/ui/chart'
 import useAuthStore from '@/stores/useAuthStore'
 import { supabase } from '@/lib/supabase/client'
-import { subDays, startOfMonth, endOfMonth } from 'date-fns'
+import {
+  startOfDay,
+  endOfDay,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  isWithinInterval,
+  isSameDay,
+} from 'date-fns'
+import { Users, CheckSquare, AlertTriangle, UserCheck } from 'lucide-react'
+
+interface LeadData {
+  estagio: string
+  data_criacao: string
+}
+
+interface DemandData {
+  status: string
+  prioridade: string
+  responsavel_id: string | null
+  data_criacao: string
+  data_vencimento: string | null
+}
+
+interface UserData {
+  id: string
+  nome: string
+}
+
+const leadsConfig: ChartConfig = {
+  leads: { label: 'Leads', color: '#94a3b8' },
+  prospeccao: { label: 'Prospecção', color: '#f97316' },
+  convertido: { label: 'Convertido', color: '#6366f1' },
+  treinamento: { label: 'Em Treinamento', color: '#a855f7' },
+  finalizado: { label: 'Finalizado', color: '#10b981' },
+  pos_venda: { label: 'Pós Venda', color: '#f43f5e' },
+  ativo: { label: 'Ativo', color: '#0ea5e9' },
+}
+
+const priorityConfig: ChartConfig = {
+  Urgente: { label: 'Urgente', color: '#ef4444' },
+  'Durante o Dia': { label: 'Durante o Dia', color: '#f59e0b' },
+  'Pode Ficar para Amanhã': { label: 'Pode Ficar para Amanhã', color: '#3b82f6' },
+}
 
 export default function Reports() {
   const { role } = useAuthStore()
 
-  const [dateFilter, setDateFilter] = useState('30days')
-  const [leadsData, setLeadsData] = useState<any[]>([])
-  const [demandsData, setDemandsData] = useState<any[]>([])
-  const [usersData, setUsersData] = useState<any[]>([])
+  const [dateFilter, setDateFilter] = useState('thisMonth')
+  const [leadsData, setLeadsData] = useState<LeadData[]>([])
+  const [demandsData, setDemandsData] = useState<DemandData[]>([])
+  const [usersData, setUsersData] = useState<UserData[]>([])
 
   useEffect(() => {
     if (role !== 'Admin') return
@@ -28,85 +77,136 @@ export default function Reports() {
     const fetchData = async () => {
       const [leadsRes, demandsRes, usersRes] = await Promise.all([
         supabase.from('leads').select('estagio, data_criacao'),
-        supabase.from('demandas').select('status, responsavel_id, data_criacao'),
+        supabase
+          .from('demandas')
+          .select('status, prioridade, responsavel_id, data_criacao, data_vencimento'),
         supabase.from('usuarios').select('id, nome'),
       ])
 
-      if (leadsRes.data) setLeadsData(leadsRes.data)
-      if (demandsRes.data) setDemandsData(demandsRes.data)
-      if (usersRes.data) setUsersData(usersRes.data)
+      if (leadsRes.data) setLeadsData(leadsRes.data as LeadData[])
+      if (demandsRes.data) setDemandsData(demandsRes.data as DemandData[])
+      if (usersRes.data) setUsersData(usersRes.data as UserData[])
     }
     fetchData()
   }, [role])
 
-  // Filtering Logic
-  const filterByDate = (dateString: string) => {
-    const date = new Date(dateString)
+  const filterInterval = useMemo(() => {
     const now = new Date()
-    if (dateFilter === '30days') {
-      return date >= subDays(now, 30)
-    } else if (dateFilter === 'thisMonth') {
-      return date >= startOfMonth(now) && date <= endOfMonth(now)
+    switch (dateFilter) {
+      case 'today':
+        return { start: startOfDay(now), end: endOfDay(now) }
+      case 'thisWeek':
+        return {
+          start: startOfWeek(now, { weekStartsOn: 1 }),
+          end: endOfWeek(now, { weekStartsOn: 1 }),
+        }
+      case 'thisMonth':
+      default:
+        return { start: startOfMonth(now), end: endOfMonth(now) }
     }
-    return true // allTime
-  }
+  }, [dateFilter])
+
+  const isDateInFilter = useCallback(
+    (dateString: string) => {
+      if (!dateString) return false
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) return false
+      return isWithinInterval(date, filterInterval)
+    },
+    [filterInterval],
+  )
 
   const filteredLeads = useMemo(
-    () => leadsData.filter((d) => filterByDate(d.data_criacao)),
-    [leadsData, dateFilter],
-  )
-  const filteredDemands = useMemo(
-    () => demandsData.filter((d) => filterByDate(d.data_criacao)),
-    [demandsData, dateFilter],
+    () => leadsData.filter((d) => isDateInFilter(d.data_criacao)),
+    [leadsData, isDateInFilter],
   )
 
-  // Leads Overview Chart Data
+  const filteredDemands = useMemo(
+    () => demandsData.filter((d) => isDateInFilter(d.data_criacao)),
+    [demandsData, isDateInFilter],
+  )
+
+  const totalLeads = filteredLeads.length
+
+  const demandsToday = useMemo(() => {
+    const now = new Date()
+    return demandsData.filter((d) => {
+      const isCreatedToday = d.data_criacao ? isSameDay(new Date(d.data_criacao), now) : false
+      const isDueToday = d.data_vencimento ? isSameDay(new Date(d.data_vencimento), now) : false
+      return isCreatedToday || isDueToday
+    }).length
+  }, [demandsData])
+
+  const urgentesAberto = useMemo(
+    () =>
+      filteredDemands.filter((d) => d.prioridade === 'Urgente' && d.status !== 'Concluído').length,
+    [filteredDemands],
+  )
+
+  const leadsConvertidos = useMemo(
+    () =>
+      filteredLeads.filter(
+        (d) => d.estagio === 'convertido' || d.estagio === 'finalizado' || d.estagio === 'ativo',
+      ).length,
+    [filteredLeads],
+  )
+
   const leadsChartData = useMemo(() => {
     const counts: Record<string, number> = {}
     filteredLeads.forEach((l) => {
       counts[l.estagio] = (counts[l.estagio] || 0) + 1
     })
-    return Object.entries(counts).map(([stage, count]) => ({ stage, count }))
+    return Object.entries(counts).map(([stage, count]) => {
+      const configItem = leadsConfig[stage as keyof typeof leadsConfig]
+      return {
+        id: stage,
+        name: configItem?.label || stage,
+        value: count,
+        fill: configItem?.color || '#94a3b8',
+      }
+    })
   }, [filteredLeads])
 
-  // Demands Status Chart Data
-  const demandsStatusData = useMemo(() => {
+  const demandsPriorityData = useMemo(() => {
     const counts: Record<string, number> = {}
     filteredDemands.forEach((d) => {
-      counts[d.status] = (counts[d.status] || 0) + 1
+      counts[d.prioridade] = (counts[d.prioridade] || 0) + 1
     })
-    return Object.entries(counts).map(([status, count]) => ({ name: status, value: count }))
+    return Object.entries(counts).map(([priority, count]) => {
+      const configItem = priorityConfig[priority as keyof typeof priorityConfig]
+      return {
+        id: priority,
+        name: configItem?.label || priority,
+        value: count,
+        fill: configItem?.color || '#ccc',
+      }
+    })
   }, [filteredDemands])
 
-  // Team Productivity Data
   const teamData = useMemo(() => {
     const userMap = new Map(usersData.map((u) => [u.id, u.nome]))
-    const counts: Record<string, { concluido: number; andamento: number }> = {}
+    const counts: Record<string, number> = {}
 
     usersData.forEach((u) => {
-      counts[u.nome] = { concluido: 0, andamento: 0 }
+      counts[u.nome] = 0
     })
 
     filteredDemands.forEach((d) => {
       if (d.responsavel_id) {
-        const userName = userMap.get(d.responsavel_id) || 'Desconhecido'
-        if (!counts[userName]) counts[userName] = { concluido: 0, andamento: 0 }
-
-        if (d.status === 'Concluído') {
-          counts[userName].concluido += 1
-        } else if (d.status === 'Em Andamento') {
-          counts[userName].andamento += 1
+        const userName = userMap.get(d.responsavel_id) || 'Não Atribuído'
+        if (counts[userName] !== undefined) {
+          counts[userName] += 1
+        } else {
+          counts[userName] = 1
         }
       }
     })
-    return Object.entries(counts).map(([name, data]) => ({ name, ...data }))
+    return Object.entries(counts).map(([name, count]) => ({ name, count }))
   }, [filteredDemands, usersData])
 
   if (role !== 'Admin') {
     return <Navigate to="/" replace />
   }
-
-  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#64748b']
 
   return (
     <div className="h-full w-full bg-slate-50/50 dark:bg-background flex flex-col p-6 overflow-y-auto">
@@ -124,54 +224,67 @@ export default function Reports() {
             <SelectValue placeholder="Período" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="30days">Últimos 30 Dias</SelectItem>
+            <SelectItem value="today">Hoje</SelectItem>
+            <SelectItem value="thisWeek">Esta Semana</SelectItem>
             <SelectItem value="thisMonth">Este Mês</SelectItem>
-            <SelectItem value="allTime">Todo o Período</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Leads</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalLeads}</div>
+            <p className="text-xs text-muted-foreground">No período selecionado</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Demandas do Dia</CardTitle>
+            <CheckSquare className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{demandsToday}</div>
+            <p className="text-xs text-muted-foreground">Criadas ou com vencimento hoje</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Demandas Urgentes</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-destructive" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{urgentesAberto}</div>
+            <p className="text-xs text-muted-foreground">Em aberto no período</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Leads Convertidos</CardTitle>
+            <UserCheck className="h-4 w-4 text-emerald-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{leadsConvertidos}</div>
+            <p className="text-xs text-muted-foreground">No período selecionado</p>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <Card className="shadow-sm">
           <CardHeader>
-            <CardTitle>Leads por Estágio</CardTitle>
-            <CardDescription>Distribuição atual de leads no funil de vendas.</CardDescription>
+            <CardTitle>Distribuição de Leads</CardTitle>
+            <CardDescription>Volume de leads por estágio do funil.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer
-              config={{ count: { label: 'Leads', color: 'hsl(var(--primary))' } }}
-              className="h-[300px] w-full"
-            >
-              <BarChart data={leadsChartData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                <XAxis
-                  dataKey="stage"
-                  tickLine={false}
-                  axisLine={false}
-                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                />
-                <YAxis
-                  tickLine={false}
-                  axisLine={false}
-                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="count" fill="var(--color-count)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm">
-          <CardHeader>
-            <CardTitle>Status das Demandas</CardTitle>
-            <CardDescription>Proporção geral de demandas ativas e concluídas.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={{}} className="h-[300px] w-full">
+            <ChartContainer config={leadsConfig} className="h-[300px] w-full">
               <PieChart>
                 <Pie
-                  data={demandsStatusData}
+                  data={leadsChartData}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
@@ -179,8 +292,36 @@ export default function Reports() {
                   paddingAngle={5}
                   dataKey="value"
                 >
-                  {demandsStatusData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  {leadsChartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Legend verticalAlign="bottom" height={36} />
+              </PieChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle>Prioridade das Demandas</CardTitle>
+            <CardDescription>Volume de tarefas por nível de prioridade.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={priorityConfig} className="h-[300px] w-full">
+              <PieChart>
+                <Pie
+                  data={demandsPriorityData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {demandsPriorityData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
                   ))}
                 </Pie>
                 <ChartTooltip content={<ChartTooltipContent />} />
@@ -194,14 +335,11 @@ export default function Reports() {
       <Card className="shadow-sm mb-6">
         <CardHeader>
           <CardTitle>Produtividade da Equipe</CardTitle>
-          <CardDescription>Comparativo de tarefas por colaborador da plataforma.</CardDescription>
+          <CardDescription>Volume de demandas atribuídas por colaborador.</CardDescription>
         </CardHeader>
         <CardContent>
           <ChartContainer
-            config={{
-              concluido: { label: 'Concluído', color: '#10b981' },
-              andamento: { label: 'Em Andamento', color: '#3b82f6' },
-            }}
+            config={{ count: { label: 'Demandas', color: 'hsl(var(--primary))' } }}
             className="h-[350px] w-full"
           >
             <BarChart data={teamData}>
@@ -218,14 +356,7 @@ export default function Reports() {
                 tick={{ fill: 'hsl(var(--muted-foreground))' }}
               />
               <ChartTooltip content={<ChartTooltipContent />} />
-              <Legend />
-              <Bar dataKey="andamento" fill="var(--color-andamento)" stackId="a" />
-              <Bar
-                dataKey="concluido"
-                fill="var(--color-concluido)"
-                stackId="a"
-                radius={[4, 4, 0, 0]}
-              />
+              <Bar dataKey="count" fill="var(--color-count)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ChartContainer>
         </CardContent>
