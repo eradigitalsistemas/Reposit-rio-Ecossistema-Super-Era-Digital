@@ -36,7 +36,7 @@ export function ClientForm({ client }: { client: Client }) {
   }
 
   return (
-    <Card className="max-w-2xl border-0 sm:border sm:shadow-sm">
+    <Card className="max-w-2xl">
       <CardHeader className="px-0 sm:px-6">
         <CardTitle>Informações Gerais</CardTitle>
         <CardDescription>Atualize os dados de contato e informações da empresa.</CardDescription>

@@ -46,6 +46,7 @@ interface UserData {
   nome: string
 }
 
+// Keeping original colors for leads to maintain status consistency
 const leadsConfig: ChartConfig = {
   leads: { label: 'Leads', color: '#94a3b8' },
   prospeccao: { label: 'Prospecção', color: '#f97316' },
@@ -56,10 +57,11 @@ const leadsConfig: ChartConfig = {
   ativo: { label: 'Ativo', color: '#0ea5e9' },
 }
 
+// Updated priority config to follow the Black/White/Green palette rule
 const priorityConfig: ChartConfig = {
-  Urgente: { label: 'Urgente', color: '#ef4444' },
-  'Durante o Dia': { label: 'Durante o Dia', color: '#f59e0b' },
-  'Pode Ficar para Amanhã': { label: 'Ficar para Amanhã', color: '#3b82f6' },
+  Urgente: { label: 'Urgente', color: '#ffffff' },
+  'Durante o Dia': { label: 'Durante o Dia', color: 'hsl(142, 71%, 45%)' }, // Primary Green
+  'Pode Ficar para Amanhã': { label: 'Ficar para Amanhã', color: 'rgba(255,255,255,0.3)' }, // Grey
 }
 
 export default function Reports() {
@@ -195,7 +197,7 @@ export default function Reports() {
         id: priority,
         name: configItem?.label || priority,
         value: count,
-        fill: configItem?.color || '#ccc',
+        fill: configItem?.color || 'rgba(255,255,255,0.3)',
       }
     })
   }, [filteredDemands])
@@ -225,10 +227,10 @@ export default function Reports() {
 
   if (loading) {
     return (
-      <div className="h-full w-full bg-slate-50/50 dark:bg-background flex items-center justify-center p-6">
+      <div className="h-full w-full bg-background flex items-center justify-center p-6 text-foreground">
         <div className="flex flex-col items-center gap-4 text-primary">
           <Loader2 className="w-8 h-8 animate-spin" />
-          <p className="text-sm font-medium">Carregando relatórios...</p>
+          <p className="text-sm font-medium text-white">Carregando relatórios...</p>
         </div>
       </div>
     )
@@ -236,36 +238,34 @@ export default function Reports() {
 
   if (error) {
     return (
-      <div className="h-full w-full bg-slate-50/50 dark:bg-background flex items-center justify-center p-6">
-        <Card className="max-w-md w-full text-center p-6 border-destructive/50 bg-destructive/10">
-          <AlertTriangle className="w-10 h-10 text-destructive mx-auto mb-4" />
-          <h2 className="text-lg font-semibold text-destructive mb-2">Erro</h2>
-          <p className="text-sm text-destructive/80">{error}</p>
+      <div className="h-full w-full bg-background flex items-center justify-center p-6 text-foreground">
+        <Card className="max-w-md w-full text-center p-6 border-white/10 bg-[rgba(255,255,255,0.05)]">
+          <AlertTriangle className="w-10 h-10 text-white/60 mx-auto mb-4" />
+          <h2 className="text-lg font-semibold text-white mb-2">Erro</h2>
+          <p className="text-sm text-white/60">{error}</p>
         </Card>
       </div>
     )
   }
 
   const renderEmptyState = () => (
-    <div className="h-[300px] w-full flex items-center justify-center text-sm text-muted-foreground bg-muted/20 rounded-lg border border-dashed p-4 text-center">
+    <div className="h-[300px] w-full flex items-center justify-center text-sm text-white/40 bg-[rgba(255,255,255,0.02)] rounded-lg border border-white/10 border-dashed p-4 text-center">
       Nenhum dado encontrado para o período selecionado.
     </div>
   )
 
   return (
-    <div className="h-full w-full bg-slate-50/50 dark:bg-background flex flex-col p-4 sm:p-6 overflow-y-auto">
+    <div className="h-full w-full bg-background flex flex-col p-4 sm:p-6 overflow-y-auto text-foreground">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 shrink-0 gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Dashboard de Relatórios
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
+          <h1 className="text-2xl font-bold tracking-tight text-white">Dashboard de Relatórios</h1>
+          <p className="text-white/60 text-sm mt-1">
             Acompanhe métricas de conversão, produtividade da equipe e prioridades.
           </p>
         </div>
         <div className="w-full sm:w-auto">
           <Select value={dateFilter} onValueChange={setDateFilter}>
-            <SelectTrigger className="w-full sm:w-[180px] bg-background shadow-sm h-11 sm:h-10">
+            <SelectTrigger className="w-full sm:w-[180px] h-11 sm:h-10">
               <SelectValue placeholder="Período" />
             </SelectTrigger>
             <SelectContent>
@@ -280,53 +280,53 @@ export default function Reports() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Leads</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-white/80">Total de Leads</CardTitle>
+            <Users className="h-4 w-4 text-white/60" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalLeads}</div>
-            <p className="text-xs text-muted-foreground mt-1">Criados no período selecionado</p>
+            <div className="text-2xl font-bold text-white">{totalLeads}</div>
+            <p className="text-xs text-white/40 mt-1">Criados no período selecionado</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Demandas do Dia</CardTitle>
-            <CheckSquare className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-white/80">Demandas do Dia</CardTitle>
+            <CheckSquare className="h-4 w-4 text-white/60" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{demandsToday}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Criadas hoje (Independente do filtro)
-            </p>
+            <div className="text-2xl font-bold text-white">{demandsToday}</div>
+            <p className="text-xs text-white/40 mt-1">Criadas hoje (Independente do filtro)</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Demandas Urgentes</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-destructive" />
+            <CardTitle className="text-sm font-medium text-white/80">Demandas Urgentes</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-white/60" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{urgentesAberto}</div>
-            <p className="text-xs text-muted-foreground mt-1">Em aberto no período selecionado</p>
+            <div className="text-2xl font-bold text-white">{urgentesAberto}</div>
+            <p className="text-xs text-white/40 mt-1">Em aberto no período selecionado</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Leads Convertidos</CardTitle>
-            <UserCheck className="h-4 w-4 text-emerald-500" />
+            <CardTitle className="text-sm font-medium text-white/80">Leads Convertidos</CardTitle>
+            <UserCheck className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{leadsConvertidos}</div>
-            <p className="text-xs text-muted-foreground mt-1">No período selecionado</p>
+            <div className="text-2xl font-bold text-white">{leadsConvertidos}</div>
+            <p className="text-xs text-white/40 mt-1">No período selecionado</p>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
-        <Card className="shadow-sm">
+        <Card>
           <CardHeader>
-            <CardTitle>Distribuição de Leads</CardTitle>
-            <CardDescription>Volume de leads por estágio do funil.</CardDescription>
+            <CardTitle className="text-white">Distribuição de Leads</CardTitle>
+            <CardDescription className="text-white/60">
+              Volume de leads por estágio do funil.
+            </CardDescription>
           </CardHeader>
           <CardContent className="px-2 sm:px-6">
             {leadsChartData.length === 0 ? (
@@ -342,23 +342,30 @@ export default function Reports() {
                     outerRadius={90}
                     paddingAngle={5}
                     dataKey="value"
+                    stroke="none"
                   >
                     {leadsChartData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.fill} />
                     ))}
                   </Pie>
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '12px' }} />
+                  <Legend
+                    verticalAlign="bottom"
+                    height={36}
+                    wrapperStyle={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)' }}
+                  />
                 </PieChart>
               </ChartContainer>
             )}
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm">
+        <Card>
           <CardHeader>
-            <CardTitle>Prioridade das Demandas</CardTitle>
-            <CardDescription>Volume de tarefas por nível de prioridade.</CardDescription>
+            <CardTitle className="text-white">Prioridade das Demandas</CardTitle>
+            <CardDescription className="text-white/60">
+              Volume de tarefas por nível de prioridade.
+            </CardDescription>
           </CardHeader>
           <CardContent className="px-2 sm:px-6">
             {demandsPriorityData.length === 0 ? (
@@ -374,13 +381,18 @@ export default function Reports() {
                     outerRadius={90}
                     paddingAngle={5}
                     dataKey="value"
+                    stroke="none"
                   >
                     {demandsPriorityData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.fill} />
                     ))}
                   </Pie>
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '12px' }} />
+                  <Legend
+                    verticalAlign="bottom"
+                    height={36}
+                    wrapperStyle={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)' }}
+                  />
                 </PieChart>
               </ChartContainer>
             )}
@@ -388,14 +400,16 @@ export default function Reports() {
         </Card>
       </div>
 
-      <Card className="shadow-sm mb-6">
+      <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Produtividade da Equipe</CardTitle>
-          <CardDescription>Volume de demandas atribuídas por colaborador.</CardDescription>
+          <CardTitle className="text-white">Produtividade da Equipe</CardTitle>
+          <CardDescription className="text-white/60">
+            Volume de demandas atribuídas por colaborador.
+          </CardDescription>
         </CardHeader>
         <CardContent className="px-2 sm:px-6 overflow-x-auto">
           {filteredDemands.length === 0 ? (
-            <div className="h-[300px] sm:h-[350px] w-full flex items-center justify-center text-sm text-muted-foreground bg-muted/20 rounded-lg border border-dashed p-4 text-center">
+            <div className="h-[300px] sm:h-[350px] w-full flex items-center justify-center text-sm text-white/40 bg-[rgba(255,255,255,0.02)] rounded-lg border border-white/10 border-dashed p-4 text-center">
               Nenhuma demanda encontrada para o período selecionado.
             </div>
           ) : (
@@ -408,18 +422,18 @@ export default function Reports() {
                   <CartesianGrid
                     strokeDasharray="3 3"
                     vertical={false}
-                    stroke="hsl(var(--border))"
+                    stroke="rgba(255,255,255,0.1)"
                   />
                   <XAxis
                     dataKey="name"
                     tickLine={false}
                     axisLine={false}
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                    tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 12 }}
                   />
                   <YAxis
                     tickLine={false}
                     axisLine={false}
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                    tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 12 }}
                     allowDecimals={false}
                   />
                   <ChartTooltip content={<ChartTooltipContent />} />
