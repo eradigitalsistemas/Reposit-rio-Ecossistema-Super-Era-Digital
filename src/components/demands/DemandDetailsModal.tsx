@@ -105,9 +105,9 @@ export function DemandDetailsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] sm:max-w-2xl flex flex-col max-h-[90vh] p-0 sm:p-0 overflow-hidden bg-[rgba(20,20,20,0.95)]">
-        <div className="flex flex-col h-full">
-          <DialogHeader className="p-4 sm:p-6 border-b border-white/10 shrink-0 bg-black/40 sticky top-0 z-10">
+      <DialogContent className="w-[95vw] sm:max-w-2xl flex flex-col max-h-[80vh] p-0 sm:p-0 overflow-hidden bg-black border border-white/10">
+        <div className="flex flex-col h-full overflow-hidden">
+          <DialogHeader className="p-4 sm:p-6 border-b border-white/10 shrink-0 bg-black z-10">
             <div className="flex items-center gap-2 mb-2 pr-8">
               <Badge
                 variant="outline"
@@ -194,10 +194,76 @@ export function DemandDetailsModal({
             <Separator className="bg-white/10" />
 
             <div className="space-y-4">
+              <h3 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
+                <History className="w-5 h-5 text-primary" />
+                Histórico e Auditoria
+              </h3>
+              <div className="space-y-3 pl-2 sm:pl-4 border-l-2 border-white/10">
+                {demand.logs && demand.logs.length > 0 ? (
+                  demand.logs.map((log) => (
+                    <div key={log.id} className="relative pl-4 sm:pl-6 pb-2">
+                      <div className="absolute -left-[21px] sm:-left-[25px] top-1 w-3 h-3 bg-black border-2 border-white rounded-full" />
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 mb-1">
+                        <span className="font-semibold text-sm text-white">{log.acao}</span>
+                        <span className="text-xs text-white/40 hidden sm:block">•</span>
+                        <span className="text-xs text-white/40">
+                          {format(new Date(log.createdAt), 'dd/MM/yyyy HH:mm')}
+                        </span>
+                      </div>
+                      <p className="text-sm text-white/70 break-words">{log.detalhes}</p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-white/50 ml-4">Nenhum histórico registrado.</p>
+                )}
+              </div>
+            </div>
+
+            <Separator className="bg-white/10" />
+
+            <div className="space-y-4">
+              <h3 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-primary" />
+                {demand.status === 'Concluído' ? 'Observação Final' : 'Anotações Internas'}
+              </h3>
+              {demand.status !== 'Concluído' && (
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Textarea
+                    placeholder="Adicione uma nota ou atualização..."
+                    value={responseText}
+                    onChange={(e) => setResponseText(e.target.value)}
+                    className="min-h-[80px] sm:min-h-[60px]"
+                  />
+                  <Button
+                    onClick={handleAddResponse}
+                    variant="default"
+                    className="sm:h-auto sm:px-6 w-full sm:w-auto text-black font-bold"
+                  >
+                    Adicionar
+                  </Button>
+                </div>
+              )}
+              {demand.responses && demand.responses.length > 0 && (
+                <div className="space-y-3 mt-4">
+                  {demand.responses.map((resp, i) => (
+                    <div
+                      key={i}
+                      className="bg-[rgba(255,255,255,0.02)] p-3 sm:p-4 rounded-lg border border-white/10 text-white text-sm break-words whitespace-pre-wrap"
+                    >
+                      {resp}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <Separator className="bg-white/10" />
+
+            <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
                   <Paperclip className="w-5 h-5 text-primary" />
-                  Anexos
+                  Arquivos Anexados
                 </h3>
                 {demand.status !== 'Concluído' && (
                   <div>
@@ -258,75 +324,9 @@ export function DemandDetailsModal({
                 </p>
               )}
             </div>
-
-            <Separator className="bg-white/10" />
-
-            <div className="space-y-4">
-              <h3 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
-                <History className="w-5 h-5 text-primary" />
-                Histórico e Auditoria
-              </h3>
-              <div className="space-y-3 pl-2 sm:pl-4 border-l-2 border-white/10">
-                {demand.logs && demand.logs.length > 0 ? (
-                  demand.logs.map((log) => (
-                    <div key={log.id} className="relative pl-4 sm:pl-6 pb-2">
-                      <div className="absolute -left-[21px] sm:-left-[25px] top-1 w-3 h-3 bg-black border-2 border-white rounded-full" />
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 mb-1">
-                        <span className="font-semibold text-sm text-white">{log.acao}</span>
-                        <span className="text-xs text-white/40 hidden sm:block">•</span>
-                        <span className="text-xs text-white/40">
-                          {format(new Date(log.createdAt), 'dd/MM/yyyy HH:mm')}
-                        </span>
-                      </div>
-                      <p className="text-sm text-white/70 break-words">{log.detalhes}</p>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-white/50 ml-4">Nenhum histórico registrado.</p>
-                )}
-              </div>
-            </div>
-
-            <Separator className="bg-white/10" />
-
-            <div className="space-y-4">
-              <h3 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-primary" />
-                {demand.status === 'Concluído' ? 'Observação Final' : 'Anotações Internas'}
-              </h3>
-              {demand.status !== 'Concluído' && (
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Textarea
-                    placeholder="Adicione uma nota ou atualização..."
-                    value={responseText}
-                    onChange={(e) => setResponseText(e.target.value)}
-                    className="min-h-[80px] sm:min-h-[60px]"
-                  />
-                  <Button
-                    onClick={handleAddResponse}
-                    variant="default"
-                    className="sm:h-auto sm:px-6 w-full sm:w-auto"
-                  >
-                    Adicionar
-                  </Button>
-                </div>
-              )}
-              {demand.responses && demand.responses.length > 0 && (
-                <div className="space-y-3 mt-4">
-                  {demand.responses.map((resp, i) => (
-                    <div
-                      key={i}
-                      className="bg-[rgba(255,255,255,0.02)] p-3 sm:p-4 rounded-lg border border-white/10 text-white text-sm break-words whitespace-pre-wrap"
-                    >
-                      {resp}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
 
-          <div className="p-4 sm:p-6 border-t border-white/10 bg-black/40 shrink-0 sticky bottom-0 z-10 flex flex-col sm:flex-row gap-3 justify-end">
+          <div className="p-4 sm:p-6 border-t border-white/10 bg-black shrink-0 z-10 flex flex-col sm:flex-row gap-3 justify-end">
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}
@@ -338,7 +338,7 @@ export function DemandDetailsModal({
               <Button
                 onClick={handleAccept}
                 variant="default"
-                className="w-full sm:w-auto gap-2 h-11 sm:h-10 shadow-none"
+                className="w-full sm:w-auto gap-2 h-11 sm:h-10 shadow-none text-black font-bold"
               >
                 <User2 className="w-4 h-4" />
                 Assumir Demanda
@@ -348,7 +348,7 @@ export function DemandDetailsModal({
               <Button
                 onClick={onCompleteClick}
                 variant="default"
-                className="w-full sm:w-auto gap-2 h-11 sm:h-10 bg-green-600 hover:bg-green-700 text-white shadow-none"
+                className="w-full sm:w-auto gap-2 h-11 sm:h-10 bg-green-600 hover:bg-green-700 text-white shadow-none font-bold"
               >
                 <CheckCircle className="w-4 h-4" />
                 Concluir Tarefa
