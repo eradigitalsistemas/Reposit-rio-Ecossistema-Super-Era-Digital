@@ -34,14 +34,20 @@ export default function Index() {
     const fetchCounts = async () => {
       setLoading(true)
       try {
+        // Passing head: false forces a GET request, bypassing JSON parse errors on empty HEAD responses
         const [leadsRes, demandasRes, clientesRes, colabRes] = await Promise.all([
-          supabase.from('leads').select('*', { count: 'exact', head: true }),
+          supabase.from('leads').select('id', { count: 'exact', head: false }).limit(1),
           supabase
             .from('demandas')
-            .select('*', { count: 'exact', head: true })
-            .in('status', ['Pendente', 'Em Andamento']),
-          supabase.from('clientes_externos').select('*', { count: 'exact', head: true }),
-          supabase.from('usuarios').select('*', { count: 'exact', head: true }).eq('ativo', true),
+            .select('id', { count: 'exact', head: false })
+            .in('status', ['Pendente', 'Em Andamento'])
+            .limit(1),
+          supabase.from('clientes_externos').select('id', { count: 'exact', head: false }).limit(1),
+          supabase
+            .from('usuarios')
+            .select('id', { count: 'exact', head: false })
+            .eq('ativo', true)
+            .limit(1),
         ])
 
         if (isMounted) {
