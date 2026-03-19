@@ -15,8 +15,9 @@ export interface Demand {
   description: string
   priority: DemandPriority
   status: DemandStatus
-  dueDate: string
+  dueDate: string | null
   assignee: string
+  assigneeId?: string | null
   responses: DemandResponse[]
   createdAt: string
   clientId?: string

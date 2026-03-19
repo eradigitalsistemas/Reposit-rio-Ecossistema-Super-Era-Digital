@@ -2,7 +2,7 @@ import { Demand } from '@/types/demand'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { AlertTriangle, Calendar, Trash2 } from 'lucide-react'
-import { format } from 'date-fns'
+import { format, isValid, parseISO } from 'date-fns'
 import useDemandStore from '@/stores/useDemandStore'
 import useAuthStore from '@/stores/useAuthStore'
 import { Button } from '../ui/button'
@@ -26,7 +26,23 @@ export function DemandCard({ demand }: Props) {
     }
   }
 
-  const isOverdue = new Date(demand.dueDate) < new Date() && demand.status !== 'Concluído'
+  // Null safety and date validation
+  let dueDateObj: Date | null = null
+  let isOverdue = false
+  let isValidDate = false
+
+  try {
+    if (demand.dueDate) {
+      const parsed = parseISO(demand.dueDate)
+      if (isValid(parsed)) {
+        dueDateObj = parsed
+        isValidDate = true
+        isOverdue = dueDateObj < new Date() && demand.status !== 'Concluído'
+      }
+    }
+  } catch (e) {
+    console.error(`Error parsing date for demand ${demand.id}:`, e)
+  }
 
   return (
     <Card className="hover:border-primary/50 transition-colors group relative bg-background">
@@ -40,16 +56,19 @@ export function DemandCard({ demand }: Props) {
               e.stopPropagation()
               deleteDemand(demand.id)
             }}
+            title="Excluir demanda"
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
         )}
         <div className="flex flex-col gap-2">
           <div className="flex items-start justify-between gap-2 pr-6">
-            <h4 className="font-medium text-sm leading-tight text-foreground">{demand.title}</h4>
+            <h4 className="font-medium text-sm leading-tight text-foreground line-clamp-2">
+              {demand.title || 'Sem título'}
+            </h4>
           </div>
 
-          {demand.systemEscalated && demand.priority === 'Urgente' && (
+          {!!demand.systemEscalated && demand.priority === 'Urgente' && (
             <Badge className="bg-red-600 hover:bg-red-700 text-white border-transparent w-fit flex items-center gap-1.5 px-2 py-0 h-5 text-[10px] font-medium tracking-wide">
               <AlertTriangle className="w-3 h-3" />
               Escalada Automaticamente
@@ -61,14 +80,16 @@ export function DemandCard({ demand }: Props) {
               variant="outline"
               className={`text-[10px] px-1.5 h-4 font-medium ${getPriorityColor(demand.priority)}`}
             >
-              {demand.priority}
+              {demand.priority || 'Sem prioridade'}
             </Badge>
-            <div
-              className={`flex items-center text-[10px] font-medium ${isOverdue ? 'text-destructive' : 'text-muted-foreground'}`}
-            >
-              <Calendar className="w-3 h-3 mr-1" />
-              {format(new Date(demand.dueDate), 'dd/MM')}
-            </div>
+            {isValidDate && dueDateObj && (
+              <div
+                className={`flex items-center text-[10px] font-medium ${isOverdue ? 'text-destructive' : 'text-muted-foreground'}`}
+              >
+                <Calendar className="w-3 h-3 mr-1" />
+                {format(dueDateObj, 'dd/MM')}
+              </div>
+            )}
           </div>
         </div>
       </CardContent>

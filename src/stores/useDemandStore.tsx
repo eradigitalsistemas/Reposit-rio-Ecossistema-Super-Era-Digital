@@ -14,7 +14,7 @@ interface DemandStoreState {
   collaborators: Collaborator[]
   notifications: DemandNotification[]
   addDemand: (
-    demand: Omit<Demand, 'id' | 'createdAt' | 'responses'> & { assigneeId: string },
+    demand: Omit<Demand, 'id' | 'createdAt' | 'responses'> & { assigneeId?: string | null },
   ) => Promise<void>
   updateStatus: (demandId: string, status: DemandStatus) => Promise<void>
   deleteDemand: (demandId: string) => Promise<void>
@@ -41,26 +41,27 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchDemands = useCallback(async () => {
     if (!user) return
-    const { data, error } = await supabase
-      .from('demandas')
-      .select(
-        '*, responsavel:usuarios(nome), logs_auditoria(acao, usuario_id, dados_novos, data_criacao)',
-      )
-      .order('data_criacao', { ascending: false })
+    try {
+      const { data, error } = await supabase
+        .from('demandas')
+        .select(
+          '*, responsavel:usuarios(nome), logs_auditoria(acao, usuario_id, dados_novos, data_criacao)',
+        )
+        .order('data_criacao', { ascending: false })
 
-    if (error) {
-      console.error(error)
-      return
-    }
+      if (error) {
+        console.error('Error fetching demands:', error)
+        return
+      }
 
-    if (data) {
-      setDemands(
-        data.map((d: any) => {
-          const logs = d.logs_auditoria || []
-          const sortedLogs = logs.sort(
-            (a: any, b: any) =>
-              new Date(b.data_criacao).getTime() - new Date(a.data_criacao).getTime(),
-          )
+      if (data) {
+        const parsedDemands = data.map((d: any) => {
+          const logs = Array.isArray(d.logs_auditoria) ? d.logs_auditoria : []
+          const sortedLogs = [...logs].sort((a: any, b: any) => {
+            const dateA = a.data_criacao ? new Date(a.data_criacao).getTime() : 0
+            const dateB = b.data_criacao ? new Date(b.data_criacao).getTime() : 0
+            return dateB - dateA
+          })
           const latestPriorityChange = sortedLogs.find(
             (l: any) => l.acao === 'Alteração de Prioridade',
           )
@@ -68,32 +69,44 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           const systemEscalated =
             latestPriorityChange &&
             latestPriorityChange.usuario_id === null &&
-            latestPriorityChange.dados_novos?.prioridade === 'Urgente' &&
+            latestPriorityChange.dados_novos &&
+            latestPriorityChange.dados_novos.prioridade === 'Urgente' &&
             d.prioridade === 'Urgente'
 
           return {
             id: d.id,
-            title: d.titulo,
+            title: d.titulo || 'Sem título',
             description: d.descricao || '',
-            priority: d.prioridade as DemandPriority,
-            status: d.status as DemandStatus,
-            dueDate: d.data_vencimento || '',
-            assignee: d.responsavel?.nome || 'Não Atribuído',
-            assigneeId: d.responsavel_id,
-            responses: [],
-            createdAt: d.data_criacao,
+            priority: (d.prioridade as DemandPriority) || 'Pode Ficar para Amanhã',
+            status: (d.status as DemandStatus) || 'Pendente',
+            dueDate: d.data_vencimento || null,
+            assignee: d.responsavel?.nome || 'Sem responsável',
+            assigneeId: d.responsavel_id || null,
+            responses: [], // Kept as empty to be populated if needed
+            createdAt: d.data_criacao || new Date().toISOString(),
             systemEscalated: !!systemEscalated,
           }
-        }),
-      )
+        })
+        setDemands(parsedDemands)
+      }
+    } catch (e) {
+      console.error('Exception in fetchDemands:', e)
     }
   }, [user])
 
   const fetchCollaborators = useCallback(async () => {
     if (!user) return
-    const { data } = await supabase.from('usuarios').select('id, nome').eq('ativo', true)
-    if (data) {
-      setCollaborators(data)
+    try {
+      const { data, error } = await supabase.from('usuarios').select('id, nome').eq('ativo', true)
+      if (error) {
+        console.error('Error fetching collaborators:', error)
+        return
+      }
+      if (data) {
+        setCollaborators(data)
+      }
+    } catch (e) {
+      console.error('Exception in fetchCollaborators:', e)
     }
   }, [user])
 
@@ -109,48 +122,58 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   }, [])
 
   const addDemand = useCallback(
-    async (newDemand: Omit<Demand, 'id' | 'createdAt' | 'responses'> & { assigneeId: string }) => {
+    async (
+      newDemand: Omit<Demand, 'id' | 'createdAt' | 'responses'> & { assigneeId?: string | null },
+    ) => {
       if (!user) return
 
-      const { data, error } = await supabase
-        .from('demandas')
-        .insert({
-          titulo: newDemand.title,
-          descricao: newDemand.description,
-          prioridade: newDemand.priority,
-          status: newDemand.status,
-          data_vencimento: newDemand.dueDate,
-          responsavel_id: newDemand.assigneeId || null,
-          usuario_id: user.id,
-        })
-        .select('*, responsavel:usuarios(nome)')
-        .single()
+      try {
+        const { data, error } = await supabase
+          .from('demandas')
+          .insert({
+            titulo: newDemand.title || 'Sem título',
+            descricao: newDemand.description || null,
+            prioridade: newDemand.priority || 'Pode Ficar para Amanhã',
+            status: newDemand.status || 'Pendente',
+            data_vencimento: newDemand.dueDate || null,
+            responsavel_id: newDemand.assigneeId || null,
+            usuario_id: user.id,
+          })
+          .select('*, responsavel:usuarios(nome)')
+          .single()
 
-      if (error) {
-        toast({
-          title: 'Erro',
-          description: 'Não foi possível criar a demanda.',
-          variant: 'destructive',
-        })
-        return
-      }
+        if (error) {
+          console.error('Error inserting demand:', error)
+          toast({
+            title: 'Erro',
+            description: 'Não foi possível criar a demanda.',
+            variant: 'destructive',
+          })
+          return
+        }
 
-      if (data) {
-        setDemands((prev) => [
-          ...prev,
-          {
-            id: data.id,
-            title: data.titulo,
-            description: data.descricao || '',
-            priority: data.prioridade as DemandPriority,
-            status: data.status as DemandStatus,
-            dueDate: data.data_vencimento || '',
-            assignee: (data as any).responsavel?.nome || 'Não Atribuído',
-            responses: [],
-            createdAt: data.data_criacao,
-          },
-        ])
-        toast({ title: 'Nova Demanda Criada', description: `A tarefa foi adicionada.` })
+        if (data) {
+          setDemands((prev) => [
+            ...prev,
+            {
+              id: data.id,
+              title: data.titulo || 'Sem título',
+              description: data.descricao || '',
+              priority: (data.prioridade as DemandPriority) || 'Pode Ficar para Amanhã',
+              status: (data.status as DemandStatus) || 'Pendente',
+              dueDate: data.data_vencimento || null,
+              assignee: (data as any).responsavel?.nome || 'Sem responsável',
+              assigneeId: data.responsavel_id || null,
+              responses: [],
+              createdAt: data.data_criacao || new Date().toISOString(),
+              systemEscalated: false,
+            },
+          ])
+          toast({ title: 'Nova Demanda Criada', description: `A tarefa foi adicionada.` })
+        }
+      } catch (e) {
+        console.error('Exception in addDemand:', e)
+        toast({ title: 'Erro', description: 'Ocorreu um erro inesperado.', variant: 'destructive' })
       }
     },
     [user],
@@ -160,9 +183,15 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
     async (demandId: string, status: DemandStatus) => {
       setDemands((prev) => prev.map((d) => (d.id === demandId ? { ...d, status } : d)))
 
-      const { error } = await supabase.from('demandas').update({ status }).eq('id', demandId)
-      if (error) {
-        toast({ title: 'Erro', description: 'Erro ao atualizar status.', variant: 'destructive' })
+      try {
+        const { error } = await supabase.from('demandas').update({ status }).eq('id', demandId)
+        if (error) {
+          console.error('Error updating status:', error)
+          toast({ title: 'Erro', description: 'Erro ao atualizar status.', variant: 'destructive' })
+          fetchDemands()
+        }
+      } catch (e) {
+        console.error('Exception in updateStatus:', e)
         fetchDemands()
       }
     },
@@ -170,17 +199,22 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   )
 
   const deleteDemand = useCallback(async (demandId: string) => {
-    const { error } = await supabase.from('demandas').delete().eq('id', demandId)
-    if (error) {
-      toast({ title: 'Erro', description: 'Erro ao excluir demanda.', variant: 'destructive' })
-      return
+    try {
+      const { error } = await supabase.from('demandas').delete().eq('id', demandId)
+      if (error) {
+        console.error('Error deleting demand:', error)
+        toast({ title: 'Erro', description: 'Erro ao excluir demanda.', variant: 'destructive' })
+        return
+      }
+      setDemands((prev) => prev.filter((d) => d.id !== demandId))
+      toast({
+        title: 'Demanda Excluída',
+        description: 'A demanda foi removida.',
+        variant: 'destructive',
+      })
+    } catch (e) {
+      console.error('Exception in deleteDemand:', e)
     }
-    setDemands((prev) => prev.filter((d) => d.id !== demandId))
-    toast({
-      title: 'Demanda Excluída',
-      description: 'A demanda foi removida.',
-      variant: 'destructive',
-    })
   }, [])
 
   const value = useMemo(
