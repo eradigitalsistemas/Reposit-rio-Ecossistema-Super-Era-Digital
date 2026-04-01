@@ -29,36 +29,38 @@ export default function CollaboratorViewModal({ open, onOpenChange, user }: Prop
         </DialogHeader>
         <div className="space-y-6 py-4">
           <div className="flex items-center gap-4">
-            <div className="h-16 w-16 bg-white/10 rounded-full flex items-center justify-center text-white">
+            <div className="h-16 w-16 bg-gray-200 dark:bg-white/10 rounded-full flex items-center justify-center text-gray-700 dark:text-white">
               <UserIcon className="h-8 w-8" />
             </div>
             <div>
-              <h3 className="text-xl font-semibold leading-none mb-2 text-white">{user.nome}</h3>
+              <h3 className="text-xl font-semibold leading-none mb-2 text-gray-900 dark:text-white">
+                {user.nome}
+              </h3>
               <Badge variant={user.perfil === 'admin' ? 'default' : 'secondary'}>
                 {user.perfil === 'admin' ? 'Admin' : 'Colaborador'}
               </Badge>
             </div>
           </div>
 
-          <div className="grid gap-4 border-t border-white/10 pt-4">
-            <div className="flex items-center gap-3 text-sm text-white">
-              <Mail className="h-4 w-4 text-white/50 shrink-0" />
+          <div className="grid gap-4 border-t border-gray-200 dark:border-white/10 pt-4">
+            <div className="flex items-center gap-3 text-sm text-gray-900 dark:text-white">
+              <Mail className="h-4 w-4 text-gray-500 dark:text-white/50 shrink-0" />
               <span className="font-medium truncate">{user.email}</span>
             </div>
-            <div className="flex items-center gap-3 text-sm text-white">
-              <Phone className="h-4 w-4 text-white/50 shrink-0" />
+            <div className="flex items-center gap-3 text-sm text-gray-900 dark:text-white">
+              <Phone className="h-4 w-4 text-gray-500 dark:text-white/50 shrink-0" />
               <span className="font-medium">{user.telefone || 'Não informado'}</span>
             </div>
-            <div className="flex items-center gap-3 text-sm text-white">
-              <Shield className="h-4 w-4 text-white/50 shrink-0" />
+            <div className="flex items-center gap-3 text-sm text-gray-900 dark:text-white">
+              <Shield className="h-4 w-4 text-gray-500 dark:text-white/50 shrink-0" />
               <span className="font-medium capitalize">Perfil: {user.perfil}</span>
             </div>
-            <div className="flex items-center gap-3 text-sm text-white">
-              <Activity className="h-4 w-4 text-white/50 shrink-0" />
+            <div className="flex items-center gap-3 text-sm text-gray-900 dark:text-white">
+              <Activity className="h-4 w-4 text-gray-500 dark:text-white/50 shrink-0" />
               <span className="font-medium">Status: {user.ativo ? 'Ativo' : 'Inativo'}</span>
             </div>
-            <div className="flex items-center gap-3 text-sm text-white/60">
-              <Calendar className="h-4 w-4 text-white/50 shrink-0" />
+            <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-white/60">
+              <Calendar className="h-4 w-4 text-gray-500 dark:text-white/50 shrink-0" />
               <span className="font-medium">
                 Criado em {new Date(user.data_criacao).toLocaleDateString('pt-BR')}
               </span>

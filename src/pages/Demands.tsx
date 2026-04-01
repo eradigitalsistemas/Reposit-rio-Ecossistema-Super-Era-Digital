@@ -77,10 +77,10 @@ export default function Demands() {
       <div className="flex flex-col flex-1 p-4 sm:p-6 min-h-0">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 shrink-0 gap-4">
           <div>
-            <h1 className="text-2xl sm:text-2xl font-bold tracking-tight text-foreground">
+            <h1 className="text-2xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-foreground">
               Gestão de Demandas
             </h1>
-            <p className="text-muted-foreground text-sm mt-1">
+            <p className="text-gray-600 dark:text-muted-foreground text-sm mt-1">
               {role === 'Admin'
                 ? 'Acompanhe as tarefas e atribuições de toda a equipe'
                 : 'Acompanhe suas tarefas e atribuições no Kanban'}
@@ -89,15 +89,15 @@ export default function Demands() {
           <div className="w-full sm:w-auto">{role === 'Admin' && <AddDemandModal />}</div>
         </div>
 
-        <div className="flex flex-col xl:flex-row items-start xl:items-end justify-between gap-4 mb-6 bg-card border-border p-4 rounded-xl border shadow-sm shrink-0">
+        <div className="flex flex-col xl:flex-row items-start xl:items-end justify-between gap-4 mb-6 bg-white dark:bg-card border-gray-300 dark:border-border p-4 rounded-xl border shadow-md dark:shadow-sm shrink-0">
           <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-end gap-4 sm:gap-6 w-full xl:w-auto">
             {role === 'Admin' && (
               <div className="space-y-2 w-full sm:w-auto">
-                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <Label className="text-xs font-semibold text-gray-700 dark:text-muted-foreground uppercase tracking-wider">
                   Filtrar por Responsável
                 </Label>
                 <Select value={collaboratorFilter} onValueChange={setCollaboratorFilter}>
-                  <SelectTrigger className="w-full sm:w-[220px] h-11 sm:h-10">
+                  <SelectTrigger className="w-full sm:w-[220px] h-11 sm:h-10 bg-white dark:bg-background border-gray-300 dark:border-input text-gray-900 dark:text-foreground shadow-sm">
                     <SelectValue placeholder="Todos os colaboradores" />
                   </SelectTrigger>
                   <SelectContent>
@@ -114,7 +114,7 @@ export default function Demands() {
             )}
 
             <div className="space-y-2 w-full sm:w-auto">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+              <Label className="text-xs font-semibold text-gray-700 dark:text-muted-foreground uppercase tracking-wider flex items-center gap-1">
                 <Columns className="w-3 h-3" />
                 Colunas Visíveis
               </Label>
@@ -123,23 +123,23 @@ export default function Demands() {
                 variant="outline"
                 value={statusFilter}
                 onValueChange={setStatusFilter}
-                className="bg-muted/50 rounded-md min-h-[40px] p-1 border border-border justify-start flex-wrap sm:flex-nowrap w-full"
+                className="bg-gray-100 dark:bg-muted/50 rounded-md min-h-[40px] p-1 border border-gray-300 dark:border-border justify-start flex-wrap sm:flex-nowrap w-full shadow-sm"
               >
                 <ToggleGroupItem
                   value="Pendente"
-                  className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none text-muted-foreground data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm border-transparent"
+                  className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none text-gray-600 dark:text-muted-foreground data-[state=on]:bg-white dark:data-[state=on]:bg-background data-[state=on]:text-gray-900 dark:data-[state=on]:text-foreground data-[state=on]:shadow border-transparent data-[state=on]:border-gray-200 dark:data-[state=on]:border-transparent"
                 >
                   Pendente
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="Em Andamento"
-                  className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none text-muted-foreground data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm border-transparent"
+                  className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none text-gray-600 dark:text-muted-foreground data-[state=on]:bg-white dark:data-[state=on]:bg-background data-[state=on]:text-gray-900 dark:data-[state=on]:text-foreground data-[state=on]:shadow border-transparent data-[state=on]:border-gray-200 dark:data-[state=on]:border-transparent"
                 >
                   Em Andamento
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="Concluído"
-                  className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none text-muted-foreground data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm border-transparent"
+                  className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none text-gray-600 dark:text-muted-foreground data-[state=on]:bg-white dark:data-[state=on]:bg-background data-[state=on]:text-gray-900 dark:data-[state=on]:text-foreground data-[state=on]:shadow border-transparent data-[state=on]:border-gray-200 dark:data-[state=on]:border-transparent"
                 >
                   Concluído
                 </ToggleGroupItem>
@@ -161,7 +161,10 @@ export default function Demands() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2 w-full xl:w-auto">
+              <Button
+                variant="outline"
+                className="gap-2 w-full xl:w-auto bg-white dark:bg-background border-gray-300 dark:border-input text-gray-900 dark:text-foreground hover:bg-gray-50 dark:hover:bg-accent shadow-sm"
+              >
                 <Download className="w-4 h-4" />
                 Exportar Relatório
               </Button>

@@ -151,7 +151,7 @@ export default function CollaboratorFormModal({
               <Label htmlFor="senha">
                 Senha{' '}
                 {initialData && (
-                  <span className="text-white/40 text-xs font-normal">
+                  <span className="text-gray-500 dark:text-white/40 text-xs font-normal">
                     (deixe em branco para manter)
                   </span>
                 )}
@@ -192,7 +192,7 @@ export default function CollaboratorFormModal({
               type="submit"
               variant="default"
               disabled={loading}
-              className="text-black font-bold"
+              className="text-white dark:text-black font-bold"
             >
               {loading ? 'Salvando...' : 'Salvar'}
             </Button>

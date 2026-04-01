@@ -67,10 +67,12 @@ export default function Collaborators() {
 
   if (role !== 'Admin') {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-6 text-center bg-background text-white">
-        <ShieldAlert className="w-12 h-12 text-white/50 mb-4" />
-        <h2 className="text-xl font-semibold mb-2">Acesso Restrito</h2>
-        <p className="text-white/60 mb-6">
+      <div className="flex flex-col items-center justify-center h-full p-6 text-center bg-background text-foreground">
+        <ShieldAlert className="w-12 h-12 text-muted-foreground mb-4" />
+        <h2 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">
+          Acesso Restrito
+        </h2>
+        <p className="text-gray-600 dark:text-white/60 mb-6">
           Apenas administradores podem acessar a gestão de colaboradores.
         </p>
         <Button onClick={() => navigate('/')}>Voltar ao Início</Button>
@@ -102,25 +104,27 @@ export default function Collaborators() {
     <div className="h-full w-full bg-background flex flex-col p-4 sm:p-6 overflow-y-auto sm:overflow-hidden">
       <div className="mb-6 shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">Equipe e Acessos</h1>
-          <p className="text-white/60 text-sm mt-1">
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+            Equipe e Acessos
+          </h1>
+          <p className="text-gray-600 dark:text-white/60 text-sm mt-1">
             Gerencie os colaboradores, departamentos e níveis de acesso ao sistema.
           </p>
         </div>
         <Button
           variant="default"
           onClick={handleCreate}
-          className="w-full sm:w-auto text-black font-bold"
+          className="w-full sm:w-auto text-white dark:text-black font-bold"
         >
           <Plus className="w-4 h-4 mr-2" />
           Novo Colaborador
         </Button>
       </div>
 
-      <Card className="hidden md:flex flex-1 overflow-hidden flex-col bg-[rgba(255,255,255,0.02)] border-white/10 shadow-subtle">
+      <Card className="hidden md:flex flex-1 overflow-hidden flex-col bg-white dark:bg-[rgba(255,255,255,0.02)] border-gray-300 dark:border-white/10 shadow-md dark:shadow-subtle">
         <CardContent className="p-0 overflow-auto flex-1">
           <Table>
-            <TableHeader className="sticky top-0 bg-black/40 backdrop-blur-md z-10">
+            <TableHeader className="sticky top-0 bg-gray-100 dark:bg-black/40 backdrop-blur-md z-10">
               <TableRow>
                 <TableHead>Nome</TableHead>
                 <TableHead>Email</TableHead>
@@ -131,21 +135,29 @@ export default function Collaborators() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8 text-white/40">
+                  <TableCell
+                    colSpan={4}
+                    className="text-center py-8 text-gray-500 dark:text-white/40"
+                  >
                     Carregando...
                   </TableCell>
                 </TableRow>
               ) : users.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8 text-white/40">
+                  <TableCell
+                    colSpan={4}
+                    className="text-center py-8 text-gray-500 dark:text-white/40"
+                  >
                     Nenhum colaborador encontrado.
                   </TableCell>
                 </TableRow>
               ) : (
                 users.map((user) => (
                   <TableRow key={user.id}>
-                    <TableCell className="font-medium text-white">{user.nome}</TableCell>
-                    <TableCell className="text-white/60">{user.email}</TableCell>
+                    <TableCell className="font-medium text-gray-900 dark:text-white">
+                      {user.nome}
+                    </TableCell>
+                    <TableCell className="text-gray-600 dark:text-white/60">{user.email}</TableCell>
                     <TableCell>
                       <Badge variant={user.perfil === 'admin' ? 'default' : 'secondary'}>
                         {user.perfil === 'admin' ? 'Admin' : 'Colaborador'}
@@ -193,13 +205,18 @@ export default function Collaborators() {
       {/* Mobile View */}
       <div className="flex flex-col gap-4 md:hidden pb-6">
         {loading ? (
-          <div className="text-center py-8 text-white/40">Carregando...</div>
+          <div className="text-center py-8 text-gray-500 dark:text-white/40">Carregando...</div>
         ) : (
           users.map((user) => (
-            <Card key={user.id} className="bg-[rgba(255,255,255,0.05)] border-white/10">
+            <Card
+              key={user.id}
+              className="bg-white dark:bg-[rgba(255,255,255,0.05)] border-gray-300 dark:border-white/10 shadow-md dark:shadow-sm"
+            >
               <CardContent className="p-4 flex flex-col gap-3">
                 <div className="flex justify-between items-start gap-2">
-                  <div className="font-semibold text-lg leading-tight text-white">{user.nome}</div>
+                  <div className="font-semibold text-lg leading-tight text-gray-900 dark:text-white">
+                    {user.nome}
+                  </div>
                   <Badge
                     variant={user.perfil === 'admin' ? 'default' : 'secondary'}
                     className="shrink-0"
@@ -208,12 +225,12 @@ export default function Collaborators() {
                   </Badge>
                 </div>
                 <div className="space-y-1.5 mt-1">
-                  <div className="text-sm flex items-center gap-2 text-white/60">
+                  <div className="text-sm flex items-center gap-2 text-gray-600 dark:text-white/60">
                     <Mail className="w-4 h-4 shrink-0" />
                     <span className="truncate">{user.email}</span>
                   </div>
                 </div>
-                <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-white/10">
+                <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-gray-200 dark:border-white/10">
                   <Button
                     variant="ghost"
                     size="sm"

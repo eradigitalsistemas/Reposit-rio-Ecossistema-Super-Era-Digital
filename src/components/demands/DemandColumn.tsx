@@ -10,17 +10,24 @@ interface DemandColumnProps {
 
 export function DemandColumn({ title, demands, highlightId }: DemandColumnProps) {
   return (
-    <div className="flex flex-col shrink-0 min-w-[85vw] sm:min-w-[320px] max-w-[400px] bg-[rgba(255,255,255,0.02)] rounded-xl border border-white/10 h-full snap-center shadow-subtle overflow-hidden">
-      <div className="p-4 border-b border-white/10 shrink-0 flex items-center justify-between bg-black/20 z-10">
-        <h3 className="font-semibold text-white text-lg sm:text-base tracking-tight">{title}</h3>
-        <Badge variant="secondary" className="px-2 font-medium text-sm sm:text-xs">
+    <div className="flex flex-col shrink-0 min-w-[85vw] sm:min-w-[320px] max-w-[400px] bg-gray-50/80 dark:bg-[rgba(255,255,255,0.02)] rounded-xl border border-gray-300 dark:border-white/10 h-full snap-center shadow-sm dark:shadow-subtle overflow-hidden">
+      <div className="p-4 border-b border-gray-300 dark:border-white/10 shrink-0 flex items-center justify-between bg-gray-100/50 dark:bg-black/20 z-10">
+        <h3 className="font-semibold text-gray-900 dark:text-white text-lg sm:text-base tracking-tight">
+          {title}
+        </h3>
+        <Badge
+          variant="secondary"
+          className="px-2 font-medium text-sm sm:text-xs text-gray-700 bg-gray-200 dark:bg-secondary dark:text-secondary-foreground"
+        >
           {demands.length}
         </Badge>
       </div>
       <div className="flex-1 p-3 overflow-y-auto overflow-x-auto space-y-3 bg-transparent kanban-scrollbar min-h-0">
         {demands.length === 0 ? (
-          <div className="h-24 flex items-center justify-center border-2 border-dashed border-white/10 rounded-lg m-2">
-            <span className="text-sm text-white/40 font-medium">Sem demandas</span>
+          <div className="h-24 flex items-center justify-center border-2 border-dashed border-gray-300 dark:border-white/10 rounded-lg m-2">
+            <span className="text-sm text-gray-500 dark:text-white/40 font-medium">
+              Sem demandas
+            </span>
           </div>
         ) : (
           demands.map((demand) => (
