@@ -142,6 +142,7 @@ export type Database = {
           id: string
           nome: string
           observacoes: string | null
+          status_interesse: string
           telefone: string | null
           usuario_id: string
         }
@@ -153,6 +154,7 @@ export type Database = {
           id?: string
           nome: string
           observacoes?: string | null
+          status_interesse?: string
           telefone?: string | null
           usuario_id?: string
         }
@@ -164,6 +166,7 @@ export type Database = {
           id?: string
           nome?: string
           observacoes?: string | null
+          status_interesse?: string
           telefone?: string | null
           usuario_id?: string
         }
@@ -508,6 +511,7 @@ export const Constants = {
 //   data_criacao: timestamp with time zone (not null, default: now())
 //   usuario_id: uuid (not null, default: auth.uid())
 //   observacoes: text (nullable, default: ''::text)
+//   status_interesse: text (not null, default: 'Interessado'::text)
 // Table: logs_auditoria
 //   id: uuid (not null, default: gen_random_uuid())
 //   demanda_id: uuid (nullable)

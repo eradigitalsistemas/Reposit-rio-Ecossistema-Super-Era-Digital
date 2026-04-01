@@ -62,7 +62,7 @@ export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalP
     for (const file of newFiles) {
       const sanitizedName = sanitizeFilename(file.name)
       const fileName = `${crypto.randomUUID()}_${sanitizedName}`
-      const { data } = await supabase.storage.from('demandas_anexos').upload(fileName, file)
+      const { data } = await supabase.storage.from('anexos').upload(fileName, file)
       if (data) attachments.push({ name: file.name, url: data.path, type: file.type })
     }
 
@@ -188,7 +188,7 @@ export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalP
               {(existingAttachments.length > 0 || newFiles.length > 0) && (
                 <div className="space-y-2 mt-1 max-h-32 overflow-y-auto pr-1">
                   {existingAttachments.map((file, i) => {
-                    const fileUrl = supabase.storage.from('demandas_anexos').getPublicUrl(file.url)
+                    const fileUrl = supabase.storage.from('anexos').getPublicUrl(file.url)
                       .data.publicUrl
                     return (
                       <div

@@ -52,7 +52,7 @@ export function AddDemandModal() {
     for (const file of files) {
       const sanitizedName = sanitizeFilename(file.name)
       const fileName = `${crypto.randomUUID()}_${sanitizedName}`
-      const { data, error } = await supabase.storage.from('demandas_anexos').upload(fileName, file)
+      const { data, error } = await supabase.storage.from('anexos').upload(fileName, file)
       if (error) {
         continue
       }

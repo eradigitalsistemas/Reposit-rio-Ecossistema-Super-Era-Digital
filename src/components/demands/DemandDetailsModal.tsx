@@ -65,7 +65,7 @@ export function DemandDetailsModal({
     for (const file of Array.from(e.target.files)) {
       const sanitizedName = sanitizeFilename(file.name)
       const fileName = `${crypto.randomUUID()}_${sanitizedName}`
-      const { data } = await supabase.storage.from('demandas_anexos').upload(fileName, file)
+      const { data } = await supabase.storage.from('anexos').upload(fileName, file)
       if (data) {
         newAttachments.push({ name: file.name, url: data.path, type: file.type })
       } else {
@@ -281,7 +281,7 @@ export function DemandDetailsModal({
               {demand.attachments && demand.attachments.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {demand.attachments.map((att, i) => {
-                    const fileUrl = supabase.storage.from('demandas_anexos').getPublicUrl(att.url)
+                    const fileUrl = supabase.storage.from('anexos').getPublicUrl(att.url)
                       .data.publicUrl
                     return (
                       <a
