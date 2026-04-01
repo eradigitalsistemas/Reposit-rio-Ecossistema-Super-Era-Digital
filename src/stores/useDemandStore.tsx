@@ -14,6 +14,7 @@ import {
   DemandNotification,
   DemandLog,
   DemandAttachment,
+  ChecklistItem,
 } from '@/types/demand'
 import { toast } from '@/hooks/use-toast'
 import { ToastAction } from '@/components/ui/toast'
@@ -51,6 +52,7 @@ interface DemandStoreState {
   ) => Promise<void>
   addResponse: (demandId: string, text: string) => Promise<void>
   addAttachments: (demandId: string, attachments: DemandAttachment[]) => Promise<void>
+  updateChecklist: (demandId: string, checklist: ChecklistItem[]) => Promise<void>
   markNotificationsAsRead: () => void
   fetchCollaborators: () => Promise<void>
 }
@@ -122,6 +124,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             responses: d.resposta ? [d.resposta] : [],
             logs: mappedLogs,
             attachments: d.anexos || [],
+            checklist: d.checklist || [],
             createdAt: d.data_criacao || new Date().toISOString(),
             systemEscalated: !!systemEscalated,
           }
@@ -295,6 +298,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
               responses: [],
               logs: [],
               attachments: d.anexos || [],
+              checklist: d.checklist || [],
               createdAt: d.data_criacao,
               systemEscalated: false,
             },
@@ -388,15 +392,17 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         .from('demandas')
         .update({ status: 'Em Andamento', responsavel_id: user.id })
         .eq('id', demandId)
-      if (!error)
+      if (!error) {
         toast({
           title: 'Demanda Aceita',
           description: 'Atribuída a você.',
           className:
             'bg-zinc-950 border-green-500/50 text-white shadow-[0_0_15px_rgba(34,197,94,0.2)]',
         })
+        fetchDemands()
+      }
     },
-    [user, userName],
+    [user, userName, fetchDemands],
   )
 
   const completeDemand = useCallback(
@@ -465,6 +471,11 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
     [fetchDemands],
   )
 
+  const updateChecklist = useCallback(async (demandId: string, checklist: ChecklistItem[]) => {
+    setDemands((prev) => prev.map((d) => (d.id === demandId ? { ...d, checklist } : d)))
+    await supabase.from('demandas').update({ checklist }).eq('id', demandId)
+  }, [])
+
   const addAttachments = useCallback(
     async (demandId: string, newAttachments: DemandAttachment[]) => {
       try {
@@ -498,6 +509,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       completeDemand,
       addResponse,
       addAttachments,
+      updateChecklist,
       markNotificationsAsRead,
       fetchCollaborators,
     }),
@@ -513,6 +525,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       completeDemand,
       addResponse,
       addAttachments,
+      updateChecklist,
       markNotificationsAsRead,
       fetchCollaborators,
     ],

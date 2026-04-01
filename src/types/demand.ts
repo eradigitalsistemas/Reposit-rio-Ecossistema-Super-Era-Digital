@@ -16,6 +16,12 @@ export interface DemandAttachment {
   type: string
 }
 
+export interface ChecklistItem {
+  id: string
+  text: string
+  completed: boolean
+}
+
 export interface Demand {
   id: string
   title: string
@@ -30,6 +36,7 @@ export interface Demand {
   responses?: string[]
   logs?: DemandLog[]
   attachments?: DemandAttachment[]
+  checklist?: ChecklistItem[]
   createdAt: string
   systemEscalated?: boolean
 }
