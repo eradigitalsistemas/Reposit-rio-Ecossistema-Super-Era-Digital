@@ -51,7 +51,7 @@ const leadsConfig: ChartConfig = {
   prospeccao: { label: 'Prospecção', color: 'hsl(var(--primary))' },
   convertido: { label: 'Convertido', color: '#3b82f6' },
   treinamento: { label: 'Em Treinamento', color: 'hsl(var(--primary))' },
-  finalizado: { label: 'Finalizado', color: '#ffffff' },
+  finalizado: { label: 'Finalizado', color: 'hsl(var(--foreground))' },
   pos_venda: { label: 'Pós Venda', color: 'hsl(var(--primary))' },
   ativo: { label: 'Ativo', color: 'hsl(var(--primary))' },
 }
@@ -233,7 +233,7 @@ export default function Reports() {
       <div className="h-full w-full bg-background flex items-center justify-center p-6 text-foreground">
         <div className="flex flex-col items-center gap-4 text-primary">
           <Loader2 className="w-8 h-8 animate-spin" />
-          <p className="text-sm font-medium text-white">Carregando relatórios...</p>
+          <p className="text-sm font-medium text-foreground">Carregando relatórios...</p>
         </div>
       </div>
     )
@@ -242,17 +242,17 @@ export default function Reports() {
   if (error) {
     return (
       <div className="h-full w-full bg-background flex items-center justify-center p-6 text-foreground">
-        <Card className="max-w-md w-full text-center p-6 border-white/10 bg-[rgba(255,255,255,0.05)]">
-          <AlertTriangle className="w-10 h-10 text-white/60 mx-auto mb-4" />
-          <h2 className="text-lg font-semibold text-white mb-2">Erro</h2>
-          <p className="text-sm text-white/60">{error}</p>
+        <Card className="max-w-md w-full text-center p-6">
+          <AlertTriangle className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
+          <h2 className="text-lg font-semibold text-foreground mb-2">Erro</h2>
+          <p className="text-sm text-muted-foreground">{error}</p>
         </Card>
       </div>
     )
   }
 
   const renderEmptyState = () => (
-    <div className="h-[300px] w-full flex items-center justify-center text-sm text-white/40 bg-[rgba(255,255,255,0.02)] rounded-lg border border-white/10 border-dashed p-4 text-center">
+    <div className="h-[300px] w-full flex items-center justify-center text-sm text-muted-foreground bg-muted/20 rounded-lg border border-border border-dashed p-4 text-center">
       Nenhum dado encontrado para o período selecionado.
     </div>
   )
@@ -261,8 +261,10 @@ export default function Reports() {
     <div className="h-full w-full bg-background flex flex-col p-4 sm:p-6 overflow-y-auto text-foreground">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 shrink-0 gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">Dashboard de Relatórios</h1>
-          <p className="text-white/60 text-sm mt-1">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Dashboard de Relatórios
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
             Acompanhe métricas de conversão, produtividade da equipe e prioridades.
           </p>
         </div>
@@ -283,42 +285,44 @@ export default function Reports() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-white/80">Total de Leads</CardTitle>
-            <Users className="h-4 w-4 text-white/60" />
+            <CardTitle className="text-sm font-medium text-foreground">Total de Leads</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{totalLeads}</div>
-            <p className="text-xs text-white/40 mt-1">Criados no período selecionado</p>
+            <div className="text-2xl font-bold text-foreground">{totalLeads}</div>
+            <p className="text-xs text-muted-foreground mt-1">Criados no período selecionado</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-white/80">Demandas do Dia</CardTitle>
-            <CheckSquare className="h-4 w-4 text-white/60" />
+            <CardTitle className="text-sm font-medium text-foreground">Demandas do Dia</CardTitle>
+            <CheckSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{demandsToday}</div>
-            <p className="text-xs text-white/40 mt-1">Criadas hoje (Independente do filtro)</p>
+            <div className="text-2xl font-bold text-foreground">{demandsToday}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Criadas hoje (Independente do filtro)
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-white/80">Demandas Urgentes</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-white/60" />
+            <CardTitle className="text-sm font-medium text-foreground">Demandas Urgentes</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{urgentesAberto}</div>
-            <p className="text-xs text-white/40 mt-1">Em aberto no período selecionado</p>
+            <div className="text-2xl font-bold text-foreground">{urgentesAberto}</div>
+            <p className="text-xs text-muted-foreground mt-1">Em aberto no período selecionado</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-white/80">Leads Convertidos</CardTitle>
+            <CardTitle className="text-sm font-medium text-foreground">Leads Convertidos</CardTitle>
             <UserCheck className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{leadsConvertidos}</div>
-            <p className="text-xs text-white/40 mt-1">No período selecionado</p>
+            <div className="text-2xl font-bold text-foreground">{leadsConvertidos}</div>
+            <p className="text-xs text-muted-foreground mt-1">No período selecionado</p>
           </CardContent>
         </Card>
       </div>
@@ -326,8 +330,8 @@ export default function Reports() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-white">Distribuição de Leads</CardTitle>
-            <CardDescription className="text-white/60">
+            <CardTitle className="text-foreground">Distribuição de Leads</CardTitle>
+            <CardDescription className="text-muted-foreground">
               Volume de leads por estágio do funil.
             </CardDescription>
           </CardHeader>
@@ -335,28 +339,27 @@ export default function Reports() {
             {leadsChartData.length === 0 ? (
               renderEmptyState()
             ) : (
-              <ChartContainer config={leadsConfig} className="h-[250px] sm:h-[300px] w-full">
+              <ChartContainer
+                config={leadsConfig}
+                className="h-[250px] sm:h-[300px] w-full text-foreground"
+              >
                 <BarChart
                   data={leadsChartData}
                   margin={{ top: 20, right: 0, left: -20, bottom: 0 }}
                 >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="rgba(255,255,255,0.1)"
-                  />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
                   <XAxis
                     dataKey="name"
-                    stroke="#ffffff"
+                    stroke="currentColor"
                     tickLine={false}
-                    axisLine={{ stroke: '#ffffff' }}
-                    tick={{ fill: '#ffffff', fontSize: 12 }}
+                    axisLine={{ stroke: 'var(--border)' }}
+                    tick={{ fill: 'currentColor', fontSize: 12 }}
                   />
                   <YAxis
-                    stroke="#ffffff"
+                    stroke="currentColor"
                     tickLine={false}
-                    axisLine={{ stroke: '#ffffff' }}
-                    tick={{ fill: '#ffffff', fontSize: 12 }}
+                    axisLine={{ stroke: 'var(--border)' }}
+                    tick={{ fill: 'currentColor', fontSize: 12 }}
                     allowDecimals={false}
                   />
                   <ChartTooltip content={<ChartTooltipContent />} />
@@ -373,8 +376,8 @@ export default function Reports() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-white">Prioridade das Demandas</CardTitle>
-            <CardDescription className="text-white/60">
+            <CardTitle className="text-foreground">Prioridade das Demandas</CardTitle>
+            <CardDescription className="text-muted-foreground">
               Volume de tarefas por nível de prioridade.
             </CardDescription>
           </CardHeader>
@@ -382,28 +385,27 @@ export default function Reports() {
             {demandsPriorityData.length === 0 ? (
               renderEmptyState()
             ) : (
-              <ChartContainer config={priorityConfig} className="h-[250px] sm:h-[300px] w-full">
+              <ChartContainer
+                config={priorityConfig}
+                className="h-[250px] sm:h-[300px] w-full text-foreground"
+              >
                 <BarChart
                   data={demandsPriorityData}
                   margin={{ top: 20, right: 0, left: -20, bottom: 0 }}
                 >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="rgba(255,255,255,0.1)"
-                  />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
                   <XAxis
                     dataKey="name"
-                    stroke="#ffffff"
+                    stroke="currentColor"
                     tickLine={false}
-                    axisLine={{ stroke: '#ffffff' }}
-                    tick={{ fill: '#ffffff', fontSize: 12 }}
+                    axisLine={{ stroke: 'var(--border)' }}
+                    tick={{ fill: 'currentColor', fontSize: 12 }}
                   />
                   <YAxis
-                    stroke="#ffffff"
+                    stroke="currentColor"
                     tickLine={false}
-                    axisLine={{ stroke: '#ffffff' }}
-                    tick={{ fill: '#ffffff', fontSize: 12 }}
+                    axisLine={{ stroke: 'var(--border)' }}
+                    tick={{ fill: 'currentColor', fontSize: 12 }}
                     allowDecimals={false}
                   />
                   <ChartTooltip content={<ChartTooltipContent />} />
@@ -421,40 +423,36 @@ export default function Reports() {
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="text-white">Produtividade da Equipe</CardTitle>
-          <CardDescription className="text-white/60">
+          <CardTitle className="text-foreground">Produtividade da Equipe</CardTitle>
+          <CardDescription className="text-muted-foreground">
             Volume de demandas atribuídas por colaborador.
           </CardDescription>
         </CardHeader>
         <CardContent className="px-2 sm:px-6 overflow-x-auto">
           {filteredDemands.length === 0 ? (
-            <div className="h-[300px] sm:h-[350px] w-full flex items-center justify-center text-sm text-white/40 bg-[rgba(255,255,255,0.02)] rounded-lg border border-white/10 border-dashed p-4 text-center">
+            <div className="h-[300px] sm:h-[350px] w-full flex items-center justify-center text-sm text-muted-foreground bg-muted/20 rounded-lg border border-border border-dashed p-4 text-center">
               Nenhuma demanda encontrada para o período selecionado.
             </div>
           ) : (
             <div className="min-w-[500px] w-full">
               <ChartContainer
                 config={{ count: { label: 'Demandas', color: 'hsl(var(--primary))' } }}
-                className="h-[300px] sm:h-[350px] w-full"
+                className="h-[300px] sm:h-[350px] w-full text-foreground"
               >
                 <BarChart data={teamData} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="rgba(255,255,255,0.1)"
-                  />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
                   <XAxis
                     dataKey="name"
-                    stroke="#ffffff"
+                    stroke="currentColor"
                     tickLine={false}
-                    axisLine={{ stroke: '#ffffff' }}
-                    tick={{ fill: '#ffffff', fontSize: 12 }}
+                    axisLine={{ stroke: 'var(--border)' }}
+                    tick={{ fill: 'currentColor', fontSize: 12 }}
                   />
                   <YAxis
-                    stroke="#ffffff"
+                    stroke="currentColor"
                     tickLine={false}
-                    axisLine={{ stroke: '#ffffff' }}
-                    tick={{ fill: '#ffffff', fontSize: 12 }}
+                    axisLine={{ stroke: 'var(--border)' }}
+                    tick={{ fill: 'currentColor', fontSize: 12 }}
                     allowDecimals={false}
                   />
                   <ChartTooltip content={<ChartTooltipContent />} />

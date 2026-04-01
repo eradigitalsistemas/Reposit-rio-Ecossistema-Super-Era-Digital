@@ -12,7 +12,7 @@ export default function Layout() {
 
   if (loading) {
     return (
-      <div className="min-h-[100dvh] flex items-center justify-center bg-slate-50 dark:bg-background w-full">
+      <div className="min-h-[100dvh] flex items-center justify-center bg-background w-full">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     )
@@ -31,7 +31,7 @@ export default function Layout() {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset className="flex flex-col min-h-[100dvh] bg-slate-50/50 dark:bg-background w-full max-w-[100vw] overflow-hidden">
+      <SidebarInset className="flex flex-col min-h-[100dvh] bg-background w-full max-w-[100vw] overflow-hidden">
         <Header />
         <main className="flex-1 overflow-hidden relative w-full flex flex-col">
           <ErrorBoundary>

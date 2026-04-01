@@ -208,10 +208,10 @@
     scrollbar-width: none;
   }
 
-  /* Kanban Custom Scrollbar matching dark theme */
+  /* Kanban Custom Scrollbar */
   .kanban-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+    scrollbar-color: hsl(var(--foreground) / 0.1) transparent;
   }
   .kanban-scrollbar::-webkit-scrollbar {
     width: 6px;
@@ -221,10 +221,10 @@
     background: transparent;
   }
   .kanban-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
+    background: hsl(var(--foreground) / 0.2);
     border-radius: 6px;
   }
   .kanban-scrollbar:hover::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.4);
+    background: hsl(var(--foreground) / 0.4);
   }
 }
