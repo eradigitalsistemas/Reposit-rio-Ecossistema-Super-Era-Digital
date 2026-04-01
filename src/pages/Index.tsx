@@ -34,7 +34,6 @@ export default function Index() {
     const fetchCounts = async () => {
       setLoading(true)
       try {
-        // Passing head: false forces a GET request, bypassing JSON parse errors on empty HEAD responses
         const [leadsRes, demandasRes, clientesRes, colabRes] = await Promise.all([
           supabase.from('leads').select('id', { count: 'exact', head: false }).limit(1),
           supabase
@@ -119,11 +118,11 @@ export default function Index() {
     <div className="flex-1 w-full bg-background min-h-full overflow-y-auto p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white flex items-center gap-3">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground flex items-center gap-3">
             <Home className="w-8 h-8 text-primary" />
             Dashboard Geral
           </h1>
-          <p className="text-white/60 mt-2 text-base sm:text-lg">
+          <p className="text-muted-foreground mt-2 text-base sm:text-lg">
             Bem-vindo ao CRM. Selecione um módulo para começar a trabalhar.
           </p>
         </div>
@@ -134,41 +133,41 @@ export default function Index() {
               key={card.route}
               onClick={() => navigate(card.route)}
               className={cn(
-                'group cursor-pointer bg-zinc-950 border-white/10 hover:border-primary/50 transition-all duration-300',
-                'shadow-lg hover:shadow-[0_0_20px_rgba(34,197,94,0.15)] flex flex-col h-full overflow-hidden',
+                'group cursor-pointer bg-card border-border hover:border-primary/50 transition-all duration-300',
+                'shadow-sm hover:shadow-md dark:hover:shadow-[0_0_20px_rgba(34,197,94,0.15)] flex flex-col h-full overflow-hidden',
               )}
             >
               <CardContent className="p-6 flex flex-col flex-1 relative">
-                <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity transform translate-x-4 -translate-y-4 group-hover:scale-110 duration-500 pointer-events-none">
-                  <card.icon className="w-24 h-24 text-white" />
+                <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity transform translate-x-4 -translate-y-4 group-hover:scale-110 duration-500 pointer-events-none text-foreground">
+                  <card.icon className="w-24 h-24" />
                 </div>
 
                 <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-6 ring-1 ring-primary/20 group-hover:ring-primary/50 transition-all">
                   <card.icon className="w-6 h-6 text-primary" />
                 </div>
 
-                <h2 className="text-xl font-bold text-white mb-2">{card.title}</h2>
-                <p className="text-white/60 text-sm mb-6 flex-1">{card.description}</p>
+                <h2 className="text-xl font-bold text-card-foreground mb-2">{card.title}</h2>
+                <p className="text-muted-foreground text-sm mb-6 flex-1">{card.description}</p>
 
-                <div className="flex items-end justify-between mt-auto pt-4 border-t border-white/10 group-hover:border-primary/20 transition-colors relative z-10">
+                <div className="flex items-end justify-between mt-auto pt-4 border-t border-border group-hover:border-primary/20 transition-colors relative z-10">
                   <div className="flex flex-col">
                     {loading ? (
-                      <div className="flex items-center gap-2 text-white/40 h-8">
+                      <div className="flex items-center gap-2 text-muted-foreground h-8">
                         <Loader2 className="w-4 h-4 animate-spin" />
                         <span className="text-sm">Carregando...</span>
                       </div>
                     ) : (
                       <>
-                        <span className="text-2xl font-bold text-white leading-none mb-1">
+                        <span className="text-2xl font-bold text-foreground leading-none mb-1">
                           {card.count !== null ? card.count : '---'}
                         </span>
-                        <span className="text-xs text-white/50 font-medium uppercase tracking-wider">
+                        <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
                           {card.countLabel}
                         </span>
                       </>
                     )}
                   </div>
-                  <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors shrink-0 text-secondary-foreground">
                     <ArrowRight className="w-4 h-4" />
                   </div>
                 </div>

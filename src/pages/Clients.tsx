@@ -22,9 +22,9 @@ export default function Clients() {
   if (role !== 'Admin') {
     return (
       <div className="flex flex-col items-center justify-center h-full p-6 text-center bg-background text-foreground">
-        <ShieldAlert className="w-12 h-12 text-white/60 mb-4" />
-        <h2 className="text-xl font-semibold mb-2 text-white">Acesso Restrito</h2>
-        <p className="text-white/60 mb-6">
+        <ShieldAlert className="w-12 h-12 text-muted-foreground mb-4" />
+        <h2 className="text-xl font-semibold mb-2 text-foreground">Acesso Restrito</h2>
+        <p className="text-muted-foreground mb-6">
           Apenas administradores podem acessar a gestão de clientes externos.
         </p>
         <Button onClick={() => navigate('/')} variant="default">
@@ -38,24 +38,26 @@ export default function Clients() {
     <div className="h-full w-full bg-background flex flex-col p-4 sm:p-6 overflow-y-auto sm:overflow-hidden text-foreground">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 shrink-0 gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">Clientes Externos</h1>
-          <p className="text-white/60 text-sm mt-1">Gerencie seus contatos externos e parceiros.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Clientes Externos</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Gerencie seus contatos externos e parceiros.
+          </p>
         </div>
         <div className="w-full sm:w-auto">
           <AddClientModal />
         </div>
       </div>
 
-      <Card className="hidden md:flex flex-1 overflow-hidden flex-col border-white/10 bg-[rgba(255,255,255,0.05)] shadow-subtle">
+      <Card className="hidden md:flex flex-1 overflow-hidden flex-col border-border bg-card shadow-sm">
         <CardContent className="p-0 overflow-auto flex-1">
           <Table>
-            <TableHeader className="sticky top-0 bg-[rgba(15,15,15,0.95)] backdrop-blur-md z-10">
+            <TableHeader className="sticky top-0 bg-background/95 backdrop-blur-md z-10">
               <TableRow>
-                <TableHead className="text-white/60">Nome</TableHead>
-                <TableHead className="text-white/60">Empresa</TableHead>
-                <TableHead className="text-white/60">Email</TableHead>
-                <TableHead className="text-white/60">Telefone</TableHead>
-                <TableHead className="text-white/60">CNPJ</TableHead>
+                <TableHead className="text-muted-foreground">Nome</TableHead>
+                <TableHead className="text-muted-foreground">Empresa</TableHead>
+                <TableHead className="text-muted-foreground">Email</TableHead>
+                <TableHead className="text-muted-foreground">Telefone</TableHead>
+                <TableHead className="text-muted-foreground">CNPJ</TableHead>
                 <TableHead className="w-[100px] text-right"></TableHead>
               </TableRow>
             </TableHeader>
@@ -63,20 +65,20 @@ export default function Clients() {
               {clients.map((client) => (
                 <TableRow
                   key={client.id}
-                  className="cursor-pointer hover:bg-[rgba(255,255,255,0.05)] border-white/10 transition-colors"
+                  className="cursor-pointer hover:bg-muted/50 border-border transition-colors"
                   onClick={() => navigate(`/clientes/${client.id}`)}
                 >
-                  <TableCell className="font-medium text-white">{client.name}</TableCell>
-                  <TableCell className="text-white/80">{client.company}</TableCell>
-                  <TableCell className="text-white/80">{client.email}</TableCell>
-                  <TableCell className="text-white/80">{client.phone}</TableCell>
-                  <TableCell className="text-white/80">{client.cnpj}</TableCell>
+                  <TableCell className="font-medium text-foreground">{client.name}</TableCell>
+                  <TableCell className="text-foreground/80">{client.company}</TableCell>
+                  <TableCell className="text-foreground/80">{client.email}</TableCell>
+                  <TableCell className="text-foreground/80">{client.phone}</TableCell>
+                  <TableCell className="text-foreground/80">{client.cnpj}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="text-white/40 hover:bg-primary/20 hover:text-primary h-9 w-9 transition-colors"
+                        className="text-muted-foreground hover:bg-primary/20 hover:text-primary h-9 w-9 transition-colors"
                         title="Visualizar/Editar cliente"
                         onClick={(e) => {
                           e.stopPropagation()
@@ -88,7 +90,7 @@ export default function Clients() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="text-white/40 hover:bg-white/10 hover:text-white h-9 w-9 transition-colors"
+                        className="text-muted-foreground hover:bg-destructive/20 hover:text-destructive h-9 w-9 transition-colors"
                         title="Excluir cliente"
                         onClick={(e) => {
                           e.stopPropagation()
@@ -103,7 +105,7 @@ export default function Clients() {
               ))}
               {clients.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center text-white/40">
+                  <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                     Nenhum cliente encontrado.
                   </TableCell>
                 </TableRow>
@@ -117,19 +119,19 @@ export default function Clients() {
         {clients.map((client) => (
           <Card
             key={client.id}
-            className="cursor-pointer border-white/10 hover:border-primary/50 bg-[rgba(255,255,255,0.05)] transition-colors shadow-subtle"
+            className="cursor-pointer border-border hover:border-primary/50 bg-card transition-colors shadow-sm"
             onClick={() => navigate(`/clientes/${client.id}`)}
           >
             <CardContent className="p-4 flex flex-col gap-3">
               <div className="flex justify-between items-start">
-                <div className="font-semibold text-lg leading-tight pr-2 text-white">
+                <div className="font-semibold text-lg leading-tight pr-2 text-foreground">
                   {client.name}
                 </div>
                 <div className="flex gap-1 -mr-2 -mt-2 shrink-0">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-white/40 hover:bg-primary/20 hover:text-primary transition-colors"
+                    className="text-muted-foreground hover:bg-primary/20 hover:text-primary transition-colors"
                     onClick={(e) => {
                       e.stopPropagation()
                       navigate(`/clientes/${client.id}`)
@@ -140,7 +142,7 @@ export default function Clients() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-white/40 hover:bg-white/10 hover:text-white transition-colors"
+                    className="text-muted-foreground hover:bg-destructive/20 hover:text-destructive transition-colors"
                     onClick={(e) => {
                       e.stopPropagation()
                       deleteClient(client.id)
@@ -152,23 +154,23 @@ export default function Clients() {
               </div>
 
               <div className="space-y-1.5 mt-1">
-                <div className="text-sm text-white/60 flex items-center gap-2">
+                <div className="text-sm text-muted-foreground flex items-center gap-2">
                   <Building2 className="w-4 h-4 shrink-0" />
                   <span className="truncate">{client.company || 'Sem empresa informada'}</span>
                 </div>
-                <div className="text-sm text-white/80 flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-white/40 shrink-0" />
+                <div className="text-sm text-foreground/80 flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
                   <span className="truncate">{client.email}</span>
                 </div>
                 {client.phone && (
-                  <div className="text-sm text-white/80 flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-white/40 shrink-0" />
+                  <div className="text-sm text-foreground/80 flex items-center gap-2">
+                    <Phone className="w-4 h-4 text-muted-foreground shrink-0" />
                     <span>{client.phone}</span>
                   </div>
                 )}
                 {client.cnpj && (
-                  <div className="text-sm text-white/80 flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-white/40 shrink-0" />
+                  <div className="text-sm text-foreground/80 flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
                     <span>{client.cnpj}</span>
                   </div>
                 )}
@@ -177,7 +179,7 @@ export default function Clients() {
           </Card>
         ))}
         {clients.length === 0 && (
-          <div className="text-center p-8 text-white/40 border border-white/10 rounded-lg bg-[rgba(255,255,255,0.02)]">
+          <div className="text-center p-8 text-muted-foreground border border-border rounded-lg bg-muted/50">
             Nenhum cliente encontrado.
           </div>
         )}

@@ -45,7 +45,7 @@ export function KanbanColumn({ stage, leads }: KanbanColumnProps) {
         <span className="tracking-wide uppercase text-xs">{stage.title}</span>
         <Badge
           variant="secondary"
-          className="bg-black/20 text-inherit hover:bg-black/30 px-2 h-5 text-xs border-0 transition-colors"
+          className="bg-black/10 dark:bg-black/20 text-foreground hover:bg-black/20 dark:hover:bg-black/30 px-2 h-5 text-xs border-0 transition-colors"
         >
           {leads.length}
         </Badge>
@@ -56,8 +56,8 @@ export function KanbanColumn({ stage, leads }: KanbanColumnProps) {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={cn(
-          'flex-1 bg-zinc-950/50 border border-t-0 border-border rounded-b-lg p-3 overflow-y-auto space-y-3 transition-all duration-200 hide-scrollbar',
-          isDragOver && 'bg-zinc-900 border-dashed border-2',
+          'flex-1 bg-muted/50 border border-t-0 border-border rounded-b-lg p-3 overflow-y-auto space-y-3 transition-all duration-200 hide-scrollbar',
+          isDragOver && 'bg-muted border-dashed border-2',
           isDragOver && stage.bgColor,
         )}
       >
