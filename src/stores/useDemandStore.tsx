@@ -55,7 +55,11 @@ interface DemandStoreState {
   ) => Promise<void>
   addResponse: (demandId: string, text: string) => Promise<void>
   addAttachments: (demandId: string, attachments: DemandAttachment[]) => Promise<void>
-  updateChecklist: (demandId: string, checklist: ChecklistItem[]) => Promise<void>
+  updateChecklist: (
+    demandId: string,
+    checklist: ChecklistItem[],
+    actionText?: string,
+  ) => Promise<void>
   markNotificationsAsRead: () => void
   fetchCollaborators: () => Promise<void>
   fetchChecklistTemplates: () => Promise<void>
@@ -80,7 +84,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       let query = supabase
         .from('demandas')
         .select(
-          '*, responsavel:usuarios(nome), logs_auditoria(id, acao, detalhes, usuario_id, dados_novos, data_criacao)',
+          '*, responsavel:usuarios!demandas_responsavel_id_fkey(nome), cliente:clientes_externos(id, nome), logs_auditoria(id, acao, detalhes, usuario_id, dados_novos, data_criacao, usuario:usuarios(nome))',
         )
         .order('data_criacao', { ascending: false })
 
@@ -107,6 +111,8 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             detalhes: l.detalhes,
             createdAt: l.data_criacao,
             usuario_id: l.usuario_id,
+            userName: l.usuario?.nome || 'Sistema',
+            dados_novos: l.dados_novos,
           }))
 
           const latestPriorityChange = sortedLogs.find(
@@ -125,8 +131,10 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             priority: (d.prioridade as DemandPriority) || 'Pode Ficar para Amanhã',
             status: (d.status as DemandStatus) || 'Pendente',
             dueDate: d.data_vencimento || null,
-            assignee: d.responsavel?.nome || 'Sem responsável',
+            assignee: (d as any).responsavel?.nome || 'Sem responsável',
             assigneeId: d.responsavel_id || null,
+            clientId: d.cliente_id || null,
+            clientName: (d as any).cliente?.nome || null,
             responses: d.resposta ? [d.resposta] : [],
             logs: mappedLogs,
             attachments: d.anexos || [],
@@ -531,29 +539,47 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
   const addResponse = useCallback(
     async (demandId: string, text: string) => {
-      const { error } = await supabase
-        .from('demandas')
-        .update({ resposta: text })
-        .eq('id', demandId)
+      if (!user) return
+      const { error } = await supabase.from('logs_auditoria').insert({
+        demanda_id: demandId,
+        usuario_id: user.id,
+        acao: 'Comentário',
+        detalhes: text,
+      })
       if (!error) {
         toast({
           title: 'Sucesso',
-          description: 'Anotação adicionada.',
+          description: 'Anotação adicionada na linha do tempo.',
           className: 'bg-zinc-950 border-green-500/50 text-white',
         })
         fetchDemands()
       }
     },
-    [fetchDemands],
+    [user, fetchDemands],
   )
 
-  const updateChecklist = useCallback(async (demandId: string, checklist: ChecklistItem[]) => {
-    setDemands((prev) => prev.map((d) => (d.id === demandId ? { ...d, checklist } : d)))
-    await supabase.from('demandas').update({ checklist }).eq('id', demandId)
-  }, [])
+  const updateChecklist = useCallback(
+    async (demandId: string, checklist: ChecklistItem[], actionText?: string) => {
+      if (!user) return
+      setDemands((prev) => prev.map((d) => (d.id === demandId ? { ...d, checklist } : d)))
+      await supabase.from('demandas').update({ checklist }).eq('id', demandId)
+
+      if (actionText) {
+        await supabase.from('logs_auditoria').insert({
+          demanda_id: demandId,
+          usuario_id: user.id,
+          acao: 'Checklist',
+          detalhes: actionText,
+        })
+        fetchDemands()
+      }
+    },
+    [user, fetchDemands],
+  )
 
   const addAttachments = useCallback(
     async (demandId: string, newAttachments: DemandAttachment[]) => {
+      if (!user) return
       try {
         const { data } = await supabase
           .from('demandas')
@@ -562,14 +588,24 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           .single()
         const updatedAttachments = [...(data?.anexos || []), ...newAttachments]
         await supabase.from('demandas').update({ anexos: updatedAttachments }).eq('id', demandId)
+
+        await supabase.from('logs_auditoria').insert({
+          demanda_id: demandId,
+          usuario_id: user.id,
+          acao: 'Anexo',
+          detalhes: `Arquivo(s) anexado(s): ${newAttachments.map((a) => a.name).join(', ')}`,
+          dados_novos: { anexos: newAttachments },
+        })
+
         setDemands((prev) =>
           prev.map((d) => (d.id === demandId ? { ...d, attachments: updatedAttachments } : d)),
         )
+        fetchDemands()
       } catch (e) {
         toast({ title: 'Erro', description: 'Erro ao salvar anexos.', variant: 'destructive' })
       }
     },
-    [],
+    [user, fetchDemands],
   )
 
   const value = useMemo(

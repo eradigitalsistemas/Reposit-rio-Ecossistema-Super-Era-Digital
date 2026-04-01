@@ -8,6 +8,8 @@ export interface DemandLog {
   detalhes: string
   createdAt: string
   usuario_id?: string
+  userName?: string
+  dados_novos?: any
 }
 
 export interface DemandAttachment {
@@ -31,7 +33,8 @@ export interface Demand {
   dueDate: string | null
   assignee: string
   assigneeId?: string | null
-  clientId?: string
+  clientId?: string | null
+  clientName?: string | null
   category?: DemandCategory
   responses?: string[]
   logs?: DemandLog[]

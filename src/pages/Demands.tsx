@@ -34,9 +34,23 @@ export default function Demands() {
   const { role, user } = useAuthStore()
 
   const [collaboratorFilter, setCollaboratorFilter] = useState<string>('all')
+  const [clientFilter, setClientFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string[]>([])
   const [dateFilter, setDateFilter] = useState<string>('all')
   const [exactDateFilter, setExactDateFilter] = useState<Date | undefined>(undefined)
+  const [clientsList, setClientsList] = useState<{ id: string; nome: string }[]>([])
+
+  useEffect(() => {
+    import('@/lib/supabase/client').then(({ supabase }) => {
+      supabase
+        .from('clientes_externos')
+        .select('id, nome')
+        .order('nome')
+        .then(({ data }) => {
+          if (data) setClientsList(data)
+        })
+    })
+  }, [])
 
   const [searchParams] = useSearchParams()
   const highlightId = searchParams.get('highlight')
@@ -68,6 +82,9 @@ export default function Demands() {
       if (role === 'Admin' && collaboratorFilter !== 'all' && d.assignee !== collaboratorFilter) {
         return false
       }
+      if (clientFilter !== 'all' && d.clientId !== clientFilter) {
+        return false
+      }
       if (exactDateFilter && d.createdAt) {
         const date = parseISO(d.createdAt)
         if (
@@ -93,12 +110,14 @@ export default function Demands() {
 
   const hasFilters =
     (role === 'Admin' && collaboratorFilter !== 'all') ||
+    clientFilter !== 'all' ||
     statusFilter.length > 0 ||
     dateFilter !== 'all' ||
     exactDateFilter !== undefined
 
   const clearFilters = () => {
     setCollaboratorFilter('all')
+    setClientFilter('all')
     setStatusFilter([])
     setDateFilter('all')
     setExactDateFilter(undefined)
@@ -133,14 +152,14 @@ export default function Demands() {
             {role === 'Admin' && (
               <div className="space-y-2 w-full sm:w-auto relative z-20">
                 <Label className="text-xs font-semibold text-gray-700 dark:text-muted-foreground uppercase tracking-wider">
-                  Filtrar por Responsável
+                  Responsável
                 </Label>
                 <Select value={collaboratorFilter} onValueChange={setCollaboratorFilter}>
-                  <SelectTrigger className="w-full sm:w-[220px] h-11 sm:h-10 bg-white dark:bg-background border-gray-300 dark:border-input text-gray-900 dark:text-foreground shadow-sm">
-                    <SelectValue placeholder="Todos os colaboradores" />
+                  <SelectTrigger className="w-full sm:w-[180px] h-11 sm:h-10 bg-white dark:bg-background border-gray-300 dark:border-input text-gray-900 dark:text-foreground shadow-sm">
+                    <SelectValue placeholder="Todos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos os colaboradores</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
                     {collaborators.map((c) => (
                       <SelectItem key={c.id} value={c.nome}>
                         {c.nome}
@@ -151,6 +170,25 @@ export default function Demands() {
                 </Select>
               </div>
             )}
+
+            <div className="space-y-2 w-full sm:w-auto relative z-20">
+              <Label className="text-xs font-semibold text-gray-700 dark:text-muted-foreground uppercase tracking-wider">
+                Cliente
+              </Label>
+              <Select value={clientFilter} onValueChange={setClientFilter}>
+                <SelectTrigger className="w-full sm:w-[180px] h-11 sm:h-10 bg-white dark:bg-background border-gray-300 dark:border-input text-gray-900 dark:text-foreground shadow-sm">
+                  <SelectValue placeholder="Todos os clientes" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os clientes</SelectItem>
+                  {clientsList.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
             <div className="space-y-2 w-full sm:w-auto relative z-20 pointer-events-auto">
               <Label className="text-xs font-semibold text-gray-700 dark:text-muted-foreground uppercase tracking-wider">
