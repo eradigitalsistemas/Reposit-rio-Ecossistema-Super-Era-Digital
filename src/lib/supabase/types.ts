@@ -9,6 +9,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      checklist_templates: {
+        Row: {
+          data_criacao: string
+          id: string
+          itens: Json
+          nome: string
+          usuario_id: string
+        }
+        Insert: {
+          data_criacao?: string
+          id?: string
+          itens?: Json
+          nome: string
+          usuario_id: string
+        }
+        Update: {
+          data_criacao?: string
+          id?: string
+          itens?: Json
+          nome?: string
+          usuario_id?: string
+        }
+        Relationships: []
+      }
       clientes_externos: {
         Row: {
           cnpj: string | null
@@ -474,6 +498,12 @@ export const Constants = {
 // --- COLUMN TYPES (actual PostgreSQL types) ---
 // Use this to know the real database type when writing migrations.
 // "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: checklist_templates
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: text (not null)
+//   itens: jsonb (not null, default: '[]'::jsonb)
+//   usuario_id: uuid (not null)
+//   data_criacao: timestamp with time zone (not null, default: now())
 // Table: clientes_externos
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -548,6 +578,9 @@ export const Constants = {
 //   telefone: text (nullable)
 
 // --- CONSTRAINTS ---
+// Table: checklist_templates
+//   PRIMARY KEY checklist_templates_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY checklist_templates_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: clientes_externos
 //   PRIMARY KEY clientes_externos_pkey: PRIMARY KEY (id)
 // Table: demandas
@@ -577,6 +610,16 @@ export const Constants = {
 //   PRIMARY KEY usuarios_pkey: PRIMARY KEY (id)
 
 // --- ROW LEVEL SECURITY POLICIES ---
+// Table: checklist_templates
+//   Policy "Todos podem ver templates" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "Usuarios deletam proprios templates" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: (auth.uid() = usuario_id)
+//   Policy "Usuarios gerenciam proprios templates" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (auth.uid() = usuario_id)
+//     WITH CHECK: (auth.uid() = usuario_id)
+//   Policy "Usuarios podem inserir templates" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: (auth.uid() = usuario_id)
 // Table: clientes_externos
 //   Policy "Admins_gerenciam_clientes_externos" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: is_admin()

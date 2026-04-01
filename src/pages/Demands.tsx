@@ -129,9 +129,9 @@ export default function Demands() {
         </div>
 
         <div className="flex flex-col xl:flex-row items-start xl:items-end justify-between gap-4 mb-6 bg-white dark:bg-card border-gray-300 dark:border-border p-4 rounded-xl border shadow-md dark:shadow-sm shrink-0">
-          <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-end gap-4 sm:gap-6 w-full xl:w-auto">
+          <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-end gap-4 sm:gap-6 w-full xl:w-auto relative z-20">
             {role === 'Admin' && (
-              <div className="space-y-2 w-full sm:w-auto">
+              <div className="space-y-2 w-full sm:w-auto relative z-20">
                 <Label className="text-xs font-semibold text-gray-700 dark:text-muted-foreground uppercase tracking-wider">
                   Filtrar por Responsável
                 </Label>
@@ -152,7 +152,7 @@ export default function Demands() {
               </div>
             )}
 
-            <div className="space-y-2 w-full sm:w-auto">
+            <div className="space-y-2 w-full sm:w-auto relative z-20 pointer-events-auto">
               <Label className="text-xs font-semibold text-gray-700 dark:text-muted-foreground uppercase tracking-wider">
                 Período
               </Label>
@@ -173,7 +173,7 @@ export default function Demands() {
               </Select>
             </div>
 
-            <div className="space-y-2 w-full sm:w-auto">
+            <div className="space-y-2 w-full sm:w-auto relative z-20 pointer-events-auto">
               <Label className="text-xs font-semibold text-gray-700 dark:text-muted-foreground uppercase tracking-wider">
                 Data Específica
               </Label>
