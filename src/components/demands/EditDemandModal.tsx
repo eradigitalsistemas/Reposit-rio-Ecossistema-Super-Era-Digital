@@ -86,7 +86,12 @@ export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] sm:max-w-[500px]" onClick={(e) => e.stopPropagation()}>
+      <DialogContent
+        className="w-[95vw] sm:max-w-[500px]"
+        onClick={(e) => e.stopPropagation()}
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Editar Demanda</DialogTitle>

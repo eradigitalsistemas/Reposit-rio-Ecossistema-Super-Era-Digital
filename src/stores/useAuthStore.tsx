@@ -22,6 +22,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [authInitialized, setAuthInitialized] = useState(false)
 
   const [role, setRole] = useState<Role>(null)
   const [userName, setUserName] = useState('')
@@ -49,10 +50,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (error || !session) {
         setSession(null)
         setUser(null)
+        setAuthInitialized(true)
         setLoading(false)
       } else {
         setSession(session)
         setUser(session.user)
+        setAuthInitialized(true)
       }
     })
 
@@ -67,7 +70,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const fetchProfile = async () => {
       if (!user) {
-        if (isMounted && role !== 'Client') {
+        if (isMounted && role !== 'Client' && authInitialized) {
           setLoading(false)
         }
         return
@@ -100,18 +103,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     }
 
-    if (user && role !== 'Client') {
-      setLoading(true)
-      fetchProfile()
-    } else if (!user && role !== 'Client') {
-      if (isMounted) setLoading(false)
+    if (authInitialized) {
+      if (user && role !== 'Client') {
+        setLoading(true)
+        fetchProfile()
+      } else if (!user && role !== 'Client') {
+        if (isMounted) setLoading(false)
+      }
     }
 
     return () => {
       isMounted = false
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user])
+  }, [user, authInitialized])
 
   const toggleRole = () => {
     if (role === 'Admin') {

@@ -72,6 +72,8 @@ export function EditLeadModal({ lead }: EditLeadModalProps) {
       <DialogContent
         className="w-[95vw] sm:max-w-[450px]"
         onPointerDown={(e) => e.stopPropagation()}
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <form onSubmit={handleSubmit}>
           <DialogHeader>

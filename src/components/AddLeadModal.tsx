@@ -63,7 +63,11 @@ export function AddLeadModal() {
           <span className="hidden sm:inline">Novo Lead</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-[95vw] sm:max-w-[450px]">
+      <DialogContent
+        className="w-[95vw] sm:max-w-[450px]"
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Adicionar Novo Lead</DialogTitle>

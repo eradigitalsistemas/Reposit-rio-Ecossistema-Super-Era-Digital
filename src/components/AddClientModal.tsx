@@ -41,7 +41,11 @@ export function AddClientModal() {
           Novo Cliente
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-[95vw] sm:max-w-[500px]">
+      <DialogContent
+        className="w-[95vw] sm:max-w-[500px]"
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Adicionar Novo Cliente</DialogTitle>
