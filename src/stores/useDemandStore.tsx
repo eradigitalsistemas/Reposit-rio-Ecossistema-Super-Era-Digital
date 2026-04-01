@@ -22,6 +22,8 @@ import { supabase } from '@/lib/supabase/client'
 import useAuthStore from './useAuthStore'
 import { useNavigate } from 'react-router-dom'
 
+import { ChecklistTemplate } from '@/types/demand'
+
 interface Collaborator {
   id: string
   nome: string
@@ -31,6 +33,7 @@ interface DemandStoreState {
   demands: Demand[]
   collaborators: Collaborator[]
   notifications: DemandNotification[]
+  checklistTemplates: ChecklistTemplate[]
   addDemand: (
     demand: Omit<Demand, 'id' | 'createdAt' | 'responses' | 'logs'> & {
       assigneeId?: string | null
@@ -55,6 +58,8 @@ interface DemandStoreState {
   updateChecklist: (demandId: string, checklist: ChecklistItem[]) => Promise<void>
   markNotificationsAsRead: () => void
   fetchCollaborators: () => Promise<void>
+  fetchChecklistTemplates: () => Promise<void>
+  addChecklistTemplate: (nome: string, itens: string[]) => Promise<void>
 }
 
 const DemandContext = createContext<DemandStoreState | null>(null)
@@ -63,6 +68,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   const [demands, setDemands] = useState<Demand[]>([])
   const [collaborators, setCollaborators] = useState<Collaborator[]>([])
   const [notifications, setNotifications] = useState<DemandNotification[]>([])
+  const [checklistTemplates, setChecklistTemplates] = useState<ChecklistTemplate[]>([])
   const { user, role, userName } = useAuthStore()
   const navigate = useNavigate()
 
@@ -136,6 +142,66 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [user, role])
 
+  const fetchChecklistTemplates = useCallback(async () => {
+    if (!user) return
+    try {
+      const { data, error } = await supabase
+        .from('checklist_templates')
+        .select('*')
+        .order('data_criacao', { ascending: false })
+
+      if (!error && data) {
+        setChecklistTemplates(
+          data.map((t: any) => ({
+            id: t.id,
+            nome: t.nome,
+            itens: t.itens,
+            usuario_id: t.usuario_id,
+            data_criacao: t.data_criacao,
+          })),
+        )
+      }
+    } catch (e) {
+      // Silently handle
+    }
+  }, [user])
+
+  const addChecklistTemplate = useCallback(
+    async (nome: string, itens: string[]) => {
+      if (!user) return
+      try {
+        const { data, error } = await supabase
+          .from('checklist_templates')
+          .insert({
+            nome,
+            itens,
+            usuario_id: user.id,
+          })
+          .select()
+          .single()
+
+        if (error) throw error
+
+        if (data) {
+          setChecklistTemplates((prev) => [
+            {
+              id: data.id,
+              nome: data.nome,
+              itens: data.itens,
+              usuario_id: data.usuario_id,
+              data_criacao: data.data_criacao,
+            },
+            ...prev,
+          ])
+          toast({ title: 'Sucesso', description: 'Template criado com sucesso.' })
+        }
+      } catch (e) {
+        toast({ title: 'Erro', description: 'Erro ao criar template.', variant: 'destructive' })
+      }
+    },
+    [user],
+  )
+
   const fetchCollaborators = useCallback(async () => {
     if (!user) return
     try {
@@ -190,6 +256,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       fetchDemands()
       fetchCollaborators()
       fetchNotifications()
+      fetchChecklistTemplates()
 
       const usersChannel = supabase
         .channel('usuarios-colab-changes')
@@ -248,7 +315,15 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
     return () => {
       isSubscribed = false
     }
-  }, [role, user, fetchDemands, fetchCollaborators, fetchNotifications, navigate])
+  }, [
+    role,
+    user,
+    fetchDemands,
+    fetchCollaborators,
+    fetchNotifications,
+    fetchChecklistTemplates,
+    navigate,
+  ])
 
   const markNotificationsAsRead = useCallback(async () => {
     if (!user || !notifications.some((n) => !n.read)) return
@@ -279,6 +354,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             responsavel_id: newDemand.assigneeId || null,
             usuario_id: user.id,
             anexos: newDemand.attachments || [],
+            checklist: newDemand.checklist || [],
           })
           .select('*, responsavel:usuarios(nome)')
 
@@ -501,6 +577,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       demands,
       collaborators,
       notifications,
+      checklistTemplates,
       addDemand,
       editDemand,
       updateStatus,
@@ -512,11 +589,14 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       updateChecklist,
       markNotificationsAsRead,
       fetchCollaborators,
+      fetchChecklistTemplates,
+      addChecklistTemplate,
     }),
     [
       demands,
       collaborators,
       notifications,
+      checklistTemplates,
       addDemand,
       editDemand,
       updateStatus,
@@ -528,6 +608,8 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       updateChecklist,
       markNotificationsAsRead,
       fetchCollaborators,
+      fetchChecklistTemplates,
+      addChecklistTemplate,
     ],
   )
 

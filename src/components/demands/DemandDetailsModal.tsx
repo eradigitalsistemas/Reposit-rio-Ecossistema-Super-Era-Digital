@@ -55,7 +55,8 @@ export function DemandDetailsModal({
   demand,
   onCompleteClick,
 }: DemandDetailsModalProps) {
-  const { acceptDemand, addResponse, addAttachments, updateChecklist } = useDemandStore()
+  const { acceptDemand, addResponse, addAttachments, updateChecklist, checklistTemplates } =
+    useDemandStore()
   const { user } = useAuthStore()
   const [responseText, setResponseText] = useState('')
   const [newChecklistText, setNewChecklistText] = useState('')
@@ -125,37 +126,13 @@ export function DemandDetailsModal({
     updateChecklist(demand.id, updated)
   }
 
-  const handleApplyTemplate = (template: string) => {
-    let items: string[] = []
-    if (template === 'emissao_certificado') {
-      items = [
-        'Solicitar documentos ao cliente',
-        'Validar documentos recebidos',
-        'Agendar videoconferência',
-        'Realizar validação em vídeo',
-        'Emitir certificado',
-        'Enviar confirmação ao cliente',
-      ]
-    } else if (template === 'onboarding') {
-      items = [
-        'Enviar e-mail de boas-vindas',
-        'Coletar dados cadastrais',
-        'Configurar acessos no sistema',
-        'Agendar reunião de kick-off',
-        'Apresentar a plataforma',
-      ]
-    } else if (template === 'reuniao_alinhamento') {
-      items = [
-        'Definir pauta da reunião',
-        'Convidar participantes',
-        'Revisar métricas',
-        'Elaborar ata',
-        'Distribuir próximos passos (Follow-up)',
-      ]
-    }
-
-    if (items.length > 0) {
-      const newItems = items.map((text) => ({ id: crypto.randomUUID(), text, completed: false }))
+  const handleApplyTemplateDb = (template: import('@/types/demand').ChecklistTemplate) => {
+    if (template.itens.length > 0) {
+      const newItems = template.itens.map((text) => ({
+        id: crypto.randomUUID(),
+        text,
+        completed: false,
+      }))
       updateChecklist(demand.id, [...checklist, ...newItems])
       toast({ title: 'Modelo aplicado', description: 'Checklist preenchido automaticamente.' })
     }
@@ -274,15 +251,14 @@ export function DemandDetailsModal({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-56">
-                      <DropdownMenuItem onClick={() => handleApplyTemplate('emissao_certificado')}>
-                        Emissão de Certificado
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleApplyTemplate('onboarding')}>
-                        Onboarding de Cliente
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleApplyTemplate('reuniao_alinhamento')}>
-                        Reunião de Alinhamento
-                      </DropdownMenuItem>
+                      {checklistTemplates.map((t) => (
+                        <DropdownMenuItem key={t.id} onClick={() => handleApplyTemplateDb(t)}>
+                          {t.nome}
+                        </DropdownMenuItem>
+                      ))}
+                      {checklistTemplates.length === 0 && (
+                        <DropdownMenuItem disabled>Nenhum modelo salvo</DropdownMenuItem>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 )}

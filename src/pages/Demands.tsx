@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect } from 'react'
-import { isToday, isThisWeek, isThisMonth, parseISO } from 'date-fns'
+import { isToday, isThisWeek, isThisMonth, parseISO, format } from 'date-fns'
 import { DemandColumn } from '@/components/demands/DemandColumn'
 import { AddDemandModal } from '@/components/demands/AddDemandModal'
+import { ChecklistBuilderModal } from '@/components/demands/ChecklistBuilderModal'
 import useDemandStore from '@/stores/useDemandStore'
 import useAuthStore from '@/stores/useAuthStore'
 import { Label } from '@/components/ui/label'
@@ -20,9 +21,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Download, FilterX, Columns } from 'lucide-react'
+import { Download, FilterX, Columns, CalendarIcon } from 'lucide-react'
 import { exportToCSV, exportToPDF } from '@/utils/export'
 import { DemandStatus } from '@/types/demand'
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
+import { Calendar } from '@/components/ui/calendar'
+import { cn } from '@/lib/utils'
 import { useSearchParams } from 'react-router-dom'
 
 export default function Demands() {
@@ -32,6 +36,7 @@ export default function Demands() {
   const [collaboratorFilter, setCollaboratorFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string[]>([])
   const [dateFilter, setDateFilter] = useState<string>('all')
+  const [exactDateFilter, setExactDateFilter] = useState<Date | undefined>(undefined)
 
   const [searchParams] = useSearchParams()
   const highlightId = searchParams.get('highlight')
@@ -63,7 +68,16 @@ export default function Demands() {
       if (role === 'Admin' && collaboratorFilter !== 'all' && d.assignee !== collaboratorFilter) {
         return false
       }
-      if (dateFilter !== 'all' && d.createdAt) {
+      if (exactDateFilter && d.createdAt) {
+        const date = parseISO(d.createdAt)
+        if (
+          date.getDate() !== exactDateFilter.getDate() ||
+          date.getMonth() !== exactDateFilter.getMonth() ||
+          date.getFullYear() !== exactDateFilter.getFullYear()
+        ) {
+          return false
+        }
+      } else if (dateFilter !== 'all' && d.createdAt) {
         const date = parseISO(d.createdAt)
         if (dateFilter === 'today' && !isToday(date)) return false
         if (dateFilter === 'week' && !isThisWeek(date)) return false
@@ -75,17 +89,19 @@ export default function Demands() {
     return filtered.sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     )
-  }, [demands, role, user?.id, collaboratorFilter, dateFilter])
+  }, [demands, role, user?.id, collaboratorFilter, dateFilter, exactDateFilter])
 
   const hasFilters =
     (role === 'Admin' && collaboratorFilter !== 'all') ||
     statusFilter.length > 0 ||
-    dateFilter !== 'all'
+    dateFilter !== 'all' ||
+    exactDateFilter !== undefined
 
   const clearFilters = () => {
     setCollaboratorFilter('all')
     setStatusFilter([])
     setDateFilter('all')
+    setExactDateFilter(undefined)
   }
 
   return (
@@ -102,7 +118,14 @@ export default function Demands() {
                 : 'Acompanhe suas tarefas e atribuições no Kanban'}
             </p>
           </div>
-          <div className="w-full sm:w-auto">{role === 'Admin' && <AddDemandModal />}</div>
+          <div className="w-full sm:w-auto flex flex-col sm:flex-row items-center gap-2">
+            {role === 'Admin' && (
+              <>
+                <ChecklistBuilderModal />
+                <AddDemandModal />
+              </>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-col xl:flex-row items-start xl:items-end justify-between gap-4 mb-6 bg-white dark:bg-card border-gray-300 dark:border-border p-4 rounded-xl border shadow-md dark:shadow-sm shrink-0">
@@ -133,8 +156,12 @@ export default function Demands() {
               <Label className="text-xs font-semibold text-gray-700 dark:text-muted-foreground uppercase tracking-wider">
                 Período
               </Label>
-              <Select value={dateFilter} onValueChange={setDateFilter}>
-                <SelectTrigger className="w-full sm:w-[160px] h-11 sm:h-10 bg-white dark:bg-background border-gray-300 dark:border-input text-gray-900 dark:text-foreground shadow-sm">
+              <Select
+                value={dateFilter}
+                onValueChange={setDateFilter}
+                disabled={exactDateFilter !== undefined}
+              >
+                <SelectTrigger className="w-full sm:w-[160px] h-11 sm:h-10 bg-white dark:bg-background border-gray-300 dark:border-input text-gray-900 dark:text-foreground shadow-sm disabled:opacity-50">
                   <SelectValue placeholder="Qualquer data" />
                 </SelectTrigger>
                 <SelectContent>
@@ -144,6 +171,34 @@ export default function Demands() {
                   <SelectItem value="month">Este mês</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2 w-full sm:w-auto">
+              <Label className="text-xs font-semibold text-gray-700 dark:text-muted-foreground uppercase tracking-wider">
+                Data Específica
+              </Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      'w-full sm:w-[160px] h-11 sm:h-10 justify-start text-left font-normal bg-white dark:bg-background border-gray-300 dark:border-input text-gray-900 dark:text-foreground shadow-sm',
+                      !exactDateFilter && 'text-muted-foreground',
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {exactDateFilter ? format(exactDateFilter, 'dd/MM/yyyy') : 'Selecionar data'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={exactDateFilter}
+                    onSelect={setExactDateFilter}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div className="space-y-2 w-full sm:w-auto">

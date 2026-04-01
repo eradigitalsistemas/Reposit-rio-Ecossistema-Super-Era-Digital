@@ -29,13 +29,23 @@ export function AddDemandModal() {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [files, setFiles] = useState<File[]>([])
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('none')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const { addDemand, collaborators, fetchCollaborators } = useDemandStore()
+  const {
+    addDemand,
+    collaborators,
+    fetchCollaborators,
+    checklistTemplates,
+    fetchChecklistTemplates,
+  } = useDemandStore()
 
   useEffect(() => {
-    if (open) fetchCollaborators()
-  }, [open, fetchCollaborators])
+    if (open) {
+      fetchCollaborators()
+      fetchChecklistTemplates()
+    }
+  }, [open, fetchCollaborators, fetchChecklistTemplates])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) setFiles((prev) => [...prev, ...Array.from(e.target.files!)])
@@ -59,6 +69,18 @@ export function AddDemandModal() {
       if (data) attachments.push({ name: file.name, url: data.path, type: file.type })
     }
 
+    let checklist: import('@/types/demand').ChecklistItem[] = []
+    if (selectedTemplate !== 'none') {
+      const template = checklistTemplates.find((t) => t.id === selectedTemplate)
+      if (template) {
+        checklist = template.itens.map((text) => ({
+          id: crypto.randomUUID(),
+          text,
+          completed: false,
+        }))
+      }
+    }
+
     await addDemand({
       title: formData.get('title') as string,
       description: formData.get('description') as string,
@@ -67,10 +89,12 @@ export function AddDemandModal() {
       dueDate: formData.get('dueDate') as string,
       assigneeId: assigneeIdStr === 'none' ? null : assigneeIdStr,
       attachments,
+      checklist,
     })
 
     setLoading(false)
     setFiles([])
+    setSelectedTemplate('none')
     setOpen(false)
   }
 
@@ -89,22 +113,32 @@ export function AddDemandModal() {
       >
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Criar Nova Demanda</DialogTitle>
+            <DialogTitle className="text-black dark:text-white">Criar Nova Demanda</DialogTitle>
             <DialogDescription>
               Adicione uma nova tarefa e atribua a um colaborador.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="title">Título *</Label>
-              <Input id="title" name="title" required disabled={loading} />
+              <Label htmlFor="title" className="text-black dark:text-white font-medium">
+                Título *
+              </Label>
+              <Input
+                id="title"
+                name="title"
+                required
+                disabled={loading}
+                className="bg-white border-gray-400 text-black dark:bg-black dark:border-white/10 dark:text-white h-11 sm:h-10"
+              />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="priority">Prioridade</Label>
+                <Label htmlFor="priority" className="text-black dark:text-white font-medium">
+                  Urgência
+                </Label>
                 <Select name="priority" defaultValue="Pode Ficar para Amanhã" disabled={loading}>
-                  <SelectTrigger className="h-11 sm:h-10">
+                  <SelectTrigger className="h-11 sm:h-10 bg-white border-gray-400 text-black dark:bg-black dark:border-white/10 dark:text-white">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -115,9 +149,11 @@ export function AddDemandModal() {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="status">Status Inicial</Label>
+                <Label htmlFor="status" className="text-black dark:text-white font-medium">
+                  Status Inicial
+                </Label>
                 <Select name="status" defaultValue="Pendente" disabled={loading}>
-                  <SelectTrigger className="h-11 sm:h-10">
+                  <SelectTrigger className="h-11 sm:h-10 bg-white border-gray-400 text-black dark:bg-black dark:border-white/10 dark:text-white">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -131,9 +167,11 @@ export function AddDemandModal() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="assigneeId">Atribuir para</Label>
+                <Label htmlFor="assigneeId" className="text-black dark:text-white font-medium">
+                  Responsável
+                </Label>
                 <Select name="assigneeId" defaultValue="none" disabled={loading}>
-                  <SelectTrigger className="h-11 sm:h-10">
+                  <SelectTrigger className="h-11 sm:h-10 bg-white border-gray-400 text-black dark:bg-black dark:border-white/10 dark:text-white">
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -147,30 +185,57 @@ export function AddDemandModal() {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="dueDate">Vencimento</Label>
+                <Label htmlFor="dueDate" className="text-black dark:text-white font-medium">
+                  Vencimento
+                </Label>
                 <Input
                   id="dueDate"
                   name="dueDate"
                   type="date"
-                  className="h-11 sm:h-10"
+                  className="h-11 sm:h-10 bg-white border-gray-400 text-black dark:bg-black dark:border-white/10 dark:text-white"
                   disabled={loading}
                 />
               </div>
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="description">Descrição / Detalhes</Label>
+              <Label htmlFor="templateId" className="text-black dark:text-white font-medium">
+                Importar Checklist
+              </Label>
+              <Select
+                value={selectedTemplate}
+                onValueChange={setSelectedTemplate}
+                disabled={loading}
+              >
+                <SelectTrigger className="h-11 sm:h-10 bg-white border-gray-400 text-black dark:bg-black dark:border-white/10 dark:text-white">
+                  <SelectValue placeholder="Sem checklist" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sem checklist</SelectItem>
+                  {checklistTemplates.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="description" className="text-black dark:text-white font-medium">
+                Descrição / Detalhes
+              </Label>
               <Textarea
                 id="description"
                 name="description"
-                className="min-h-[80px]"
+                className="min-h-[80px] bg-white border-gray-400 text-black dark:bg-black dark:border-white/10 dark:text-white"
                 disabled={loading}
               />
             </div>
 
             <div className="grid gap-2">
               <div className="flex items-center justify-between">
-                <Label>Anexos</Label>
+                <Label className="text-black dark:text-white font-medium">Anexos</Label>
                 <Button
                   type="button"
                   variant="ghost"
@@ -223,7 +288,7 @@ export function AddDemandModal() {
               type="button"
               variant="ghost"
               onClick={() => setOpen(false)}
-              className="w-full sm:w-auto mb-2 sm:mb-0 h-11 sm:h-10"
+              className="w-full sm:w-auto mb-2 sm:mb-0 h-11 sm:h-10 text-black dark:text-white hover:bg-gray-100 dark:hover:bg-white/10"
               disabled={loading}
             >
               Cancelar
@@ -231,7 +296,7 @@ export function AddDemandModal() {
             <Button
               type="submit"
               variant="default"
-              className="w-full sm:w-auto h-11 sm:h-10 text-black font-bold"
+              className="w-full sm:w-auto h-11 sm:h-10 text-white font-bold bg-black dark:bg-primary"
               disabled={loading}
             >
               {loading ? 'Criando...' : 'Criar Demanda'}

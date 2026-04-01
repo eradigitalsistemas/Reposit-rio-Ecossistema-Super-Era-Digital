@@ -49,3 +49,11 @@ export interface DemandNotification {
   read: boolean
   demandId?: string
 }
+
+export interface ChecklistTemplate {
+  id: string
+  nome: string
+  itens: string[]
+  usuario_id: string
+  data_criacao: string
+}
