@@ -24,49 +24,52 @@ import { DemandProvider } from './stores/useDemandStore'
 import { ClientProvider } from './stores/useClientStore'
 import { AuthProvider } from './stores/useAuthStore'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import { ThemeProvider } from './components/ThemeProvider'
 
 const App = () => (
   <ErrorBoundary>
-    <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <ClientProvider>
-            <LeadProvider>
-              <DemandProvider>
-                <Routes>
-                  {/* Public Auth Routes */}
-                  <Route path="/login" element={<Login />} />
+    <ThemeProvider defaultTheme="dark" storageKey="era-digital-theme" attribute="class">
+      <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <ClientProvider>
+              <LeadProvider>
+                <DemandProvider>
+                  <Routes>
+                    {/* Public Auth Routes */}
+                    <Route path="/login" element={<Login />} />
 
-                  {/* Internal CRM Routes */}
-                  <Route element={<Layout />}>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/vendas" element={<Vendas />} />
-                    <Route path="/demandas" element={<Demands />} />
-                    <Route path="/clientes" element={<Clients />} />
-                    <Route path="/clientes/:id" element={<ClientProfile />} />
-                    <Route path="/colaboradores" element={<Collaborators />} />
-                    <Route path="/relatorios" element={<Reports />} />
-                    <Route path="/configuracoes" element={<Settings />} />
-                  </Route>
+                    {/* Internal CRM Routes */}
+                    <Route element={<Layout />}>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/vendas" element={<Vendas />} />
+                      <Route path="/demandas" element={<Demands />} />
+                      <Route path="/clientes" element={<Clients />} />
+                      <Route path="/clientes/:id" element={<ClientProfile />} />
+                      <Route path="/colaboradores" element={<Collaborators />} />
+                      <Route path="/relatorios" element={<Reports />} />
+                      <Route path="/configuracoes" element={<Settings />} />
+                    </Route>
 
-                  {/* External Portal Routes */}
-                  <Route path="/portal/login" element={<PortalLogin />} />
-                  <Route path="/portal" element={<PortalLayout />}>
-                    <Route index element={<Navigate to="/portal/demandas" replace />} />
-                    <Route path="demandas" element={<PortalDemands />} />
-                    <Route path="documentos" element={<PortalDocuments />} />
-                  </Route>
+                    {/* External Portal Routes */}
+                    <Route path="/portal/login" element={<PortalLogin />} />
+                    <Route path="/portal" element={<PortalLayout />}>
+                      <Route index element={<Navigate to="/portal/demandas" replace />} />
+                      <Route path="demandas" element={<PortalDemands />} />
+                      <Route path="documentos" element={<PortalDocuments />} />
+                    </Route>
 
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </DemandProvider>
-            </LeadProvider>
-          </ClientProvider>
-        </TooltipProvider>
-      </AuthProvider>
-    </BrowserRouter>
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </DemandProvider>
+              </LeadProvider>
+            </ClientProvider>
+          </TooltipProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   </ErrorBoundary>
 )
 

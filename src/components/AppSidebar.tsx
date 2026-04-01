@@ -58,19 +58,19 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="h-16 flex items-center px-6 border-b border-white/10 bg-sidebar shrink-0">
+      <SidebarHeader className="h-16 flex items-center px-6 border-b border-border bg-sidebar shrink-0">
         <Link
           to="/"
           onClick={handleLinkClick}
-          className="flex items-center gap-2 font-bold text-lg text-white hover:text-white/80 transition-colors"
+          className="flex items-center gap-2 font-bold text-lg text-sidebar-foreground hover:text-sidebar-foreground/80 transition-colors"
         >
-          <div className="p-1 bg-white/10 rounded-md ring-1 ring-white/30">
-            <Building2 className="w-5 h-5 text-white" />
+          <div className="p-1 bg-sidebar-accent rounded-md ring-1 ring-sidebar-border">
+            <Building2 className="w-5 h-5 text-sidebar-foreground" />
           </div>
           <span>Era Digital</span>
         </Link>
       </SidebarHeader>
-      <SidebarContent className="flex-1 overflow-y-auto">
+      <SidebarContent className="flex-1 overflow-y-auto bg-sidebar">
         <SidebarGroup>
           <SidebarGroupContent className="py-4">
             <SidebarMenu>
@@ -88,7 +88,7 @@ export function AppSidebar() {
                     <Link
                       to={item.url}
                       onClick={handleLinkClick}
-                      className="flex items-center gap-3 text-white/80 hover:text-white"
+                      className="flex items-center gap-3 text-sidebar-foreground/80 hover:text-sidebar-foreground"
                     >
                       <item.icon className="w-5 h-5" />
                       <span className="text-base md:text-sm font-medium">{item.title}</span>
@@ -100,13 +100,13 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="p-4 border-t border-white/10 shrink-0 mt-auto pb-8 md:pb-4">
+      <SidebarFooter className="p-4 border-t border-border shrink-0 mt-auto pb-8 md:pb-4 bg-sidebar">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
               variant="outline"
-              className="w-full justify-center text-white border-white/20 hover:bg-white/10 transition-colors h-12 md:h-10"
+              className="w-full justify-center text-sidebar-foreground border-sidebar-border hover:bg-sidebar-accent transition-colors h-12 md:h-10"
             >
               <Link
                 to="/portal/login"
