@@ -21,13 +21,15 @@ export default function PortalLogin() {
     setLoading(true)
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) throw error
-      navigate('/portal')
+      if (data?.user) {
+        navigate('/portal')
+      }
     } catch (error: any) {
       toast({
         title: 'Erro ao fazer login',
-        description: error.message || 'Verifique suas credenciais e tente novamente.',
+        description: error?.message ?? 'Verifique suas credenciais e tente novamente.',
         variant: 'destructive',
       })
     } finally {

@@ -23,26 +23,43 @@ export const CoreAuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let isMounted = true
+    let subscription: any = null
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, currentSession) => {
-      if (!isMounted) return
-      setSession(currentSession)
-      setUser(currentSession?.user ?? null)
-      setLoading(false)
-    })
+    try {
+      const { data } = supabase.auth.onAuthStateChange((event, currentSession) => {
+        if (!isMounted) return
+        setSession(currentSession ?? null)
+        setUser(currentSession?.user ?? null)
+        setLoading(false)
+      })
+      subscription = data?.subscription
 
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      if (!isMounted) return
-      setSession(currentSession)
-      setUser(currentSession?.user ?? null)
-      setLoading(false)
-    })
+      supabase.auth
+        .getSession()
+        .then(({ data: { session: currentSession }, error }) => {
+          if (!isMounted) return
+          if (error) {
+            setSession(null)
+            setUser(null)
+          } else {
+            setSession(currentSession ?? null)
+            setUser(currentSession?.user ?? null)
+          }
+          setLoading(false)
+        })
+        .catch(() => {
+          if (!isMounted) return
+          setSession(null)
+          setUser(null)
+          setLoading(false)
+        })
+    } catch (err) {
+      if (isMounted) setLoading(false)
+    }
 
     return () => {
       isMounted = false
-      subscription.unsubscribe()
+      subscription?.unsubscribe()
     }
   }, [])
 

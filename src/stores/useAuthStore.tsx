@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useMemo } from 'react'
+import React, { createContext, useContext, useEffect, useState, useMemo, useRef } from 'react'
 import { User, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase/client'
 
@@ -28,40 +28,59 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [userName, setUserName] = useState('')
   const [clientId, setClientId] = useState<string | null>(null)
 
+  const fetchedUserIdRef = useRef<string | null>(null)
+
   useEffect(() => {
     let isMounted = true
+    let subscription: any = null
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, currentSession) => {
-      if (!isMounted) return
-      setSession(currentSession)
-      setUser(currentSession?.user ?? null)
-      if (event === 'SIGNED_OUT') {
-        setRole(null)
-        setUserName('')
-        setClientId(null)
-        setLoading(false)
-      }
-    })
+    try {
+      const { data } = supabase.auth.onAuthStateChange((event, currentSession) => {
+        if (!isMounted) return
+        setSession(currentSession ?? null)
+        setUser(currentSession?.user ?? null)
+        if (event === 'SIGNED_OUT') {
+          setRole(null)
+          setUserName('')
+          setClientId(null)
+          fetchedUserIdRef.current = null
+          setLoading(false)
+        }
+      })
+      subscription = data?.subscription
 
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (!isMounted) return
-      if (error || !session) {
-        setSession(null)
-        setUser(null)
+      supabase.auth
+        .getSession()
+        .then(({ data: { session: currentSession }, error }) => {
+          if (!isMounted) return
+          if (error || !currentSession) {
+            setSession(null)
+            setUser(null)
+            setAuthInitialized(true)
+            setLoading(false)
+          } else {
+            setSession(currentSession ?? null)
+            setUser(currentSession?.user ?? null)
+            setAuthInitialized(true)
+          }
+        })
+        .catch(() => {
+          if (!isMounted) return
+          setSession(null)
+          setUser(null)
+          setAuthInitialized(true)
+          setLoading(false)
+        })
+    } catch (err) {
+      if (isMounted) {
         setAuthInitialized(true)
         setLoading(false)
-      } else {
-        setSession(session)
-        setUser(session.user)
-        setAuthInitialized(true)
       }
-    })
+    }
 
     return () => {
       isMounted = false
-      subscription.unsubscribe()
+      subscription?.unsubscribe()
     }
   }, [])
 
@@ -69,7 +88,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     let isMounted = true
 
     const fetchProfile = async () => {
-      if (!user) {
+      if (!user?.id) {
         if (isMounted && role !== 'Client' && authInitialized) {
           setLoading(false)
         }
@@ -92,9 +111,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (isMounted && data) {
           setRole((prev) =>
-            prev === 'Client' ? 'Client' : data.perfil === 'admin' ? 'Admin' : 'Colaborador',
+            prev === 'Client' ? 'Client' : data?.perfil === 'admin' ? 'Admin' : 'Colaborador',
           )
-          setUserName((prev) => (prev ? prev : data.nome || user.email || ''))
+          setUserName((prev) => (prev ? prev : (data?.nome ?? user?.email ?? '')))
+          fetchedUserIdRef.current = user.id
         }
       } catch (err) {
         // Silently handle
@@ -104,10 +124,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     if (authInitialized) {
-      if (user && role !== 'Client') {
-        setLoading(true)
-        fetchProfile()
-      } else if (!user && role !== 'Client') {
+      if (user?.id && role !== 'Client') {
+        // Prevent loading flash and unmounts on Alt+Tab/Focus
+        if (fetchedUserIdRef.current !== user.id) {
+          setLoading(true)
+          fetchProfile()
+        } else {
+          if (isMounted) setLoading(false)
+        }
+      } else if (!user?.id && role !== 'Client') {
+        fetchedUserIdRef.current = null
         if (isMounted) setLoading(false)
       }
     }
@@ -115,8 +141,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => {
       isMounted = false
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, authInitialized])
+  }, [user?.id, authInitialized, role])
 
   const toggleRole = () => {
     if (role === 'Admin') {
@@ -141,10 +166,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     setLoading(true)
-    await supabase.auth.signOut()
+    try {
+      await supabase.auth.signOut()
+    } catch (e) {}
     setRole(null)
     setClientId(null)
     setUserName('')
+    fetchedUserIdRef.current = null
     setLoading(false)
   }
 

@@ -70,6 +70,7 @@ export type Database = {
         Row: {
           anexos: Json | null
           checklist: Json | null
+          cliente_id: string | null
           data_criacao: string
           data_resposta: string | null
           data_vencimento: string | null
@@ -85,6 +86,7 @@ export type Database = {
         Insert: {
           anexos?: Json | null
           checklist?: Json | null
+          cliente_id?: string | null
           data_criacao?: string
           data_resposta?: string | null
           data_vencimento?: string | null
@@ -100,6 +102,7 @@ export type Database = {
         Update: {
           anexos?: Json | null
           checklist?: Json | null
+          cliente_id?: string | null
           data_criacao?: string
           data_resposta?: string | null
           data_vencimento?: string | null
@@ -113,6 +116,13 @@ export type Database = {
           usuario_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: 'demandas_cliente_id_fkey'
+            columns: ['cliente_id']
+            isOneToOne: false
+            referencedRelation: 'clientes_externos'
+            referencedColumns: ['id']
+          },
           {
             foreignKeyName: 'demandas_responsavel_id_fkey'
             columns: ['responsavel_id']
@@ -527,6 +537,7 @@ export const Constants = {
 //   data_resposta: timestamp with time zone (nullable)
 //   anexos: jsonb (nullable, default: '[]'::jsonb)
 //   checklist: jsonb (nullable, default: '[]'::jsonb)
+//   cliente_id: uuid (nullable)
 // Table: historico_leads
 //   id: uuid (not null, default: gen_random_uuid())
 //   lead_id: uuid (not null)
@@ -584,6 +595,7 @@ export const Constants = {
 // Table: clientes_externos
 //   PRIMARY KEY clientes_externos_pkey: PRIMARY KEY (id)
 // Table: demandas
+//   FOREIGN KEY demandas_cliente_id_fkey: FOREIGN KEY (cliente_id) REFERENCES clientes_externos(id) ON DELETE SET NULL
 //   PRIMARY KEY demandas_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY demandas_responsavel_id_fkey: FOREIGN KEY (responsavel_id) REFERENCES usuarios(id) ON DELETE SET NULL
 //   FOREIGN KEY demandas_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE CASCADE
@@ -905,3 +917,7 @@ export const Constants = {
 //   on_demanda_change_log: CREATE TRIGGER on_demanda_change_log AFTER INSERT OR UPDATE ON public.demandas FOR EACH ROW EXECUTE FUNCTION log_demanda_changes()
 //   on_demanda_push_notify: CREATE TRIGGER on_demanda_push_notify AFTER UPDATE ON public.demandas FOR EACH ROW EXECUTE FUNCTION trigger_demanda_push_notification()
 //   on_demanda_status_change_notify: CREATE TRIGGER on_demanda_status_change_notify AFTER UPDATE OF status ON public.demandas FOR EACH ROW EXECUTE FUNCTION trigger_notify_automation()
+
+// --- INDEXES ---
+// Table: demandas
+//   CREATE INDEX idx_demandas_cliente_id ON public.demandas USING btree (cliente_id)

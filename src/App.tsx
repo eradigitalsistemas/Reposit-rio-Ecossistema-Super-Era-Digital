@@ -26,6 +26,22 @@ import { AuthProvider } from './stores/useAuthStore'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { ThemeProvider } from './components/ThemeProvider'
 
+// Força Bruta: Bloquear eventos de foco/visibilidade globais que causam perda de dados em re-renders
+if (typeof window !== 'undefined') {
+  const originalWinAdd = window.addEventListener
+  window.addEventListener = function (type: string, listener: any, options?: any) {
+    if (type === 'focus' || type === 'blur') return
+    return originalWinAdd.call(window, type, listener, options)
+  }
+}
+if (typeof document !== 'undefined') {
+  const originalDocAdd = document.addEventListener
+  document.addEventListener = function (type: string, listener: any, options?: any) {
+    if (type === 'visibilitychange') return
+    return originalDocAdd.call(document, type, listener, options)
+  }
+}
+
 const App = () => (
   <ErrorBoundary>
     <ThemeProvider defaultTheme="dark" storageKey="era-digital-theme" attribute="class">
