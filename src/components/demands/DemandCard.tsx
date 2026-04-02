@@ -199,8 +199,8 @@ export function DemandCard({ demand }: DemandCardProps) {
             <div className="mt-2 pt-3 border-t border-border flex flex-col sm:flex-row gap-2">
               {demand.status === 'Pendente' && (
                 <Button
-                  variant="outline"
-                  className="flex-1 h-10 sm:h-9 text-sm sm:text-xs font-bold transition-all shadow-none"
+                  variant="default"
+                  className="flex-1 h-10 sm:h-9 text-sm sm:text-xs font-bold transition-all shadow-none bg-green-600 hover:bg-green-700 text-white dark:bg-green-600 dark:text-white"
                   onClick={(e) => {
                     e.stopPropagation()
                     acceptDemand(demand.id)
@@ -210,17 +210,19 @@ export function DemandCard({ demand }: DemandCardProps) {
                   Aceitar
                 </Button>
               )}
-              <Button
-                variant="default"
-                className="flex-1 h-10 sm:h-9 text-sm sm:text-xs font-bold transition-all shadow-none bg-green-600 hover:bg-green-700 text-white"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setCompleteOpen(true)
-                }}
-              >
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Concluído
-              </Button>
+              {demand.status === 'Em Andamento' && (
+                <Button
+                  variant="default"
+                  className="flex-1 h-10 sm:h-9 text-sm sm:text-xs font-bold transition-all shadow-none bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:text-white"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setCompleteOpen(true)
+                  }}
+                >
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Concluir
+                </Button>
+              )}
             </div>
           )}
         </CardContent>

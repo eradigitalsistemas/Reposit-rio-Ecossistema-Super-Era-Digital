@@ -145,8 +145,8 @@ export function DemandDetailsModal({
     }
   }
 
-  const canAccept = demand.status === 'Pendente' && demand.assigneeId !== user?.id
-  const canComplete = demand.status === 'Pendente' || demand.status === 'Em Andamento'
+  const canAccept = demand.status === 'Pendente'
+  const canComplete = demand.status === 'Em Andamento'
 
   const sortedLogs = demand.logs
     ? [...demand.logs].sort(
@@ -198,17 +198,17 @@ export function DemandDetailsModal({
               <Button
                 onClick={handleAccept}
                 variant="default"
-                className="gap-2 shadow-sm font-bold"
+                className="gap-2 bg-green-600 hover:bg-green-700 text-white dark:bg-green-600 dark:text-white shadow-sm font-bold"
               >
-                <User2 className="w-4 h-4" />
-                Assumir Demanda
+                <Check className="w-4 h-4" />
+                Aceitar Demanda
               </Button>
             )}
             {canComplete && (
               <Button
                 onClick={onCompleteClick}
                 variant="default"
-                className="gap-2 bg-green-600 hover:bg-green-700 text-white shadow-sm font-bold"
+                className="gap-2 bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:text-white shadow-sm font-bold"
               >
                 <CheckCircle className="w-4 h-4" />
                 Concluir Tarefa

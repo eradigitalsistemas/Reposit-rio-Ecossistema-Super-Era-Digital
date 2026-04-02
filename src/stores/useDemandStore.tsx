@@ -465,28 +465,39 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   const acceptDemand = useCallback(
     async (demandId: string) => {
       if (!user) return
+
+      const demand = demands.find((d) => d.id === demandId)
+      if (!demand) return
+
+      const newAssigneeId = demand.assigneeId || user.id
+      const newAssigneeName = demand.assigneeId ? demand.assignee : userName || 'Você'
+
       setDemands((prev) =>
         prev.map((d) =>
           d.id === demandId
-            ? { ...d, status: 'Em Andamento', assigneeId: user.id, assignee: userName || 'Você' }
+            ? { ...d, status: 'Em Andamento', assigneeId: newAssigneeId, assignee: newAssigneeName }
             : d,
         ),
       )
       const { error } = await supabase
         .from('demandas')
-        .update({ status: 'Em Andamento', responsavel_id: user.id })
+        .update({ status: 'Em Andamento', responsavel_id: newAssigneeId })
         .eq('id', demandId)
+
       if (!error) {
         toast({
           title: 'Demanda Aceita',
-          description: 'Atribuída a você.',
+          description:
+            newAssigneeId === user.id
+              ? 'Atribuída a você e em andamento.'
+              : 'Movida para Em andamento.',
           className:
             'bg-zinc-950 border-green-500/50 text-white shadow-[0_0_15px_rgba(34,197,94,0.2)]',
         })
         fetchDemands()
       }
     },
-    [user, userName, fetchDemands],
+    [user, userName, fetchDemands, demands],
   )
 
   const completeDemand = useCallback(
