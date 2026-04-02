@@ -52,20 +52,34 @@ export function DemandDetailsModal({
   demand,
   onCompleteClick,
 }: DemandDetailsModalProps) {
-  const { acceptDemand, addResponse, addAttachments, updateChecklist, checklistTemplates } =
-    useDemandStore()
+  const {
+    demands,
+    acceptDemand,
+    addResponse,
+    addAttachments,
+    updateChecklist,
+    checklistTemplates,
+  } = useDemandStore()
   const { user } = useAuthStore()
   const [responseText, setResponseText] = useState('')
   const [newChecklistText, setNewChecklistText] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleAccept = () => acceptDemand(demand.id)
+  const currentDemand = demands.find((d) => d.id === demand.id) || demand
 
-  const handleAddResponse = () => {
+  const handleAccept = () => acceptDemand(currentDemand.id)
+
+  const handleAddResponse = async () => {
     if (responseText.trim()) {
-      addResponse(demand.id, responseText)
-      setResponseText('')
+      setIsSubmitting(true)
+      try {
+        await addResponse(currentDemand.id, responseText)
+        setResponseText('')
+      } finally {
+        setIsSubmitting(false)
+      }
     }
   }
 
@@ -90,7 +104,7 @@ export function DemandDetailsModal({
     }
 
     if (newAttachments.length > 0) {
-      await addAttachments(demand.id, newAttachments)
+      await addAttachments(currentDemand.id, newAttachments)
       toast({
         title: 'Anexos adicionados',
         description: 'Arquivos foram salvos com sucesso na timeline.',
@@ -101,7 +115,7 @@ export function DemandDetailsModal({
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
-  const checklist = demand.checklist || []
+  const checklist = currentDemand.checklist || []
   const completedCount = checklist.filter((c) => c.completed).length
   const totalCount = checklist.length
   const progress = totalCount === 0 ? 0 : (completedCount / totalCount) * 100
@@ -109,7 +123,7 @@ export function DemandDetailsModal({
   const handleToggleChecklist = (item: ChecklistItem) => {
     const updated = checklist.map((c) => (c.id === item.id ? { ...c, completed: !c.completed } : c))
     updateChecklist(
-      demand.id,
+      currentDemand.id,
       updated,
       `Marcou a etapa "${item.text}" como ${!item.completed ? 'concluída' : 'pendente'}`,
     )
@@ -121,13 +135,17 @@ export function DemandDetailsModal({
       ...checklist,
       { id: crypto.randomUUID(), text: newChecklistText, completed: false },
     ]
-    updateChecklist(demand.id, updated, `Adicionou a etapa "${newChecklistText}" ao checklist`)
+    updateChecklist(
+      currentDemand.id,
+      updated,
+      `Adicionou a etapa "${newChecklistText}" ao checklist`,
+    )
     setNewChecklistText('')
   }
 
   const handleRemoveChecklist = (item: ChecklistItem) => {
     const updated = checklist.filter((c) => c.id !== item.id)
-    updateChecklist(demand.id, updated, `Removeu a etapa "${item.text}" do checklist`)
+    updateChecklist(currentDemand.id, updated, `Removeu a etapa "${item.text}" do checklist`)
   }
 
   const handleApplyTemplateDb = (template: import('@/types/demand').ChecklistTemplate) => {
@@ -138,7 +156,7 @@ export function DemandDetailsModal({
         completed: false,
       }))
       updateChecklist(
-        demand.id,
+        currentDemand.id,
         [...checklist, ...newItems],
         `Aplicou o template de checklist "${template.nome}"`,
       )
@@ -146,11 +164,11 @@ export function DemandDetailsModal({
     }
   }
 
-  const canAccept = demand.status === 'Pendente'
-  const canComplete = demand.status === 'Em Andamento'
+  const canAccept = currentDemand.status === 'Pendente'
+  const canComplete = currentDemand.status === 'Em Andamento'
 
-  const sortedLogs = demand.logs
-    ? [...demand.logs].sort(
+  const sortedLogs = currentDemand.logs
+    ? [...currentDemand.logs].sort(
         (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
       )
     : []
@@ -166,31 +184,34 @@ export function DemandDetailsModal({
                 variant="outline"
                 className="bg-gray-100 dark:bg-muted text-gray-800 dark:text-foreground border-gray-300 font-mono text-xs"
               >
-                #{demand.id.toUpperCase().slice(0, 8)}
+                #{currentDemand.id.toUpperCase().slice(0, 8)}
               </Badge>
               <Badge
                 variant="outline"
                 className={cn(
                   'border-gray-200 text-xs font-semibold',
-                  demand.status === 'Pendente' && 'text-amber-600 bg-amber-50 border-amber-200',
-                  demand.status === 'Em Andamento' && 'text-blue-600 bg-blue-50 border-blue-200',
-                  demand.status === 'Concluído' && 'text-green-600 bg-green-50 border-green-200',
+                  currentDemand.status === 'Pendente' &&
+                    'text-amber-600 bg-amber-50 border-amber-200',
+                  currentDemand.status === 'Em Andamento' &&
+                    'text-blue-600 bg-blue-50 border-blue-200',
+                  currentDemand.status === 'Concluído' &&
+                    'text-green-600 bg-green-50 border-green-200',
                 )}
               >
-                {demand.status}
+                {currentDemand.status}
               </Badge>
-              {demand.clientName && (
+              {currentDemand.clientName && (
                 <Badge
                   variant="secondary"
                   className="bg-gray-100 text-gray-700 hover:bg-gray-200 gap-1 border-transparent px-2"
                 >
                   <Building2 className="w-3 h-3" />
-                  {demand.clientName}
+                  {currentDemand.clientName}
                 </Badge>
               )}
             </div>
             <DialogTitle className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-foreground pr-6">
-              {demand.title}
+              {currentDemand.title}
             </DialogTitle>
           </div>
 
@@ -231,7 +252,7 @@ export function DemandDetailsModal({
                   </span>
                   <div className="flex items-center gap-2 font-medium text-sm text-gray-900 dark:text-white">
                     <User2 className="w-4 h-4 text-gray-400" />
-                    {demand.assignee}
+                    {currentDemand.assignee}
                   </div>
                 </div>
                 <div className="space-y-1">
@@ -239,11 +260,11 @@ export function DemandDetailsModal({
                     Prioridade
                   </span>
                   <div className="flex items-center gap-2 font-medium text-sm text-gray-900 dark:text-white">
-                    {demand.priority === 'Urgente' ? (
+                    {currentDemand.priority === 'Urgente' ? (
                       <Badge className="bg-red-600 text-white hover:bg-red-700 border-transparent px-1.5 py-0 font-bold">
                         Urgente
                       </Badge>
-                    ) : demand.priority === 'Durante o Dia' ? (
+                    ) : currentDemand.priority === 'Durante o Dia' ? (
                       <Badge
                         variant="outline"
                         className="text-orange-600 bg-orange-50 border-orange-200 px-1.5 py-0 font-bold"
@@ -266,7 +287,7 @@ export function DemandDetailsModal({
                   </span>
                   <div className="flex items-center gap-2 font-medium text-sm text-gray-900 dark:text-white">
                     <Calendar className="w-4 h-4 text-gray-400" />
-                    {format(new Date(demand.createdAt), 'dd/MM/yyyy')}
+                    {format(new Date(currentDemand.createdAt), 'dd/MM/yyyy')}
                   </div>
                 </div>
                 <div className="space-y-1">
@@ -275,7 +296,9 @@ export function DemandDetailsModal({
                   </span>
                   <div className="flex items-center gap-2 font-medium text-sm text-gray-900 dark:text-white">
                     <Clock className="w-4 h-4 text-gray-400" />
-                    {demand.dueDate ? format(new Date(demand.dueDate), 'dd/MM/yyyy') : 'Sem prazo'}
+                    {currentDemand.dueDate
+                      ? format(new Date(currentDemand.dueDate), 'dd/MM/yyyy')
+                      : 'Sem prazo'}
                   </div>
                 </div>
               </div>
@@ -286,7 +309,7 @@ export function DemandDetailsModal({
                   Descrição da Tarefa
                 </h3>
                 <div className="bg-gray-50 dark:bg-white/5 p-4 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
-                  {demand.description || (
+                  {currentDemand.description || (
                     <span className="italic text-gray-400">Nenhuma descrição fornecida.</span>
                   )}
                 </div>
@@ -301,7 +324,7 @@ export function DemandDetailsModal({
                     <CheckSquare className="w-5 h-5 text-primary" />
                     Checklist Dinâmico
                   </h3>
-                  {demand.status !== 'Concluído' && (
+                  {currentDemand.status !== 'Concluído' && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button
@@ -352,12 +375,12 @@ export function DemandDetailsModal({
                         <Checkbox
                           checked={item.completed}
                           onCheckedChange={() => handleToggleChecklist(item)}
-                          disabled={demand.status === 'Concluído'}
+                          disabled={currentDemand.status === 'Concluído'}
                           className="mt-0.5 border-gray-400 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                         />
                         <span
                           className={cn(
-                            'flex-1 text-sm font-medium leading-tight transition-colors',
+                            'flex-1 text-sm font-medium leading-tight transition-colors whitespace-pre-wrap break-words',
                             item.completed
                               ? 'line-through text-gray-400 dark:text-gray-500'
                               : 'text-gray-800 dark:text-gray-200',
@@ -365,7 +388,7 @@ export function DemandDetailsModal({
                         >
                           {item.text}
                         </span>
-                        {demand.status !== 'Concluído' && (
+                        {currentDemand.status !== 'Concluído' && (
                           <Button
                             variant="ghost"
                             size="icon"
@@ -384,7 +407,7 @@ export function DemandDetailsModal({
                     )}
                   </div>
 
-                  {demand.status !== 'Concluído' && (
+                  {currentDemand.status !== 'Concluído' && (
                     <div className="flex gap-2 mt-5 pt-4 border-t border-gray-100 dark:border-white/10">
                       <Input
                         placeholder="Adicionar nova etapa no checklist..."
@@ -476,37 +499,38 @@ export function DemandDetailsModal({
 
                           {/* Render specifics based on log type */}
                           {isComment ? (
-                            <div className="mt-1 bg-white dark:bg-card p-3 rounded-tr-xl rounded-b-xl border border-gray-200 dark:border-white/10 shadow-sm text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed relative">
+                            <div className="mt-1 bg-white dark:bg-card p-3 rounded-tr-xl rounded-b-xl border border-gray-200 dark:border-white/10 shadow-sm text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words leading-relaxed relative">
                               <div className="absolute -left-[6px] top-0 w-3 h-3 bg-white dark:bg-card border-l border-t border-gray-200 dark:border-white/10 rotate-[-45deg] -z-10" />
                               {log.detalhes}
                             </div>
                           ) : isAttachment ? (
                             <div className="mt-1 space-y-2">
-                              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words">
                                 {log.detalhes}
                               </p>
                               {log.dados_novos?.anexos && Array.isArray(log.dados_novos.anexos) && (
                                 <div className="flex flex-col gap-2">
                                   {log.dados_novos.anexos.map((att: any, i: number) => {
-                                    const fileUrl = supabase.storage
-                                      .from('anexos')
-                                      .getPublicUrl(att.url).data.publicUrl
+                                    const fileUrl = att.url?.startsWith('http')
+                                      ? att.url
+                                      : supabase.storage.from('anexos').getPublicUrl(att.url).data
+                                          .publicUrl
                                     return (
                                       <a
                                         key={i}
                                         href={fileUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex items-center gap-3 bg-white dark:bg-white/5 p-2.5 rounded-lg border border-gray-200 dark:border-white/10 hover:border-primary/50 hover:bg-primary/5 transition-colors shadow-sm group"
+                                        className="flex items-center gap-3 bg-white dark:bg-white/5 p-2.5 rounded-lg border border-gray-200 dark:border-white/10 hover:border-primary/50 hover:bg-primary/5 transition-colors shadow-sm group overflow-hidden"
                                       >
-                                        <div className="p-2 rounded bg-gray-100 dark:bg-black/50 text-gray-500 group-hover:text-primary transition-colors">
+                                        <div className="p-2 rounded bg-gray-100 dark:bg-black/50 text-gray-500 group-hover:text-primary transition-colors shrink-0">
                                           {att.type?.startsWith('image/') ? (
                                             <ImageIcon className="w-4 h-4" />
                                           ) : (
                                             <FileIcon className="w-4 h-4" />
                                           )}
                                         </div>
-                                        <span className="truncate text-sm font-bold text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors">
+                                        <span className="text-sm font-bold text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors whitespace-pre-wrap break-words">
                                           {att.name}
                                         </span>
                                       </a>
@@ -516,7 +540,7 @@ export function DemandDetailsModal({
                               )}
                             </div>
                           ) : (
-                            <p className="text-sm text-gray-700 dark:text-gray-400 bg-white/50 dark:bg-white/5 p-2 rounded-lg border border-gray-100 dark:border-transparent">
+                            <p className="text-sm text-gray-700 dark:text-gray-400 bg-white/50 dark:bg-white/5 p-2 rounded-lg border border-gray-100 dark:border-transparent whitespace-pre-wrap break-words">
                               <span className="font-bold mr-1 text-gray-900 dark:text-white">
                                 {log.acao}:
                               </span>
@@ -532,13 +556,14 @@ export function DemandDetailsModal({
             </ScrollArea>
 
             {/* Input Section at the Root of Timeline */}
-            {demand.status !== 'Concluído' && (
+            {currentDemand.status !== 'Concluído' && (
               <div className="p-4 sm:p-5 border-t border-gray-200 dark:border-border bg-white dark:bg-card shrink-0 space-y-3 z-10 shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.05)]">
                 <Textarea
                   placeholder="Escreva uma observação para a timeline..."
                   value={responseText}
                   onChange={(e) => setResponseText(e.target.value)}
-                  className="min-h-[80px] bg-gray-50 dark:bg-black resize-none border-gray-300 dark:border-white/20 text-sm shadow-inner text-gray-900 dark:text-white focus-visible:ring-1 focus-visible:ring-primary"
+                  disabled={isSubmitting}
+                  className="min-h-[80px] bg-gray-50 dark:bg-black resize-none border-gray-300 dark:border-white/20 text-sm shadow-inner text-gray-900 dark:text-white focus-visible:ring-1 focus-visible:ring-primary disabled:opacity-50"
                 />
                 <div className="flex items-center justify-between gap-2">
                   <input
@@ -552,7 +577,7 @@ export function DemandDetailsModal({
                     variant="outline"
                     size="sm"
                     onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
+                    disabled={uploading || isSubmitting}
                     className="bg-white dark:bg-transparent shadow-sm border-gray-300 dark:border-white/20 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-700 dark:text-white font-medium h-9"
                   >
                     {uploading ? (
@@ -566,11 +591,17 @@ export function DemandDetailsModal({
                   <Button
                     onClick={handleAddResponse}
                     size="sm"
-                    className="shadow-sm gap-2 px-5 h-9 font-bold"
-                    disabled={!responseText.trim()}
+                    className="shadow-sm gap-2 px-5 h-9 font-bold transition-all"
+                    disabled={!responseText.trim() || isSubmitting}
                   >
-                    <Send className="w-4 h-4" />
-                    Registrar
+                    {isSubmitting ? (
+                      <span className="animate-pulse flex items-center gap-2">Salvando...</span>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        Registrar
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>
