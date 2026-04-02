@@ -20,12 +20,16 @@ const safeStorage = {
   setItem: (key: string, value: string) => {
     try {
       if (typeof window !== 'undefined') window.localStorage.setItem(key, value)
-    } catch (e) {}
+    } catch (e) {
+      /* ignore */
+    }
   },
   removeItem: (key: string) => {
     try {
       if (typeof window !== 'undefined') window.localStorage.removeItem(key)
-    } catch (e) {}
+    } catch (e) {
+      /* ignore */
+    }
   },
 }
 

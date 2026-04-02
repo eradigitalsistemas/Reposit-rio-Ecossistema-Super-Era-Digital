@@ -168,7 +168,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setLoading(true)
     try {
       await supabase.auth.signOut()
-    } catch (e) {}
+    } catch (e) {
+      // Ignore errors on logout
+    }
     setRole(null)
     setClientId(null)
     setUserName('')
