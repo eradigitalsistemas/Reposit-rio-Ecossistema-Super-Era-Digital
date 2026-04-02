@@ -30,6 +30,7 @@ import {
   Trash2,
   Building2,
   Send,
+  Check,
 } from 'lucide-react'
 import { Demand, DemandAttachment, ChecklistItem } from '@/types/demand'
 import useDemandStore from '@/stores/useDemandStore'
