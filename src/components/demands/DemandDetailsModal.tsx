@@ -31,6 +31,7 @@ import {
   Building2,
   Send,
   Check,
+  X,
 } from 'lucide-react'
 import { Demand, DemandAttachment, ChecklistItem } from '@/types/demand'
 import useDemandStore from '@/stores/useDemandStore'
@@ -63,56 +64,63 @@ export function DemandDetailsModal({
   const { user } = useAuthStore()
   const [responseText, setResponseText] = useState('')
   const [newChecklistText, setNewChecklistText] = useState('')
-  const [uploading, setUploading] = useState(false)
+  const [pendingFiles, setPendingFiles] = useState<File[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
 
   const currentDemand = demands.find((d) => d.id === demand.id) || demand
 
   const handleAccept = () => acceptDemand(currentDemand.id)
 
-  const handleAddResponse = async () => {
-    if (responseText.trim()) {
-      setIsSubmitting(true)
-      try {
-        await addResponse(currentDemand.id, responseText)
-        setResponseText('')
-      } finally {
-        setIsSubmitting(false)
-      }
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.length) {
+      setPendingFiles((prev) => [...prev, ...Array.from(e.target.files!)])
     }
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files?.length) return
-    setUploading(true)
-    const newAttachments: DemandAttachment[] = []
+  const removePendingFile = (index: number) => {
+    setPendingFiles((prev) => prev.filter((_, i) => i !== index))
+  }
 
-    for (const file of Array.from(e.target.files)) {
-      const sanitizedName = sanitizeFilename(file.name)
-      const fileName = `${crypto.randomUUID()}_${sanitizedName}`
-      const { data } = await supabase.storage.from('anexos').upload(fileName, file)
-      if (data) {
-        newAttachments.push({ name: file.name, url: data.path, type: file.type })
-      } else {
-        toast({
-          title: 'Erro',
-          description: `Falha ao anexar ${file.name}`,
-          variant: 'destructive',
-        })
+  const handleAddResponse = async () => {
+    if (!responseText.trim() && pendingFiles.length === 0) return
+    setIsSubmitting(true)
+
+    try {
+      const uploadedAttachments: DemandAttachment[] = []
+
+      if (pendingFiles.length > 0) {
+        for (const file of pendingFiles) {
+          const sanitizedName = sanitizeFilename(file.name)
+          const fileName = `${crypto.randomUUID()}_${sanitizedName}`
+          const { data } = await supabase.storage.from('anexos').upload(fileName, file)
+          if (data) {
+            uploadedAttachments.push({ name: file.name, url: data.path, type: file.type })
+          } else {
+            toast({
+              title: 'Erro',
+              description: `Falha ao anexar ${file.name}`,
+              variant: 'destructive',
+            })
+          }
+        }
       }
-    }
 
-    if (newAttachments.length > 0) {
-      await addAttachments(currentDemand.id, newAttachments)
-      toast({
-        title: 'Anexos adicionados',
-        description: 'Arquivos foram salvos com sucesso na timeline.',
-      })
-    }
+      await addResponse(currentDemand.id, responseText, uploadedAttachments)
+      setResponseText('')
+      setPendingFiles([])
 
-    setUploading(false)
-    if (fileInputRef.current) fileInputRef.current.value = ''
+      // Scroll para o fim da timeline após inserir
+      setTimeout(() => {
+        if (scrollAreaRef.current) {
+          scrollAreaRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' })
+        }
+      }, 100)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const checklist = currentDemand.checklist || []
@@ -440,7 +448,7 @@ export function DemandDetailsModal({
             </div>
 
             <ScrollArea className="flex-1 p-4 sm:p-6 relative">
-              <div className="space-y-6 pb-6">
+              <div className="space-y-6 pb-6" ref={scrollAreaRef}>
                 {sortedLogs.length === 0 ? (
                   <div className="flex flex-col items-center justify-center text-center py-10 opacity-50">
                     <History className="w-8 h-8 mb-2 text-gray-400" />
@@ -500,18 +508,29 @@ export function DemandDetailsModal({
                               </div>
 
                               {/* Render specifics based on log type */}
-                              {isComment ? (
-                                <div className="mt-1 bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap break-words leading-relaxed w-full">
+                              {isChecklist ? (
+                                <p className="text-sm text-gray-700 dark:text-gray-400 bg-white/50 dark:bg-white/5 p-2 rounded-lg border border-gray-100 dark:border-transparent whitespace-pre-wrap break-words mt-1">
+                                  <span className="font-bold mr-1 text-gray-900 dark:text-white">
+                                    {log.acao}:
+                                  </span>
                                   {log.detalhes}
-                                </div>
-                              ) : isAttachment ? (
-                                <div className="mt-1 space-y-2">
-                                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words">
-                                    {log.detalhes}
-                                  </p>
+                                </p>
+                              ) : (
+                                <div className="mt-1 w-full space-y-2">
+                                  {/* Exibe o texto do comentário caso não seja puramente o texto auto-gerado de anexos */}
+                                  {log.detalhes &&
+                                    (!isAttachment ||
+                                      log.detalhes !==
+                                        `Arquivo(s) anexado(s): ${log.dados_novos?.anexos?.map((a: any) => a.name).join(', ')}`) && (
+                                      <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap break-words leading-relaxed w-full">
+                                        {log.detalhes}
+                                      </div>
+                                    )}
+
+                                  {/* Exibe os anexos atrelados a este comentário ou ação, se houver */}
                                   {log.dados_novos?.anexos &&
                                     Array.isArray(log.dados_novos.anexos) && (
-                                      <div className="flex flex-col gap-2">
+                                      <div className="flex flex-col gap-2 w-full">
                                         {log.dados_novos.anexos.map((att: any, i: number) => {
                                           const fileUrl = att.url?.startsWith('http')
                                             ? att.url
@@ -541,13 +560,6 @@ export function DemandDetailsModal({
                                       </div>
                                     )}
                                 </div>
-                              ) : (
-                                <p className="text-sm text-gray-700 dark:text-gray-400 bg-white/50 dark:bg-white/5 p-2 rounded-lg border border-gray-100 dark:border-transparent whitespace-pre-wrap break-words">
-                                  <span className="font-bold mr-1 text-gray-900 dark:text-white">
-                                    {log.acao}:
-                                  </span>
-                                  {log.detalhes}
-                                </p>
                               )}
                             </>
                           ) : (
@@ -574,6 +586,30 @@ export function DemandDetailsModal({
             {/* Input Section at the Root of Timeline */}
             {currentDemand.status !== 'Concluído' && (
               <div className="p-4 sm:p-5 border-t border-gray-200 dark:border-border bg-white dark:bg-card shrink-0 space-y-3 z-10 shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.05)]">
+                {pendingFiles.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {pendingFiles.map((file, i) => (
+                      <Badge
+                        key={i}
+                        variant="secondary"
+                        className="gap-1 pr-1 bg-gray-100 dark:bg-white/10"
+                      >
+                        <Paperclip className="w-3 h-3 text-gray-500" />
+                        <span className="max-w-[150px] truncate text-xs">{file.name}</span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-4 w-4 rounded-full hover:bg-gray-200 dark:hover:bg-white/20 ml-1 p-0.5"
+                          onClick={() => removePendingFile(i)}
+                          disabled={isSubmitting}
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+
                 <Textarea
                   placeholder="Escreva uma observação para a timeline..."
                   value={responseText}
@@ -587,28 +623,22 @@ export function DemandDetailsModal({
                     multiple
                     className="hidden"
                     ref={fileInputRef}
-                    onChange={handleFileUpload}
+                    onChange={handleFileSelect}
                   />
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading || isSubmitting}
+                    disabled={isSubmitting}
                     className="bg-white dark:bg-transparent shadow-sm border-gray-300 dark:border-white/20 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-700 dark:text-white font-medium h-9"
                   >
-                    {uploading ? (
-                      <span className="animate-pulse">Enviando...</span>
-                    ) : (
-                      <>
-                        <Paperclip className="w-4 h-4 mr-2" /> Anexar Arquivo
-                      </>
-                    )}
+                    <Paperclip className="w-4 h-4 mr-2" /> Anexar Arquivo
                   </Button>
                   <Button
                     onClick={handleAddResponse}
                     size="sm"
                     className="shadow-sm gap-2 px-5 h-9 font-bold transition-all"
-                    disabled={!responseText.trim() || isSubmitting}
+                    disabled={(!responseText.trim() && pendingFiles.length === 0) || isSubmitting}
                   >
                     {isSubmitting ? (
                       <span className="animate-pulse flex items-center gap-2">Salvando...</span>

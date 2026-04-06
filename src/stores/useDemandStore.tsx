@@ -53,7 +53,7 @@ interface DemandStoreState {
     resposta: string,
     attachments: DemandAttachment[],
   ) => Promise<void>
-  addResponse: (demandId: string, text: string) => Promise<void>
+  addResponse: (demandId: string, text: string, attachments?: DemandAttachment[]) => Promise<void>
   addAttachments: (demandId: string, attachments: DemandAttachment[]) => Promise<void>
   updateChecklist: (
     demandId: string,
@@ -549,24 +549,77 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   )
 
   const addResponse = useCallback(
-    async (demandId: string, text: string) => {
+    async (demandId: string, text: string, attachments?: DemandAttachment[]) => {
       if (!user) return
+
+      const newLogId = crypto.randomUUID()
+      const hasAttachments = attachments && attachments.length > 0
+      const acaoType = hasAttachments && !text.trim() ? 'Anexo' : 'Comentário'
+      const detalhesText =
+        text.trim() ||
+        (hasAttachments
+          ? `Arquivo(s) anexado(s): ${attachments.map((a) => a.name).join(', ')}`
+          : '')
+
+      const newLog: DemandLog = {
+        id: newLogId,
+        acao: acaoType,
+        detalhes: detalhesText,
+        createdAt: new Date().toISOString(),
+        usuario_id: user.id,
+        userName: userName || 'Você',
+        dados_novos: hasAttachments ? { anexos: attachments } : undefined,
+      }
+
+      // Atualização otimista imediata na timeline local
+      setDemands((prev) =>
+        prev.map((d) =>
+          d.id === demandId
+            ? {
+                ...d,
+                logs: [...(d.logs || []), newLog],
+                attachments: hasAttachments
+                  ? [...(d.attachments || []), ...attachments]
+                  : d.attachments,
+              }
+            : d,
+        ),
+      )
+
+      if (hasAttachments) {
+        const { data } = await supabase
+          .from('demandas')
+          .select('anexos')
+          .eq('id', demandId)
+          .single()
+        const updatedAttachments = [...(data?.anexos || []), ...attachments]
+        await supabase.from('demandas').update({ anexos: updatedAttachments }).eq('id', demandId)
+      }
+
       const { error } = await supabase.from('logs_auditoria').insert({
         demanda_id: demandId,
         usuario_id: user.id,
-        acao: 'Comentário',
-        detalhes: text,
+        acao: acaoType,
+        detalhes: detalhesText,
+        dados_novos: hasAttachments ? { anexos: attachments } : undefined,
       })
+
       if (!error) {
         toast({
           title: 'Sucesso',
-          description: 'Anotação adicionada na linha do tempo.',
+          description: 'Registro adicionado na linha do tempo.',
           className: 'bg-zinc-950 border-green-500/50 text-white',
         })
         fetchDemands()
+      } else {
+        toast({
+          title: 'Erro',
+          description: 'Falha ao registrar observação.',
+          variant: 'destructive',
+        })
       }
     },
-    [user, fetchDemands],
+    [user, userName, fetchDemands],
   )
 
   const updateChecklist = useCallback(
@@ -592,6 +645,28 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
     async (demandId: string, newAttachments: DemandAttachment[]) => {
       if (!user) return
       try {
+        const newLogId = crypto.randomUUID()
+        const newLog: DemandLog = {
+          id: newLogId,
+          acao: 'Anexo',
+          detalhes: `Arquivo(s) anexado(s): ${newAttachments.map((a) => a.name).join(', ')}`,
+          dados_novos: { anexos: newAttachments },
+          createdAt: new Date().toISOString(),
+          usuario_id: user.id,
+          userName: userName || 'Você',
+        }
+
+        // Atualização Otimista
+        setDemands((prev) =>
+          prev.map((d) => {
+            if (d.id === demandId) {
+              const updatedAttachments = [...(d.attachments || []), ...newAttachments]
+              return { ...d, attachments: updatedAttachments, logs: [...(d.logs || []), newLog] }
+            }
+            return d
+          }),
+        )
+
         const { data } = await supabase
           .from('demandas')
           .select('anexos')
@@ -608,15 +683,12 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           dados_novos: { anexos: newAttachments },
         })
 
-        setDemands((prev) =>
-          prev.map((d) => (d.id === demandId ? { ...d, attachments: updatedAttachments } : d)),
-        )
         fetchDemands()
       } catch (e) {
         toast({ title: 'Erro', description: 'Erro ao salvar anexos.', variant: 'destructive' })
       }
     },
-    [user, fetchDemands],
+    [user, userName, fetchDemands],
   )
 
   const value = useMemo(
