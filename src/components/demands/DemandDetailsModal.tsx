@@ -487,65 +487,81 @@ export function DemandDetailsModal({
                         </div>
 
                         {/* Log Content Wrapper */}
-                        <div className="flex flex-col gap-1.5 pt-1.5">
-                          <div className="flex items-baseline justify-between gap-2">
-                            <span className="font-bold text-sm text-gray-900 dark:text-white">
-                              {log.userName || 'Sistema'}
-                            </span>
-                            <span className="text-[11px] font-medium text-gray-500 whitespace-nowrap bg-white/50 dark:bg-black/50 px-1.5 py-0.5 rounded">
-                              {format(new Date(log.createdAt), 'dd/MM/yy HH:mm')}
-                            </span>
-                          </div>
+                        <div className="flex flex-col gap-1.5 pt-1.5 w-full">
+                          {isComment || isAttachment || isChecklist ? (
+                            <>
+                              <div className="flex items-baseline justify-between gap-2">
+                                <span className="font-bold text-sm text-gray-900 dark:text-white">
+                                  {log.userName || 'Sistema'}
+                                </span>
+                                <span className="text-[11px] font-medium text-gray-500 whitespace-nowrap bg-white/50 dark:bg-black/50 px-1.5 py-0.5 rounded">
+                                  {format(new Date(log.createdAt), 'dd/MM/yy HH:mm')}
+                                </span>
+                              </div>
 
-                          {/* Render specifics based on log type */}
-                          {isComment ? (
-                            <div className="mt-1 bg-white dark:bg-card p-3 rounded-tr-xl rounded-b-xl border border-gray-200 dark:border-white/10 shadow-sm text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words leading-relaxed relative">
-                              <div className="absolute -left-[6px] top-0 w-3 h-3 bg-white dark:bg-card border-l border-t border-gray-200 dark:border-white/10 rotate-[-45deg] -z-10" />
-                              {log.detalhes}
-                            </div>
-                          ) : isAttachment ? (
-                            <div className="mt-1 space-y-2">
-                              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words">
-                                {log.detalhes}
-                              </p>
-                              {log.dados_novos?.anexos && Array.isArray(log.dados_novos.anexos) && (
-                                <div className="flex flex-col gap-2">
-                                  {log.dados_novos.anexos.map((att: any, i: number) => {
-                                    const fileUrl = att.url?.startsWith('http')
-                                      ? att.url
-                                      : supabase.storage.from('anexos').getPublicUrl(att.url).data
-                                          .publicUrl
-                                    return (
-                                      <a
-                                        key={i}
-                                        href={fileUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex items-center gap-3 bg-white dark:bg-white/5 p-2.5 rounded-lg border border-gray-200 dark:border-white/10 hover:border-primary/50 hover:bg-primary/5 transition-colors shadow-sm group overflow-hidden"
-                                      >
-                                        <div className="p-2 rounded bg-gray-100 dark:bg-black/50 text-gray-500 group-hover:text-primary transition-colors shrink-0">
-                                          {att.type?.startsWith('image/') ? (
-                                            <ImageIcon className="w-4 h-4" />
-                                          ) : (
-                                            <FileIcon className="w-4 h-4" />
-                                          )}
-                                        </div>
-                                        <span className="text-sm font-bold text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors whitespace-pre-wrap break-words">
-                                          {att.name}
-                                        </span>
-                                      </a>
-                                    )
-                                  })}
+                              {/* Render specifics based on log type */}
+                              {isComment ? (
+                                <div className="mt-1 bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap break-words leading-relaxed w-full">
+                                  {log.detalhes}
                                 </div>
+                              ) : isAttachment ? (
+                                <div className="mt-1 space-y-2">
+                                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words">
+                                    {log.detalhes}
+                                  </p>
+                                  {log.dados_novos?.anexos &&
+                                    Array.isArray(log.dados_novos.anexos) && (
+                                      <div className="flex flex-col gap-2">
+                                        {log.dados_novos.anexos.map((att: any, i: number) => {
+                                          const fileUrl = att.url?.startsWith('http')
+                                            ? att.url
+                                            : supabase.storage.from('anexos').getPublicUrl(att.url)
+                                                .data.publicUrl
+                                          return (
+                                            <a
+                                              key={i}
+                                              href={fileUrl}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="flex items-center gap-3 bg-white dark:bg-white/5 p-2.5 rounded-lg border border-gray-200 dark:border-white/10 hover:border-primary/50 hover:bg-primary/5 transition-colors shadow-sm group overflow-hidden"
+                                            >
+                                              <div className="p-2 rounded bg-gray-100 dark:bg-black/50 text-gray-500 group-hover:text-primary transition-colors shrink-0">
+                                                {att.type?.startsWith('image/') ? (
+                                                  <ImageIcon className="w-4 h-4" />
+                                                ) : (
+                                                  <FileIcon className="w-4 h-4" />
+                                                )}
+                                              </div>
+                                              <span className="text-sm font-bold text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors whitespace-pre-wrap break-words">
+                                                {att.name}
+                                              </span>
+                                            </a>
+                                          )
+                                        })}
+                                      </div>
+                                    )}
+                                </div>
+                              ) : (
+                                <p className="text-sm text-gray-700 dark:text-gray-400 bg-white/50 dark:bg-white/5 p-2 rounded-lg border border-gray-100 dark:border-transparent whitespace-pre-wrap break-words">
+                                  <span className="font-bold mr-1 text-gray-900 dark:text-white">
+                                    {log.acao}:
+                                  </span>
+                                  {log.detalhes}
+                                </p>
                               )}
-                            </div>
+                            </>
                           ) : (
-                            <p className="text-sm text-gray-700 dark:text-gray-400 bg-white/50 dark:bg-white/5 p-2 rounded-lg border border-gray-100 dark:border-transparent whitespace-pre-wrap break-words">
-                              <span className="font-bold mr-1 text-gray-900 dark:text-white">
-                                {log.acao}:
-                              </span>
-                              {log.detalhes}
-                            </p>
+                            <div className="flex items-start gap-2 pt-0.5">
+                              <p className="text-sm text-gray-600 dark:text-gray-400 leading-tight break-words whitespace-pre-wrap">
+                                <span className="font-semibold text-gray-900 dark:text-gray-200 mr-1">
+                                  {log.userName || 'Sistema'}
+                                </span>
+                                {log.detalhes}
+                                <span className="text-xs text-gray-400 ml-2 whitespace-nowrap">
+                                  {format(new Date(log.createdAt), 'HH:mm')}
+                                </span>
+                              </p>
+                            </div>
                           )}
                         </div>
                       </div>
