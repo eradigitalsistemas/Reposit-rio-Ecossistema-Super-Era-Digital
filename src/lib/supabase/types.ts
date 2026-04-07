@@ -738,6 +738,10 @@ export const Constants = {
 // Table: logs_auditoria
 //   Policy "Admins podem ver logs_auditoria" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: is_admin()
+//   Policy "Colaboradores podem inserir logs_auditoria" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: (auth.uid() = usuario_id)
+//   Policy "Usuarios podem ver logs_auditoria" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
 // Table: notificacoes
 //   Policy "Sistema pode inserir notificacoes" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: true

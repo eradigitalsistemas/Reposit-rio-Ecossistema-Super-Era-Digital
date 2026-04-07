@@ -33,6 +33,16 @@ interface EventDialogProps {
   onSuccess: () => void
 }
 
+const toGMT3String = (isoString: string) => {
+  if (!isoString) return ''
+  const d = new Date(isoString)
+  if (isNaN(d.getTime())) return ''
+  // Lê o horário como se o usuário estivesse fisicamente no fuso GMT-3
+  const gmt3Date = new Date(d.getTime() - 3 * 60 * 60 * 1000)
+  const pad = (n: number) => n.toString().padStart(2, '0')
+  return `${gmt3Date.getUTCFullYear()}-${pad(gmt3Date.getUTCMonth() + 1)}-${pad(gmt3Date.getUTCDate())}T${pad(gmt3Date.getUTCHours())}:${pad(gmt3Date.getUTCMinutes())}`
+}
+
 export function EventDialog({
   open,
   onOpenChange,
@@ -76,8 +86,8 @@ export function EventDialog({
           id: eventoToEdit.id,
           titulo: eventoToEdit.titulo,
           descricao: eventoToEdit.descricao,
-          data_inicio: eventoToEdit.data_inicio.slice(0, 16),
-          data_fim: eventoToEdit.data_fim.slice(0, 16),
+          data_inicio: toGMT3String(eventoToEdit.data_inicio),
+          data_fim: toGMT3String(eventoToEdit.data_fim),
           tipo: eventoToEdit.tipo,
           privado: eventoToEdit.privado,
           cliente_id: eventoToEdit.cliente_id || 'none',
@@ -86,18 +96,18 @@ export function EventDialog({
         setIsEditMode(true)
         const initDate = new Date(selectedDate)
         initDate.setHours(9, 0, 0, 0)
-        const dInicio = new Date(initDate.getTime() - initDate.getTimezoneOffset() * 60000)
-          .toISOString()
-          .slice(0, 16)
-        const dFim = new Date(initDate.getTime() - initDate.getTimezoneOffset() * 60000 + 3600000)
-          .toISOString()
-          .slice(0, 16)
+        const endDate = new Date(initDate)
+        endDate.setHours(10, 0, 0, 0)
+
+        const pad = (n: number) => n.toString().padStart(2, '0')
+        const formatLocal = (d: Date) =>
+          `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 
         setFormData({
           titulo: '',
           descricao: '',
-          data_inicio: dInicio,
-          data_fim: dFim,
+          data_inicio: formatLocal(initDate),
+          data_fim: formatLocal(endDate),
           tipo: 'Evento',
           privado: false,
           cliente_id: 'none',
@@ -111,10 +121,18 @@ export function EventDialog({
     if (!user) return
 
     setLoading(true)
+
+    // Força o offset GMT-3 ao salvar para garantir que a intenção original
+    // do usuário seja registrada corretamente no banco sem adicionar horas
+    const formatToSave = (localDatetime: string | undefined) => {
+      if (!localDatetime) return new Date().toISOString()
+      return `${localDatetime}:00-03:00`
+    }
+
     const payload = {
       ...formData,
-      data_inicio: new Date(formData.data_inicio as string).toISOString(),
-      data_fim: new Date(formData.data_fim as string).toISOString(),
+      data_inicio: formatToSave(formData.data_inicio as string),
+      data_fim: formatToSave(formData.data_fim as string),
       cliente_id: formData.cliente_id === 'none' ? null : formData.cliente_id,
     }
 

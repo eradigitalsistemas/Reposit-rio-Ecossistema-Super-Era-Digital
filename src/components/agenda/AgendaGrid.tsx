@@ -19,6 +19,20 @@ interface AgendaGridProps {
   onEventClick: (evento: EventoAgenda, e: React.MouseEvent) => void
 }
 
+const getGMT3LocalDate = (isoString: string) => {
+  if (!isoString) return new Date()
+  const d = new Date(isoString)
+  // Ajusta estritamente para GMT-3 ignorando timezone do navegador
+  const gmt3Date = new Date(d.getTime() - 3 * 60 * 60 * 1000)
+  return new Date(
+    gmt3Date.getUTCFullYear(),
+    gmt3Date.getUTCMonth(),
+    gmt3Date.getUTCDate(),
+    gmt3Date.getUTCHours(),
+    gmt3Date.getUTCMinutes(),
+  )
+}
+
 export function AgendaGrid({ currentDate, eventos, onDayClick, onEventClick }: AgendaGridProps) {
   const monthStart = startOfMonth(currentDate)
   const monthEnd = endOfMonth(monthStart)
@@ -62,7 +76,7 @@ export function AgendaGrid({ currentDate, eventos, onDayClick, onEventClick }: A
           {days.map((day, idx) => {
             const isCurrentMonth = isSameMonth(day, currentDate)
             const isToday = isSameDay(day, new Date())
-            const dayEvents = eventos.filter((e) => isSameDay(parseISO(e.data_inicio), day))
+            const dayEvents = eventos.filter((e) => isSameDay(getGMT3LocalDate(e.data_inicio), day))
 
             dayEvents.sort(
               (a, b) => new Date(a.data_inicio).getTime() - new Date(b.data_inicio).getTime(),
@@ -98,10 +112,10 @@ export function AgendaGrid({ currentDate, eventos, onDayClick, onEventClick }: A
                         'text-xs px-1.5 py-1 rounded border truncate cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-1',
                         getEventColor(evento.tipo),
                       )}
-                      title={`${format(parseISO(evento.data_inicio), 'HH:mm')} - ${evento.titulo}`}
+                      title={`${format(getGMT3LocalDate(evento.data_inicio), 'HH:mm')} - ${evento.titulo}`}
                     >
                       <span className="font-semibold shrink-0">
-                        {format(parseISO(evento.data_inicio), 'HH:mm')}
+                        {format(getGMT3LocalDate(evento.data_inicio), 'HH:mm')}
                       </span>
                       <span className="truncate">{evento.titulo}</span>
                     </div>
