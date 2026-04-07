@@ -14,6 +14,7 @@ export interface EventoAgenda {
   cliente_id?: string | null
   isDemanda?: boolean
   status?: string
+  criado_por?: string | null
 }
 
 interface AgendaState {
@@ -80,6 +81,7 @@ export const useAgendaStore = create<AgendaState>((set) => ({
         tipo: e.tipo,
         privado: e.privado,
         cliente_id: e.cliente_id,
+        criado_por: e.criado_por,
       }))
 
       const mappedDemandas: EventoAgenda[] = (dataDemandas || []).map((d: any) => ({
@@ -119,15 +121,21 @@ export const useAgendaStore = create<AgendaState>((set) => ({
         privado: evento.privado || false,
         usuario_id: currentUserId,
         cliente_id: evento.cliente_id || null,
+        criado_por: evento.criado_por || null,
       }
 
       let res
       if (evento.id) {
-        res = await supabase.from('agenda_eventos').update(payload).eq('id', evento.id)
+        res = await supabase
+          .from('agenda_eventos')
+          .update(payload as any)
+          .eq('id', evento.id)
       } else {
-        res = await supabase.from('agenda_eventos').insert([payload])
+        res = await supabase.from('agenda_eventos').insert([payload as any])
       }
-      return { error: res.error }
+
+      if (res.error) throw res.error
+      return { error: null }
     } catch (error) {
       return { error }
     }

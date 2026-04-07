@@ -66,6 +66,7 @@ export function EventDialog({
     tipo: 'Evento',
     privado: false,
     cliente_id: 'none',
+    criado_por: '',
   })
 
   useEffect(() => {
@@ -91,6 +92,7 @@ export function EventDialog({
           tipo: eventoToEdit.tipo,
           privado: eventoToEdit.privado,
           cliente_id: eventoToEdit.cliente_id || 'none',
+          criado_por: eventoToEdit.criado_por || '',
         })
       } else if (selectedDate) {
         setIsEditMode(true)
@@ -111,6 +113,7 @@ export function EventDialog({
           tipo: 'Evento',
           privado: false,
           cliente_id: 'none',
+          criado_por: '',
         })
       }
     }
@@ -134,19 +137,29 @@ export function EventDialog({
       data_inicio: formatToSave(formData.data_inicio as string),
       data_fim: formatToSave(formData.data_fim as string),
       cliente_id: formData.cliente_id === 'none' ? null : formData.cliente_id,
+      criado_por: formData.criado_por || user.user_metadata?.full_name || user.email || 'Usuário',
     }
 
-    const { error } = await salvarEvento(payload, user.id)
-    setLoading(false)
+    try {
+      const { error } = await salvarEvento(payload, user.id)
 
-    if (error) {
-      toast({ title: 'Erro ao salvar evento', description: error.message, variant: 'destructive' })
-      return
+      if (error) {
+        throw error
+      }
+
+      toast({ title: 'Sucesso', description: 'Evento salvo com sucesso.' })
+      onSuccess()
+      onOpenChange(false)
+    } catch (error: any) {
+      console.error('Erro ao salvar evento:', error)
+      toast({
+        title: 'Erro ao salvar evento',
+        description: error.message || 'Falha na comunicação com o banco de dados.',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
     }
-
-    toast({ title: 'Sucesso', description: 'Evento salvo com sucesso.' })
-    onSuccess()
-    onOpenChange(false)
   }
 
   const handleDelete = async () => {
@@ -220,6 +233,12 @@ export function EventDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
+          {eventoToEdit && eventoToEdit.criado_por && (
+            <div className="text-sm text-gray-700 bg-white border border-gray-200 p-3 rounded-md shadow-sm flex items-center gap-2">
+              <span className="font-semibold text-black">Feito por:</span> {eventoToEdit.criado_por}
+            </div>
+          )}
+
           <div className="grid gap-2">
             <Label>Título do Evento</Label>
             <Input
