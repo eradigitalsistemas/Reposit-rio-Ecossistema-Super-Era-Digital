@@ -19,10 +19,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import useDemandStore from '@/stores/useDemandStore'
-import { Demand, DemandPriority, DemandAttachment } from '@/types/demand'
+import { Demand, DemandPriority, DemandAttachment, ChecklistItem } from '@/types/demand'
 import { supabase } from '@/lib/supabase/client'
 import { format } from 'date-fns'
-import { Paperclip, X, File as FileIcon, Image as ImageIcon } from 'lucide-react'
+import { Paperclip, X, Plus, File as FileIcon, Image as ImageIcon } from 'lucide-react'
 import { sanitizeFilename } from '@/lib/utils'
 
 interface EditDemandModalProps {
@@ -36,15 +36,17 @@ export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalP
   const [loading, setLoading] = useState(false)
   const [newFiles, setNewFiles] = useState<File[]>([])
   const [existingAttachments, setExistingAttachments] = useState<DemandAttachment[]>([])
+  const [checklist, setChecklist] = useState<ChecklistItem[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (open) {
       fetchCollaborators()
       setExistingAttachments(demand.attachments || [])
+      setChecklist(demand.checklist || [])
       setNewFiles([])
     }
-  }, [open, fetchCollaborators, demand.attachments])
+  }, [open, fetchCollaborators, demand])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) setNewFiles((prev) => [...prev, ...Array.from(e.target.files!)])
@@ -66,16 +68,18 @@ export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalP
       if (data) attachments.push({ name: file.name, url: data.path, type: file.type })
     }
 
-    const dueDate = formData.get('dueDate') as string
+    const dueDateStr = formData.get('dueDate') as string
+    const finalDueDate = dueDateStr ? new Date(dueDateStr + 'T12:00:00').toISOString() : null
     const assigneeIdStr = formData.get('assigneeId') as string
 
     await editDemand(demand.id, {
       title: formData.get('title') as string,
       description: formData.get('description') as string,
       priority: formData.get('priority') as DemandPriority,
-      dueDate: dueDate || null,
+      dueDate: finalDueDate,
       assigneeId: assigneeIdStr === 'none' ? null : assigneeIdStr,
       attachments,
+      checklist,
     })
 
     setLoading(false)
@@ -87,7 +91,7 @@ export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalP
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="w-[95vw] sm:max-w-[500px]"
+        className="w-[95vw] sm:max-w-[500px] max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
@@ -155,6 +159,66 @@ export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalP
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <div className="flex items-center justify-between">
+                <Label className="font-medium">Itens do Checklist</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    setChecklist([
+                      ...checklist,
+                      { id: crypto.randomUUID(), text: '', completed: false },
+                    ])
+                  }
+                >
+                  <Plus className="w-4 h-4 mr-1" /> Adicionar
+                </Button>
+              </div>
+              {checklist.length > 0 && (
+                <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                  {checklist.map((item) => (
+                    <div key={item.id} className="flex items-center gap-2">
+                      <Input
+                        value={item.text}
+                        onChange={(e) =>
+                          setChecklist(
+                            checklist.map((c) =>
+                              c.id === item.id ? { ...c, text: e.target.value } : c,
+                            ),
+                          )
+                        }
+                        placeholder="Passo da tarefa"
+                        className="flex-1 h-9"
+                      />
+                      <Input
+                        type="datetime-local"
+                        value={item.dueDate || ''}
+                        onChange={(e) =>
+                          setChecklist(
+                            checklist.map((c) =>
+                              c.id === item.id ? { ...c, dueDate: e.target.value } : c,
+                            ),
+                          )
+                        }
+                        className="w-[180px] h-9"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setChecklist(checklist.filter((c) => c.id !== item.id))}
+                        className="h-9 w-9 text-red-500 shrink-0"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="grid gap-2">

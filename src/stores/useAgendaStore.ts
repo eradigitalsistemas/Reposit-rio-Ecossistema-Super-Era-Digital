@@ -11,6 +11,7 @@ export interface EventoAgenda {
   data_fim: string
   tipo: 'Evento' | 'Tarefa' | 'Lembrete' | 'Demanda'
   privado: boolean
+  cliente_id?: string | null
   isDemanda?: boolean
   status?: string
 }
@@ -78,6 +79,7 @@ export const useAgendaStore = create<AgendaState>((set) => ({
         data_fim: e.data_fim,
         tipo: e.tipo,
         privado: e.privado,
+        cliente_id: e.cliente_id,
       }))
 
       const mappedDemandas: EventoAgenda[] = (dataDemandas || []).map((d: any) => ({
@@ -93,7 +95,13 @@ export const useAgendaStore = create<AgendaState>((set) => ({
         status: d.status,
       }))
 
-      set({ eventos: [...mappedEventos, ...mappedDemandas], loading: false })
+      const startOfToday = new Date()
+      startOfToday.setHours(0, 0, 0, 0)
+
+      const filteredEventos = mappedEventos.filter((e) => new Date(e.data_inicio) >= startOfToday)
+      const filteredDemandas = mappedDemandas.filter((d) => new Date(d.data_inicio) >= startOfToday)
+
+      set({ eventos: [...filteredEventos, ...filteredDemandas], loading: false })
     } catch (error) {
       console.error(error)
       set({ loading: false })
@@ -110,6 +118,7 @@ export const useAgendaStore = create<AgendaState>((set) => ({
         tipo: evento.tipo,
         privado: evento.privado || false,
         usuario_id: currentUserId,
+        cliente_id: evento.cliente_id || null,
       }
 
       let res

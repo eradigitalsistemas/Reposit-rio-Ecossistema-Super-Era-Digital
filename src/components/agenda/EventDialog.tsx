@@ -22,7 +22,8 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { EventoAgenda, useAgendaStore } from '@/stores/useAgendaStore'
 import useAuthStore from '@/stores/useAuthStore'
 import { useToast } from '@/components/ui/use-toast'
-import { Loader2, Trash2 } from 'lucide-react'
+import { Loader2, Trash2, Pencil } from 'lucide-react'
+import { supabase } from '@/lib/supabase/client'
 
 interface EventDialogProps {
   open: boolean
@@ -45,6 +46,8 @@ export function EventDialog({
   const isAdmin = role === 'Admin' || role === 'Patrão'
 
   const [loading, setLoading] = useState(false)
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [clientes, setClientes] = useState<{ id: string; nome: string }[]>([])
   const [formData, setFormData] = useState<Partial<EventoAgenda>>({
     titulo: '',
     descricao: '',
@@ -52,37 +55,54 @@ export function EventDialog({
     data_fim: '',
     tipo: 'Evento',
     privado: false,
+    cliente_id: 'none',
   })
 
   useEffect(() => {
-    if (eventoToEdit) {
-      setFormData({
-        id: eventoToEdit.id,
-        titulo: eventoToEdit.titulo,
-        descricao: eventoToEdit.descricao,
-        data_inicio: eventoToEdit.data_inicio.slice(0, 16),
-        data_fim: eventoToEdit.data_fim.slice(0, 16),
-        tipo: eventoToEdit.tipo,
-        privado: eventoToEdit.privado,
+    supabase
+      .from('clientes_externos')
+      .select('id, nome')
+      .order('nome')
+      .then(({ data }) => {
+        if (data) setClientes(data)
       })
-    } else if (selectedDate) {
-      const initDate = new Date(selectedDate)
-      initDate.setHours(9, 0, 0, 0)
-      const dInicio = new Date(initDate.getTime() - initDate.getTimezoneOffset() * 60000)
-        .toISOString()
-        .slice(0, 16)
-      const dFim = new Date(initDate.getTime() - initDate.getTimezoneOffset() * 60000 + 3600000)
-        .toISOString()
-        .slice(0, 16)
+  }, [])
 
-      setFormData({
-        titulo: '',
-        descricao: '',
-        data_inicio: dInicio,
-        data_fim: dFim,
-        tipo: 'Evento',
-        privado: false,
-      })
+  useEffect(() => {
+    if (open) {
+      if (eventoToEdit) {
+        setIsEditMode(false)
+        setFormData({
+          id: eventoToEdit.id,
+          titulo: eventoToEdit.titulo,
+          descricao: eventoToEdit.descricao,
+          data_inicio: eventoToEdit.data_inicio.slice(0, 16),
+          data_fim: eventoToEdit.data_fim.slice(0, 16),
+          tipo: eventoToEdit.tipo,
+          privado: eventoToEdit.privado,
+          cliente_id: eventoToEdit.cliente_id || 'none',
+        })
+      } else if (selectedDate) {
+        setIsEditMode(true)
+        const initDate = new Date(selectedDate)
+        initDate.setHours(9, 0, 0, 0)
+        const dInicio = new Date(initDate.getTime() - initDate.getTimezoneOffset() * 60000)
+          .toISOString()
+          .slice(0, 16)
+        const dFim = new Date(initDate.getTime() - initDate.getTimezoneOffset() * 60000 + 3600000)
+          .toISOString()
+          .slice(0, 16)
+
+        setFormData({
+          titulo: '',
+          descricao: '',
+          data_inicio: dInicio,
+          data_fim: dFim,
+          tipo: 'Evento',
+          privado: false,
+          cliente_id: 'none',
+        })
+      }
     }
   }, [eventoToEdit, selectedDate, open])
 
@@ -95,6 +115,7 @@ export function EventDialog({
       ...formData,
       data_inicio: new Date(formData.data_inicio as string).toISOString(),
       data_fim: new Date(formData.data_fim as string).toISOString(),
+      cliente_id: formData.cliente_id === 'none' ? null : formData.cliente_id,
     }
 
     const { error } = await salvarEvento(payload, user.id)
@@ -129,24 +150,55 @@ export function EventDialog({
   }
 
   const isReadOnly =
-    eventoToEdit?.isDemanda || (eventoToEdit && eventoToEdit.usuario_id !== user?.id && !isAdmin)
+    eventoToEdit?.isDemanda ||
+    (eventoToEdit && !isEditMode) ||
+    (eventoToEdit && eventoToEdit.usuario_id !== user?.id && !isAdmin)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>
-            {eventoToEdit
-              ? isReadOnly
-                ? 'Detalhes do Compromisso'
-                : 'Editar Compromisso'
-              : 'Novo Compromisso'}
-          </DialogTitle>
-          <DialogDescription>
-            {isReadOnly
-              ? 'Este é um evento em formato de visualização.'
-              : 'Preencha os detalhes para agendar.'}
-          </DialogDescription>
+          <div className="flex items-start justify-between w-full">
+            <div className="flex flex-col gap-1">
+              <DialogTitle>
+                {eventoToEdit
+                  ? isEditMode
+                    ? 'Editar Compromisso'
+                    : 'Detalhes do Compromisso'
+                  : 'Novo Compromisso'}
+              </DialogTitle>
+              <DialogDescription>
+                {isEditMode
+                  ? 'Preencha os detalhes para agendar.'
+                  : 'Este é um evento em formato de visualização.'}
+              </DialogDescription>
+            </div>
+            {eventoToEdit &&
+              !eventoToEdit.isDemanda &&
+              (isAdmin || eventoToEdit.usuario_id === user?.id) &&
+              !isEditMode && (
+                <div className="flex items-center gap-1 pr-6">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsEditMode(true)}
+                    className="h-8 w-8 hover:bg-blue-50"
+                  >
+                    <Pencil className="w-4 h-4 text-blue-500" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleDelete}
+                    className="h-8 w-8 hover:bg-red-50"
+                  >
+                    <Trash2 className="w-4 h-4 text-red-500" />
+                  </Button>
+                </div>
+              )}
+          </div>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
@@ -184,22 +236,44 @@ export function EventDialog({
             </div>
           </div>
 
-          <div className="grid gap-2">
-            <Label>Tipo de Compromisso</Label>
-            <Select
-              value={formData.tipo}
-              onValueChange={(v) => setFormData({ ...formData, tipo: v as any })}
-              disabled={isReadOnly}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Evento">Evento</SelectItem>
-                <SelectItem value="Tarefa">Tarefa</SelectItem>
-                <SelectItem value="Lembrete">Lembrete</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label>Tipo de Compromisso</Label>
+              <Select
+                value={formData.tipo}
+                onValueChange={(v) => setFormData({ ...formData, tipo: v as any })}
+                disabled={isReadOnly}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Evento">Evento</SelectItem>
+                  <SelectItem value="Tarefa">Tarefa</SelectItem>
+                  <SelectItem value="Lembrete">Lembrete</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label>Vincular Cliente</Label>
+              <Select
+                value={formData.cliente_id || 'none'}
+                onValueChange={(v) => setFormData({ ...formData, cliente_id: v })}
+                disabled={isReadOnly}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Nenhum cliente" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nenhum cliente</SelectItem>
+                  {clientes.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="grid gap-2">
@@ -226,15 +300,7 @@ export function EventDialog({
             </div>
           )}
 
-          <DialogFooter className="pt-4 border-t flex justify-between sm:justify-between items-center w-full">
-            {eventoToEdit && !isReadOnly && !eventoToEdit.isDemanda ? (
-              <Button type="button" variant="destructive" onClick={handleDelete} disabled={loading}>
-                <Trash2 className="w-4 h-4 mr-2" /> Excluir
-              </Button>
-            ) : (
-              <div />
-            )}
-
+          <DialogFooter className="pt-4 border-t flex justify-end items-center w-full">
             <div className="flex gap-2">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 {isReadOnly ? 'Fechar' : 'Cancelar'}

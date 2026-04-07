@@ -22,6 +22,8 @@ export interface ChecklistItem {
   id: string
   text: string
   completed: boolean
+  dueDate?: string | null
+  eventId?: string | null
 }
 
 export interface Demand {

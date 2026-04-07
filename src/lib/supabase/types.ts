@@ -9,6 +9,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      agenda_eventos: {
+        Row: {
+          data_criacao: string
+          data_fim: string
+          data_inicio: string
+          descricao: string | null
+          id: string
+          privado: boolean
+          tipo: string
+          titulo: string
+          usuario_id: string
+        }
+        Insert: {
+          data_criacao?: string
+          data_fim: string
+          data_inicio: string
+          descricao?: string | null
+          id?: string
+          privado?: boolean
+          tipo?: string
+          titulo: string
+          usuario_id: string
+        }
+        Update: {
+          data_criacao?: string
+          data_fim?: string
+          data_inicio?: string
+          descricao?: string | null
+          id?: string
+          privado?: boolean
+          tipo?: string
+          titulo?: string
+          usuario_id?: string
+        }
+        Relationships: []
+      }
       checklist_templates: {
         Row: {
           data_criacao: string
@@ -508,6 +544,16 @@ export const Constants = {
 // --- COLUMN TYPES (actual PostgreSQL types) ---
 // Use this to know the real database type when writing migrations.
 // "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: agenda_eventos
+//   id: uuid (not null, default: gen_random_uuid())
+//   usuario_id: uuid (not null)
+//   titulo: text (not null)
+//   descricao: text (nullable)
+//   data_inicio: timestamp with time zone (not null)
+//   data_fim: timestamp with time zone (not null)
+//   tipo: text (not null, default: 'Evento'::text)
+//   privado: boolean (not null, default: false)
+//   data_criacao: timestamp with time zone (not null, default: now())
 // Table: checklist_templates
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -589,6 +635,9 @@ export const Constants = {
 //   telefone: text (nullable)
 
 // --- CONSTRAINTS ---
+// Table: agenda_eventos
+//   PRIMARY KEY agenda_eventos_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY agenda_eventos_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: checklist_templates
 //   PRIMARY KEY checklist_templates_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY checklist_templates_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE CASCADE
@@ -622,6 +671,16 @@ export const Constants = {
 //   PRIMARY KEY usuarios_pkey: PRIMARY KEY (id)
 
 // --- ROW LEVEL SECURITY POLICIES ---
+// Table: agenda_eventos
+//   Policy "agenda_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: (usuario_id = auth.uid())
+//   Policy "agenda_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: (usuario_id = auth.uid())
+//   Policy "agenda_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((usuario_id = auth.uid()) OR ((privado = false) AND is_admin()))
+//   Policy "agenda_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (usuario_id = auth.uid())
+//     WITH CHECK: (usuario_id = auth.uid())
 // Table: checklist_templates
 //   Policy "Todos podem ver templates" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
@@ -919,5 +978,8 @@ export const Constants = {
 //   on_demanda_status_change_notify: CREATE TRIGGER on_demanda_status_change_notify AFTER UPDATE OF status ON public.demandas FOR EACH ROW EXECUTE FUNCTION trigger_notify_automation()
 
 // --- INDEXES ---
+// Table: agenda_eventos
+//   CREATE INDEX idx_agenda_eventos_data_inicio ON public.agenda_eventos USING btree (data_inicio)
+//   CREATE INDEX idx_agenda_eventos_usuario_id ON public.agenda_eventos USING btree (usuario_id)
 // Table: demandas
 //   CREATE INDEX idx_demandas_cliente_id ON public.demandas USING btree (cliente_id)

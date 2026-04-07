@@ -78,6 +78,48 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
   const hasFetched = useRef(false)
 
+  const syncChecklistAgenda = async (
+    demandId: string,
+    demandTitle: string,
+    assigneeId: string,
+    checklist: ChecklistItem[],
+  ) => {
+    const updatedChecklist = [...checklist]
+    for (let i = 0; i < updatedChecklist.length; i++) {
+      const item = updatedChecklist[i]
+      if (item.dueDate && !item.completed) {
+        if (!item.eventId) {
+          const { data } = await supabase
+            .from('agenda_eventos')
+            .insert({
+              titulo: `[Checklist] ${item.text} - ${demandTitle}`,
+              descricao: `Link para demanda original: /demandas?highlight=${demandId}`,
+              data_inicio: new Date(item.dueDate).toISOString(),
+              data_fim: new Date(new Date(item.dueDate).getTime() + 60 * 60 * 1000).toISOString(),
+              tipo: 'Tarefa',
+              usuario_id: assigneeId,
+            })
+            .select('id')
+            .single()
+          if (data) {
+            updatedChecklist[i] = { ...item, eventId: data.id }
+          }
+        } else {
+          await supabase
+            .from('agenda_eventos')
+            .update({
+              titulo: `[Checklist] ${item.text} - ${demandTitle}`,
+              data_inicio: new Date(item.dueDate).toISOString(),
+              data_fim: new Date(new Date(item.dueDate).getTime() + 60 * 60 * 1000).toISOString(),
+              usuario_id: assigneeId,
+            })
+            .eq('id', item.eventId)
+        }
+      }
+    }
+    return updatedChecklist
+  }
+
   const fetchDemands = useCallback(async () => {
     if (!user) return
     try {
@@ -213,8 +255,6 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchCollaborators = useCallback(async () => {
     if (!user) return
     try {
-      // Ensure we explicitly use the GET method by passing { head: false }
-      // This resolves runtime errors where a HEAD request is sent but a JSON response is expected.
       const { data, error } = await supabase
         .from('usuarios')
         .select('id, nome', { head: false })
@@ -225,7 +265,6 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         setCollaborators(data)
       }
     } catch (err) {
-      // Silently handle to prevent application crashes
       console.error('Error fetching collaborators:', err)
     }
   }, [user])
@@ -369,6 +408,24 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         if (error) throw error
         if (data && data.length > 0) {
           const d = data[0]
+
+          let finalChecklist = newDemand.checklist || []
+          if (d.responsavel_id && finalChecklist.length > 0) {
+            finalChecklist = await syncChecklistAgenda(
+              d.id,
+              d.titulo,
+              d.responsavel_id,
+              finalChecklist,
+            )
+            if (
+              finalChecklist.some(
+                (item, idx) => item.eventId !== (newDemand.checklist || [])[idx].eventId,
+              )
+            ) {
+              await supabase.from('demandas').update({ checklist: finalChecklist }).eq('id', d.id)
+            }
+          }
+
           setDemands((prev) => [
             {
               id: d.id,
@@ -382,7 +439,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
               responses: [],
               logs: [],
               attachments: d.anexos || [],
-              checklist: d.checklist || [],
+              checklist: finalChecklist,
               createdAt: d.data_criacao,
               systemEscalated: false,
             },
@@ -431,6 +488,25 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (updates.status !== undefined && !statusChangedToPending) {
           updateData.status = updates.status
+        }
+
+        let finalChecklist = updates.checklist || currentDemand?.checklist || []
+        const assigneeIdToSync = updateData.responsavel_id || currentDemand?.assigneeId
+
+        if (
+          assigneeIdToSync &&
+          (updates.checklist !== undefined ||
+            (updates.assigneeId && updates.assigneeId !== currentDemand?.assigneeId))
+        ) {
+          finalChecklist = await syncChecklistAgenda(
+            demandId,
+            currentDemand?.title || '',
+            assigneeIdToSync,
+            finalChecklist,
+          )
+          updateData.checklist = finalChecklist
+        } else if (updates.checklist !== undefined) {
+          updateData.checklist = updates.checklist
         }
 
         const { error } = await supabase.from('demandas').update(updateData).eq('id', demandId)
@@ -571,7 +647,6 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         dados_novos: hasAttachments ? { anexos: attachments } : undefined,
       }
 
-      // Atualização otimista imediata na timeline local
       setDemands((prev) =>
         prev.map((d) =>
           d.id === demandId
@@ -625,6 +700,17 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   const updateChecklist = useCallback(
     async (demandId: string, checklist: ChecklistItem[], actionText?: string) => {
       if (!user) return
+
+      const currentDemand = demands.find((d) => d.id === demandId)
+      if (currentDemand?.assigneeId) {
+        checklist = await syncChecklistAgenda(
+          demandId,
+          currentDemand.title,
+          currentDemand.assigneeId,
+          checklist,
+        )
+      }
+
       setDemands((prev) => prev.map((d) => (d.id === demandId ? { ...d, checklist } : d)))
       await supabase.from('demandas').update({ checklist }).eq('id', demandId)
 
@@ -638,7 +724,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         fetchDemands()
       }
     },
-    [user, fetchDemands],
+    [user, fetchDemands, demands],
   )
 
   const addAttachments = useCallback(
@@ -656,7 +742,6 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           userName: userName || 'Você',
         }
 
-        // Atualização Otimista
         setDemands((prev) =>
           prev.map((d) => {
             if (d.id === demandId) {
