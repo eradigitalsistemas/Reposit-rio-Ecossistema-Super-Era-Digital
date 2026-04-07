@@ -80,8 +80,8 @@ export default function Reports() {
   const [reportConfig, setReportConfig] = useState({
     startDate: '',
     endDate: '',
-    collaboratorId: 'all',
-    metrics: { demands: true, leads: true, checklists: true },
+    collaboratorIds: [] as string[],
+    metrics: { demands: true, leads: true },
   })
 
   const [data, setData] = useState<{ leads: LeadData[]; demands: DemandData[]; users: UserData[] }>(
@@ -544,13 +544,13 @@ export default function Reports() {
 
       {/* Report Builder Modal */}
       {reportModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
-          <div className="bg-card text-card-foreground p-6 rounded-lg shadow-lg w-full max-w-xl border border-border animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white text-black p-6 rounded-lg shadow-2xl w-full max-w-xl border border-gray-300 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold">Gerar Relatório Detalhado</h2>
+              <h2 className="text-xl font-bold text-black">Gerar Relatório Detalhado</h2>
               <button
                 onClick={() => setReportModalOpen(false)}
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="text-gray-500 hover:text-black transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -559,10 +559,10 @@ export default function Reports() {
             <div className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Data Inicial</label>
+                  <label className="text-sm font-bold text-black">Data Inicial</label>
                   <input
                     type="date"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    className="flex h-10 w-full rounded-md border border-gray-300 bg-white text-black px-3 py-2 text-sm focus:ring-black focus:border-black"
                     value={reportConfig.startDate}
                     onChange={(e) =>
                       setReportConfig({ ...reportConfig, startDate: e.target.value })
@@ -570,10 +570,10 @@ export default function Reports() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Data Final</label>
+                  <label className="text-sm font-bold text-black">Data Final</label>
                   <input
                     type="date"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    className="flex h-10 w-full rounded-md border border-gray-300 bg-white text-black px-3 py-2 text-sm focus:ring-black focus:border-black"
                     value={reportConfig.endDate}
                     onChange={(e) => setReportConfig({ ...reportConfig, endDate: e.target.value })}
                   />
@@ -581,34 +581,63 @@ export default function Reports() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Colaborador</label>
-                <Select
-                  value={reportConfig.collaboratorId}
-                  onValueChange={(v) => setReportConfig({ ...reportConfig, collaboratorId: v })}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Todos os Colaboradores" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os Colaboradores</SelectItem>
-                    {data.users.map((u) => (
-                      <SelectItem key={u.id} value={u.id}>
+                <label className="text-sm font-bold text-black">Colaboradores</label>
+                <div className="flex flex-col gap-2 max-h-[160px] overflow-y-auto p-3 border border-gray-300 rounded-md bg-white shadow-sm">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="colab-all"
+                      className="h-4 w-4 rounded border-gray-400 text-black focus:ring-black accent-black"
+                      checked={reportConfig.collaboratorIds.length === 0}
+                      onChange={(e) => {
+                        if (e.target.checked)
+                          setReportConfig({ ...reportConfig, collaboratorIds: [] })
+                      }}
+                    />
+                    <label
+                      htmlFor="colab-all"
+                      className="text-sm text-black cursor-pointer font-medium"
+                    >
+                      Todos os Colaboradores
+                    </label>
+                  </div>
+                  {data.users.map((u) => (
+                    <div key={u.id} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={`colab-${u.id}`}
+                        className="h-4 w-4 rounded border-gray-400 text-black focus:ring-black accent-black"
+                        checked={reportConfig.collaboratorIds.includes(u.id)}
+                        onChange={(e) => {
+                          let newIds = [...reportConfig.collaboratorIds]
+                          if (e.target.checked) {
+                            newIds.push(u.id)
+                          } else {
+                            newIds = newIds.filter((id) => id !== u.id)
+                          }
+                          setReportConfig({ ...reportConfig, collaboratorIds: newIds })
+                        }}
+                      />
+                      <label
+                        htmlFor={`colab-${u.id}`}
+                        className="text-sm text-black cursor-pointer"
+                      >
                         {u.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                      </label>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div className="space-y-3 pt-2">
-                <label className="text-sm font-medium block border-b border-border pb-2">
+                <label className="text-sm font-bold text-black block border-b border-gray-200 pb-2">
                   Métricas a Incluir
                 </label>
                 <div className="flex items-center space-x-3 mt-3">
                   <input
                     type="checkbox"
                     id="m-demands"
-                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary accent-primary"
+                    className="h-4 w-4 rounded border-gray-400 text-black focus:ring-black accent-black"
                     checked={reportConfig.metrics.demands}
                     onChange={(e) =>
                       setReportConfig({
@@ -617,7 +646,7 @@ export default function Reports() {
                       })
                     }
                   />
-                  <label htmlFor="m-demands" className="text-sm cursor-pointer">
+                  <label htmlFor="m-demands" className="text-sm text-black cursor-pointer">
                     Demandas (Volume, Status, Prioridade, Tempo Médio)
                   </label>
                 </div>
@@ -625,7 +654,7 @@ export default function Reports() {
                   <input
                     type="checkbox"
                     id="m-leads"
-                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary accent-primary"
+                    className="h-4 w-4 rounded border-gray-400 text-black focus:ring-black accent-black"
                     checked={reportConfig.metrics.leads}
                     onChange={(e) =>
                       setReportConfig({
@@ -634,25 +663,8 @@ export default function Reports() {
                       })
                     }
                   />
-                  <label htmlFor="m-leads" className="text-sm cursor-pointer">
+                  <label htmlFor="m-leads" className="text-sm text-black cursor-pointer">
                     Leads (Conversão, Estágio, Volume Total)
-                  </label>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    id="m-checklists"
-                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary accent-primary"
-                    checked={reportConfig.metrics.checklists}
-                    onChange={(e) =>
-                      setReportConfig({
-                        ...reportConfig,
-                        metrics: { ...reportConfig.metrics, checklists: e.target.checked },
-                      })
-                    }
-                  />
-                  <label htmlFor="m-checklists" className="text-sm cursor-pointer">
-                    Checklists (Taxa de Conclusão de Tarefas)
                   </label>
                 </div>
               </div>
@@ -661,13 +673,13 @@ export default function Reports() {
             <div className="mt-8 flex justify-end gap-3">
               <button
                 onClick={() => setReportModalOpen(false)}
-                className="px-4 py-2 rounded-md border border-input bg-background hover:bg-accent text-sm font-medium transition-colors"
+                className="px-4 py-2 rounded-md border border-gray-300 bg-gray-50 hover:bg-gray-100 text-black text-sm font-bold transition-colors"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleGenerateReport}
-                className="px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium flex items-center transition-colors shadow-sm"
+                className="px-4 py-2 rounded-md bg-black text-white hover:bg-gray-800 text-sm font-bold flex items-center transition-colors shadow-sm"
               >
                 <FileText className="w-4 h-4 mr-2" />
                 Gerar PDF

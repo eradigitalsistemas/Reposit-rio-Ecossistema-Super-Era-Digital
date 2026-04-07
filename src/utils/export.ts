@@ -98,8 +98,8 @@ export function exportDetailedPDF(
   config: {
     startDate: string
     endDate: string
-    collaboratorId: string
-    metrics: { demands: boolean; leads: boolean; checklists: boolean }
+    collaboratorIds: string[]
+    metrics: { demands: boolean; leads: boolean }
   },
 ) {
   const newWindow = window.open('', '_blank')
@@ -124,11 +124,13 @@ export function exportDetailedPDF(
     return isWithinInterval(date, { start: startDate, end: endDate })
   })
 
-  if (config.collaboratorId !== 'all') {
-    filteredDemands = filteredDemands.filter((d) => d.responsavel_id === config.collaboratorId)
+  if (config.collaboratorIds.length > 0) {
+    filteredDemands = filteredDemands.filter((d) =>
+      config.collaboratorIds.includes(d.responsavel_id),
+    )
   }
 
-  const filteredLeads = data.leads.filter((l) => {
+  let filteredLeads = data.leads.filter((l) => {
     if (!l.data_criacao) return false
     const date = new Date(l.data_criacao)
     return isWithinInterval(date, { start: startDate, end: endDate })
@@ -160,46 +162,143 @@ export function exportDetailedPDF(
   ).length
   const conversaoRate = leadsTotal > 0 ? ((leadsConvertidos / leadsTotal) * 100).toFixed(1) : '0.0'
 
-  // Checklists Metrics
-  let totalChecklistItems = 0
-  let completedChecklistItems = 0
-  filteredDemands.forEach((d) => {
-    if (d.checklist && Array.isArray(d.checklist)) {
-      d.checklist.forEach((item: any) => {
-        totalChecklistItems++
-        if (item.checked) completedChecklistItems++
-      })
-    }
-  })
-  const checklistRate =
-    totalChecklistItems > 0
-      ? ((completedChecklistItems / totalChecklistItems) * 100).toFixed(1)
-      : '0.0'
+  const colabNames =
+    config.collaboratorIds.length === 0
+      ? 'toda a equipe'
+      : data.users
+          .filter((u: any) => config.collaboratorIds.includes(u.id))
+          .map((u: any) => u.nome)
+          .join(', ')
+
+  const startDateFormatted = config.startDate
+    ? format(new Date(config.startDate + 'T12:00:00'), 'dd/MM/yyyy')
+    : 'Início'
+  const endDateFormatted = config.endDate
+    ? format(new Date(config.endDate + 'T12:00:00'), 'dd/MM/yyyy')
+    : 'Hoje'
 
   const html = `
+    <!DOCTYPE html>
     <html>
       <head>
+        <meta charset="utf-8">
         <title>Relatório de Desempenho Operacional</title>
         <style>
-          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #000; background: #fff; line-height: 1.5; }
-          .header { display: flex; align-items: center; border-bottom: 2px solid #e5e7eb; padding-bottom: 20px; margin-bottom: 30px; }
-          .logo { height: 50px; margin-right: 20px; }
-          .title-container { flex: 1; }
-          .title { font-size: 24px; font-weight: bold; margin: 0; color: #111827; }
-          .subtitle { font-size: 14px; color: #6b7280; margin-top: 4px; }
-          .section { margin-bottom: 40px; }
-          h2 { font-size: 18px; color: #111827; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 20px; }
-          .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
-          .metric-card { border: 1px solid #e5e7eb; padding: 16px; border-radius: 8px; background: #f9fafb; text-align: center; }
-          .metric-label { font-size: 12px; color: #6b7280; text-transform: uppercase; font-weight: 600; margin-bottom: 8px; }
-          .metric-value { font-size: 28px; font-weight: bold; color: #111827; }
-          table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
-          th, td { border: 1px solid #e5e7eb; padding: 12px; text-align: left; }
-          th { background-color: #f3f4f6; font-weight: 600; color: #374151; }
-          .footer { margin-top: 50px; font-size: 12px; color: #9ca3af; text-align: center; border-top: 1px solid #e5e7eb; padding-top: 20px; }
+          @page {
+            size: A4;
+            margin: 20mm;
+            @bottom-right {
+              content: "Página " counter(page) " de " counter(pages);
+            }
+          }
+          * { box-sizing: border-box; }
+          body { 
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+            color: #000; 
+            background: #fff; 
+            line-height: 1.5; 
+            margin: 0 auto;
+            max-width: 210mm;
+          }
           @media print {
-            body { padding: 0; }
-            .metric-card { break-inside: avoid; }
+            body { 
+              margin: 0;
+              padding: 0;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .page-break { page-break-before: always; }
+            .metric-card, table, tr, .analysis-section { page-break-inside: avoid; }
+          }
+          .header { 
+            display: flex; 
+            align-items: center; 
+            border-bottom: 2px solid #000; 
+            padding-bottom: 15px; 
+            margin-bottom: 25px; 
+          }
+          .logo { height: 45px; margin-right: 20px; }
+          .title-container { flex: 1; }
+          .title { font-size: 22px; font-weight: bold; margin: 0; color: #000; text-transform: uppercase; letter-spacing: 0.5px; }
+          .subtitle { font-size: 13px; color: #333; margin-top: 5px; }
+          .section { margin-bottom: 35px; }
+          h2 { 
+            font-size: 16px; 
+            color: #000; 
+            border-bottom: 1px solid #ccc; 
+            padding-bottom: 6px; 
+            margin-bottom: 15px; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px;
+          }
+          .grid { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 15px; 
+            margin-bottom: 25px; 
+          }
+          .metric-card { 
+            border: 1px solid #000; 
+            padding: 15px; 
+            border-radius: 4px; 
+            background: #fff; 
+            text-align: center; 
+          }
+          .metric-label { 
+            font-size: 11px; 
+            color: #000; 
+            text-transform: uppercase; 
+            font-weight: bold; 
+            margin-bottom: 8px; 
+          }
+          .metric-value { 
+            font-size: 26px; 
+            font-weight: bold; 
+            color: #000; 
+          }
+          
+          table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 10px; 
+            font-size: 12px; 
+            border: 1px solid #000; 
+          }
+          th, td { 
+            border: 1px solid #000; 
+            padding: 10px; 
+            text-align: left; 
+          }
+          th { 
+            background-color: #f0f0f0; 
+            font-weight: bold; 
+            color: #000; 
+            text-transform: uppercase; 
+          }
+          
+          .analysis-section { 
+            background: #fff; 
+            border: 2px solid #000; 
+            padding: 25px; 
+            border-radius: 6px; 
+            margin-top: 40px; 
+          }
+          .analysis-section h2 { border-bottom: 2px solid #000; }
+          .analysis-section p { 
+            font-size: 14px; 
+            color: #000; 
+            text-align: justify; 
+            margin-bottom: 15px; 
+            line-height: 1.6;
+          }
+          
+          .footer { 
+            margin-top: 50px; 
+            font-size: 10px; 
+            color: #000; 
+            text-align: center; 
+            border-top: 1px solid #000; 
+            padding-top: 15px; 
           }
         </style>
       </head>
@@ -209,21 +308,8 @@ export function exportDetailedPDF(
           <div class="title-container">
             <h1 class="title">Relatório de Desempenho Operacional</h1>
             <div class="subtitle">
-              Período: ${
-                config.startDate
-                  ? format(new Date(config.startDate + 'T12:00:00'), 'dd/MM/yyyy')
-                  : 'Início'
-              } até ${
-                config.endDate
-                  ? format(new Date(config.endDate + 'T12:00:00'), 'dd/MM/yyyy')
-                  : 'Hoje'
-              } | 
-              Colaborador: ${
-                config.collaboratorId === 'all'
-                  ? 'Todos'
-                  : data.users.find((u: any) => u.id === config.collaboratorId)?.nome ||
-                    'Desconhecido'
-              }
+              <strong>Período:</strong> ${startDateFormatted} a ${endDateFormatted} <br/>
+              <strong>Colaboradores:</strong> ${colabNames}
             </div>
           </div>
         </div>
@@ -261,7 +347,7 @@ export function exportDetailedPDF(
             ? `
         <div class="section">
           <h2>Métricas de Leads</h2>
-          <div class="grid">
+          <div class="grid" style="grid-template-columns: repeat(3, 1fr);">
             <div class="metric-card">
               <div class="metric-label">Novos Leads</div>
               <div class="metric-value">${leadsTotal}</div>
@@ -280,35 +366,32 @@ export function exportDetailedPDF(
             : ''
         }
 
-        ${
-          config.metrics.checklists
-            ? `
-        <div class="section">
-          <h2>Desempenho de Tarefas (Checklists)</h2>
-          <div class="grid" style="grid-template-columns: repeat(3, 1fr);">
-            <div class="metric-card">
-              <div class="metric-label">Total de Tarefas</div>
-              <div class="metric-value">${totalChecklistItems}</div>
-            </div>
-            <div class="metric-card">
-              <div class="metric-label">Tarefas Concluídas</div>
-              <div class="metric-value">${completedChecklistItems}</div>
-            </div>
-            <div class="metric-card">
-              <div class="metric-label">Taxa de Conclusão</div>
-              <div class="metric-value">${checklistRate}%</div>
-            </div>
+        <div class="page-break"></div>
+
+        <div class="header">
+          <img src="https://img.usecurling.com/i?q=company+logo&shape=outline&color=solid-black" class="logo" alt="Era Digital" />
+          <div class="title-container">
+            <h1 class="title">Análise de Inteligência Operacional</h1>
           </div>
         </div>
-        `
-            : ''
-        }
+
+        <div class="section analysis-section">
+          <h2>Consideração Final Executiva</h2>
+          <p>Analisando os dados operacionais de <strong>${colabNames}</strong> no período selecionado, observamos uma dinâmica de trabalho que reflete o comprometimento e a capacidade técnica da operação.</p>
+          
+          ${config.metrics.demands ? `<p>Com um volume de <strong>${demandsTotal}</strong> demandas geradas e <strong>${demandsConcluidas}</strong> concluídas, a equipe demonstra engajamento robusto com as metas estabelecidas. O tempo médio de resolução de <strong>${avgTimeHours.toFixed(1)}h</strong> indica um ritmo sólido de entrega. Recomendamos, sob uma ótica de liderança humanizada, avaliar o volume de demandas classificadas como 'Urgentes' (${demandsUrgentes}), buscando antecipar gargalos processuais para que a equipe atue com mais previsibilidade e menos sobrecarga. O foco na prevenção de urgências preserva a saúde mental e o foco analítico de cada talento.</p>` : ''}
+          
+          ${config.metrics.leads ? `<p>Em relação à captação comercial, os <strong>${leadsTotal}</strong> novos leads com <strong>${conversaoRate}%</strong> de conversão confirmam o potencial do nosso fluxo. Para otimizar uma produtividade sustentável, sugerimos revisitar os pontos de contato da jornada do lead, oferecendo suporte contínuo aos colaboradores para que o fechamento ocorra de forma fluida, estruturada e assertiva.</p>` : ''}
+          
+          <p>Reafirmamos nosso compromisso com uma gestão centrada no desenvolvimento humano. A excelência nas entregas e no atendimento é o resultado direto de um ambiente de trabalho saudável e empático, onde os processos atuam a favor da equipe e impulsionam o sucesso coletivo de forma sustentável e inovadora.</p>
+        </div>
 
         <div class="footer">
-          Gerado em ${format(new Date(), 'dd/MM/yyyy HH:mm')} pelo Sistema CRM Era Digital
+          Gerado em ${format(new Date(), 'dd/MM/yyyy HH:mm')} pelo Sistema CRM Era Digital | Este documento contém informações confidenciais
         </div>
+        
         <script>
-          window.onload = () => { setTimeout(() => { window.print(); window.close(); }, 500); }
+          window.onload = () => { setTimeout(() => { window.print(); window.close(); }, 800); }
         </script>
       </body>
     </html>

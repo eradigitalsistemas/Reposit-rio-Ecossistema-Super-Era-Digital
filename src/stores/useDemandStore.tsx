@@ -626,7 +626,10 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
   const addResponse = useCallback(
     async (demandId: string, text: string, attachments?: DemandAttachment[]) => {
-      if (!user) return
+      if (!user || !demandId) {
+        console.error('Erro Arquitetural: user_id ou demanda_id inválido/nulo.')
+        return
+      }
 
       const newLogId = crypto.randomUUID()
       const hasAttachments = attachments && attachments.length > 0
@@ -637,59 +640,80 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           ? `Arquivo(s) anexado(s): ${attachments.map((a) => a.name).join(', ')}`
           : '')
 
-      const newLog: DemandLog = {
-        id: newLogId,
-        acao: acaoType,
-        detalhes: detalhesText,
-        createdAt: new Date().toISOString(),
-        usuario_id: user.id,
-        userName: userName || 'Você',
-        dados_novos: hasAttachments ? { anexos: attachments } : undefined,
-      }
+      try {
+        let finalAttachments = attachments
 
-      setDemands((prev) =>
-        prev.map((d) =>
-          d.id === demandId
-            ? {
-                ...d,
-                logs: [...(d.logs || []), newLog],
-                attachments: hasAttachments
-                  ? [...(d.attachments || []), ...attachments]
-                  : d.attachments,
-              }
-            : d,
-        ),
-      )
+        if (hasAttachments) {
+          const { data, error: fetchErr } = await supabase
+            .from('demandas')
+            .select('anexos')
+            .eq('id', demandId)
+            .single()
 
-      if (hasAttachments) {
-        const { data } = await supabase
-          .from('demandas')
-          .select('anexos')
-          .eq('id', demandId)
-          .single()
-        const updatedAttachments = [...(data?.anexos || []), ...attachments]
-        await supabase.from('demandas').update({ anexos: updatedAttachments }).eq('id', demandId)
-      }
+          if (fetchErr) {
+            console.error('Erro ao buscar anexos da demanda:', fetchErr)
+            throw fetchErr
+          }
 
-      const { error } = await supabase.from('logs_auditoria').insert({
-        demanda_id: demandId,
-        usuario_id: user.id,
-        acao: acaoType,
-        detalhes: detalhesText,
-        dados_novos: hasAttachments ? { anexos: attachments } : undefined,
-      })
+          finalAttachments = [...(data?.anexos || []), ...attachments]
+          const { error: updateErr } = await supabase
+            .from('demandas')
+            .update({ anexos: finalAttachments })
+            .eq('id', demandId)
 
-      if (!error) {
+          if (updateErr) {
+            console.error('Erro ao atualizar anexos na demanda:', updateErr)
+            throw updateErr
+          }
+        }
+
+        const { error } = await supabase.from('logs_auditoria').insert({
+          id: newLogId,
+          demanda_id: demandId,
+          usuario_id: user.id,
+          acao: acaoType,
+          detalhes: detalhesText,
+          dados_novos: hasAttachments ? { anexos: attachments } : undefined,
+        })
+
+        if (error) {
+          console.error('Erro real do Supabase ao inserir log_auditoria:', error)
+          throw error
+        }
+
+        const newLog: DemandLog = {
+          id: newLogId,
+          acao: acaoType,
+          detalhes: detalhesText,
+          createdAt: new Date().toISOString(),
+          usuario_id: user.id,
+          userName: userName || 'Você',
+          dados_novos: hasAttachments ? { anexos: attachments } : undefined,
+        }
+
+        setDemands((prev) =>
+          prev.map((d) =>
+            d.id === demandId
+              ? {
+                  ...d,
+                  logs: [...(d.logs || []), newLog],
+                  attachments: hasAttachments ? finalAttachments : d.attachments,
+                }
+              : d,
+          ),
+        )
+
         toast({
           title: 'Sucesso',
           description: 'Registro adicionado na linha do tempo.',
-          className: 'bg-zinc-950 border-green-500/50 text-white',
+          className:
+            'bg-zinc-950 border-green-500/50 text-white shadow-[0_0_15px_rgba(34,197,94,0.2)]',
         })
         fetchDemands()
-      } else {
+      } catch (err: any) {
         toast({
-          title: 'Erro',
-          description: 'Falha ao registrar observação.',
+          title: 'Erro de Inserção',
+          description: err.message || 'Falha ao registrar observação.',
           variant: 'destructive',
         })
       }
