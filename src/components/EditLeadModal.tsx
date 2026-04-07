@@ -77,44 +77,93 @@ export function EditLeadModal({ lead }: EditLeadModalProps) {
       >
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Editar Lead</DialogTitle>
-            <DialogDescription>Atualize os dados do lead abaixo.</DialogDescription>
+            <DialogTitle className="text-slate-900 dark:text-slate-100">Editar Lead</DialogTitle>
+            <DialogDescription className="text-slate-600 dark:text-slate-400">
+              Atualize os dados do lead abaixo.
+            </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-4 py-4 text-slate-900 dark:text-slate-100">
             <div className="grid gap-2">
-              <Label htmlFor="edit-name">Nome completo *</Label>
-              <Input id="edit-name" name="name" defaultValue={lead.name} required />
+              <Label htmlFor="edit-name" className="text-slate-900 dark:text-slate-100">
+                Nome completo *
+              </Label>
+              <Input
+                id="edit-name"
+                name="name"
+                defaultValue={lead.name}
+                required
+                className="text-slate-900 dark:text-slate-100 bg-transparent border-slate-300 dark:border-slate-700 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+              />
             </div>
             <div className="grid gap-2">
-              <Label>Status de Interesse *</Label>
+              <Label className="text-slate-900 dark:text-slate-100">Status de Interesse *</Label>
               <Select
                 value={interestStatus}
                 onValueChange={(v: InterestStatus) => setInterestStatus(v)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="text-slate-900 dark:text-slate-100 bg-transparent border-slate-300 dark:border-slate-700">
                   <SelectValue placeholder="Selecione o status" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Interessado">Interessado</SelectItem>
-                  <SelectItem value="Não Interessado">Não Interessado</SelectItem>
+                <SelectContent className="bg-white dark:bg-zinc-950 border-slate-200 dark:border-zinc-800">
+                  <SelectItem
+                    value="Interessado"
+                    className="text-slate-900 dark:text-slate-100 focus:bg-slate-100 dark:focus:bg-zinc-800"
+                  >
+                    Interessado
+                  </SelectItem>
+                  <SelectItem
+                    value="Não Interessado"
+                    className="text-slate-900 dark:text-slate-100 focus:bg-slate-100 dark:focus:bg-zinc-800"
+                  >
+                    Não Interessado
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-company">Empresa</Label>
-              <Input id="edit-company" name="company" defaultValue={lead.company} />
+              <Label htmlFor="edit-company" className="text-slate-900 dark:text-slate-100">
+                Empresa
+              </Label>
+              <Input
+                id="edit-company"
+                name="company"
+                defaultValue={lead.company}
+                className="text-slate-900 dark:text-slate-100 bg-transparent border-slate-300 dark:border-slate-700 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+              />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-email">E-mail</Label>
-              <Input id="edit-email" name="email" type="email" defaultValue={lead.email} />
+              <Label htmlFor="edit-email" className="text-slate-900 dark:text-slate-100">
+                E-mail
+              </Label>
+              <Input
+                id="edit-email"
+                name="email"
+                type="email"
+                defaultValue={lead.email}
+                className="text-slate-900 dark:text-slate-100 bg-transparent border-slate-300 dark:border-slate-700 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+              />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-phone">Telefone</Label>
-              <Input id="edit-phone" name="phone" defaultValue={lead.phone} />
+              <Label htmlFor="edit-phone" className="text-slate-900 dark:text-slate-100">
+                Telefone
+              </Label>
+              <Input
+                id="edit-phone"
+                name="phone"
+                defaultValue={lead.phone}
+                className="text-slate-900 dark:text-slate-100 bg-transparent border-slate-300 dark:border-slate-700 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+              />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-notes">Observações</Label>
-              <Textarea id="edit-notes" name="notes" defaultValue={lead.notes} />
+              <Label htmlFor="edit-notes" className="text-slate-900 dark:text-slate-100">
+                Observações
+              </Label>
+              <Textarea
+                id="edit-notes"
+                name="notes"
+                defaultValue={lead.notes}
+                className="text-slate-900 dark:text-slate-100 bg-transparent border-slate-300 dark:border-slate-700 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+              />
             </div>
           </div>
           <DialogFooter>
@@ -125,14 +174,14 @@ export function EditLeadModal({ lead }: EditLeadModalProps) {
                 e.stopPropagation()
                 setOpen(false)
               }}
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
               variant="default"
-              className="w-full sm:w-auto text-black font-bold"
+              className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
             >
               Salvar Alterações
             </Button>

@@ -1,11 +1,10 @@
 export type LeadStage =
-  | 'leads'
-  | 'prospeccao'
+  | 'novo_lead'
+  | 'em_negociacao'
   | 'convertido'
-  | 'treinamento'
-  | 'finalizado'
-  | 'pos_venda'
+  | 'encerrado'
   | 'ativo'
+  | 'pos_venda'
 
 export type InterestStatus = 'Interessado' | 'Não Interessado'
 
@@ -31,45 +30,45 @@ export interface StageConfig {
 
 export const KANBAN_STAGES: StageConfig[] = [
   {
-    id: 'leads',
-    title: 'Leads',
-    color: 'bg-zinc-900 text-zinc-300 border border-zinc-800',
-    bgColor: 'border-zinc-800',
+    id: 'novo_lead',
+    title: 'Novo Lead',
+    color:
+      'bg-zinc-100 text-black dark:bg-zinc-900 dark:text-white border border-zinc-200 dark:border-zinc-800',
+    bgColor: 'border-zinc-300 dark:border-zinc-700',
   },
   {
-    id: 'prospeccao',
-    title: 'Prospecção',
-    color: 'bg-orange-500/10 text-orange-500 border border-orange-500/20',
-    bgColor: 'border-orange-500/50',
+    id: 'em_negociacao',
+    title: 'Em Negociação',
+    color:
+      'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border border-purple-200 dark:border-purple-800/50',
+    bgColor: 'border-purple-300 dark:border-purple-700/50',
   },
   {
     id: 'convertido',
     title: 'Convertido',
-    color: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
-    bgColor: 'border-blue-500/50',
+    color:
+      'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50',
+    bgColor: 'border-blue-300 dark:border-blue-700/50',
   },
   {
-    id: 'treinamento',
-    title: 'Em Treinamento',
-    color: 'bg-purple-500/10 text-purple-400 border border-purple-500/20',
-    bgColor: 'border-purple-500/50',
-  },
-  {
-    id: 'finalizado',
-    title: 'Finalizado',
-    color: 'bg-sky-500/10 text-sky-400 border border-sky-500/20',
-    bgColor: 'border-sky-500/50',
-  },
-  {
-    id: 'pos_venda',
-    title: 'Pós Venda',
-    color: 'bg-rose-500/10 text-rose-400 border border-rose-500/20',
-    bgColor: 'border-rose-500/50',
+    id: 'encerrado',
+    title: 'Encerrado',
+    color:
+      'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 border border-red-200 dark:border-red-800/50',
+    bgColor: 'border-red-300 dark:border-red-700/50',
   },
   {
     id: 'ativo',
     title: 'Cliente Ativo',
-    color: 'bg-primary/10 text-primary border border-primary/20',
-    bgColor: 'border-primary/50',
+    color:
+      'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 border border-green-200 dark:border-green-800/50',
+    bgColor: 'border-green-300 dark:border-green-700/50',
+  },
+  {
+    id: 'pos_venda',
+    title: 'Pós-Venda',
+    color:
+      'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300 border border-orange-200 dark:border-orange-800/50',
+    bgColor: 'border-orange-300 dark:border-orange-700/50',
   },
 ]

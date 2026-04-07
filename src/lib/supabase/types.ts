@@ -12,6 +12,7 @@ export type Database = {
       agenda_eventos: {
         Row: {
           cliente_id: string | null
+          criado_por: string | null
           data_criacao: string
           data_fim: string
           data_inicio: string
@@ -24,6 +25,7 @@ export type Database = {
         }
         Insert: {
           cliente_id?: string | null
+          criado_por?: string | null
           data_criacao?: string
           data_fim: string
           data_inicio: string
@@ -36,6 +38,7 @@ export type Database = {
         }
         Update: {
           cliente_id?: string | null
+          criado_por?: string | null
           data_criacao?: string
           data_fim?: string
           data_inicio?: string
@@ -566,6 +569,7 @@ export const Constants = {
 //   privado: boolean (not null, default: false)
 //   data_criacao: timestamp with time zone (not null, default: now())
 //   cliente_id: uuid (nullable)
+//   criado_por: text (nullable)
 // Table: checklist_templates
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
