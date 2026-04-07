@@ -24,14 +24,18 @@ import {
   endOfWeek,
   startOfMonth,
   endOfMonth,
+  startOfYear,
+  endOfYear,
   isWithinInterval,
   isSameDay,
 } from 'date-fns'
-import { Users, CheckSquare, AlertTriangle, UserCheck, Loader2 } from 'lucide-react'
+import { Users, CheckSquare, AlertTriangle, UserCheck, Loader2, FileText, X } from 'lucide-react'
+import { exportDetailedPDF } from '@/utils/export'
 
 interface LeadData {
   estagio: string
   data_criacao: string
+  status_interesse: string
 }
 
 interface DemandData {
@@ -39,6 +43,9 @@ interface DemandData {
   prioridade: string
   responsavel_id: string | null
   data_criacao: string
+  data_vencimento: string | null
+  data_resposta: string | null
+  checklist: any
 }
 
 interface UserData {
@@ -66,6 +73,17 @@ export default function Reports() {
   const { role } = useAuthStore()
 
   const [dateFilter, setDateFilter] = useState('thisMonth')
+  const [customStartDate, setCustomStartDate] = useState('')
+  const [customEndDate, setCustomEndDate] = useState('')
+
+  const [reportModalOpen, setReportModalOpen] = useState(false)
+  const [reportConfig, setReportConfig] = useState({
+    startDate: '',
+    endDate: '',
+    collaboratorId: 'all',
+    metrics: { demands: true, leads: true, checklists: true },
+  })
+
   const [data, setData] = useState<{ leads: LeadData[]; demands: DemandData[]; users: UserData[] }>(
     {
       leads: [],
@@ -85,8 +103,12 @@ export default function Reports() {
       setError(null)
       try {
         const [leadsRes, demandsRes, usersRes] = await Promise.all([
-          supabase.from('leads').select('estagio, data_criacao'),
-          supabase.from('demandas').select('status, prioridade, responsavel_id, data_criacao'),
+          supabase.from('leads').select('estagio, data_criacao, status_interesse'),
+          supabase
+            .from('demandas')
+            .select(
+              'status, prioridade, responsavel_id, data_criacao, data_vencimento, data_resposta, checklist',
+            ),
           supabase.from('usuarios').select('id, nome'),
         ])
 
@@ -115,6 +137,13 @@ export default function Reports() {
     }
   }, [role])
 
+  const parseLocalDate = useCallback((dateStr: string, isEnd: boolean) => {
+    if (!dateStr) return isEnd ? new Date(8640000000000000) : new Date(0)
+    const [year, month, day] = dateStr.split('-').map(Number)
+    const d = new Date(year, month - 1, day)
+    return isEnd ? endOfDay(d) : startOfDay(d)
+  }, [])
+
   const filterInterval = useMemo(() => {
     const now = new Date()
     switch (dateFilter) {
@@ -126,10 +155,19 @@ export default function Reports() {
           end: endOfWeek(now, { weekStartsOn: 1 }),
         }
       case 'thisMonth':
+        return { start: startOfMonth(now), end: endOfMonth(now) }
+      case 'thisYear':
+        return { start: startOfYear(now), end: endOfYear(now) }
+      case 'custom': {
+        const start = parseLocalDate(customStartDate, false)
+        let end = parseLocalDate(customEndDate, true)
+        if (start > end) end = start
+        return { start, end }
+      }
       default:
         return { start: startOfMonth(now), end: endOfMonth(now) }
     }
-  }, [dateFilter])
+  }, [dateFilter, customStartDate, customEndDate, parseLocalDate])
 
   const isDateInFilter = useCallback(
     (dateString: string) => {
@@ -140,6 +178,11 @@ export default function Reports() {
     },
     [filterInterval],
   )
+
+  const handleGenerateReport = () => {
+    exportDetailedPDF(data, reportConfig)
+    setReportModalOpen(false)
+  }
 
   const filteredLeads = useMemo(
     () => data.leads.filter((d) => isDateInFilter(d.data_criacao)),
@@ -259,7 +302,7 @@ export default function Reports() {
 
   return (
     <div className="w-full min-h-full bg-background flex flex-col p-4 sm:p-6 text-foreground">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 shrink-0 gap-4">
+      <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between mb-6 shrink-0 gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
             Dashboard de Relatórios
@@ -268,17 +311,47 @@ export default function Reports() {
             Acompanhe métricas de conversão, produtividade da equipe e prioridades.
           </p>
         </div>
-        <div className="w-full sm:w-auto">
-          <Select value={dateFilter} onValueChange={setDateFilter}>
-            <SelectTrigger className="w-full sm:w-[180px] h-11 sm:h-10">
-              <SelectValue placeholder="Período" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="today">Hoje</SelectItem>
-              <SelectItem value="thisWeek">Esta Semana</SelectItem>
-              <SelectItem value="thisMonth">Este Mês</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full xl:w-auto">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Select value={dateFilter} onValueChange={setDateFilter}>
+              <SelectTrigger className="w-full sm:w-[150px] h-10">
+                <SelectValue placeholder="Período" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="today">Hoje</SelectItem>
+                <SelectItem value="thisWeek">Esta Semana</SelectItem>
+                <SelectItem value="thisMonth">Este Mês</SelectItem>
+                <SelectItem value="thisYear">Este Ano</SelectItem>
+                <SelectItem value="custom">Personalizado</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {dateFilter === 'custom' && (
+              <div className="flex items-center gap-2">
+                <input
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  className="h-10 px-3 py-2 rounded-md border border-input bg-background text-sm w-[130px] sm:w-[140px]"
+                />
+                <span className="text-muted-foreground text-sm">até</span>
+                <input
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  className="h-10 px-3 py-2 rounded-md border border-input bg-background text-sm w-[130px] sm:w-[140px]"
+                />
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={() => setReportModalOpen(true)}
+            className="w-full sm:w-auto h-10 px-4 inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground font-medium text-sm transition-colors hover:bg-primary/90"
+          >
+            <FileText className="w-4 h-4 mr-2" />
+            Gerar Relatório Detalhado
+          </button>
         </div>
       </div>
 
@@ -468,6 +541,141 @@ export default function Reports() {
           )}
         </CardContent>
       </Card>
+
+      {/* Report Builder Modal */}
+      {reportModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+          <div className="bg-card text-card-foreground p-6 rounded-lg shadow-lg w-full max-w-xl border border-border animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold">Gerar Relatório Detalhado</h2>
+              <button
+                onClick={() => setReportModalOpen(false)}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Data Inicial</label>
+                  <input
+                    type="date"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={reportConfig.startDate}
+                    onChange={(e) =>
+                      setReportConfig({ ...reportConfig, startDate: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Data Final</label>
+                  <input
+                    type="date"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={reportConfig.endDate}
+                    onChange={(e) => setReportConfig({ ...reportConfig, endDate: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Colaborador</label>
+                <Select
+                  value={reportConfig.collaboratorId}
+                  onValueChange={(v) => setReportConfig({ ...reportConfig, collaboratorId: v })}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Todos os Colaboradores" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os Colaboradores</SelectItem>
+                    {data.users.map((u) => (
+                      <SelectItem key={u.id} value={u.id}>
+                        {u.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-3 pt-2">
+                <label className="text-sm font-medium block border-b border-border pb-2">
+                  Métricas a Incluir
+                </label>
+                <div className="flex items-center space-x-3 mt-3">
+                  <input
+                    type="checkbox"
+                    id="m-demands"
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary accent-primary"
+                    checked={reportConfig.metrics.demands}
+                    onChange={(e) =>
+                      setReportConfig({
+                        ...reportConfig,
+                        metrics: { ...reportConfig.metrics, demands: e.target.checked },
+                      })
+                    }
+                  />
+                  <label htmlFor="m-demands" className="text-sm cursor-pointer">
+                    Demandas (Volume, Status, Prioridade, Tempo Médio)
+                  </label>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="m-leads"
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary accent-primary"
+                    checked={reportConfig.metrics.leads}
+                    onChange={(e) =>
+                      setReportConfig({
+                        ...reportConfig,
+                        metrics: { ...reportConfig.metrics, leads: e.target.checked },
+                      })
+                    }
+                  />
+                  <label htmlFor="m-leads" className="text-sm cursor-pointer">
+                    Leads (Conversão, Estágio, Volume Total)
+                  </label>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="m-checklists"
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary accent-primary"
+                    checked={reportConfig.metrics.checklists}
+                    onChange={(e) =>
+                      setReportConfig({
+                        ...reportConfig,
+                        metrics: { ...reportConfig.metrics, checklists: e.target.checked },
+                      })
+                    }
+                  />
+                  <label htmlFor="m-checklists" className="text-sm cursor-pointer">
+                    Checklists (Taxa de Conclusão de Tarefas)
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 flex justify-end gap-3">
+              <button
+                onClick={() => setReportModalOpen(false)}
+                className="px-4 py-2 rounded-md border border-input bg-background hover:bg-accent text-sm font-medium transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleGenerateReport}
+                className="px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium flex items-center transition-colors shadow-sm"
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Gerar PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
