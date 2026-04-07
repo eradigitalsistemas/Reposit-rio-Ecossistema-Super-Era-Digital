@@ -11,6 +11,7 @@ export type Database = {
     Tables: {
       agenda_eventos: {
         Row: {
+          cliente_id: string | null
           data_criacao: string
           data_fim: string
           data_inicio: string
@@ -22,6 +23,7 @@ export type Database = {
           usuario_id: string
         }
         Insert: {
+          cliente_id?: string | null
           data_criacao?: string
           data_fim: string
           data_inicio: string
@@ -33,6 +35,7 @@ export type Database = {
           usuario_id: string
         }
         Update: {
+          cliente_id?: string | null
           data_criacao?: string
           data_fim?: string
           data_inicio?: string
@@ -43,7 +46,15 @@ export type Database = {
           titulo?: string
           usuario_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: 'agenda_eventos_cliente_id_fkey'
+            columns: ['cliente_id']
+            isOneToOne: false
+            referencedRelation: 'clientes_externos'
+            referencedColumns: ['id']
+          },
+        ]
       }
       checklist_templates: {
         Row: {
@@ -554,6 +565,7 @@ export const Constants = {
 //   tipo: text (not null, default: 'Evento'::text)
 //   privado: boolean (not null, default: false)
 //   data_criacao: timestamp with time zone (not null, default: now())
+//   cliente_id: uuid (nullable)
 // Table: checklist_templates
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -636,6 +648,7 @@ export const Constants = {
 
 // --- CONSTRAINTS ---
 // Table: agenda_eventos
+//   FOREIGN KEY agenda_eventos_cliente_id_fkey: FOREIGN KEY (cliente_id) REFERENCES clientes_externos(id) ON DELETE SET NULL
 //   PRIMARY KEY agenda_eventos_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY agenda_eventos_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: checklist_templates
@@ -979,6 +992,7 @@ export const Constants = {
 
 // --- INDEXES ---
 // Table: agenda_eventos
+//   CREATE INDEX idx_agenda_eventos_cliente_id ON public.agenda_eventos USING btree (cliente_id)
 //   CREATE INDEX idx_agenda_eventos_data_inicio ON public.agenda_eventos USING btree (data_inicio)
 //   CREATE INDEX idx_agenda_eventos_usuario_id ON public.agenda_eventos USING btree (usuario_id)
 // Table: demandas

@@ -31,9 +31,9 @@ export default function Layout() {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset className="flex flex-col min-h-[100dvh] bg-background w-full max-w-[100vw] overflow-hidden">
+      <SidebarInset className="flex flex-col min-h-[100dvh] bg-background w-full max-w-[100vw]">
         <Header />
-        <main className="flex-1 overflow-hidden relative w-full flex flex-col">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden relative w-full flex flex-col">
           <ErrorBoundary>
             <Outlet />
           </ErrorBoundary>

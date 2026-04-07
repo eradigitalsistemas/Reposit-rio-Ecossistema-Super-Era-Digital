@@ -75,8 +75,8 @@ export default function Agenda() {
   }
 
   return (
-    <div className="flex-1 w-full bg-background min-h-full overflow-hidden flex flex-col p-4 sm:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto w-full h-full flex flex-col space-y-6">
+    <div className="flex-1 w-full bg-background min-h-full flex flex-col p-4 sm:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto w-full flex flex-col space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground flex items-center gap-3">
@@ -128,7 +128,7 @@ export default function Agenda() {
           <div className="w-20" />
         </div>
 
-        <div className="flex-1 min-h-0 relative">
+        <div className="relative">
           {loading && (
             <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-10 flex items-center justify-center rounded-lg">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>

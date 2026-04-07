@@ -124,8 +124,8 @@ export default function Demands() {
   }
 
   return (
-    <div className="flex flex-col flex-1 h-full w-full bg-background overflow-hidden min-h-0">
-      <div className="flex flex-col flex-1 p-4 sm:p-6 min-h-0">
+    <div className="flex flex-col flex-1 w-full bg-background min-h-full">
+      <div className="flex flex-col flex-1 p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 shrink-0 gap-4">
           <div>
             <h1 className="text-2xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-foreground">
@@ -312,8 +312,8 @@ export default function Demands() {
           </DropdownMenu>
         </div>
 
-        <div className="flex-1 overflow-x-auto overflow-y-hidden snap-x snap-mandatory hide-scrollbar min-h-0">
-          <div className="flex h-full items-start gap-4 min-w-max [&>div]:!w-[85vw] sm:[&>div]:!w-[320px] [&>div]:!max-w-[400px] [&>div]:snap-center pr-4 pb-4">
+        <div className="w-full overflow-x-auto snap-x snap-mandatory hide-scrollbar pb-4">
+          <div className="flex items-start gap-4 min-w-max [&>div]:!w-[85vw] sm:[&>div]:!w-[320px] [&>div]:!max-w-[400px] [&>div]:snap-center pr-4">
             {activeColumns.map((colName) => (
               <DemandColumn
                 key={colName}

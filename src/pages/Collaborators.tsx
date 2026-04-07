@@ -101,7 +101,7 @@ export default function Collaborators() {
   }
 
   return (
-    <div className="h-full w-full bg-background flex flex-col p-4 sm:p-6 overflow-y-auto sm:overflow-hidden">
+    <div className="w-full bg-background min-h-full flex flex-col p-4 sm:p-6">
       <div className="mb-6 shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
@@ -121,8 +121,8 @@ export default function Collaborators() {
         </Button>
       </div>
 
-      <Card className="hidden md:flex flex-1 overflow-hidden flex-col bg-white dark:bg-[rgba(255,255,255,0.02)] border-gray-300 dark:border-white/10 shadow-md dark:shadow-subtle">
-        <CardContent className="p-0 overflow-auto flex-1">
+      <Card className="hidden md:flex flex-col bg-white dark:bg-[rgba(255,255,255,0.02)] border-gray-300 dark:border-white/10 shadow-md dark:shadow-subtle">
+        <CardContent className="p-0">
           <Table>
             <TableHeader className="sticky top-0 bg-gray-100 dark:bg-black/40 backdrop-blur-md z-10">
               <TableRow>

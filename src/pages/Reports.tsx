@@ -258,7 +258,7 @@ export default function Reports() {
   )
 
   return (
-    <div className="h-full w-full bg-background flex flex-col p-4 sm:p-6 overflow-y-auto text-foreground">
+    <div className="w-full min-h-full bg-background flex flex-col p-4 sm:p-6 text-foreground">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 shrink-0 gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
