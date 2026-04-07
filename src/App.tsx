@@ -6,6 +6,7 @@ import Index from './pages/Index'
 import Vendas from './pages/Vendas'
 import Login from './pages/Login'
 import Demands from './pages/Demands'
+import Agenda from './pages/Agenda'
 import Clients from './pages/Clients'
 import ClientProfile from './pages/ClientProfile'
 import Collaborators from './pages/Collaborators'
@@ -25,6 +26,7 @@ import { ClientProvider } from './stores/useClientStore'
 import { AuthProvider } from './stores/useAuthStore'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { ThemeProvider } from './components/ThemeProvider'
+import { GlobalNotifications } from './components/GlobalNotifications'
 
 // Força Bruta: Bloquear eventos de foco/visibilidade globais que causam perda de dados em re-renders
 if (typeof window !== 'undefined') {
@@ -53,6 +55,7 @@ const App = () => (
             <ClientProvider>
               <LeadProvider>
                 <DemandProvider>
+                  <GlobalNotifications />
                   <Routes>
                     {/* Public Auth Routes */}
                     <Route path="/login" element={<Login />} />
@@ -62,6 +65,7 @@ const App = () => (
                       <Route path="/" element={<Index />} />
                       <Route path="/vendas" element={<Vendas />} />
                       <Route path="/demandas" element={<Demands />} />
+                      <Route path="/agenda" element={<Agenda />} />
                       <Route path="/clientes" element={<Clients />} />
                       <Route path="/clientes/:id" element={<ClientProfile />} />
                       <Route path="/colaboradores" element={<Collaborators />} />

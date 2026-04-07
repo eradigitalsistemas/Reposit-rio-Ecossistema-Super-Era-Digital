@@ -10,6 +10,7 @@ import {
   Loader2,
   ArrowRight,
   Home,
+  Calendar,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import useAuthStore from '@/stores/useAuthStore'
@@ -87,6 +88,14 @@ export default function Index() {
       count: counts.demandas,
       countLabel: 'Demandas em Aberto',
       route: '/demandas',
+    },
+    {
+      title: 'Agenda',
+      description: 'Calendário e Compromissos',
+      icon: Calendar,
+      count: null,
+      countLabel: 'Acessar Calendário',
+      route: '/agenda',
     },
     {
       title: 'Clientes Externos',
