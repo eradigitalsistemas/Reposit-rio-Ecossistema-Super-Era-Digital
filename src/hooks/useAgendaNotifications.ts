@@ -61,7 +61,9 @@ export function useAgendaNotifications() {
             }
           }
         })
-      } catch (err) {}
+      } catch (err) {
+        console.error('Error fetching notifications:', err)
+      }
     }
 
     if ('Notification' in window && Notification.permission === 'default') {
