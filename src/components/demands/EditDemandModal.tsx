@@ -99,12 +99,13 @@ export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalP
         checklist,
       })
 
-      if (schedEnabled && user) {
+      if (schedEnabled && user && schedDate) {
+        const formattedDate = schedDate.length === 16 ? `${schedDate}:00-03:00` : schedDate
         const { error: agendaError } = await supabase.from('agenda_eventos').insert({
           titulo: schedTitle,
           descricao: schedDesc,
-          data_inicio: schedDate,
-          data_fim: schedDate,
+          data_inicio: formattedDate,
+          data_fim: formattedDate,
           tipo: schedType as any,
           demanda_id: demand.id,
           usuario_id: user.id,

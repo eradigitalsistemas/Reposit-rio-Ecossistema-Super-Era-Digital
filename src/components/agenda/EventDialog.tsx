@@ -88,7 +88,6 @@ export function EventDialog({
           titulo: eventoToEdit.titulo,
           descricao: eventoToEdit.descricao,
           data_inicio: toGMT3String(eventoToEdit.data_inicio),
-          data_fim: toGMT3String(eventoToEdit.data_fim),
           tipo: eventoToEdit.tipo,
           privado: eventoToEdit.privado,
           cliente_id: eventoToEdit.cliente_id || 'none',
@@ -98,8 +97,6 @@ export function EventDialog({
         setIsEditMode(true)
         const initDate = new Date(selectedDate)
         initDate.setHours(9, 0, 0, 0)
-        const endDate = new Date(initDate)
-        endDate.setHours(10, 0, 0, 0)
 
         const pad = (n: number) => n.toString().padStart(2, '0')
         const formatLocal = (d: Date) =>
@@ -109,7 +106,6 @@ export function EventDialog({
           titulo: '',
           descricao: '',
           data_inicio: formatLocal(initDate),
-          data_fim: formatLocal(endDate),
           tipo: 'Evento',
           privado: false,
           cliente_id: 'none',
@@ -129,13 +125,14 @@ export function EventDialog({
     // do usuário seja registrada corretamente no banco sem adicionar horas
     const formatToSave = (localDatetime: string | undefined) => {
       if (!localDatetime) return new Date().toISOString()
-      return `${localDatetime}:00-03:00`
+      if (localDatetime.length === 16) return `${localDatetime}:00-03:00`
+      return localDatetime
     }
 
     const payload = {
       ...formData,
       data_inicio: formatToSave(formData.data_inicio as string),
-      data_fim: formatToSave(formData.data_fim as string),
+      data_fim: formatToSave(formData.data_inicio as string),
       cliente_id: formData.cliente_id === 'none' ? null : formData.cliente_id,
       criado_por: formData.criado_por || user.user_metadata?.full_name || user.email || 'Usuário',
     }
@@ -250,61 +247,60 @@ export function EventDialog({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label>Data/Hora Início</Label>
-              <Input
-                type="datetime-local"
-                value={formData.data_inicio}
-                onChange={(e) => setFormData({ ...formData, data_inicio: e.target.value })}
-                required
-                disabled={isReadOnly}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label>Data/Hora Fim</Label>
-              <Input
-                type="datetime-local"
-                value={formData.data_fim}
-                onChange={(e) => setFormData({ ...formData, data_fim: e.target.value })}
-                required
-                disabled={isReadOnly}
-              />
-            </div>
+          <div className="grid gap-2">
+            <Label className="text-gray-900 dark:text-gray-100 font-bold">Data e Hora</Label>
+            <Input
+              type="datetime-local"
+              value={formData.data_inicio || ''}
+              onChange={(e) => setFormData({ ...formData, data_inicio: e.target.value })}
+              required
+              disabled={isReadOnly}
+              className="bg-white text-black border-gray-300 dark:bg-zinc-950 dark:text-white dark:border-zinc-800"
+            />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="grid gap-2">
-              <Label>Tipo de Compromisso</Label>
+              <Label className="text-gray-900 dark:text-gray-100 font-bold">
+                Tipo de Compromisso
+              </Label>
               <Select
                 value={formData.tipo}
                 onValueChange={(v) => setFormData({ ...formData, tipo: v as any })}
                 disabled={isReadOnly}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-white text-black border-gray-300 dark:bg-zinc-950 dark:text-white dark:border-zinc-800">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Evento">Evento</SelectItem>
-                  <SelectItem value="Tarefa">Tarefa</SelectItem>
-                  <SelectItem value="Lembrete">Lembrete</SelectItem>
+                <SelectContent className="bg-white text-black border-gray-300 dark:bg-zinc-950 dark:text-white dark:border-zinc-800">
+                  <SelectItem value="Evento" className="text-black dark:text-white">
+                    Evento
+                  </SelectItem>
+                  <SelectItem value="Tarefa" className="text-black dark:text-white">
+                    Tarefa
+                  </SelectItem>
+                  <SelectItem value="Lembrete" className="text-black dark:text-white">
+                    Lembrete
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label>Vincular Cliente</Label>
+              <Label className="text-gray-900 dark:text-gray-100 font-bold">Vincular Cliente</Label>
               <Select
                 value={formData.cliente_id || 'none'}
                 onValueChange={(v) => setFormData({ ...formData, cliente_id: v })}
                 disabled={isReadOnly}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-white text-black border-gray-300 dark:bg-zinc-950 dark:text-white dark:border-zinc-800">
                   <SelectValue placeholder="Nenhum cliente" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Nenhum cliente</SelectItem>
+                <SelectContent className="bg-white text-black border-gray-300 dark:bg-zinc-950 dark:text-white dark:border-zinc-800">
+                  <SelectItem value="none" className="text-black dark:text-white">
+                    Nenhum cliente
+                  </SelectItem>
                   {clientes.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
+                    <SelectItem key={c.id} value={c.id} className="text-black dark:text-white">
                       {c.nome}
                     </SelectItem>
                   ))}

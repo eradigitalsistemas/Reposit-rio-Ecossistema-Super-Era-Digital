@@ -61,12 +61,13 @@ export function AddLeadModal() {
         interestStatus,
       })
 
-      if (newLead && schedEnabled && user) {
+      if (newLead && schedEnabled && user && schedDate) {
+        const formattedDate = schedDate.length === 16 ? `${schedDate}:00-03:00` : schedDate
         const { error: agendaError } = await supabase.from('agenda_eventos').insert({
           titulo: schedTitle,
           descricao: schedDesc,
-          data_inicio: schedDate,
-          data_fim: schedDate,
+          data_inicio: formattedDate,
+          data_fim: formattedDate,
           tipo: schedType,
           lead_id: newLead.id,
           usuario_id: user.id,
