@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { supabase } from '@/lib/supabase/client'
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns'
+import useAuthStore from './useAuthStore'
 
 export interface EventoAgenda {
   id: string
@@ -12,6 +13,8 @@ export interface EventoAgenda {
   tipo: 'Evento' | 'Tarefa' | 'Lembrete' | 'Demanda'
   privado: boolean
   cliente_id?: string | null
+  lead_id?: string | null
+  demanda_id?: string | null
   isDemanda?: boolean
   status?: string
   criado_por?: string | null
@@ -54,22 +57,8 @@ export const useAgendaStore = create<AgendaState>((set) => ({
         qEventos = qEventos.eq('usuario_id', filtroUsuario)
       }
 
-      const { data: dataEventos } = await qEventos
-
-      let qDemandas = supabase
-        .from('demandas')
-        .select('id, responsavel_id, titulo, descricao, data_vencimento, status')
-        .not('data_vencimento', 'is', null)
-        .gte('data_vencimento', startDate)
-        .lte('data_vencimento', endDate)
-
-      if (!isAdmin) {
-        qDemandas = qDemandas.eq('responsavel_id', currentUserId)
-      } else if (filtroUsuario && filtroUsuario !== 'todos') {
-        qDemandas = qDemandas.eq('responsavel_id', filtroUsuario)
-      }
-
-      const { data: dataDemandas } = await qDemandas
+      const { data: dataEventos, error } = await qEventos
+      if (error) throw error
 
       const mappedEventos: EventoAgenda[] = (dataEventos || []).map((e: any) => ({
         id: e.id,
@@ -81,47 +70,40 @@ export const useAgendaStore = create<AgendaState>((set) => ({
         tipo: e.tipo,
         privado: e.privado,
         cliente_id: e.cliente_id,
+        lead_id: e.lead_id,
+        demanda_id: e.demanda_id,
         criado_por: e.criado_por,
-      }))
-
-      const mappedDemandas: EventoAgenda[] = (dataDemandas || []).map((d: any) => ({
-        id: d.id,
-        usuario_id: d.responsavel_id || currentUserId,
-        titulo: `[Demanda] ${d.titulo}`,
-        descricao: d.descricao,
-        data_inicio: d.data_vencimento,
-        data_fim: d.data_vencimento,
-        tipo: 'Demanda',
-        privado: false,
-        isDemanda: true,
-        status: d.status,
       }))
 
       const startOfToday = new Date()
       startOfToday.setHours(0, 0, 0, 0)
 
       const filteredEventos = mappedEventos.filter((e) => new Date(e.data_inicio) >= startOfToday)
-      const filteredDemandas = mappedDemandas.filter((d) => new Date(d.data_inicio) >= startOfToday)
 
-      set({ eventos: [...filteredEventos, ...filteredDemandas], loading: false })
+      set({ eventos: filteredEventos, loading: false })
     } catch (error) {
-      console.error(error)
+      console.error('Erro ao buscar eventos:', error)
       set({ loading: false })
     }
   },
 
   salvarEvento: async (evento, currentUserId) => {
     try {
+      const user = useAuthStore.getState().user
+      const criadorNome = user?.user_metadata?.full_name || user?.email || 'Usuário'
+
       const payload = {
         titulo: evento.titulo,
         descricao: evento.descricao || '',
         data_inicio: evento.data_inicio,
-        data_fim: evento.data_fim,
+        data_fim: evento.data_fim || evento.data_inicio,
         tipo: evento.tipo,
         privado: evento.privado || false,
         usuario_id: currentUserId,
         cliente_id: evento.cliente_id || null,
-        criado_por: evento.criado_por || null,
+        lead_id: evento.lead_id || null,
+        demanda_id: evento.demanda_id || null,
+        criado_por: evento.id ? evento.criado_por : criadorNome,
       }
 
       let res
@@ -137,6 +119,7 @@ export const useAgendaStore = create<AgendaState>((set) => ({
       if (res.error) throw res.error
       return { error: null }
     } catch (error) {
+      console.error('Erro ao salvar evento:', error)
       return { error }
     }
   },
@@ -144,7 +127,8 @@ export const useAgendaStore = create<AgendaState>((set) => ({
   deletarEvento: async (id) => {
     try {
       const { error } = await supabase.from('agenda_eventos').delete().eq('id', id)
-      return { error }
+      if (error) throw error
+      return { error: null }
     } catch (error) {
       return { error }
     }

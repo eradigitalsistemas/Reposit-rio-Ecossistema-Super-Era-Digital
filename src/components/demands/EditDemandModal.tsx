@@ -18,12 +18,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import useDemandStore from '@/stores/useDemandStore'
+import { useAgendaStore } from '@/stores/useAgendaStore'
+import useAuthStore from '@/stores/useAuthStore'
 import { Demand, DemandPriority, DemandAttachment, ChecklistItem } from '@/types/demand'
 import { supabase } from '@/lib/supabase/client'
 import { format } from 'date-fns'
 import { Paperclip, X, Plus, File as FileIcon, Image as ImageIcon } from 'lucide-react'
 import { sanitizeFilename } from '@/lib/utils'
+import { ScheduleActionFields } from '../ScheduleActionFields'
+import { useToast } from '@/hooks/use-toast'
 
 interface EditDemandModalProps {
   open: boolean
@@ -33,11 +38,21 @@ interface EditDemandModalProps {
 
 export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalProps) {
   const { editDemand, collaborators, fetchCollaborators } = useDemandStore()
+  const { user } = useAuthStore()
+  const salvarEvento = useAgendaStore((state) => state.salvarEvento)
+  const { toast } = useToast()
+
   const [loading, setLoading] = useState(false)
   const [newFiles, setNewFiles] = useState<File[]>([])
   const [existingAttachments, setExistingAttachments] = useState<DemandAttachment[]>([])
   const [checklist, setChecklist] = useState<ChecklistItem[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const [schedEnabled, setSchedEnabled] = useState(false)
+  const [schedType, setSchedType] = useState('Tarefa')
+  const [schedDate, setSchedDate] = useState('')
+  const [schedTitle, setSchedTitle] = useState('')
+  const [schedDesc, setSchedDesc] = useState('')
 
   useEffect(() => {
     if (open) {
@@ -45,6 +60,7 @@ export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalP
       setExistingAttachments(demand.attachments || [])
       setChecklist(demand.checklist || [])
       setNewFiles([])
+      setSchedEnabled(false)
     }
   }, [open, fetchCollaborators, demand])
 
@@ -82,6 +98,21 @@ export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalP
       checklist,
     })
 
+    if (schedEnabled && user) {
+      await salvarEvento(
+        {
+          titulo: schedTitle,
+          descricao: schedDesc,
+          data_inicio: schedDate,
+          data_fim: schedDate,
+          tipo: schedType as any,
+          demanda_id: demand.id,
+        },
+        user.id,
+      )
+      toast({ title: 'Ação Agendada', description: 'O lembrete da demanda foi atualizado.' })
+    }
+
     setLoading(false)
     onOpenChange(false)
   }
@@ -91,250 +122,281 @@ export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalP
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="w-[95vw] sm:max-w-[500px] max-h-[90vh] overflow-y-auto"
+        className="w-[95vw] sm:max-w-[550px] p-0"
         onClick={(e) => e.stopPropagation()}
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle>Editar Demanda</DialogTitle>
-            <DialogDescription>Modifique as informações da demanda abaixo.</DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="title">Título *</Label>
-              <Input
-                id="title"
-                name="title"
-                defaultValue={demand.title}
-                required
-                disabled={loading}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col max-h-[90vh]">
+          <div className="p-6 pb-4 border-b border-border">
+            <DialogHeader>
+              <DialogTitle className="text-foreground">Editar Demanda</DialogTitle>
+              <DialogDescription>
+                Modifique as informações e agende os próximos passos.
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+          <ScrollArea className="flex-1 p-6">
+            <div className="grid gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="priority">Prioridade</Label>
-                <Select name="priority" defaultValue={demand.priority} disabled={loading}>
-                  <SelectTrigger className="h-11 sm:h-10">
-                    <SelectValue />
+                <Label htmlFor="title" className="text-foreground">
+                  Título *
+                </Label>
+                <Input
+                  id="title"
+                  name="title"
+                  defaultValue={demand.title}
+                  required
+                  disabled={loading}
+                  className="bg-background text-foreground"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="priority" className="text-foreground">
+                    Prioridade
+                  </Label>
+                  <Select name="priority" defaultValue={demand.priority} disabled={loading}>
+                    <SelectTrigger className="bg-background text-foreground">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Pode Ficar para Amanhã">Ficar para Amanhã</SelectItem>
+                      <SelectItem value="Durante o Dia">Durante o Dia</SelectItem>
+                      <SelectItem value="Urgente">Urgente</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="dueDate" className="text-foreground">
+                    Vencimento
+                  </Label>
+                  <Input
+                    id="dueDate"
+                    name="dueDate"
+                    type="date"
+                    defaultValue={defaultDueDate}
+                    className="bg-background text-foreground"
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="assigneeId" className="text-foreground">
+                  Responsável
+                </Label>
+                <Select
+                  name="assigneeId"
+                  defaultValue={demand.assigneeId || 'none'}
+                  disabled={loading}
+                >
+                  <SelectTrigger className="bg-background text-foreground">
+                    <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Pode Ficar para Amanhã">Ficar para Amanhã</SelectItem>
-                    <SelectItem value="Durante o Dia">Durante o Dia</SelectItem>
-                    <SelectItem value="Urgente">Urgente</SelectItem>
+                    <SelectItem value="none">Não Atribuído</SelectItem>
+                    {collaborators.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.nome}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
+
               <div className="grid gap-2">
-                <Label htmlFor="dueDate">Vencimento</Label>
-                <Input
-                  id="dueDate"
-                  name="dueDate"
-                  type="date"
-                  defaultValue={defaultDueDate}
-                  className="h-11 sm:h-10"
-                  disabled={loading}
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="assigneeId">Responsável</Label>
-              <Select
-                name="assigneeId"
-                defaultValue={demand.assigneeId || 'none'}
-                disabled={loading}
-              >
-                <SelectTrigger className="h-11 sm:h-10">
-                  <SelectValue placeholder="Selecione..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Não Atribuído</SelectItem>
-                  {collaborators.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid gap-2">
-              <div className="flex items-center justify-between">
-                <Label className="font-medium">Itens do Checklist</Label>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() =>
-                    setChecklist([
-                      ...checklist,
-                      { id: crypto.randomUUID(), text: '', completed: false },
-                    ])
-                  }
-                >
-                  <Plus className="w-4 h-4 mr-1" /> Adicionar
-                </Button>
-              </div>
-              {checklist.length > 0 && (
-                <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
-                  {checklist.map((item) => (
-                    <div key={item.id} className="flex items-center gap-2">
-                      <Input
-                        value={item.text}
-                        onChange={(e) =>
-                          setChecklist(
-                            checklist.map((c) =>
-                              c.id === item.id ? { ...c, text: e.target.value } : c,
-                            ),
-                          )
-                        }
-                        placeholder="Passo da tarefa"
-                        className="flex-1 h-9"
-                      />
-                      <Input
-                        type="datetime-local"
-                        value={item.dueDate || ''}
-                        onChange={(e) =>
-                          setChecklist(
-                            checklist.map((c) =>
-                              c.id === item.id ? { ...c, dueDate: e.target.value } : c,
-                            ),
-                          )
-                        }
-                        className="w-[180px] h-9"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setChecklist(checklist.filter((c) => c.id !== item.id))}
-                        className="h-9 w-9 text-red-500 shrink-0"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
+                <div className="flex items-center justify-between">
+                  <Label className="font-medium text-foreground">Itens do Checklist</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      setChecklist([
+                        ...checklist,
+                        { id: crypto.randomUUID(), text: '', completed: false },
+                      ])
+                    }
+                  >
+                    <Plus className="w-4 h-4 mr-1" /> Adicionar
+                  </Button>
                 </div>
-              )}
-            </div>
+                {checklist.length > 0 && (
+                  <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                    {checklist.map((item) => (
+                      <div key={item.id} className="flex items-center gap-2">
+                        <Input
+                          value={item.text}
+                          onChange={(e) =>
+                            setChecklist(
+                              checklist.map((c) =>
+                                c.id === item.id ? { ...c, text: e.target.value } : c,
+                              ),
+                            )
+                          }
+                          placeholder="Passo da tarefa"
+                          className="flex-1 h-9 bg-background text-foreground"
+                        />
+                        <Input
+                          type="datetime-local"
+                          value={item.dueDate || ''}
+                          onChange={(e) =>
+                            setChecklist(
+                              checklist.map((c) =>
+                                c.id === item.id ? { ...c, dueDate: e.target.value } : c,
+                              ),
+                            )
+                          }
+                          className="w-[180px] h-9 bg-background text-foreground"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setChecklist(checklist.filter((c) => c.id !== item.id))}
+                          className="h-9 w-9 text-red-500 shrink-0"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="description">Descrição</Label>
-              <Textarea
-                id="description"
-                name="description"
-                defaultValue={demand.description}
-                className="min-h-[80px]"
-                disabled={loading}
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <div className="flex items-center justify-between">
-                <Label>Anexos</Label>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="text-primary hover:text-primary/80 hover:bg-primary/10 gap-2 px-2 h-8"
-                  onClick={() => fileInputRef.current?.click()}
+              <div className="grid gap-2">
+                <Label htmlFor="description" className="text-foreground">
+                  Descrição
+                </Label>
+                <Textarea
+                  id="description"
+                  name="description"
+                  defaultValue={demand.description}
+                  className="min-h-[80px] bg-background text-foreground"
                   disabled={loading}
-                >
-                  <Paperclip className="w-4 h-4" />
-                  Adicionar
-                </Button>
-                <input
-                  type="file"
-                  multiple
-                  className="hidden"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
                 />
               </div>
-              {(existingAttachments.length > 0 || newFiles.length > 0) && (
-                <div className="space-y-2 mt-1 max-h-32 overflow-y-auto pr-1">
-                  {existingAttachments.map((file, i) => {
-                    const fileUrl = supabase.storage.from('anexos').getPublicUrl(file.url)
-                      .data.publicUrl
-                    return (
-                      <div
-                        key={`ext-${i}`}
-                        className="flex items-center justify-between bg-white/5 border border-white/10 rounded-md p-2 text-sm"
-                      >
-                        <div className="flex items-center gap-2 overflow-hidden flex-1 pr-2">
-                          {file.type.startsWith('image/') ? (
-                            <ImageIcon className="w-4 h-4 shrink-0 text-white/50" />
-                          ) : (
-                            <FileIcon className="w-4 h-4 shrink-0 text-white/50" />
-                          )}
-                          <a
-                            href={fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            download={file.name}
-                            className="truncate text-primary hover:underline text-left cursor-pointer"
+
+              <ScheduleActionFields
+                enabled={schedEnabled}
+                setEnabled={setSchedEnabled}
+                type={schedType}
+                setType={setSchedType}
+                date={schedDate}
+                setDate={setSchedDate}
+                title={schedTitle}
+                setTitle={setSchedTitle}
+                desc={schedDesc}
+                setDesc={setSchedDesc}
+              />
+
+              <div className="grid gap-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-foreground">Anexos</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-primary hover:text-primary/80 gap-2 h-8"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={loading}
+                  >
+                    <Paperclip className="w-4 h-4" /> Adicionar
+                  </Button>
+                  <input
+                    type="file"
+                    multiple
+                    className="hidden"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                  />
+                </div>
+                {(existingAttachments.length > 0 || newFiles.length > 0) && (
+                  <div className="space-y-2 mt-1 max-h-32 overflow-y-auto pr-1">
+                    {existingAttachments.map((file, i) => {
+                      const fileUrl = supabase.storage.from('anexos').getPublicUrl(file.url)
+                        .data.publicUrl
+                      return (
+                        <div
+                          key={`ext-${i}`}
+                          className="flex items-center justify-between bg-muted/50 border border-border rounded-md p-2 text-sm"
+                        >
+                          <div className="flex items-center gap-2 overflow-hidden flex-1 pr-2">
+                            {file.type.startsWith('image/') ? (
+                              <ImageIcon className="w-4 h-4 shrink-0 text-muted-foreground" />
+                            ) : (
+                              <FileIcon className="w-4 h-4 shrink-0 text-muted-foreground" />
+                            )}
+                            <a
+                              href={fileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              download={file.name}
+                              className="truncate text-primary hover:underline text-left cursor-pointer"
+                            >
+                              {file.name}
+                            </a>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeExistingFile(i)}
+                            className="text-muted-foreground hover:text-foreground shrink-0 p-1"
                           >
-                            {file.name}
-                          </a>
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )
+                    })}
+                    {newFiles.map((file, i) => (
+                      <div
+                        key={`new-${i}`}
+                        className="flex items-center justify-between bg-primary/5 border border-primary/20 rounded-md p-2 text-sm"
+                      >
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          {file.type.startsWith('image/') ? (
+                            <ImageIcon className="w-4 h-4 shrink-0 text-primary/50" />
+                          ) : (
+                            <FileIcon className="w-4 h-4 shrink-0 text-primary/50" />
+                          )}
+                          <span className="truncate text-primary/80">{file.name}</span>
                         </div>
                         <button
                           type="button"
-                          onClick={() => removeExistingFile(i)}
-                          className="text-white/50 hover:text-white shrink-0 p-1"
+                          onClick={() => removeNewFile(i)}
+                          className="text-primary/50 hover:text-primary shrink-0 p-1"
                         >
                           <X className="w-4 h-4" />
                         </button>
                       </div>
-                    )
-                  })}
-                  {newFiles.map((file, i) => (
-                    <div
-                      key={`new-${i}`}
-                      className="flex items-center justify-between bg-primary/5 border border-primary/20 rounded-md p-2 text-sm"
-                    >
-                      <div className="flex items-center gap-2 overflow-hidden">
-                        {file.type.startsWith('image/') ? (
-                          <ImageIcon className="w-4 h-4 shrink-0 text-primary/50" />
-                        ) : (
-                          <FileIcon className="w-4 h-4 shrink-0 text-primary/50" />
-                        )}
-                        <span className="truncate text-primary/80">{file.name}</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => removeNewFile(i)}
-                        className="text-primary/50 hover:text-primary shrink-0 p-1"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
+          </ScrollArea>
+          <div className="p-6 pt-4 border-t border-border">
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => onOpenChange(false)}
+                className="w-full sm:w-auto"
+                disabled={loading}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                variant="default"
+                className="w-full sm:w-auto text-primary-foreground"
+                disabled={loading}
+              >
+                {loading ? 'Salvando...' : 'Salvar Alterações'}
+              </Button>
+            </DialogFooter>
           </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => onOpenChange(false)}
-              className="w-full sm:w-auto mb-2 sm:mb-0 h-11 sm:h-10"
-              disabled={loading}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              variant="default"
-              className="w-full sm:w-auto h-11 sm:h-10 text-black"
-              disabled={loading}
-            >
-              {loading ? 'Salvando...' : 'Salvar Alterações'}
-            </Button>
-          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

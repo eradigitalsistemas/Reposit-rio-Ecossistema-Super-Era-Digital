@@ -1,7 +1,7 @@
 import { Lead } from '@/types/crm'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Building2, Mail, Phone } from 'lucide-react'
+import { Building2, Mail, Phone, MapPin } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { EditLeadModal } from './EditLeadModal'
 import { DeleteLeadAlert } from './DeleteLeadAlert'
@@ -34,7 +34,8 @@ export function KanbanCard({ lead }: KanbanCardProps) {
               {lead.name}
             </h4>
           </div>
-          <div className="flex items-center gap-0.5 absolute right-2 top-2 sm:right-1.5 sm:top-1.5 bg-background/90 backdrop-blur-sm rounded-md px-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10 border border-border shadow-sm">
+          {/* Always visible icons with muted styling, highlighting on hover */}
+          <div className="flex items-center gap-0.5 absolute right-2 top-2 sm:right-1.5 sm:top-1.5 bg-background/90 backdrop-blur-sm rounded-md px-1 z-10 border border-border shadow-sm">
             <LeadHistorySheet lead={lead} />
             <EditLeadModal lead={lead} />
             <DeleteLeadAlert lead={lead} />
@@ -45,6 +46,13 @@ export function KanbanCard({ lead }: KanbanCardProps) {
           <div className="flex items-center text-sm sm:text-xs text-muted-foreground mt-0.5">
             <Building2 className="w-4 h-4 sm:w-3 sm:h-3 mr-1.5 sm:mr-1 shrink-0" />
             <span className="truncate">{lead.company}</span>
+          </div>
+        )}
+
+        {lead.address && (
+          <div className="flex items-center text-sm sm:text-xs text-muted-foreground">
+            <MapPin className="w-4 h-4 sm:w-3 sm:h-3 mr-1.5 sm:mr-1 shrink-0" />
+            <span className="truncate">{lead.address}</span>
           </div>
         )}
 

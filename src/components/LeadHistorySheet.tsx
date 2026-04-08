@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Eye, Clock, User, Phone, Mail, MessageSquare } from 'lucide-react'
+import { Eye, Clock, User, Phone, Mail, MessageSquare, Building2, MapPin } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -10,9 +10,12 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
 import { Lead } from '@/types/crm'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from '@/hooks/use-toast'
+import { cn } from '@/lib/utils'
 
 interface LeadHistorySheetProps {
   lead: Lead
@@ -34,9 +37,7 @@ export function LeadHistorySheet({ lead }: LeadHistorySheetProps) {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (open) {
-      fetchHistory()
-    }
+    if (open) fetchHistory()
   }, [open, lead.id])
 
   const fetchHistory = async () => {
@@ -47,14 +48,12 @@ export function LeadHistorySheet({ lead }: LeadHistorySheetProps) {
         .select('observacoes, data_criacao')
         .eq('id', lead.id)
         .single()
-
       if (leadError) throw leadError
 
       const { data: historyData, error: historyError } = await supabase
         .from('historico_leads')
         .select('*')
         .eq('lead_id', lead.id)
-
       if (historyError) throw historyError
 
       const items: HistoryItem[] = (historyData || []).map((item) => ({
@@ -72,12 +71,10 @@ export function LeadHistorySheet({ lead }: LeadHistorySheetProps) {
         type: 'creation',
         date: leadData.data_criacao,
         title: 'Lead criado',
-        details: leadData.observacoes || 'Lead adicionado ao sistema na fase inicial.',
+        details: leadData.observacoes || 'Lead adicionado ao sistema.',
       })
 
-      // Strict chronological order (oldest to newest)
       items.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-
       setHistory(items)
     } catch (error) {
       toast({
@@ -107,8 +104,7 @@ export function LeadHistorySheet({ lead }: LeadHistorySheetProps) {
 
   const formatTimelineDate = (dateStr: string) => {
     try {
-      const d = new Date(dateStr)
-      return d.toLocaleDateString('pt-BR', {
+      return new Date(dateStr).toLocaleDateString('pt-BR', {
         day: '2-digit',
         month: 'short',
         hour: '2-digit',
@@ -119,79 +115,125 @@ export function LeadHistorySheet({ lead }: LeadHistorySheetProps) {
     }
   }
 
+  const DetailItem = ({ label, icon: Icon, value }: any) => (
+    <div className="flex gap-3 items-start p-3 bg-background border border-border rounded-lg shadow-sm">
+      <div className="bg-primary/10 p-2 rounded-md shrink-0">
+        <Icon className="w-4 h-4 text-primary" />
+      </div>
+      <div className="flex flex-col min-w-0">
+        <Label className="text-xs text-muted-foreground font-medium">{label}</Label>
+        <p className="text-sm text-foreground break-words mt-0.5 whitespace-pre-wrap">
+          {value || 'N/A'}
+        </p>
+      </div>
+    </div>
+  )
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 text-white/60 hover:text-primary hover:bg-white/10"
+          className="h-7 w-7 text-gray-500 dark:text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => e.stopPropagation()}
         >
-          <Eye className="h-3.5 w-3.5" />
-          <span className="sr-only">Ver Histórico</span>
+          <Eye className="h-4 w-4" />
+          <span className="sr-only">Ver Dossiê</span>
         </Button>
       </SheetTrigger>
       <SheetContent
-        className="w-[95vw] sm:max-w-md flex flex-col gap-0 p-0"
+        className="w-[95vw] sm:max-w-2xl md:max-w-4xl flex flex-col md:flex-row gap-0 p-0 overflow-hidden"
         onPointerDown={(e) => e.stopPropagation()}
       >
-        <div className="p-6 pb-4 border-b border-white/10">
-          <SheetHeader>
-            <SheetTitle>Histórico do Lead</SheetTitle>
-            <SheetDescription>Linha do tempo de interações com {lead.name}</SheetDescription>
+        {/* Left Panel: Dossier Details */}
+        <div className="w-full md:w-[350px] bg-muted/20 border-b md:border-b-0 md:border-r border-border p-6 overflow-y-auto shrink-0 flex flex-col">
+          <SheetHeader className="mb-6 text-left">
+            <SheetTitle className="text-2xl font-bold text-foreground tracking-tight leading-tight">
+              {lead.name}
+            </SheetTitle>
+            <SheetDescription>Dossiê Completo do Lead</SheetDescription>
+            <div className="flex flex-wrap gap-2 mt-3">
+              <Badge variant="outline" className="bg-background">
+                {lead.stage.replace('_', ' ').toUpperCase()}
+              </Badge>
+              <Badge
+                variant="default"
+                className={cn(
+                  lead.interestStatus === 'Não Interessado' ? 'bg-red-600' : 'bg-green-600',
+                )}
+              >
+                {lead.interestStatus}
+              </Badge>
+            </div>
           </SheetHeader>
+          <div className="space-y-3 flex-1">
+            <DetailItem label="Telefone" icon={Phone} value={lead.phone} />
+            <DetailItem label="E-mail" icon={Mail} value={lead.email} />
+            <DetailItem label="Empresa" icon={Building2} value={lead.company} />
+            <DetailItem label="Endereço" icon={MapPin} value={lead.address} />
+          </div>
         </div>
 
-        <ScrollArea className="flex-1 p-6">
-          {loading ? (
-            <div className="flex justify-center items-center py-8">
-              <span className="text-sm text-white/40 animate-pulse">Carregando histórico...</span>
-            </div>
-          ) : (
-            <div className="relative border-l border-white/10 ml-3 space-y-6 pb-6">
-              {history.map((item) => (
-                <div key={item.id} className="relative pl-6">
-                  <div className="absolute -left-[5px] top-1 h-2.5 w-2.5 rounded-full border-2 border-background bg-primary shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
-
-                  <div className="flex flex-col gap-2">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4">
-                      <h4 className="text-sm font-semibold text-white leading-none mt-0.5">
-                        {item.title}
-                      </h4>
-                      <time className="text-xs text-white/60 whitespace-nowrap flex items-center gap-1 shrink-0">
-                        <Clock className="w-3 h-3" />
-                        {formatTimelineDate(item.date)}
-                      </time>
-                    </div>
-
-                    {item.type === 'interaction' && (
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        {item.contact && (
-                          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[rgba(255,255,255,0.05)] text-xs text-white border border-white/10">
-                            <User className="w-3 h-3" />
-                            {item.contact}
-                          </div>
-                        )}
-                        {item.method && (
-                          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[rgba(255,255,255,0.05)] text-xs text-white border border-white/10">
-                            {getMethodIcon(item.method)}
-                            {item.method}
-                          </div>
-                        )}
+        {/* Right Panel: Timeline */}
+        <div className="flex-1 flex flex-col overflow-hidden bg-background">
+          <div className="p-6 pb-4 border-b border-border bg-muted/5">
+            <h3 className="font-semibold text-foreground flex items-center gap-2">
+              <Clock className="w-4 h-4 text-primary" /> Linha do Tempo e Interações
+            </h3>
+          </div>
+          <ScrollArea className="flex-1 p-6">
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <span className="text-sm text-muted-foreground animate-pulse">
+                  Carregando histórico...
+                </span>
+              </div>
+            ) : (
+              <div className="relative border-l border-border ml-3 space-y-8 pb-8">
+                {history.map((item) => (
+                  <div
+                    key={item.id}
+                    className="relative pl-6 animate-in fade-in slide-in-from-left-2"
+                  >
+                    <div className="absolute -left-[5px] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-primary shadow-[0_0_8px_rgba(var(--primary),0.5)]" />
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4">
+                        <h4 className="text-sm font-bold text-foreground leading-none">
+                          {item.title}
+                        </h4>
+                        <time className="text-xs text-muted-foreground whitespace-nowrap flex items-center gap-1 font-medium bg-muted/30 px-2 py-0.5 rounded-md">
+                          <Clock className="w-3 h-3" />
+                          {formatTimelineDate(item.date)}
+                        </time>
                       </div>
-                    )}
-
-                    <div className="text-sm text-white/70 bg-[rgba(255,255,255,0.02)] p-3 rounded-lg border border-white/10 mt-1 whitespace-pre-wrap">
-                      {item.details}
+                      {item.type === 'interaction' && (
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {item.contact && (
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary/5 text-xs text-foreground font-medium border border-primary/10">
+                              <User className="w-3.5 h-3.5 text-primary" />
+                              {item.contact}
+                            </div>
+                          )}
+                          {item.method && (
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary/5 text-xs text-foreground font-medium border border-primary/10">
+                              <span className="text-primary">{getMethodIcon(item.method)}</span>
+                              {item.method}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      <div className="text-sm text-foreground bg-muted/30 p-4 rounded-xl border border-border mt-2 whitespace-pre-wrap leading-relaxed shadow-sm">
+                        {item.details}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </ScrollArea>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+        </div>
       </SheetContent>
     </Sheet>
   )

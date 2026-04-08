@@ -16,7 +16,7 @@ interface LeadStoreState {
   leads: Lead[]
   searchQuery: string
   setSearchQuery: (query: string) => void
-  addLead: (lead: Omit<Lead, 'id' | 'createdAt'>) => Promise<void>
+  addLead: (lead: Omit<Lead, 'id' | 'createdAt'>) => Promise<Lead | undefined>
   updateLead: (id: string, updates: Partial<Omit<Lead, 'id' | 'createdAt'>>) => Promise<void>
   moveLead: (id: string, newStage: LeadStage) => Promise<void>
   deleteLead: (id: string) => Promise<void>
@@ -54,6 +54,7 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
           company: d.empresa || '',
           email: d.email,
           phone: d.telefone || '',
+          address: d.endereco || '',
           notes: d.observacoes || '',
           stage: d.estagio as LeadStage,
           interestStatus: (d.status_interesse as InterestStatus) || 'Interessado',
@@ -72,7 +73,7 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
 
   const addLead = useCallback(
     async (newLead: Omit<Lead, 'id' | 'createdAt'>) => {
-      if (!user) return
+      if (!user) return undefined
 
       const { data, error } = await supabase
         .from('leads')
@@ -81,6 +82,7 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
           empresa: newLead.company,
           email: newLead.email,
           telefone: newLead.phone,
+          endereco: newLead.address,
           observacoes: newLead.notes,
           estagio: newLead.stage,
           status_interesse: newLead.interestStatus,
@@ -91,31 +93,31 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (error) {
         toast({ title: 'Erro', description: 'Erro ao criar lead.', variant: 'destructive' })
-        return
+        return undefined
       }
 
       if (data) {
         const d = data as any
-        setLeads((prev) => [
-          {
-            id: d.id,
-            name: d.nome,
-            company: d.empresa || '',
-            email: d.email,
-            phone: d.telefone || '',
-            notes: d.observacoes || '',
-            stage: d.estagio as LeadStage,
-            interestStatus: (d.status_interesse as InterestStatus) || 'Interessado',
-            createdAt: d.data_criacao,
-          },
-          ...prev,
-        ])
+        const createdLead: Lead = {
+          id: d.id,
+          name: d.nome,
+          company: d.empresa || '',
+          email: d.email,
+          phone: d.telefone || '',
+          address: d.endereco || '',
+          notes: d.observacoes || '',
+          stage: d.estagio as LeadStage,
+          interestStatus: (d.status_interesse as InterestStatus) || 'Interessado',
+          createdAt: d.data_criacao,
+        }
+        setLeads((prev) => [createdLead, ...prev])
         toast({ title: 'Lead Criado', description: 'O lead foi adicionado com sucesso.' })
+        return createdLead
       }
+      return undefined
     },
     [user],
   )
-
   const updateLead = useCallback(
     async (id: string, updates: Partial<Omit<Lead, 'id' | 'createdAt'>>) => {
       const dbUpdates: any = {}
@@ -124,6 +126,7 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
       if (updates.email !== undefined) dbUpdates.email = updates.email
       if (updates.phone !== undefined) dbUpdates.telefone = updates.phone
       if (updates.notes !== undefined) dbUpdates.observacoes = updates.notes
+      if (updates.address !== undefined) dbUpdates.endereco = updates.address
       if (updates.stage !== undefined) dbUpdates.estagio = updates.stage
       if (updates.interestStatus !== undefined) dbUpdates.status_interesse = updates.interestStatus
 

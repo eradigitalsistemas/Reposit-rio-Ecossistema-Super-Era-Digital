@@ -20,10 +20,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import useDemandStore from '@/stores/useDemandStore'
+import { useAgendaStore } from '@/stores/useAgendaStore'
+import useAuthStore from '@/stores/useAuthStore'
 import { DemandPriority, DemandStatus, DemandAttachment, ChecklistItem } from '@/types/demand'
 import { supabase } from '@/lib/supabase/client'
 import { sanitizeFilename } from '@/lib/utils'
+import { ScheduleActionFields } from '../ScheduleActionFields'
+import { useToast } from '@/hooks/use-toast'
 
 export function AddDemandModal() {
   const [open, setOpen] = useState(false)
@@ -32,6 +37,16 @@ export function AddDemandModal() {
   const [selectedTemplate, setSelectedTemplate] = useState<string>('none')
   const [checklist, setChecklist] = useState<ChecklistItem[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const [schedEnabled, setSchedEnabled] = useState(false)
+  const [schedType, setSchedType] = useState('Tarefa')
+  const [schedDate, setSchedDate] = useState('')
+  const [schedTitle, setSchedTitle] = useState('')
+  const [schedDesc, setSchedDesc] = useState('')
+
+  const { user } = useAuthStore()
+  const salvarEvento = useAgendaStore((state) => state.salvarEvento)
+  const { toast } = useToast()
 
   const {
     addDemand,
@@ -45,6 +60,7 @@ export function AddDemandModal() {
     if (open) {
       fetchCollaborators()
       fetchChecklistTemplates()
+      setSchedEnabled(false)
     }
   }, [open, fetchCollaborators, fetchChecklistTemplates])
 
@@ -76,6 +92,7 @@ export function AddDemandModal() {
     setLoading(true)
     const formData = new FormData(e.currentTarget)
     const assigneeIdStr = formData.get('assigneeId') as string
+    const demandTitle = formData.get('title') as string
 
     const dueDateStr = formData.get('dueDate') as string
     const finalDueDate = dueDateStr ? new Date(dueDateStr + 'T12:00:00').toISOString() : null
@@ -90,7 +107,7 @@ export function AddDemandModal() {
     }
 
     await addDemand({
-      title: formData.get('title') as string,
+      title: demandTitle,
       description: formData.get('description') as string,
       priority: formData.get('priority') as DemandPriority,
       status: formData.get('status') as DemandStatus,
@@ -99,6 +116,33 @@ export function AddDemandModal() {
       attachments,
       checklist,
     })
+
+    if (schedEnabled && user) {
+      // Find the created demand to link
+      const { data: latestDemand } = await supabase
+        .from('demandas')
+        .select('id')
+        .eq('usuario_id', user.id)
+        .eq('titulo', demandTitle)
+        .order('data_criacao', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (latestDemand) {
+        await salvarEvento(
+          {
+            titulo: schedTitle,
+            descricao: schedDesc,
+            data_inicio: schedDate,
+            data_fim: schedDate,
+            tipo: schedType as any,
+            demanda_id: latestDemand.id,
+          },
+          user.id,
+        )
+        toast({ title: 'Ação Agendada', description: 'O lembrete da demanda foi salvo.' })
+      }
+    }
 
     setLoading(false)
     setFiles([])
@@ -110,265 +154,286 @@ export function AddDemandModal() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="default" className="gap-2 w-full sm:w-auto h-11 sm:h-10 text-black">
+        <Button
+          variant="default"
+          className="gap-2 w-full sm:w-auto h-11 sm:h-10 text-primary-foreground"
+        >
           <Plus className="w-5 h-5 sm:w-4 sm:h-4" />
           <span className="sm:inline font-bold">Nova Demanda</span>
         </Button>
       </DialogTrigger>
       <DialogContent
-        className="w-[95vw] sm:max-w-[500px] max-h-[90vh] overflow-y-auto"
+        className="w-[95vw] sm:max-w-[550px] p-0"
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle className="text-black dark:text-white">Criar Nova Demanda</DialogTitle>
-            <DialogDescription>
-              Adicione uma nova tarefa e atribua a um colaborador.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="title" className="text-black dark:text-white font-medium">
-                Título *
-              </Label>
-              <Input
-                id="title"
-                name="title"
-                required
-                disabled={loading}
-                className="bg-white border-gray-400 text-black dark:bg-black dark:border-white/10 dark:text-white h-11 sm:h-10"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col max-h-[90vh]">
+          <div className="p-6 pb-4 border-b border-border">
+            <DialogHeader>
+              <DialogTitle className="text-foreground">Criar Nova Demanda</DialogTitle>
+              <DialogDescription>
+                Adicione uma nova tarefa e planeje as próximas ações.
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+          <ScrollArea className="flex-1 p-6">
+            <div className="grid gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="priority" className="text-black dark:text-white font-medium">
-                  Urgência
+                <Label htmlFor="title" className="text-foreground font-medium">
+                  Título *
                 </Label>
-                <Select name="priority" defaultValue="Pode Ficar para Amanhã" disabled={loading}>
-                  <SelectTrigger className="h-11 sm:h-10 bg-white border-gray-400 text-black dark:bg-black dark:border-white/10 dark:text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Pode Ficar para Amanhã">Ficar para Amanhã</SelectItem>
-                    <SelectItem value="Durante o Dia">Durante o Dia</SelectItem>
-                    <SelectItem value="Urgente">Urgente</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input
+                  id="title"
+                  name="title"
+                  required
+                  disabled={loading}
+                  className="bg-background text-foreground border-input"
+                />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="status" className="text-black dark:text-white font-medium">
-                  Status Inicial
-                </Label>
-                <Select name="status" defaultValue="Pendente" disabled={loading}>
-                  <SelectTrigger className="h-11 sm:h-10 bg-white border-gray-400 text-black dark:bg-black dark:border-white/10 dark:text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Pendente">Pendente</SelectItem>
-                    <SelectItem value="Em Andamento">Em Andamento</SelectItem>
-                    <SelectItem value="Concluído">Concluído</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="priority" className="text-foreground font-medium">
+                    Urgência
+                  </Label>
+                  <Select name="priority" defaultValue="Pode Ficar para Amanhã" disabled={loading}>
+                    <SelectTrigger className="bg-background text-foreground border-input">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Pode Ficar para Amanhã">Ficar para Amanhã</SelectItem>
+                      <SelectItem value="Durante o Dia">Durante o Dia</SelectItem>
+                      <SelectItem value="Urgente">Urgente</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="status" className="text-foreground font-medium">
+                    Status Inicial
+                  </Label>
+                  <Select name="status" defaultValue="Pendente" disabled={loading}>
+                    <SelectTrigger className="bg-background text-foreground border-input">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Pendente">Pendente</SelectItem>
+                      <SelectItem value="Em Andamento">Em Andamento</SelectItem>
+                      <SelectItem value="Concluído">Concluído</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="assigneeId" className="text-foreground font-medium">
+                    Responsável
+                  </Label>
+                  <Select name="assigneeId" defaultValue="none" disabled={loading}>
+                    <SelectTrigger className="bg-background text-foreground border-input">
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Não Atribuído</SelectItem>
+                      {collaborators.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="dueDate" className="text-foreground font-medium">
+                    Vencimento
+                  </Label>
+                  <Input
+                    id="dueDate"
+                    name="dueDate"
+                    type="date"
+                    className="bg-background text-foreground border-input"
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
               <div className="grid gap-2">
-                <Label htmlFor="assigneeId" className="text-black dark:text-white font-medium">
-                  Responsável
-                </Label>
-                <Select name="assigneeId" defaultValue="none" disabled={loading}>
-                  <SelectTrigger className="h-11 sm:h-10 bg-white border-gray-400 text-black dark:bg-black dark:border-white/10 dark:text-white">
-                    <SelectValue placeholder="Selecione..." />
+                <Label className="text-foreground font-medium">Importar Checklist</Label>
+                <Select
+                  value={selectedTemplate}
+                  onValueChange={handleTemplateChange}
+                  disabled={loading}
+                >
+                  <SelectTrigger className="bg-background text-foreground border-input">
+                    <SelectValue placeholder="Sem checklist" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Não Atribuído</SelectItem>
-                    {collaborators.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.nome}
+                    <SelectItem value="none">Sem checklist</SelectItem>
+                    {checklistTemplates.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.nome}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
+
               <div className="grid gap-2">
-                <Label htmlFor="dueDate" className="text-black dark:text-white font-medium">
-                  Vencimento
+                <div className="flex items-center justify-between">
+                  <Label className="text-foreground font-medium">Itens do Checklist</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      setChecklist([
+                        ...checklist,
+                        { id: crypto.randomUUID(), text: '', completed: false },
+                      ])
+                    }
+                  >
+                    <Plus className="w-4 h-4 mr-1" /> Adicionar
+                  </Button>
+                </div>
+                {checklist.length > 0 && (
+                  <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                    {checklist.map((item) => (
+                      <div key={item.id} className="flex items-center gap-2">
+                        <Input
+                          value={item.text}
+                          onChange={(e) =>
+                            setChecklist(
+                              checklist.map((c) =>
+                                c.id === item.id ? { ...c, text: e.target.value } : c,
+                              ),
+                            )
+                          }
+                          placeholder="Passo"
+                          className="flex-1 h-9 bg-background text-foreground"
+                        />
+                        <Input
+                          type="datetime-local"
+                          value={item.dueDate || ''}
+                          onChange={(e) =>
+                            setChecklist(
+                              checklist.map((c) =>
+                                c.id === item.id ? { ...c, dueDate: e.target.value } : c,
+                              ),
+                            )
+                          }
+                          className="w-[180px] h-9 bg-background text-foreground"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setChecklist(checklist.filter((c) => c.id !== item.id))}
+                          className="h-9 w-9 text-red-500 shrink-0"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="description" className="text-foreground font-medium">
+                  Descrição / Detalhes
                 </Label>
-                <Input
-                  id="dueDate"
-                  name="dueDate"
-                  type="date"
-                  className="h-11 sm:h-10 bg-white border-gray-400 text-black dark:bg-black dark:border-white/10 dark:text-white"
+                <Textarea
+                  id="description"
+                  name="description"
+                  className="min-h-[80px] bg-background text-foreground border-input"
                   disabled={loading}
                 />
               </div>
-            </div>
 
-            <div className="grid gap-2">
-              <Label className="text-black dark:text-white font-medium">Importar Checklist</Label>
-              <Select
-                value={selectedTemplate}
-                onValueChange={handleTemplateChange}
+              <ScheduleActionFields
+                enabled={schedEnabled}
+                setEnabled={setSchedEnabled}
+                type={schedType}
+                setType={setSchedType}
+                date={schedDate}
+                setDate={setSchedDate}
+                title={schedTitle}
+                setTitle={setSchedTitle}
+                desc={schedDesc}
+                setDesc={setSchedDesc}
+              />
+
+              <div className="grid gap-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-foreground font-medium">Anexos</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-primary hover:text-primary/80 gap-2 h-8"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={loading}
+                  >
+                    <Paperclip className="w-4 h-4" /> Adicionar
+                  </Button>
+                  <input
+                    type="file"
+                    multiple
+                    className="hidden"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                  />
+                </div>
+                {files.length > 0 && (
+                  <div className="space-y-2 mt-1 max-h-32 overflow-y-auto pr-1">
+                    {files.map((file, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center justify-between bg-muted/50 border border-border rounded-md p-2 text-sm"
+                      >
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          {file.type.startsWith('image/') ? (
+                            <ImageIcon className="w-4 h-4 shrink-0 text-muted-foreground" />
+                          ) : (
+                            <FileIcon className="w-4 h-4 shrink-0 text-muted-foreground" />
+                          )}
+                          <span className="truncate text-foreground">{file.name}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeFile(i)}
+                          className="text-muted-foreground hover:text-foreground shrink-0 p-1"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </ScrollArea>
+          <div className="p-6 pt-4 border-t border-border">
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setOpen(false)}
+                className="w-full sm:w-auto"
                 disabled={loading}
               >
-                <SelectTrigger className="h-11 sm:h-10 bg-white border-gray-400 text-black dark:bg-black dark:border-white/10 dark:text-white">
-                  <SelectValue placeholder="Sem checklist" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Sem checklist</SelectItem>
-                  {checklistTemplates.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {t.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid gap-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-black dark:text-white font-medium">Itens do Checklist</Label>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() =>
-                    setChecklist([
-                      ...checklist,
-                      { id: crypto.randomUUID(), text: '', completed: false },
-                    ])
-                  }
-                >
-                  <Plus className="w-4 h-4 mr-1" /> Adicionar
-                </Button>
-              </div>
-              {checklist.length > 0 && (
-                <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
-                  {checklist.map((item) => (
-                    <div key={item.id} className="flex items-center gap-2">
-                      <Input
-                        value={item.text}
-                        onChange={(e) =>
-                          setChecklist(
-                            checklist.map((c) =>
-                              c.id === item.id ? { ...c, text: e.target.value } : c,
-                            ),
-                          )
-                        }
-                        placeholder="Passo da tarefa"
-                        className="flex-1 h-9"
-                      />
-                      <Input
-                        type="datetime-local"
-                        value={item.dueDate || ''}
-                        onChange={(e) =>
-                          setChecklist(
-                            checklist.map((c) =>
-                              c.id === item.id ? { ...c, dueDate: e.target.value } : c,
-                            ),
-                          )
-                        }
-                        className="w-[180px] h-9"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setChecklist(checklist.filter((c) => c.id !== item.id))}
-                        className="h-9 w-9 text-red-500 shrink-0"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="description" className="text-black dark:text-white font-medium">
-                Descrição / Detalhes
-              </Label>
-              <Textarea
-                id="description"
-                name="description"
-                className="min-h-[80px] bg-white border-gray-400 text-black dark:bg-black dark:border-white/10 dark:text-white"
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                variant="default"
+                className="w-full sm:w-auto font-bold"
                 disabled={loading}
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-black dark:text-white font-medium">Anexos</Label>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="text-primary hover:text-primary/80 hover:bg-primary/10 gap-2 px-2 h-8"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={loading}
-                >
-                  <Paperclip className="w-4 h-4" />
-                  Adicionar Arquivos
-                </Button>
-                <input
-                  type="file"
-                  multiple
-                  className="hidden"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                />
-              </div>
-              {files.length > 0 && (
-                <div className="space-y-2 mt-1 max-h-32 overflow-y-auto pr-1">
-                  {files.map((file, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center justify-between bg-white/5 border border-white/10 rounded-md p-2 text-sm"
-                    >
-                      <div className="flex items-center gap-2 overflow-hidden">
-                        {file.type.startsWith('image/') ? (
-                          <ImageIcon className="w-4 h-4 shrink-0 text-white/50" />
-                        ) : (
-                          <FileIcon className="w-4 h-4 shrink-0 text-white/50" />
-                        )}
-                        <span className="truncate text-white/80">{file.name}</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => removeFile(i)}
-                        className="text-white/50 hover:text-white shrink-0 p-1"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+              >
+                {loading ? 'Criando...' : 'Criar Demanda'}
+              </Button>
+            </DialogFooter>
           </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => setOpen(false)}
-              className="w-full sm:w-auto mb-2 sm:mb-0 h-11 sm:h-10 text-black dark:text-white hover:bg-gray-100 dark:hover:bg-white/10"
-              disabled={loading}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              variant="default"
-              className="w-full sm:w-auto h-11 sm:h-10 text-white font-bold bg-black dark:bg-primary"
-              disabled={loading}
-            >
-              {loading ? 'Criando...' : 'Criar Demanda'}
-            </Button>
-          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

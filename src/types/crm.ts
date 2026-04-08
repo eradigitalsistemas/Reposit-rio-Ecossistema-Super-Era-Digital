@@ -15,6 +15,7 @@ export interface Lead {
   email: string
   phone: string
   notes: string
+  address?: string
   stage: LeadStage
   interestStatus: InterestStatus
   trainingStep?: 1 | 2 | 3
