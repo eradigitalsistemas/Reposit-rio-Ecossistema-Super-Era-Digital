@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import useDemandStore from '@/stores/useDemandStore'
-import { useAgendaStore } from '@/stores/useAgendaStore'
+
 import useAuthStore from '@/stores/useAuthStore'
 import { Demand, DemandPriority, DemandAttachment, ChecklistItem } from '@/types/demand'
 import { supabase } from '@/lib/supabase/client'
@@ -39,7 +39,7 @@ interface EditDemandModalProps {
 export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalProps) {
   const { editDemand, collaborators, fetchCollaborators } = useDemandStore()
   const { user } = useAuthStore()
-  const salvarEvento = useAgendaStore((state) => state.salvarEvento)
+
   const { toast } = useToast()
 
   const [loading, setLoading] = useState(false)
@@ -88,33 +88,40 @@ export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalP
     const finalDueDate = dueDateStr ? new Date(dueDateStr + 'T12:00:00').toISOString() : null
     const assigneeIdStr = formData.get('assigneeId') as string
 
-    await editDemand(demand.id, {
-      title: formData.get('title') as string,
-      description: formData.get('description') as string,
-      priority: formData.get('priority') as DemandPriority,
-      dueDate: finalDueDate,
-      assigneeId: assigneeIdStr === 'none' ? null : assigneeIdStr,
-      attachments,
-      checklist,
-    })
+    try {
+      await editDemand(demand.id, {
+        title: formData.get('title') as string,
+        description: formData.get('description') as string,
+        priority: formData.get('priority') as DemandPriority,
+        dueDate: finalDueDate,
+        assigneeId: assigneeIdStr === 'none' ? null : assigneeIdStr,
+        attachments,
+        checklist,
+      })
 
-    if (schedEnabled && user) {
-      await salvarEvento(
-        {
+      if (schedEnabled && user) {
+        const { error: agendaError } = await supabase.from('agenda_eventos').insert({
           titulo: schedTitle,
           descricao: schedDesc,
           data_inicio: schedDate,
           data_fim: schedDate,
           tipo: schedType as any,
           demanda_id: demand.id,
-        },
-        user.id,
-      )
-      toast({ title: 'Ação Agendada', description: 'O lembrete da demanda foi atualizado.' })
+          usuario_id: user.id,
+        })
+        if (agendaError) throw agendaError
+        toast({ title: 'Ação Agendada', description: 'O lembrete da demanda foi atualizado.' })
+      }
+      onOpenChange(false)
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível salvar as alterações.',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
-    onOpenChange(false)
   }
 
   const defaultDueDate = demand.dueDate ? format(new Date(demand.dueDate), 'yyyy-MM-dd') : ''

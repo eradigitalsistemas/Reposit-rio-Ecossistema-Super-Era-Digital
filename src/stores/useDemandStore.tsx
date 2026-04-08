@@ -38,7 +38,7 @@ interface DemandStoreState {
     demand: Omit<Demand, 'id' | 'createdAt' | 'responses' | 'logs'> & {
       assigneeId?: string | null
     },
-  ) => Promise<void>
+  ) => Promise<Demand | undefined>
   editDemand: (
     demandId: string,
     updates: Partial<Omit<Demand, 'id' | 'createdAt' | 'responses' | 'logs'>> & {
@@ -388,7 +388,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         assigneeId?: string | null
       },
     ) => {
-      if (!user) return
+      if (!user) return undefined
       try {
         const { data, error } = await supabase
           .from('demandas')
@@ -426,33 +426,32 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             }
           }
 
-          setDemands((prev) => [
-            {
-              id: d.id,
-              title: d.titulo,
-              description: d.descricao || '',
-              priority: d.prioridade as DemandPriority,
-              status: d.status as DemandStatus,
-              dueDate: d.data_vencimento,
-              assignee: (d as any).responsavel?.nome || 'Sem responsável',
-              assigneeId: d.responsavel_id,
-              responses: [],
-              logs: [],
-              attachments: d.anexos || [],
-              checklist: finalChecklist,
-              createdAt: d.data_criacao,
-              systemEscalated: false,
-            },
-            ...prev,
-          ])
+          const createdDemand: Demand = {
+            id: d.id,
+            title: d.titulo,
+            description: d.descricao || '',
+            priority: d.prioridade as DemandPriority,
+            status: d.status as DemandStatus,
+            dueDate: d.data_vencimento,
+            assignee: (d as any).responsavel?.nome || 'Sem responsável',
+            assigneeId: d.responsavel_id,
+            responses: [],
+            logs: [],
+            attachments: d.anexos || [],
+            checklist: finalChecklist,
+            createdAt: d.data_criacao,
+            systemEscalated: false,
+          }
+          setDemands((prev) => [createdDemand, ...prev])
+          return createdDemand
         }
-        toast({ title: 'Nova Demanda Criada', description: `A tarefa foi adicionada.` })
       } catch (e) {
         toast({
           title: 'Erro',
           description: 'Não foi possível criar a demanda.',
           variant: 'destructive',
         })
+        return undefined
       }
     },
     [user],

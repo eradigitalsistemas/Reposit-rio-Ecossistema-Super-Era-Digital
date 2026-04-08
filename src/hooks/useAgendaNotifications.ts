@@ -36,6 +36,9 @@ export function useAgendaNotifications() {
     }
 
     const checkEvents = async () => {
+      const alertsEnabled = localStorage.getItem('agenda_alerts_enabled')
+      if (alertsEnabled === 'false') return
+
       const now = new Date()
       const startOfToday = new Date()
       startOfToday.setHours(0, 0, 0, 0)

@@ -135,6 +135,11 @@
     -webkit-text-fill-color: #000000 !important;
     caret-color: #000000 !important;
   }
+
+  /* Global contrast override for Light Mode to prevent unreadable text */
+  :root:not(.dark) .bg-white {
+    color: #111827 !important; /* Tailwind text-gray-900 */
+  }
 }
 
 @layer utilities {

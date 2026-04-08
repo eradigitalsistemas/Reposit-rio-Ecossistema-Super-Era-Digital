@@ -332,14 +332,14 @@ export default function Reports() {
                   type="date"
                   value={customStartDate}
                   onChange={(e) => setCustomStartDate(e.target.value)}
-                  className="h-10 px-3 py-2 rounded-md border border-input bg-background text-sm w-[130px] sm:w-[140px]"
+                  className="h-10 px-3 py-2 rounded-md border border-gray-600 bg-white text-black dark:border-input dark:bg-background dark:text-foreground text-sm w-[130px] sm:w-[140px]"
                 />
-                <span className="text-muted-foreground text-sm">até</span>
+                <span className="text-gray-900 dark:text-muted-foreground text-sm">até</span>
                 <input
                   type="date"
                   value={customEndDate}
                   onChange={(e) => setCustomEndDate(e.target.value)}
-                  className="h-10 px-3 py-2 rounded-md border border-input bg-background text-sm w-[130px] sm:w-[140px]"
+                  className="h-10 px-3 py-2 rounded-md border border-gray-600 bg-white text-black dark:border-input dark:bg-background dark:text-foreground text-sm w-[130px] sm:w-[140px]"
                 />
               </div>
             )}

@@ -91,10 +91,10 @@ export default function Agenda() {
           <div className="flex items-center gap-3">
             {isAdmin && (
               <Select value={filtroUsuario} onValueChange={setFiltroUsuario}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-[180px] bg-white text-black border-gray-300 dark:bg-black dark:text-white dark:border-gray-700">
                   <SelectValue placeholder="Filtrar por Usuário" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white text-black border-gray-300 dark:bg-black dark:text-white dark:border-gray-700">
                   <SelectItem value="todos">Todos os Usuários</SelectItem>
                   {usuarios.map((u) => (
                     <SelectItem key={u.id} value={u.id}>

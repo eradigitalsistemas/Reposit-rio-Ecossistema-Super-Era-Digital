@@ -22,7 +22,6 @@ import {
 } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import useDemandStore from '@/stores/useDemandStore'
-import { useAgendaStore } from '@/stores/useAgendaStore'
 import useAuthStore from '@/stores/useAuthStore'
 import { DemandPriority, DemandStatus, DemandAttachment, ChecklistItem } from '@/types/demand'
 import { supabase } from '@/lib/supabase/client'
@@ -45,7 +44,6 @@ export function AddDemandModal() {
   const [schedDesc, setSchedDesc] = useState('')
 
   const { user } = useAuthStore()
-  const salvarEvento = useAgendaStore((state) => state.salvarEvento)
   const { toast } = useToast()
 
   const {
@@ -106,49 +104,50 @@ export function AddDemandModal() {
       if (data) attachments.push({ name: file.name, url: data.path, type: file.type })
     }
 
-    await addDemand({
-      title: demandTitle,
-      description: formData.get('description') as string,
-      priority: formData.get('priority') as DemandPriority,
-      status: formData.get('status') as DemandStatus,
-      dueDate: finalDueDate,
-      assigneeId: assigneeIdStr === 'none' ? null : assigneeIdStr,
-      attachments,
-      checklist,
-    })
+    try {
+      const newDemand = await addDemand({
+        title: demandTitle,
+        description: formData.get('description') as string,
+        priority: formData.get('priority') as DemandPriority,
+        status: formData.get('status') as DemandStatus,
+        dueDate: finalDueDate,
+        assigneeId: assigneeIdStr === 'none' ? null : assigneeIdStr,
+        attachments,
+        checklist,
+      })
 
-    if (schedEnabled && user) {
-      // Find the created demand to link
-      const { data: latestDemand } = await supabase
-        .from('demandas')
-        .select('id')
-        .eq('usuario_id', user.id)
-        .eq('titulo', demandTitle)
-        .order('data_criacao', { ascending: false })
-        .limit(1)
-        .single()
-
-      if (latestDemand) {
-        await salvarEvento(
-          {
-            titulo: schedTitle,
-            descricao: schedDesc,
-            data_inicio: schedDate,
-            data_fim: schedDate,
-            tipo: schedType as any,
-            demanda_id: latestDemand.id,
-          },
-          user.id,
-        )
-        toast({ title: 'Ação Agendada', description: 'O lembrete da demanda foi salvo.' })
+      if (newDemand && schedEnabled && user) {
+        const { error: agendaError } = await supabase.from('agenda_eventos').insert({
+          titulo: schedTitle,
+          descricao: schedDesc,
+          data_inicio: schedDate,
+          data_fim: schedDate,
+          tipo: schedType as any,
+          demanda_id: newDemand.id,
+          usuario_id: user.id,
+        })
+        if (agendaError) throw agendaError
+        toast({
+          title: 'Demanda e Ação Salvas',
+          description: 'Ação agendada na agenda com sucesso.',
+        })
+      } else if (newDemand) {
+        toast({ title: 'Demanda Criada', description: 'Sua demanda foi cadastrada com sucesso.' })
       }
-    }
 
-    setLoading(false)
-    setFiles([])
-    setSelectedTemplate('none')
-    setChecklist([])
-    setOpen(false)
+      setFiles([])
+      setSelectedTemplate('none')
+      setChecklist([])
+      setOpen(false)
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: 'Falha ao salvar a demanda ou a ação.',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (

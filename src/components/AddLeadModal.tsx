@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 import useLeadStore from '@/stores/useLeadStore'
-import { useAgendaStore } from '@/stores/useAgendaStore'
+import { supabase } from '@/lib/supabase/client'
 import useAuthStore from '@/stores/useAuthStore'
 import { InterestStatus } from '@/types/crm'
 import { ScheduleActionFields } from './ScheduleActionFields'
@@ -41,50 +41,54 @@ export function AddLeadModal() {
 
   const { addLead } = useLeadStore()
   const { user } = useAuthStore()
-  const salvarEvento = useAgendaStore((state) => state.salvarEvento)
+
   const { toast } = useToast()
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
-    const formData = new FormData(e.currentTarget)
+    try {
+      const formData = new FormData(e.currentTarget)
 
-    const newLead = await addLead({
-      name: formData.get('name') as string,
-      company: formData.get('company') as string,
-      email: formData.get('email') as string,
-      phone: formData.get('phone') as string,
-      address: formData.get('address') as string,
-      notes: formData.get('notes') as string,
-      stage: 'novo_lead',
-      interestStatus,
-    })
+      const newLead = await addLead({
+        name: formData.get('name') as string,
+        company: formData.get('company') as string,
+        email: formData.get('email') as string,
+        phone: formData.get('phone') as string,
+        address: formData.get('address') as string,
+        notes: formData.get('notes') as string,
+        stage: 'novo_lead',
+        interestStatus,
+      })
 
-    if (newLead && schedEnabled && user) {
-      await salvarEvento(
-        {
+      if (newLead && schedEnabled && user) {
+        const { error: agendaError } = await supabase.from('agenda_eventos').insert({
           titulo: schedTitle,
           descricao: schedDesc,
           data_inicio: schedDate,
           data_fim: schedDate,
-          tipo: schedType as any,
+          tipo: schedType,
           lead_id: newLead.id,
-        },
-        user.id,
-      )
-      toast({
-        title: 'Ação Agendada',
-        description: 'Lembrete adicionado à sua agenda com sucesso.',
-      })
-    }
+          usuario_id: user.id,
+        })
+        if (agendaError) throw agendaError
+        toast({
+          title: 'Lead e Ação Salvos',
+          description: 'Lembrete adicionado à sua agenda com sucesso.',
+        })
+      }
 
-    setIsSubmitting(false)
-    setOpen(false)
-    setInterestStatus('Interessado')
-    setSchedEnabled(false)
-    setSchedDate('')
-    setSchedTitle('')
-    setSchedDesc('')
+      setOpen(false)
+      setInterestStatus('Interessado')
+      setSchedEnabled(false)
+      setSchedDate('')
+      setSchedTitle('')
+      setSchedDesc('')
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao salvar registro.', variant: 'destructive' })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (

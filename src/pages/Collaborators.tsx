@@ -170,7 +170,7 @@ export default function Collaborators() {
                           size="icon"
                           onClick={() => handleView(user)}
                           title="Ver Detalhes"
-                          className="hover:text-primary hover:bg-primary/10"
+                          className="text-gray-600 dark:text-gray-400 hover:text-primary hover:bg-primary/10"
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
@@ -179,7 +179,7 @@ export default function Collaborators() {
                           size="icon"
                           onClick={() => handleEdit(user)}
                           title="Editar"
-                          className="hover:text-primary hover:bg-primary/10"
+                          className="text-gray-600 dark:text-gray-400 hover:text-primary hover:bg-primary/10"
                         >
                           <Pencil className="w-4 h-4" />
                         </Button>
@@ -188,7 +188,7 @@ export default function Collaborators() {
                           size="icon"
                           onClick={() => handleDelete(user)}
                           title="Remover"
-                          className="hover:text-primary hover:bg-primary/10"
+                          className="text-gray-600 dark:text-gray-400 hover:text-primary hover:bg-primary/10"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>

@@ -16,8 +16,10 @@ export type Database = {
           data_criacao: string
           data_fim: string
           data_inicio: string
+          demanda_id: string | null
           descricao: string | null
           id: string
+          lead_id: string | null
           privado: boolean
           tipo: string
           titulo: string
@@ -29,8 +31,10 @@ export type Database = {
           data_criacao?: string
           data_fim: string
           data_inicio: string
+          demanda_id?: string | null
           descricao?: string | null
           id?: string
+          lead_id?: string | null
           privado?: boolean
           tipo?: string
           titulo: string
@@ -42,8 +46,10 @@ export type Database = {
           data_criacao?: string
           data_fim?: string
           data_inicio?: string
+          demanda_id?: string | null
           descricao?: string | null
           id?: string
+          lead_id?: string | null
           privado?: boolean
           tipo?: string
           titulo?: string
@@ -55,6 +61,20 @@ export type Database = {
             columns: ['cliente_id']
             isOneToOne: false
             referencedRelation: 'clientes_externos'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'agenda_eventos_demanda_id_fkey'
+            columns: ['demanda_id']
+            isOneToOne: false
+            referencedRelation: 'demandas'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'agenda_eventos_lead_id_fkey'
+            columns: ['lead_id']
+            isOneToOne: false
+            referencedRelation: 'leads'
             referencedColumns: ['id']
           },
         ]
@@ -225,6 +245,7 @@ export type Database = {
           data_criacao: string
           email: string
           empresa: string | null
+          endereco: string | null
           estagio: string
           id: string
           nome: string
@@ -237,6 +258,7 @@ export type Database = {
           data_criacao?: string
           email: string
           empresa?: string | null
+          endereco?: string | null
           estagio: string
           id?: string
           nome: string
@@ -249,6 +271,7 @@ export type Database = {
           data_criacao?: string
           email?: string
           empresa?: string | null
+          endereco?: string | null
           estagio?: string
           id?: string
           nome?: string
@@ -570,6 +593,8 @@ export const Constants = {
 //   data_criacao: timestamp with time zone (not null, default: now())
 //   cliente_id: uuid (nullable)
 //   criado_por: text (nullable)
+//   lead_id: uuid (nullable)
+//   demanda_id: uuid (nullable)
 // Table: checklist_templates
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -619,6 +644,7 @@ export const Constants = {
 //   usuario_id: uuid (not null, default: auth.uid())
 //   observacoes: text (nullable, default: ''::text)
 //   status_interesse: text (not null, default: 'Interessado'::text)
+//   endereco: text (nullable)
 // Table: logs_auditoria
 //   id: uuid (not null, default: gen_random_uuid())
 //   demanda_id: uuid (nullable)
@@ -653,6 +679,8 @@ export const Constants = {
 // --- CONSTRAINTS ---
 // Table: agenda_eventos
 //   FOREIGN KEY agenda_eventos_cliente_id_fkey: FOREIGN KEY (cliente_id) REFERENCES clientes_externos(id) ON DELETE SET NULL
+//   FOREIGN KEY agenda_eventos_demanda_id_fkey: FOREIGN KEY (demanda_id) REFERENCES demandas(id) ON DELETE CASCADE
+//   FOREIGN KEY agenda_eventos_lead_id_fkey: FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE
 //   PRIMARY KEY agenda_eventos_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY agenda_eventos_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: checklist_templates

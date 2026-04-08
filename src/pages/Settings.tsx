@@ -24,11 +24,20 @@ export default function Settings() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+  const [agendaAlerts, setAgendaAlerts] = useState(() => {
+    const saved = localStorage.getItem('agenda_alerts_enabled')
+    return saved !== null ? saved === 'true' : true
+  })
 
   useEffect(() => {
     if (userName) setName(userName)
     if (user?.email) setEmail(user.email)
   }, [userName, user])
+
+  const handleToggleAgendaAlerts = (checked: boolean) => {
+    setAgendaAlerts(checked)
+    localStorage.setItem('agenda_alerts_enabled', String(checked))
+  }
 
   const handleSaveProfile = async () => {
     if (!user) return
@@ -184,6 +193,22 @@ export default function Settings() {
                 </div>
                 <Switch defaultChecked className="self-end sm:self-auto" />
               </div>
+              <div className="w-full h-px bg-gray-200 dark:bg-border sm:hidden" />
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex flex-col space-y-1">
+                  <Label className="text-gray-900 dark:text-foreground font-bold">
+                    Alertas de Agenda (Eventos e Tarefas)
+                  </Label>
+                  <span className="text-sm text-gray-500 dark:text-muted-foreground">
+                    Receba pop-ups e alertas sonoros no momento exato dos seus compromissos.
+                  </span>
+                </div>
+                <Switch
+                  checked={agendaAlerts}
+                  onCheckedChange={handleToggleAgendaAlerts}
+                  className="self-end sm:self-auto"
+                />
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -214,8 +239,7 @@ export default function Settings() {
             </CardContent>
             <CardFooter className="border-t border-gray-200 dark:border-border px-0 sm:px-6 py-4 mt-4">
               <Button
-                variant="secondary"
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
                 onClick={() => toast({ title: 'Funcionalidade em desenvolvimento' })}
               >
                 Atualizar Senha
