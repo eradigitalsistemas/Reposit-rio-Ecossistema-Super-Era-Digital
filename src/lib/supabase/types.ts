@@ -1,11 +1,17 @@
 // AVOID UPDATING THIS FILE DIRECTLY. It is automatically generated.
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '14.4'
+    PostgrestVersion: "14.4"
   }
   public: {
     Tables: {
@@ -57,25 +63,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'agenda_eventos_cliente_id_fkey'
-            columns: ['cliente_id']
+            foreignKeyName: "agenda_eventos_cliente_id_fkey"
+            columns: ["cliente_id"]
             isOneToOne: false
-            referencedRelation: 'clientes_externos'
-            referencedColumns: ['id']
+            referencedRelation: "clientes_externos"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'agenda_eventos_demanda_id_fkey'
-            columns: ['demanda_id']
+            foreignKeyName: "agenda_eventos_demanda_id_fkey"
+            columns: ["demanda_id"]
             isOneToOne: false
-            referencedRelation: 'demandas'
-            referencedColumns: ['id']
+            referencedRelation: "demandas"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'agenda_eventos_lead_id_fkey'
-            columns: ['lead_id']
+            foreignKeyName: "agenda_eventos_lead_id_fkey"
+            columns: ["lead_id"]
             isOneToOne: false
-            referencedRelation: 'leads'
-            referencedColumns: ['id']
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -286,18 +292,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'demandas_cliente_id_fkey'
-            columns: ['cliente_id']
+            foreignKeyName: "demandas_cliente_id_fkey"
+            columns: ["cliente_id"]
             isOneToOne: false
-            referencedRelation: 'clientes_externos'
-            referencedColumns: ['id']
+            referencedRelation: "clientes_externos"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'demandas_responsavel_id_fkey'
-            columns: ['responsavel_id']
+            foreignKeyName: "demandas_responsavel_id_fkey"
+            columns: ["responsavel_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -337,18 +343,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'department_schedules_department_id_fkey'
-            columns: ['department_id']
+            foreignKeyName: "department_schedules_department_id_fkey"
+            columns: ["department_id"]
             isOneToOne: false
-            referencedRelation: 'departments'
-            referencedColumns: ['id']
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'department_schedules_organization_id_fkey'
-            columns: ['organization_id']
+            foreignKeyName: "department_schedules_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: false
-            referencedRelation: 'organizations'
-            referencedColumns: ['id']
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -373,11 +379,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'departments_manager_id_fkey'
-            columns: ['manager_id']
+            foreignKeyName: "departments_manager_id_fkey"
+            columns: ["manager_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -417,11 +423,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'disc_results_user_id_fkey'
-            columns: ['user_id']
+            foreignKeyName: "disc_results_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -458,11 +464,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'documents_employee_id_fkey'
-            columns: ['employee_id']
+            foreignKeyName: "documents_employee_id_fkey"
+            columns: ["employee_id"]
             isOneToOne: false
-            referencedRelation: 'employees'
-            referencedColumns: ['id']
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -496,11 +502,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'educations_user_id_fkey'
-            columns: ['user_id']
+            foreignKeyName: "educations_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -531,11 +537,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'emails_sent_user_id_fkey'
-            columns: ['user_id']
+            foreignKeyName: "emails_sent_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -587,18 +593,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'employees_candidate_id_fkey'
-            columns: ['candidate_id']
+            foreignKeyName: "employees_candidate_id_fkey"
+            columns: ["candidate_id"]
             isOneToOne: false
-            referencedRelation: 'candidates'
-            referencedColumns: ['id']
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'employees_department_id_fkey'
-            columns: ['department_id']
+            foreignKeyName: "employees_department_id_fkey"
+            columns: ["department_id"]
             isOneToOne: false
-            referencedRelation: 'departments'
-            referencedColumns: ['id']
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -635,11 +641,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'experiences_user_id_fkey'
-            columns: ['user_id']
+            foreignKeyName: "experiences_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -673,11 +679,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'historico_leads_lead_id_fkey'
-            columns: ['lead_id']
+            foreignKeyName: "historico_leads_lead_id_fkey"
+            columns: ["lead_id"]
             isOneToOne: false
-            referencedRelation: 'leads'
-            referencedColumns: ['id']
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -810,18 +816,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'logs_auditoria_demanda_id_fkey'
-            columns: ['demanda_id']
+            foreignKeyName: "logs_auditoria_demanda_id_fkey"
+            columns: ["demanda_id"]
             isOneToOne: false
-            referencedRelation: 'demandas'
-            referencedColumns: ['id']
+            referencedRelation: "demandas"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'logs_auditoria_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "logs_auditoria_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -870,18 +876,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'monthly_timesheets_employee_id_fkey'
-            columns: ['employee_id']
+            foreignKeyName: "monthly_timesheets_employee_id_fkey"
+            columns: ["employee_id"]
             isOneToOne: false
-            referencedRelation: 'employees'
-            referencedColumns: ['id']
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'monthly_timesheets_organization_id_fkey'
-            columns: ['organization_id']
+            foreignKeyName: "monthly_timesheets_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: false
-            referencedRelation: 'organizations'
-            referencedColumns: ['id']
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -921,18 +927,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'notificacoes_demanda_id_fkey'
-            columns: ['demanda_id']
+            foreignKeyName: "notificacoes_demanda_id_fkey"
+            columns: ["demanda_id"]
             isOneToOne: false
-            referencedRelation: 'demandas'
-            referencedColumns: ['id']
+            referencedRelation: "demandas"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'notificacoes_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "notificacoes_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -969,18 +975,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'onboarding_checklist_assigned_to_fkey'
-            columns: ['assigned_to']
+            foreignKeyName: "onboarding_checklist_assigned_to_fkey"
+            columns: ["assigned_to"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'onboarding_checklist_employee_id_fkey'
-            columns: ['employee_id']
+            foreignKeyName: "onboarding_checklist_employee_id_fkey"
+            columns: ["employee_id"]
             isOneToOne: false
-            referencedRelation: 'employees'
-            referencedColumns: ['id']
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1023,11 +1029,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'push_subscriptions_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "push_subscriptions_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1103,18 +1109,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'time_entries_employee_id_fkey'
-            columns: ['employee_id']
+            foreignKeyName: "time_entries_employee_id_fkey"
+            columns: ["employee_id"]
             isOneToOne: false
-            referencedRelation: 'employees'
-            referencedColumns: ['id']
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'time_entries_organization_id_fkey'
-            columns: ['organization_id']
+            foreignKeyName: "time_entries_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: false
-            referencedRelation: 'organizations'
-            referencedColumns: ['id']
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1151,18 +1157,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'time_entries_audit_organization_id_fkey'
-            columns: ['organization_id']
+            foreignKeyName: "time_entries_audit_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: false
-            referencedRelation: 'organizations'
-            referencedColumns: ['id']
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'time_entries_audit_time_entry_id_fkey'
-            columns: ['time_entry_id']
+            foreignKeyName: "time_entries_audit_time_entry_id_fkey"
+            columns: ["time_entry_id"]
             isOneToOne: false
-            referencedRelation: 'time_entries'
-            referencedColumns: ['id']
+            referencedRelation: "time_entries"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1265,11 +1271,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'vacation_balance_employee_id_fkey'
-            columns: ['employee_id']
+            foreignKeyName: "vacation_balance_employee_id_fkey"
+            columns: ["employee_id"]
             isOneToOne: false
-            referencedRelation: 'employees'
-            referencedColumns: ['id']
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1309,18 +1315,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'vacation_requests_approved_by_fkey'
-            columns: ['approved_by']
+            foreignKeyName: "vacation_requests_approved_by_fkey"
+            columns: ["approved_by"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'vacation_requests_employee_id_fkey'
-            columns: ['employee_id']
+            foreignKeyName: "vacation_requests_employee_id_fkey"
+            columns: ["employee_id"]
             isOneToOne: false
-            referencedRelation: 'employees'
-            referencedColumns: ['id']
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1353,10 +1359,45 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_tolerance: {
+        Args: { p_delay_minutes: number; p_tolerance_minutes: number }
+        Returns: Json
+      }
+      calculate_daily_hours: {
+        Args: {
+          p_date: string
+          p_employee_id: string
+          p_organization_id: string
+        }
+        Returns: Json
+      }
+      calculate_monthly_totals: {
+        Args: {
+          p_employee_id: string
+          p_month: number
+          p_organization_id: string
+          p_year: number
+        }
+        Returns: Json
+      }
+      get_employee_schedule: {
+        Args: { p_employee_id: string; p_organization_id: string }
+        Returns: Json
+      }
       get_user_employee_id: { Args: never; Returns: string }
       get_user_org_id: { Args: never; Returns: string }
       get_user_role: { Args: never; Returns: string }
       is_admin: { Args: never; Returns: boolean }
+      validate_time_entry_sequence: {
+        Args: {
+          p_date: string
+          p_employee_id: string
+          p_new_entry_type: string
+          p_new_timestamp: string
+          p_organization_id: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
@@ -1367,31 +1408,33 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
-    ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -1400,23 +1443,23 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -1425,23 +1468,23 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -1450,36 +1493,36 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema['Enums']
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
-    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema['CompositeTypes']
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
-    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
@@ -1487,6 +1530,7 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
 
 // ====== DATABASE EXTENDED CONTEXT (auto-generated) ======
 // This section contains actual PostgreSQL column types, constraints, RLS policies,
@@ -2140,6 +2184,28 @@ export const Constants = {
 //     USING: true
 
 // --- DATABASE FUNCTIONS ---
+// FUNCTION apply_tolerance(integer, integer)
+//   CREATE OR REPLACE FUNCTION public.apply_tolerance(p_delay_minutes integer, p_tolerance_minutes integer)
+//    RETURNS jsonb
+//    LANGUAGE plpgsql
+//   AS $function$
+//   DECLARE
+//     v_final_delay INT;
+//   BEGIN
+//     IF p_delay_minutes <= p_tolerance_minutes THEN
+//       v_final_delay := 0;
+//     ELSE
+//       v_final_delay := p_delay_minutes - p_tolerance_minutes;
+//     END IF;
+//   
+//     RETURN jsonb_build_object(
+//       'original_delay', p_delay_minutes,
+//       'tolerance', p_tolerance_minutes,
+//       'final_delay', v_final_delay
+//     );
+//   END;
+//   $function$
+//   
 // FUNCTION audit_time_entries()
 //   CREATE OR REPLACE FUNCTION public.audit_time_entries()
 //    RETURNS trigger
@@ -2154,7 +2220,7 @@ export const Constants = {
 //       EXCEPTION WHEN OTHERS THEN
 //           v_user_id := NULL;
 //       END;
-//
+//   
 //       IF TG_OP = 'INSERT' THEN
 //           INSERT INTO public.time_entries_audit (time_entry_id, organization_id, action, new_values, changed_by)
 //           VALUES (NEW.id, NEW.organization_id, 'created', to_jsonb(NEW), COALESCE(NEW.created_by, v_user_id));
@@ -2171,7 +2237,202 @@ export const Constants = {
 //       RETURN NULL;
 //   END;
 //   $function$
-//
+//   
+// FUNCTION calculate_daily_hours(uuid, uuid, date)
+//   CREATE OR REPLACE FUNCTION public.calculate_daily_hours(p_organization_id uuid, p_employee_id uuid, p_date date)
+//    RETURNS jsonb
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//     v_schedule jsonb;
+//     v_start_time TIME;
+//     v_end_time TIME;
+//     v_lunch_duration INT;
+//     v_tolerance INT;
+//   
+//     v_entrada TIMESTAMP WITH TIME ZONE;
+//     v_int_saida TIMESTAMP WITH TIME ZONE;
+//     v_int_entrada TIMESTAMP WITH TIME ZONE;
+//     v_saida TIMESTAMP WITH TIME ZONE;
+//   
+//     v_worked_minutes INT := 0;
+//     v_extra_minutes INT := 0;
+//     v_delay_minutes INT := 0;
+//     v_status TEXT := 'incompleto';
+//     v_notes TEXT := '';
+//   
+//     v_expected_worked_minutes INT;
+//   BEGIN
+//     -- 1. Obter horários
+//     v_schedule := public.get_employee_schedule(p_organization_id, p_employee_id);
+//     v_start_time := (v_schedule->>'start_time')::time;
+//     v_end_time := (v_schedule->>'end_time')::time;
+//     v_lunch_duration := (v_schedule->>'lunch_duration_minutes')::int;
+//     v_tolerance := (v_schedule->>'tolerance_minutes')::int;
+//   
+//     v_expected_worked_minutes := EXTRACT(EPOCH FROM (v_end_time - v_start_time))/60 - v_lunch_duration;
+//   
+//     -- 2. Buscar registros do dia
+//     SELECT timestamp INTO v_entrada
+//     FROM public.time_entries
+//     WHERE organization_id = p_organization_id AND employee_id = p_employee_id AND entry_date = p_date AND entry_type = 'entrada'
+//     ORDER BY timestamp ASC LIMIT 1;
+//   
+//     SELECT timestamp INTO v_int_saida
+//     FROM public.time_entries
+//     WHERE organization_id = p_organization_id AND employee_id = p_employee_id AND entry_date = p_date AND entry_type = 'intervalo_saida'
+//     ORDER BY timestamp ASC LIMIT 1;
+//   
+//     SELECT timestamp INTO v_int_entrada
+//     FROM public.time_entries
+//     WHERE organization_id = p_organization_id AND employee_id = p_employee_id AND entry_date = p_date AND entry_type = 'intervalo_entrada'
+//     ORDER BY timestamp ASC LIMIT 1;
+//   
+//     SELECT timestamp INTO v_saida
+//     FROM public.time_entries
+//     WHERE organization_id = p_organization_id AND employee_id = p_employee_id AND entry_date = p_date AND entry_type = 'saida'
+//     ORDER BY timestamp ASC LIMIT 1;
+//   
+//     IF v_entrada IS NULL THEN
+//       RETURN jsonb_build_object(
+//         'date', p_date,
+//         'worked_hours', 0,
+//         'extra_hours', 0,
+//         'delay_minutes', 0,
+//         'status', 'falta',
+//         'notes', 'Sem registro de entrada'
+//       );
+//     END IF;
+//   
+//     -- 3. Calcular atraso
+//     IF (v_entrada AT TIME ZONE 'America/Sao_Paulo')::time > v_start_time THEN
+//       v_delay_minutes := EXTRACT(EPOCH FROM ((v_entrada AT TIME ZONE 'America/Sao_Paulo')::time - v_start_time))/60;
+//       v_delay_minutes := (public.apply_tolerance(v_delay_minutes, v_tolerance)->>'final_delay')::int;
+//     END IF;
+//   
+//     -- 4. Calcular tempo trabalhado e horas extras
+//     IF v_saida IS NOT NULL THEN
+//       v_status := 'completo';
+//       v_worked_minutes := EXTRACT(EPOCH FROM (v_saida - v_entrada))/60;
+//       
+//       IF v_int_saida IS NOT NULL AND v_int_entrada IS NOT NULL THEN
+//         v_worked_minutes := v_worked_minutes - EXTRACT(EPOCH FROM (v_int_entrada - v_int_saida))/60;
+//       ELSE
+//         -- Deduzir duração padrão do intervalo se não registrado
+//         v_worked_minutes := GREATEST(0, v_worked_minutes - v_lunch_duration);
+//       END IF;
+//   
+//       IF v_worked_minutes > v_expected_worked_minutes THEN
+//         v_extra_minutes := v_worked_minutes - v_expected_worked_minutes;
+//       END IF;
+//       
+//       IF v_delay_minutes = 0 AND v_extra_minutes > 0 THEN
+//         v_notes := 'Sem atraso, ' || v_extra_minutes || 'min extras';
+//       ELSIF v_delay_minutes = 0 THEN
+//         v_notes := 'Sem atraso';
+//       ELSE
+//         v_notes := 'Atraso de ' || v_delay_minutes || 'min';
+//       END IF;
+//     ELSE
+//       v_status := 'incompleto';
+//       v_notes := 'Falta registro de saída';
+//       -- Calcular tempo parcial até o momento
+//       v_worked_minutes := EXTRACT(EPOCH FROM (COALESCE(v_int_saida, NOW()) - v_entrada))/60;
+//     END IF;
+//   
+//     RETURN jsonb_build_object(
+//       'date', p_date,
+//       'entry_time', TO_CHAR(v_entrada AT TIME ZONE 'America/Sao_Paulo', 'HH24:MI'),
+//       'exit_time', CASE WHEN v_saida IS NOT NULL THEN TO_CHAR(v_saida AT TIME ZONE 'America/Sao_Paulo', 'HH24:MI') ELSE null END,
+//       'worked_hours', ROUND((v_worked_minutes::numeric / 60.0), 2),
+//       'extra_hours', ROUND((v_extra_minutes::numeric / 60.0), 2),
+//       'delay_minutes', v_delay_minutes,
+//       'status', v_status,
+//       'notes', v_notes
+//     );
+//   END;
+//   $function$
+//   
+// FUNCTION calculate_monthly_totals(uuid, uuid, integer, integer)
+//   CREATE OR REPLACE FUNCTION public.calculate_monthly_totals(p_organization_id uuid, p_employee_id uuid, p_year integer, p_month integer)
+//    RETURNS jsonb
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//     v_start_date DATE;
+//     v_end_date DATE;
+//     v_current_date DATE;
+//     v_daily_result jsonb;
+//   
+//     v_total_hours_worked NUMERIC := 0;
+//     v_total_extra_hours NUMERIC := 0;
+//     v_total_delays_minutes INT := 0;
+//     v_days_worked INT := 0;
+//     v_absences INT := 0;
+//   BEGIN
+//     v_start_date := MAKE_DATE(p_year, p_month, 1);
+//     v_end_date := v_start_date + INTERVAL '1 month' - INTERVAL '1 day';
+//     v_current_date := v_start_date;
+//   
+//     WHILE v_current_date <= v_end_date AND v_current_date <= CURRENT_DATE LOOP
+//       IF EXTRACT(ISODOW FROM v_current_date) < 6 THEN 
+//          -- Dia da semana
+//          v_daily_result := public.calculate_daily_hours(p_organization_id, p_employee_id, v_current_date);
+//          
+//          IF v_daily_result->>'status' = 'falta' THEN
+//            v_absences := v_absences + 1;
+//          ELSE
+//            v_days_worked := v_days_worked + 1;
+//            v_total_hours_worked := v_total_hours_worked + (v_daily_result->>'worked_hours')::numeric;
+//            v_total_extra_hours := v_total_extra_hours + (v_daily_result->>'extra_hours')::numeric;
+//            v_total_delays_minutes := v_total_delays_minutes + (v_daily_result->>'delay_minutes')::int;
+//          END IF;
+//       ELSE
+//          -- Fim de semana
+//          v_daily_result := public.calculate_daily_hours(p_organization_id, p_employee_id, v_current_date);
+//          IF v_daily_result->>'status' != 'falta' THEN
+//            v_days_worked := v_days_worked + 1;
+//            v_total_hours_worked := v_total_hours_worked + (v_daily_result->>'worked_hours')::numeric;
+//            v_total_extra_hours := v_total_extra_hours + (v_daily_result->>'extra_hours')::numeric;
+//            v_total_delays_minutes := v_total_delays_minutes + (v_daily_result->>'delay_minutes')::int;
+//          END IF;
+//       END IF;
+//   
+//       v_current_date := v_current_date + INTERVAL '1 day';
+//     END LOOP;
+//   
+//     INSERT INTO public.monthly_timesheets (
+//       organization_id, employee_id, year, month, 
+//       total_hours_worked, total_extra_hours, total_delays_minutes, total_absences, days_worked, generated_at
+//     ) VALUES (
+//       p_organization_id, p_employee_id, p_year, p_month,
+//       v_total_hours_worked, v_total_extra_hours, v_total_delays_minutes, v_absences, v_days_worked, NOW()
+//     )
+//     ON CONFLICT (organization_id, employee_id, year, month)
+//     DO UPDATE SET
+//       total_hours_worked = EXCLUDED.total_hours_worked,
+//       total_extra_hours = EXCLUDED.total_extra_hours,
+//       total_delays_minutes = EXCLUDED.total_delays_minutes,
+//       total_absences = EXCLUDED.total_absences,
+//       days_worked = EXCLUDED.days_worked,
+//       generated_at = EXCLUDED.generated_at;
+//   
+//     RETURN jsonb_build_object(
+//       'employee_id', p_employee_id,
+//       'year', p_year,
+//       'month', p_month,
+//       'total_hours_worked', v_total_hours_worked,
+//       'total_extra_hours', v_total_extra_hours,
+//       'total_delays_minutes', v_total_delays_minutes,
+//       'days_worked', v_days_worked,
+//       'absences', v_absences,
+//       'status', 'generated'
+//     );
+//   END;
+//   $function$
+//   
 // FUNCTION fix_auth_users_nulls()
 //   CREATE OR REPLACE FUNCTION public.fix_auth_users_nulls()
 //    RETURNS trigger
@@ -2190,7 +2451,46 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
+// FUNCTION get_employee_schedule(uuid, uuid)
+//   CREATE OR REPLACE FUNCTION public.get_employee_schedule(p_organization_id uuid, p_employee_id uuid)
+//    RETURNS jsonb
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//     v_department_id UUID;
+//     v_schedule RECORD;
+//   BEGIN
+//     SELECT department_id INTO v_department_id
+//     FROM public.employees
+//     WHERE id = p_employee_id;
+//   
+//     SELECT start_time, end_time, lunch_duration_minutes, tolerance_minutes
+//     INTO v_schedule
+//     FROM public.department_schedules
+//     WHERE organization_id = p_organization_id AND department_id = v_department_id
+//     LIMIT 1;
+//   
+//     IF NOT FOUND THEN
+//       -- Default schedule se não configurado (8h as 17h, 1h almoço, 5min tolerância)
+//       RETURN jsonb_build_object(
+//         'start_time', '08:00:00'::time,
+//         'end_time', '17:00:00'::time,
+//         'lunch_duration_minutes', 60,
+//         'tolerance_minutes', 5
+//       );
+//     END IF;
+//   
+//     RETURN jsonb_build_object(
+//       'start_time', v_schedule.start_time,
+//       'end_time', v_schedule.end_time,
+//       'lunch_duration_minutes', v_schedule.lunch_duration_minutes,
+//       'tolerance_minutes', v_schedule.tolerance_minutes
+//     );
+//   END;
+//   $function$
+//   
 // FUNCTION get_user_employee_id()
 //   CREATE OR REPLACE FUNCTION public.get_user_employee_id()
 //    RETURNS uuid
@@ -2202,7 +2502,7 @@ export const Constants = {
 //       (SELECT id FROM public.employees WHERE personal_data->>'email' = (SELECT email FROM auth.users WHERE id = auth.uid()) LIMIT 1)
 //     );
 //   $function$
-//
+//   
 // FUNCTION get_user_org_id()
 //   CREATE OR REPLACE FUNCTION public.get_user_org_id()
 //    RETURNS uuid
@@ -2215,7 +2515,7 @@ export const Constants = {
 //     )
 //     FROM auth.users WHERE id = auth.uid();
 //   $function$
-//
+//   
 // FUNCTION get_user_role()
 //   CREATE OR REPLACE FUNCTION public.get_user_role()
 //    RETURNS text
@@ -2224,7 +2524,7 @@ export const Constants = {
 //   AS $function$
 //     SELECT perfil FROM public.usuarios WHERE id = auth.uid();
 //   $function$
-//
+//   
 // FUNCTION handle_new_user()
 //   CREATE OR REPLACE FUNCTION public.handle_new_user()
 //    RETURNS trigger
@@ -2234,8 +2534,8 @@ export const Constants = {
 //   BEGIN
 //     INSERT INTO public.usuarios (id, email, nome, perfil, telefone)
 //     VALUES (
-//       new.id,
-//       new.email,
+//       new.id, 
+//       new.email, 
 //       COALESCE(new.raw_user_meta_data->>'full_name', ''),
 //       COALESCE(new.raw_user_meta_data->>'perfil', 'colaborador'),
 //       new.raw_user_meta_data->>'telefone'
@@ -2243,7 +2543,7 @@ export const Constants = {
 //     RETURN new;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION is_admin()
 //   CREATE OR REPLACE FUNCTION public.is_admin()
 //    RETURNS boolean
@@ -2257,7 +2557,7 @@ export const Constants = {
 //     RETURN v_perfil = 'admin';
 //   END;
 //   $function$
-//
+//   
 // FUNCTION log_demanda_changes()
 //   CREATE OR REPLACE FUNCTION public.log_demanda_changes()
 //    RETURNS trigger
@@ -2273,7 +2573,7 @@ export const Constants = {
 //       EXCEPTION WHEN OTHERS THEN
 //           v_usuario_id := NULL;
 //       END;
-//
+//   
 //       IF TG_OP = 'INSERT' THEN
 //           INSERT INTO public.logs_auditoria (demanda_id, usuario_id, acao, detalhes, dados_novos)
 //           VALUES (NEW.id, v_usuario_id, 'Criação', 'Demanda criada', to_jsonb(NEW));
@@ -2282,17 +2582,17 @@ export const Constants = {
 //               INSERT INTO public.logs_auditoria (demanda_id, usuario_id, acao, detalhes, dados_anteriores, dados_novos)
 //               VALUES (NEW.id, v_usuario_id, 'Alteração de Status', 'Status alterado de ' || OLD.status || ' para ' || NEW.status, jsonb_build_object('status', OLD.status), jsonb_build_object('status', NEW.status));
 //           END IF;
-//
+//   
 //           IF NEW.prioridade IS DISTINCT FROM OLD.prioridade THEN
 //               INSERT INTO public.logs_auditoria (demanda_id, usuario_id, acao, detalhes, dados_anteriores, dados_novos)
 //               VALUES (NEW.id, v_usuario_id, 'Alteração de Prioridade', 'Prioridade alterada de ' || OLD.prioridade || ' para ' || NEW.prioridade, jsonb_build_object('prioridade', OLD.prioridade), jsonb_build_object('prioridade', NEW.prioridade));
 //           END IF;
-//
+//   
 //           IF NEW.responsavel_id IS DISTINCT FROM OLD.responsavel_id THEN
 //               INSERT INTO public.logs_auditoria (demanda_id, usuario_id, acao, detalhes, dados_anteriores, dados_novos)
 //               VALUES (NEW.id, v_usuario_id, 'Atribuição', 'Responsável alterado', jsonb_build_object('responsavel_id', OLD.responsavel_id), jsonb_build_object('responsavel_id', NEW.responsavel_id));
 //           END IF;
-//
+//   
 //           IF NEW.resposta IS DISTINCT FROM OLD.resposta AND NEW.resposta IS NOT NULL AND NEW.resposta != '' THEN
 //               INSERT INTO public.logs_auditoria (demanda_id, usuario_id, acao, detalhes, dados_anteriores, dados_novos)
 //               VALUES (NEW.id, v_usuario_id, 'Nova Mensagem', 'Nova nota interna adicionada', jsonb_build_object('resposta', OLD.resposta), jsonb_build_object('resposta', NEW.resposta));
@@ -2301,7 +2601,7 @@ export const Constants = {
 //       RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION set_demanda_dates()
 //   CREATE OR REPLACE FUNCTION public.set_demanda_dates()
 //    RETURNS trigger
@@ -2326,11 +2626,11 @@ export const Constants = {
 //               NEW.data_conclusao := NULL;
 //           END IF;
 //       END IF;
-//
+//   
 //       RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION set_time_entries_updated_at()
 //   CREATE OR REPLACE FUNCTION public.set_time_entries_updated_at()
 //    RETURNS trigger
@@ -2341,7 +2641,7 @@ export const Constants = {
 //       RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION set_updated_at_timestamp()
 //   CREATE OR REPLACE FUNCTION public.set_updated_at_timestamp()
 //    RETURNS trigger
@@ -2352,7 +2652,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION trigger_demanda_push_notification()
 //   CREATE OR REPLACE FUNCTION public.trigger_demanda_push_notification()
 //    RETURNS trigger
@@ -2372,7 +2672,7 @@ export const Constants = {
 //           v_usuario_id := NEW.responsavel_id;
 //           v_title := 'Nova Demanda Atribuída';
 //           v_body := 'A demanda "' || NEW.titulo || '" foi atribuída a você.';
-//
+//   
 //           payload := jsonb_build_object('usuario_id', v_usuario_id, 'notification', jsonb_build_object('title', v_title, 'body', v_body));
 //           PERFORM net.http_post(
 //               url := edge_function_url,
@@ -2380,13 +2680,13 @@ export const Constants = {
 //               body := payload
 //           );
 //       END IF;
-//
+//   
 //       -- Scenario 2: Escalation
 //       IF NEW.prioridade = 'Urgente' AND OLD.prioridade = 'Pode Ficar para Amanhã' AND NEW.responsavel_id IS NOT NULL THEN
 //           v_usuario_id := NEW.responsavel_id;
 //           v_title := 'Demanda Escalada para Urgente';
 //           v_body := 'A demanda "' || NEW.titulo || '" agora é Urgente.';
-//
+//   
 //           payload := jsonb_build_object('usuario_id', v_usuario_id, 'notification', jsonb_build_object('title', v_title, 'body', v_body));
 //           PERFORM net.http_post(
 //               url := edge_function_url,
@@ -2394,11 +2694,11 @@ export const Constants = {
 //               body := payload
 //           );
 //       END IF;
-//
+//   
 //       RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION trigger_notify_automation()
 //   CREATE OR REPLACE FUNCTION public.trigger_notify_automation()
 //    RETURNS trigger
@@ -2418,7 +2718,7 @@ export const Constants = {
 //                   'record', to_jsonb(NEW),
 //                   'old_record', to_jsonb(OLD)
 //               );
-//
+//               
 //               -- Send async HTTP POST request
 //               PERFORM net.http_post(
 //                   url := edge_function_url,
@@ -2434,7 +2734,7 @@ export const Constants = {
 //                   'record', to_jsonb(NEW),
 //                   'old_record', to_jsonb(OLD)
 //               );
-//
+//               
 //               -- Send async HTTP POST request
 //               PERFORM net.http_post(
 //                   url := edge_function_url,
@@ -2443,11 +2743,11 @@ export const Constants = {
 //               );
 //           END IF;
 //       END IF;
-//
+//   
 //       RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION trigger_nova_notificacao_demanda()
 //   CREATE OR REPLACE FUNCTION public.trigger_nova_notificacao_demanda()
 //    RETURNS trigger
@@ -2460,17 +2760,17 @@ export const Constants = {
 //           INSERT INTO public.notificacoes (usuario_id, titulo, mensagem, demanda_id)
 //           VALUES (NEW.responsavel_id, 'Nova Demanda Atribuída', 'A demanda "' || NEW.titulo || '" foi atribuída a você.', NEW.id);
 //       END IF;
-//
+//   
 //       -- Scenario 2: Existing demand reassigned
 //       IF TG_OP = 'UPDATE' AND NEW.responsavel_id IS NOT NULL AND NEW.responsavel_id IS DISTINCT FROM OLD.responsavel_id THEN
 //           INSERT INTO public.notificacoes (usuario_id, titulo, mensagem, demanda_id)
 //           VALUES (NEW.responsavel_id, 'Nova Demanda Atribuída', 'A demanda "' || NEW.titulo || '" foi atribuída a você.', NEW.id);
 //       END IF;
-//
+//   
 //       RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION update_monthly_timesheet()
 //   CREATE OR REPLACE FUNCTION public.update_monthly_timesheet()
 //    RETURNS trigger
@@ -2482,16 +2782,16 @@ export const Constants = {
 //   BEGIN
 //       v_year := EXTRACT(YEAR FROM NEW.entry_date);
 //       v_month := EXTRACT(MONTH FROM NEW.entry_date);
-//
+//       
 //       INSERT INTO public.monthly_timesheets (organization_id, employee_id, year, month, days_worked)
 //       VALUES (NEW.organization_id, NEW.employee_id, v_year, v_month, 1)
 //       ON CONFLICT (organization_id, employee_id, year, month) DO UPDATE
 //       SET days_worked = public.monthly_timesheets.days_worked + 1;
-//
+//       
 //       RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION validate_time_entries_sequence()
 //   CREATE OR REPLACE FUNCTION public.validate_time_entries_sequence()
 //    RETURNS trigger
@@ -2507,7 +2807,7 @@ export const Constants = {
 //         AND id != NEW.id
 //       ORDER BY timestamp DESC
 //       LIMIT 1;
-//
+//   
 //       IF NEW.entry_type = 'intervalo_saida' THEN
 //           IF v_previous_entry IS NULL OR v_previous_entry != 'entrada' THEN
 //               RAISE EXCEPTION 'A saída para intervalo só pode ocorrer após uma entrada.';
@@ -2525,11 +2825,82 @@ export const Constants = {
 //               RAISE EXCEPTION 'Já existe um registro para este dia anterior à entrada.';
 //           END IF;
 //       END IF;
-//
+//   
 //       RETURN NEW;
 //   END;
 //   $function$
-//
+//   
+// FUNCTION validate_time_entry_sequence(uuid, uuid, date, text, timestamp with time zone)
+//   CREATE OR REPLACE FUNCTION public.validate_time_entry_sequence(p_organization_id uuid, p_employee_id uuid, p_date date, p_new_entry_type text, p_new_timestamp timestamp with time zone)
+//    RETURNS jsonb
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//     v_last_entry RECORD;
+//     v_valid BOOLEAN := true;
+//     v_message TEXT := 'Sequência válida';
+//     v_next_expected TEXT := '';
+//   BEGIN
+//     SELECT entry_type, timestamp INTO v_last_entry
+//     FROM public.time_entries
+//     WHERE organization_id = p_organization_id
+//       AND employee_id = p_employee_id
+//       AND entry_date = p_date
+//       AND timestamp < p_new_timestamp
+//     ORDER BY timestamp DESC
+//     LIMIT 1;
+//   
+//     IF v_last_entry IS NULL THEN
+//       IF p_new_entry_type != 'entrada' THEN
+//         v_valid := false;
+//         v_message := 'O primeiro registro do dia deve ser uma entrada';
+//         v_next_expected := 'entrada';
+//       ELSE
+//         v_next_expected := 'intervalo_saida';
+//       END IF;
+//     ELSIF v_last_entry.entry_type = 'entrada' THEN
+//       IF p_new_entry_type != 'intervalo_saida' AND p_new_entry_type != 'saida' THEN
+//         v_valid := false;
+//         v_message := 'Após a entrada, é esperado saída para intervalo ou saída final';
+//         v_next_expected := 'intervalo_saida';
+//       ELSE
+//         IF p_new_entry_type = 'intervalo_saida' THEN
+//           v_next_expected := 'intervalo_entrada';
+//         ELSE
+//           v_next_expected := 'fim';
+//         END IF;
+//       END IF;
+//     ELSIF v_last_entry.entry_type = 'intervalo_saida' THEN
+//       IF p_new_entry_type != 'intervalo_entrada' THEN
+//         v_valid := false;
+//         v_message := 'Após saída para intervalo, é esperado o retorno (intervalo_entrada)';
+//         v_next_expected := 'intervalo_entrada';
+//       ELSE
+//         v_next_expected := 'saida';
+//       END IF;
+//     ELSIF v_last_entry.entry_type = 'intervalo_entrada' THEN
+//       IF p_new_entry_type != 'saida' THEN
+//         v_valid := false;
+//         v_message := 'Após o retorno do intervalo, é esperada a saída final';
+//         v_next_expected := 'saida';
+//       ELSE
+//         v_next_expected := 'fim';
+//       END IF;
+//     ELSIF v_last_entry.entry_type = 'saida' THEN
+//       v_valid := false;
+//       v_message := 'Não são permitidos registros após a saída final do dia';
+//       v_next_expected := 'fim';
+//     END IF;
+//   
+//     RETURN jsonb_build_object(
+//       'valid', v_valid,
+//       'message', v_message,
+//       'next_expected', v_next_expected
+//     );
+//   END;
+//   $function$
+//   
 
 // --- TRIGGERS ---
 // Table: clientes_externos
@@ -2612,3 +2983,4 @@ export const Constants = {
 // Table: vacation_requests
 //   CREATE INDEX idx_vacation_requests_employee_id ON public.vacation_requests USING btree (employee_id)
 //   CREATE INDEX idx_vacation_requests_status ON public.vacation_requests USING btree (status)
+
