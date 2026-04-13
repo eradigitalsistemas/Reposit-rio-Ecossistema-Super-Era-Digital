@@ -5,8 +5,7 @@ import { z } from 'zod'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, x-supabase-client-platform, apikey, content-type, x-cron-secret',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, x-supabase-client-platform, apikey, content-type, x-cron-secret',
 }
 
 const candidateSchema = z.object({
@@ -36,11 +35,7 @@ async function verifySignature(secret: string, signature: string, bodyText: stri
   return signature === expectedSignatureHex
 }
 
-async function handleRequest(
-  req: Request,
-  requestId: string,
-  timestamp: string,
-): Promise<Response> {
+async function handleRequest(req: Request, requestId: string, timestamp: string): Promise<Response> {
   const webhookSecret = Deno.env.get('WEBHOOK_SECRET')
 
   const rawBody = await req.text()
@@ -76,10 +71,7 @@ async function handleRequest(
     })
   }
 
-  console.log(
-    `[${requestId}] Received webhook:`,
-    JSON.stringify({ timestamp, email: payload.email }),
-  )
+  console.log(`[${requestId}] Received webhook:`, JSON.stringify({ timestamp, email: payload.email }))
 
   const parseResult = candidateSchema.safeParse(payload)
   if (!parseResult.success) {
