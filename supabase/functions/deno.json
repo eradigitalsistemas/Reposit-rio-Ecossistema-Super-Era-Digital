@@ -13,9 +13,9 @@
     "employees": 2,
     "candidates": 1,
     "time-entries": 1,
-    "vacation-balance": 2,
+    "vacation-balance": 3,
     "vacation-requests": 1,
-    "onboarding": 1,
+    "onboarding": 2,
     "productivity": 1,
     "notifications": 1,
     "cron-hr-jobs": 1

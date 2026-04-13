@@ -9,7 +9,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
       include: ['supabase/functions/**/*.ts'],
-      exclude: ['supabase/functions/**/index.ts', 'supabase/functions/tests/**/*.ts'],
+      exclude: ['supabase/functions/**/index.ts', 'supabase/functions/_tests/**/*.ts'],
     },
     alias: {
       '@': path.resolve(__dirname, './src'),
