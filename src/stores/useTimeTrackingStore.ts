@@ -1,5 +1,11 @@
 import { create } from 'zustand'
 import { supabase } from '@/lib/supabase/client'
+import { z } from 'zod'
+
+const timeEntryActionSchema = z.object({
+  action: z.enum(['entrada', 'intervalo_saida', 'intervalo_entrada', 'saida']),
+  notes: z.string().max(500).optional(),
+})
 
 interface TimeTrackingState {
   employeeId: string | null
@@ -96,11 +102,30 @@ export const useTimeTrackingStore = create<TimeTrackingState>((set, get) => ({
   registerAction: async (action, notes) => {
     const { employeeId } = get()
     if (!employeeId) return { success: false, error: 'Colaborador não identificado' }
+
+    // Zod validation frontend
+    const parsed = timeEntryActionSchema.safeParse({ action, notes })
+    if (!parsed.success) {
+      return { success: false, error: 'Ação inválida: ' + parsed.error.errors[0]?.message }
+    }
+
     try {
       const {
         data: { session },
       } = await supabase.auth.getSession()
-      const payload: any = { employee_id: employeeId, action }
+
+      const now = new Date()
+      // Fuso horário fixo UTC-03:00
+      const offsetMs = 3 * 60 * 60 * 1000
+      const utcMinus3 = new Date(now.getTime() - offsetMs)
+      const isoString = utcMinus3.toISOString().split('.')[0] + '-03:00'
+
+      const payload: any = {
+        employee_id: employeeId,
+        entry_type: action,
+        entry_date: utcMinus3.toISOString().split('T')[0],
+        timestamp: isoString,
+      }
       if (notes) payload.notes = notes
 
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/time-entries`, {

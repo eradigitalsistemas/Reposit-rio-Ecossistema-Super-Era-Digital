@@ -3,7 +3,8 @@ import { useTimeTrackingStore } from '@/stores/useTimeTrackingStore'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { Play, Pause, Square, FileDown } from 'lucide-react'
+import { Play, Pause, Square, FileDown, AlertCircle } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   Select,
   SelectContent,
@@ -201,7 +202,29 @@ export function TimeTracker() {
                       <td className="p-3">{getT('entrada')}</td>
                       <td className="p-3 text-muted-foreground">{getT('intervalo_saida')}</td>
                       <td className="p-3 text-muted-foreground">{getT('intervalo_entrada')}</td>
-                      <td className="p-3">{getT('saida')}</td>
+                      <td className="p-3">
+                        <div className="flex items-center">
+                          {getT('saida')}
+                          {day.anomalies && day.anomalies.length > 0 && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button type="button" className="outline-none">
+                                  <AlertCircle className="h-4 w-4 text-amber-500 ml-2" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <div className="text-xs">
+                                  {day.anomalies.map((a: any, i: number) => (
+                                    <div key={i} className="text-amber-500 font-medium">
+                                      {a.message}
+                                    </div>
+                                  ))}
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
+                      </td>
                       <td className="p-3">{day.hours_worked || 0}h</td>
                       <td className="p-3 text-green-600">{day.overtime || 0}h</td>
                       <td className="p-3 text-red-600">{day.delay || 0}h</td>
