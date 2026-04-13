@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { FileText, CalendarAlert } from 'lucide-react'
+import { FileText, Calendar } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { Badge } from '@/components/ui/badge'
 
@@ -53,7 +53,7 @@ export default function EmployeeDocumentsTab({ employeeId }: { employeeId: strin
             <div className="flex items-center gap-3 shrink-0">
               {doc.expiration_date && (
                 <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <CalendarAlert className="w-3.5 h-3.5" />
+                  <Calendar className="w-3.5 h-3.5" />
                   Vence:{' '}
                   {new Date(doc.expiration_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
                 </span>
