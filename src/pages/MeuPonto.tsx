@@ -1,76 +1,82 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase/client'
-import { useTimeTrackingStore } from '@/stores/useTimeTrackingStore'
-import { useVacationStore } from '@/stores/useVacationStore'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { TimeTracker } from '@/components/time-tracking/TimeTracker'
-import { VacationManager } from '@/components/time-tracking/VacationManager'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Clock, AlertCircle } from 'lucide-react'
-import { Skeleton } from '@/components/ui/skeleton'
+import { DailyPunch } from '@/components/time-tracking/DailyPunch'
+import { MonthlyTimesheet } from '@/components/time-tracking/MonthlyTimesheet'
+import useAuthStore from '@/stores/useAuthStore'
+import { useTimeTrackingStore } from '@/stores/useTimeTrackingStore'
+import { Clock, CalendarDays } from 'lucide-react'
 
 export default function MeuPonto() {
-  const { employeeId, fetchEmployeeId, error, loading } = useTimeTrackingStore()
-  const { fetchBalance, fetchRequests } = useVacationStore()
-  const [init, setInit] = useState(true)
+  const { user } = useAuthStore()
+  const { fetchEmployeeId, employeeId, loading, error } = useTimeTrackingStore()
+  const [activeTab, setActiveTab] = useState('daily')
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user?.email) {
-        fetchEmployeeId(data.user.email).then((id) => {
-          if (id) {
-            fetchBalance(id)
-            fetchRequests(id)
-          }
-          setInit(false)
-        })
-      } else {
-        setInit(false)
-      }
-    })
-  }, [fetchEmployeeId, fetchBalance, fetchRequests])
+    if (user?.email && !employeeId) {
+      fetchEmployeeId(user.email)
+    }
+  }, [user, employeeId, fetchEmployeeId])
 
-  if (init || loading) {
+  if (loading && !employeeId) {
     return (
-      <div className="p-8 w-full">
-        <Skeleton className="h-[400px] w-full rounded-xl" />
+      <div className="flex h-[50vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     )
   }
 
-  if (error || !employeeId) {
+  if (error) {
     return (
-      <div className="p-8">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Acesso Negado</AlertTitle>
-          <AlertDescription>
-            {error || 'Seu usuário não está vinculado a um colaborador ativo. Contate o RH.'}
-          </AlertDescription>
-        </Alert>
+      <div className="flex h-[50vh] items-center justify-center p-8 text-center text-destructive">
+        <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-6">
+          <h3 className="font-semibold text-lg mb-2">Erro de Acesso</h3>
+          <p>{error}</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!employeeId) {
+    return (
+      <div className="flex h-[50vh] items-center justify-center p-8 text-center text-muted-foreground">
+        <p>Colaborador não encontrado ou não vinculado ao seu usuário.</p>
       </div>
     )
   }
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="p-2 bg-primary/10 rounded-full">
-          <Clock className="h-8 w-8 text-primary" />
-        </div>
-        <h1 className="text-3xl font-bold tracking-tight">Meu Ponto & Férias</h1>
+    <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 max-w-7xl mx-auto w-full">
+      <div className="flex flex-col space-y-2">
+        <h2 className="text-3xl font-bold tracking-tight text-foreground">Meu Ponto</h2>
+        <p className="text-muted-foreground">
+          Gerencie seus registros diários e consulte sua folha consolidada.
+        </p>
       </div>
 
-      <Tabs defaultValue="ponto" className="w-full">
-        <TabsList className="grid w-full md:w-[400px] grid-cols-2">
-          <TabsTrigger value="ponto">Controle de Ponto</TabsTrigger>
-          <TabsTrigger value="ferias">Férias</TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 w-full">
+        <TabsList className="w-full justify-start h-auto flex-wrap bg-muted/50 p-1">
+          <TabsTrigger value="daily" className="flex items-center gap-2 py-2.5 px-4">
+            <Clock className="w-4 h-4" />
+            <span className="hidden sm:inline">Registro</span> Diário
+          </TabsTrigger>
+          <TabsTrigger value="monthly" className="flex items-center gap-2 py-2.5 px-4">
+            <CalendarDays className="w-4 h-4" />
+            Folha <span className="hidden sm:inline">Mensal Consolidada</span>
+          </TabsTrigger>
         </TabsList>
-        <TabsContent value="ponto" className="mt-6">
-          <TimeTracker />
+
+        <TabsContent
+          value="daily"
+          className="m-0 border-0 p-0 focus-visible:outline-none focus-visible:ring-0"
+        >
+          <DailyPunch />
         </TabsContent>
-        <TabsContent value="ferias" className="mt-6">
-          <VacationManager />
+
+        <TabsContent
+          value="monthly"
+          className="m-0 border-0 p-0 focus-visible:outline-none focus-visible:ring-0"
+        >
+          <MonthlyTimesheet />
         </TabsContent>
       </Tabs>
     </div>

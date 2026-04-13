@@ -52,7 +52,7 @@ const HR_MENU = [
 
 const SYS_MENU = [
   {
-    title: 'Equipe e Acessos',
+    title: 'Colaboradores',
     icon: UserCog,
     url: '/colaboradores',
     roles: ['Admin'],
