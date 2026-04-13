@@ -67,9 +67,6 @@ export default function TalentBank() {
               <p className="text-sm sm:text-base text-muted-foreground">
                 Gerencie currículos, triagem e conversões.
               </p>
-              <Badge variant="secondary" className="hidden sm:inline-flex">
-                {total} encontrados
-              </Badge>
             </div>
           </div>
 

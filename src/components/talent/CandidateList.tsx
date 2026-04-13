@@ -55,16 +55,7 @@ export function CandidateList() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4">
-      {candidates.map((candidate) => (
-        <Card
-          key={candidate.id}
-          className="cursor-pointer hover:border-primary/50 hover:shadow-md transition-all group"
-          onClick={() => {
-            setSelectedCandidate(candidate)
-            setDetailsOpen(true)
-          }}
-        ></Card>
-      ))}
+      {candidates.map((candidate) => null)}
     </div>
   )
 }
