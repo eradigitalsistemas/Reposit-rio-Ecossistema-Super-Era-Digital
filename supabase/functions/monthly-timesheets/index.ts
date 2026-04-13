@@ -17,10 +17,13 @@ Deno.serve(async (req: Request) => {
   try {
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'UNAUTHORIZED', message: 'Missing Authorization header' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return new Response(
+        JSON.stringify({ error: 'UNAUTHORIZED', message: 'Missing Authorization header' }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      )
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
@@ -30,7 +33,10 @@ Deno.serve(async (req: Request) => {
       global: { headers: { Authorization: authHeader } },
     })
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
     if (authError || !user) {
       return new Response(JSON.stringify({ error: 'UNAUTHORIZED', message: 'Invalid token' }), {
         status: 401,
@@ -43,17 +49,24 @@ Deno.serve(async (req: Request) => {
     const functionIndex = pathParts.indexOf('monthly-timesheets')
 
     if (functionIndex === -1) {
-      return new Response(JSON.stringify({ error: 'NOT_FOUND', message: 'Endpoint não encontrado' }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return new Response(
+        JSON.stringify({ error: 'NOT_FOUND', message: 'Endpoint não encontrado' }),
+        {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      )
     }
 
     const params = pathParts.slice(functionIndex + 1)
     const action = params[0]
 
     // Obter Role e Org ID do usuário
-    const { data: userProfile } = await supabase.from('usuarios').select('perfil').eq('id', user.id).single()
+    const { data: userProfile } = await supabase
+      .from('usuarios')
+      .select('perfil')
+      .eq('id', user.id)
+      .single()
     const role = userProfile?.perfil || 'colaborador'
 
     const { data: orgIdData } = await supabase.rpc('get_user_org_id')
@@ -62,10 +75,13 @@ Deno.serve(async (req: Request) => {
     // POST /api/monthly-timesheets/generate
     if (req.method === 'POST' && action === 'generate') {
       if (role !== 'rh' && role !== 'admin') {
-        return new Response(JSON.stringify({ error: 'FORBIDDEN', message: 'Apenas RH pode gerar folha' }), {
-          status: 403,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        return new Response(
+          JSON.stringify({ error: 'FORBIDDEN', message: 'Apenas RH pode gerar folha' }),
+          {
+            status: 403,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          },
+        )
       }
 
       const body = await req.json().catch(() => ({}))
@@ -78,7 +94,7 @@ Deno.serve(async (req: Request) => {
             message: 'Dados inválidos para geração',
             details: parsed.error.errors,
           }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
         )
       }
 
@@ -95,7 +111,7 @@ Deno.serve(async (req: Request) => {
             error: 'INVALID_PERIOD',
             message: 'Não é possível gerar folha para período futuro',
           }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
         )
       }
 
@@ -115,7 +131,7 @@ Deno.serve(async (req: Request) => {
               error: 'ALREADY_EXISTS',
               message: `Folha para ${month}/${year} já foi gerada. Use regenerate=true para sobrescrever`,
             }),
-            { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
           )
         }
       }
@@ -131,7 +147,7 @@ Deno.serve(async (req: Request) => {
       if (!employees || employees.length === 0) {
         return new Response(
           JSON.stringify({ error: 'NO_DATA', message: 'Nenhum colaborador ativo encontrado' }),
-          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
         )
       }
 
@@ -166,16 +182,22 @@ Deno.serve(async (req: Request) => {
                 summary.total_extra_hours += Number(res.total_extra_hours) || 0
                 summary.total_delays_minutes += Number(res.total_delays_minutes) || 0
                 summary.total_absences += Number(res.absences) || 0
-                
+
                 // Atualizar generated_by no registro que acabou de ser criado pelo RPC
-                await supabase.from('monthly_timesheets').update({ generated_by: user.id }).eq('organization_id', orgId).eq('employee_id', emp.id).eq('year', year).eq('month', month)
+                await supabase
+                  .from('monthly_timesheets')
+                  .update({ generated_by: user.id })
+                  .eq('organization_id', orgId)
+                  .eq('employee_id', emp.id)
+                  .eq('year', year)
+                  .eq('month', month)
               }
               processed++
             } catch (err) {
               console.error(`Failed to process employee ${emp.id}:`, err)
               failed++
             }
-          })
+          }),
         )
       }
 
@@ -195,7 +217,7 @@ Deno.serve(async (req: Request) => {
             total_absences: summary.total_absences,
           },
         }),
-        { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )
     }
 
@@ -229,7 +251,7 @@ Deno.serve(async (req: Request) => {
             has_more: count !== null ? offset + limit < count : false,
           },
         }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )
     }
 
@@ -247,7 +269,7 @@ Deno.serve(async (req: Request) => {
       if (tsErr || !timesheet) {
         return new Response(
           JSON.stringify({ error: 'NOT_FOUND', message: 'Folha não encontrada' }),
-          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
         )
       }
 
@@ -271,12 +293,12 @@ Deno.serve(async (req: Request) => {
               p_employee_id: timesheet.employee_id,
               p_date: dateStr,
             })
-            .then((res) => res.data)
+            .then((res) => res.data),
         )
       }
 
       const dailyBreakdown = await Promise.all(promises)
-      
+
       // Filtrar resultados nulos ou com erro do RPC
       const validBreakdown = dailyBreakdown.filter(Boolean)
       validBreakdown.sort((a: any, b: any) => a.date.localeCompare(b.date))
@@ -289,13 +311,13 @@ Deno.serve(async (req: Request) => {
           month: timesheet.month,
           daily_breakdown: validBreakdown,
         }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )
     }
 
     return new Response(
       JSON.stringify({ error: 'METHOD_NOT_ALLOWED', message: 'Método não permitido' }),
-      { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )
   } catch (error: any) {
     console.error('Internal Server Error:', error)
@@ -304,7 +326,7 @@ Deno.serve(async (req: Request) => {
         error: 'INTERNAL_ERROR',
         message: error.message || 'Erro interno no servidor',
       }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )
   }
 })

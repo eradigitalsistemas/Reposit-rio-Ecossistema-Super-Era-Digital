@@ -12,6 +12,7 @@ import {
   UserPlus,
   Clock,
   Briefcase,
+  UserCog,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -42,7 +43,7 @@ const MAIN_MENU = [
 
 const HR_MENU = [
   { title: 'Central RH', icon: Briefcase, url: '/rh', roles: ['Admin'] },
-  { title: 'Colaboradores', icon: Users, url: '/funcionarios', roles: ['Admin'] },
+  { title: 'Funcionários (RH)', icon: Users, url: '/funcionarios', roles: ['Admin'] },
   { title: 'Banco de Talentos', icon: UserPlus, url: '/talentos', roles: ['Admin'] },
   { title: 'Admissão & Onboarding', icon: UserPlus, url: '/onboarding', roles: ['Admin'] },
   { title: 'Meu Ponto & Férias', icon: Clock, url: '/meu-ponto', roles: ['Admin', 'Colaborador'] },
@@ -50,6 +51,12 @@ const HR_MENU = [
 ]
 
 const SYS_MENU = [
+  {
+    title: 'Equipe e Acessos',
+    icon: UserCog,
+    url: '/colaboradores',
+    roles: ['Admin'],
+  },
   {
     title: 'Configurações',
     icon: SettingsIcon,
