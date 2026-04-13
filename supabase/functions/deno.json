@@ -9,6 +9,7 @@
     "process-resume": 7,
     "submit-talento": 8,
     "custom-auth": 1,
-    "candidates-webhook": 1
+    "candidates-webhook": 1,
+    "employees": 1
   }
 }
