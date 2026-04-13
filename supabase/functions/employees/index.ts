@@ -1,6 +1,6 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import { z } from 'npm:zod'
+import { z } from 'zod'
 import { corsHeaders } from '../_shared/cors.ts'
 import { isValidCPF } from '../_shared/validations.ts'
 
