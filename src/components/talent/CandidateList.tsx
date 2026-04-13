@@ -63,62 +63,7 @@ export function CandidateList() {
             setSelectedCandidate(candidate)
             setDetailsOpen(true)
           }}
-        >
-          <CardContent className="p-5 flex flex-col h-full gap-4">
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex items-center gap-3 overflow-hidden">
-                <Avatar className="h-12 w-12 border shadow-sm">
-                  <AvatarImage
-                    src={`https://img.usecurling.com/ppl/thumbnail?seed=${candidate.id}`}
-                  />
-                  <AvatarFallback className="font-medium text-muted-foreground">
-                    {candidate.name.substring(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="overflow-hidden">
-                  <h3
-                    className="font-semibold truncate text-base group-hover:text-primary transition-colors"
-                    title={candidate.name}
-                  >
-                    {candidate.name}
-                  </h3>
-                  <p className="text-sm text-muted-foreground truncate" title={candidate.email}>
-                    {candidate.email}
-                  </p>
-                </div>
-              </div>
-              <Badge
-                variant="secondary"
-                className={`shrink-0 border-0 ${getStatusColor(candidate.status)}`}
-              >
-                {candidate.status}
-              </Badge>
-            </div>
-
-            <div className="mt-auto space-y-2.5 text-sm text-muted-foreground bg-muted/30 p-3 rounded-md">
-              <div className="flex items-center gap-2 truncate">
-                <Briefcase className="h-4 w-4 shrink-0 text-primary/70" />
-                <span className="truncate font-medium text-foreground/80">
-                  {candidate.profession || 'Não informado'}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4 shrink-0 text-primary/70" />
-                <span>
-                  {candidate.resume_data?.salary_expectation
-                    ? `R$ ${candidate.resume_data.salary_expectation}`
-                    : 'Não informado'}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 shrink-0 text-primary/70" />
-                <span>
-                  {format(new Date(candidate.created_at), "dd 'de' MMM, yyyy", { locale: ptBR })}
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        ></Card>
       ))}
     </div>
   )
