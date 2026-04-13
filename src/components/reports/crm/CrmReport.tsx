@@ -42,7 +42,17 @@ export function CrmReport() {
   const [customEndDate, setCustomEndDate] = useState('')
   const [reportModalOpen, setReportModalOpen] = useState(false)
 
-  const { raw, loading, error, filteredLeads, filteredDemands, totalLeads, demandsToday, urgentesAberto, leadsConvertidos } = useCrmReportData(role, dateFilter, customStartDate, customEndDate)
+  const {
+    raw,
+    loading,
+    error,
+    filteredLeads,
+    filteredDemands,
+    totalLeads,
+    demandsToday,
+    urgentesAberto,
+    leadsConvertidos,
+  } = useCrmReportData(role, dateFilter, customStartDate, customEndDate)
 
   const leadsChartData = useMemo(() => {
     const counts: Record<string, number> = {}
@@ -92,7 +102,7 @@ export function CrmReport() {
       }
     })
     return Object.entries(counts)
-      .map(([name, count]) => ({ name, count as number }))
+      .map(([name, count]) => ({ name, count: Number(count) }))
       .filter((item) => item.count > 0 || raw.users.some((u: any) => u.nome === item.name))
   }, [filteredDemands, raw.users])
 
@@ -118,7 +128,9 @@ export function CrmReport() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-semibold tracking-tight">CRM Comercial & Operação</h2>
-          <p className="text-muted-foreground text-sm">Acompanhe métricas de conversão e demandas operacionais.</p>
+          <p className="text-muted-foreground text-sm">
+            Acompanhe métricas de conversão e demandas operacionais.
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Select value={dateFilter} onValueChange={setDateFilter}>
@@ -209,16 +221,35 @@ export function CrmReport() {
           </CardHeader>
           <CardContent className="px-2 sm:px-6">
             {leadsChartData.length === 0 ? (
-              <div className="h-[250px] flex items-center justify-center text-sm text-muted-foreground border border-dashed rounded">Nenhum dado</div>
+              <div className="h-[250px] flex items-center justify-center text-sm text-muted-foreground border border-dashed rounded">
+                Nenhum dado
+              </div>
             ) : (
               <ChartContainer config={leadsConfig} className="h-[250px] w-full">
-                <BarChart data={leadsChartData} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
+                <BarChart
+                  data={leadsChartData}
+                  margin={{ top: 20, right: 0, left: -20, bottom: 0 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-                  <XAxis dataKey="name" stroke="currentColor" tickLine={false} axisLine={{ stroke: 'var(--border)' }} tick={{ fill: 'currentColor', fontSize: 12 }} />
-                  <YAxis stroke="currentColor" tickLine={false} axisLine={{ stroke: 'var(--border)' }} tick={{ fill: 'currentColor', fontSize: 12 }} allowDecimals={false} />
+                  <XAxis
+                    dataKey="name"
+                    stroke="currentColor"
+                    tickLine={false}
+                    axisLine={{ stroke: 'var(--border)' }}
+                    tick={{ fill: 'currentColor', fontSize: 12 }}
+                  />
+                  <YAxis
+                    stroke="currentColor"
+                    tickLine={false}
+                    axisLine={{ stroke: 'var(--border)' }}
+                    tick={{ fill: 'currentColor', fontSize: 12 }}
+                    allowDecimals={false}
+                  />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={60}>
-                    {leadsChartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
+                    {leadsChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
                   </Bar>
                 </BarChart>
               </ChartContainer>
@@ -233,16 +264,35 @@ export function CrmReport() {
           </CardHeader>
           <CardContent className="px-2 sm:px-6">
             {demandsPriorityData.length === 0 ? (
-              <div className="h-[250px] flex items-center justify-center text-sm text-muted-foreground border border-dashed rounded">Nenhum dado</div>
+              <div className="h-[250px] flex items-center justify-center text-sm text-muted-foreground border border-dashed rounded">
+                Nenhum dado
+              </div>
             ) : (
               <ChartContainer config={priorityConfig} className="h-[250px] w-full">
-                <BarChart data={demandsPriorityData} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
+                <BarChart
+                  data={demandsPriorityData}
+                  margin={{ top: 20, right: 0, left: -20, bottom: 0 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-                  <XAxis dataKey="name" stroke="currentColor" tickLine={false} axisLine={{ stroke: 'var(--border)' }} tick={{ fill: 'currentColor', fontSize: 12 }} />
-                  <YAxis stroke="currentColor" tickLine={false} axisLine={{ stroke: 'var(--border)' }} tick={{ fill: 'currentColor', fontSize: 12 }} allowDecimals={false} />
+                  <XAxis
+                    dataKey="name"
+                    stroke="currentColor"
+                    tickLine={false}
+                    axisLine={{ stroke: 'var(--border)' }}
+                    tick={{ fill: 'currentColor', fontSize: 12 }}
+                  />
+                  <YAxis
+                    stroke="currentColor"
+                    tickLine={false}
+                    axisLine={{ stroke: 'var(--border)' }}
+                    tick={{ fill: 'currentColor', fontSize: 12 }}
+                    allowDecimals={false}
+                  />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={60}>
-                    {demandsPriorityData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
+                    {demandsPriorityData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
                   </Bar>
                 </BarChart>
               </ChartContainer>
@@ -258,16 +308,38 @@ export function CrmReport() {
         </CardHeader>
         <CardContent className="px-2 sm:px-6 overflow-x-auto">
           {filteredDemands.length === 0 ? (
-            <div className="h-[300px] flex items-center justify-center text-sm text-muted-foreground border border-dashed rounded">Nenhuma demanda</div>
+            <div className="h-[300px] flex items-center justify-center text-sm text-muted-foreground border border-dashed rounded">
+              Nenhuma demanda
+            </div>
           ) : (
             <div className="min-w-[500px] w-full">
-              <ChartContainer config={{ count: { label: 'Demandas', color: 'hsl(var(--primary))' } }} className="h-[300px] w-full">
+              <ChartContainer
+                config={{ count: { label: 'Demandas', color: 'hsl(var(--primary))' } }}
+                className="h-[300px] w-full"
+              >
                 <BarChart data={teamData} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-                  <XAxis dataKey="name" stroke="currentColor" tickLine={false} axisLine={{ stroke: 'var(--border)' }} tick={{ fill: 'currentColor', fontSize: 12 }} />
-                  <YAxis stroke="currentColor" tickLine={false} axisLine={{ stroke: 'var(--border)' }} tick={{ fill: 'currentColor', fontSize: 12 }} allowDecimals={false} />
+                  <XAxis
+                    dataKey="name"
+                    stroke="currentColor"
+                    tickLine={false}
+                    axisLine={{ stroke: 'var(--border)' }}
+                    tick={{ fill: 'currentColor', fontSize: 12 }}
+                  />
+                  <YAxis
+                    stroke="currentColor"
+                    tickLine={false}
+                    axisLine={{ stroke: 'var(--border)' }}
+                    tick={{ fill: 'currentColor', fontSize: 12 }}
+                    allowDecimals={false}
+                  />
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="count" fill="var(--color-count)" radius={[4, 4, 0, 0]} maxBarSize={60} />
+                  <Bar
+                    dataKey="count"
+                    fill="var(--color-count)"
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={60}
+                  />
                 </BarChart>
               </ChartContainer>
             </div>
@@ -275,7 +347,9 @@ export function CrmReport() {
         </CardContent>
       </Card>
 
-      {reportModalOpen && <CrmExportModal rawData={raw} onClose={() => setReportModalOpen(false)} />}
+      {reportModalOpen && (
+        <CrmExportModal rawData={raw} onClose={() => setReportModalOpen(false)} />
+      )}
     </div>
   )
 }
