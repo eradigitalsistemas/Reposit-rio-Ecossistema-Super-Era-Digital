@@ -10,6 +10,8 @@ import {
   Settings as SettingsIcon,
   Home,
   UserPlus,
+  Clock,
+  Briefcase,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -25,7 +27,7 @@ import {
 } from '@/components/ui/sidebar'
 import useAuthStore from '@/stores/useAuthStore'
 
-const MENU_ITEMS = [
+const MAIN_MENU = [
   { title: 'Dashboard Geral', icon: Home, url: '/', roles: ['Admin', 'Colaborador'] },
   {
     title: 'Era Digital Vendas',
@@ -35,10 +37,18 @@ const MENU_ITEMS = [
   },
   { title: 'Demandas', icon: CheckSquare, url: '/demandas', roles: ['Admin', 'Colaborador'] },
   { title: 'Agenda', icon: Calendar, url: '/agenda', roles: ['Admin', 'Colaborador'] },
+  { title: 'Clientes Externos', icon: Building2, url: '/clientes', roles: ['Admin'] },
+]
+
+const HR_MENU = [
+  { title: 'Central RH', icon: Briefcase, url: '/rh', roles: ['Admin'] },
   { title: 'Colaboradores', icon: Users, url: '/colaboradores', roles: ['Admin'] },
   { title: 'Admissão & Onboarding', icon: UserPlus, url: '/onboarding', roles: ['Admin'] },
-  { title: 'Clientes Externos', icon: Building2, url: '/clientes', roles: ['Admin'] },
-  { title: 'Relatórios', icon: BarChart3, url: '/relatorios', roles: ['Admin'] },
+  { title: 'Meu Ponto & Férias', icon: Clock, url: '/meu-ponto', roles: ['Admin', 'Colaborador'] },
+  { title: 'Relatórios RH', icon: BarChart3, url: '/relatorios', roles: ['Admin'] },
+]
+
+const SYS_MENU = [
   {
     title: 'Configurações',
     icon: SettingsIcon,
@@ -52,13 +62,45 @@ export function AppSidebar() {
   const { role } = useAuthStore()
   const { setOpenMobile, isMobile } = useSidebar()
 
-  const visibleItems = MENU_ITEMS.filter((item) => item.roles.includes(role as string))
-
   const handleLinkClick = () => {
     if (isMobile) {
       setOpenMobile(false)
     }
   }
+
+  const renderMenu = (items: typeof MAIN_MENU) => {
+    const visibleItems = items.filter((item) => item.roles.includes(role as string))
+    if (visibleItems.length === 0) return null
+
+    return (
+      <SidebarMenu>
+        {visibleItems.map((item) => (
+          <SidebarMenuItem key={item.title}>
+            <SidebarMenuButton
+              asChild
+              isActive={
+                location.pathname.startsWith(item.url) &&
+                item.url !== '#' &&
+                (item.url === '/' ? location.pathname === '/' : true)
+              }
+              className="transition-all duration-200 h-12 md:h-10 px-4 md:px-2"
+            >
+              <Link
+                to={item.url}
+                onClick={handleLinkClick}
+                className="flex items-center gap-3 text-sidebar-foreground/80 hover:text-sidebar-foreground"
+              >
+                <item.icon className="w-5 h-5" />
+                <span className="text-base md:text-sm font-medium">{item.title}</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ))}
+      </SidebarMenu>
+    )
+  }
+
+  const hrItemsVisible = HR_MENU.filter((i) => i.roles.includes(role as string)).length > 0
 
   return (
     <Sidebar>
@@ -74,36 +116,32 @@ export function AppSidebar() {
           <span>Era Digital</span>
         </Link>
       </SidebarHeader>
+
       <SidebarContent className="flex-1 overflow-y-auto bg-sidebar">
         <SidebarGroup>
-          <SidebarGroupContent className="py-4">
-            <SidebarMenu>
-              {visibleItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={
-                      location.pathname.startsWith(item.url) &&
-                      item.url !== '#' &&
-                      (item.url === '/' ? location.pathname === '/' : true)
-                    }
-                    className="transition-all duration-200 h-12 md:h-10 px-4 md:px-2"
-                  >
-                    <Link
-                      to={item.url}
-                      onClick={handleLinkClick}
-                      className="flex items-center gap-3 text-sidebar-foreground/80 hover:text-sidebar-foreground"
-                    >
-                      <item.icon className="w-5 h-5" />
-                      <span className="text-base md:text-sm font-medium">{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
+          <div className="px-4 py-2 mt-2 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider">
+            Principal
+          </div>
+          <SidebarGroupContent>{renderMenu(MAIN_MENU)}</SidebarGroupContent>
+        </SidebarGroup>
+
+        {hrItemsVisible && (
+          <SidebarGroup>
+            <div className="px-4 py-2 mt-4 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider">
+              Recursos Humanos
+            </div>
+            <SidebarGroupContent>{renderMenu(HR_MENU)}</SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        <SidebarGroup>
+          <div className="px-4 py-2 mt-4 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider">
+            Sistema
+          </div>
+          <SidebarGroupContent>{renderMenu(SYS_MENU)}</SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
       <SidebarFooter className="p-4 border-t border-border shrink-0 mt-auto pb-8 md:pb-4 bg-sidebar">
         <SidebarMenu>
           <SidebarMenuItem>

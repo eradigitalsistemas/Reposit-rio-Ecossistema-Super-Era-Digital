@@ -16,6 +16,7 @@ import Onboarding from './pages/Onboarding'
 import Reports from './pages/Reports'
 import Settings from './pages/Settings'
 import MeuPonto from './pages/MeuPonto'
+import RH from './pages/RH'
 import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
 
@@ -77,10 +78,10 @@ const App = () => (
                       <Route path="/talentos" element={<TalentBank />} />
                       <Route path="/onboarding" element={<Onboarding />} />
                       <Route path="/relatorios" element={<Reports />} />
+                      <Route path="/rh" element={<RH />} />
                       <Route path="/configuracoes" element={<Settings />} />
                       <Route path="/meu-ponto" element={<MeuPonto />} />
                     </Route>
-
                     {/* External Portal Routes */}
                     <Route path="/portal/login" element={<PortalLogin />} />
                     <Route path="/portal" element={<PortalLayout />}>
