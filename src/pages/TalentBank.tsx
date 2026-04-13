@@ -1,189 +1,154 @@
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useEffect, useState } from 'react'
+import { useCandidateStore } from '@/stores/useCandidateStore'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Search, Filter, Briefcase, Users } from 'lucide-react'
+import { CandidateFilters } from '@/components/talent/CandidateFilters'
+import { CandidateList } from '@/components/talent/CandidateList'
+import { CandidateDetails } from '@/components/talent/CandidateDetails'
+import { ConvertCandidateDialog } from '@/components/talent/ConvertCandidateDialog'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination'
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Badge } from '@/components/ui/badge'
-import { useToast } from '@/hooks/use-toast'
-import { Search, Briefcase, Clock, FileText } from 'lucide-react'
-import { getCandidates, updateCandidate } from '@/services/candidates'
-import { format } from 'date-fns'
 
 export default function TalentBank() {
-  const [candidates, setCandidates] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const { toast } = useToast()
+  const { fetchCandidates, filters, setFilters, page, limit, total, setPage } = useCandidateStore()
+  const [localSearch, setLocalSearch] = useState(filters.search)
 
-  const loadCandidates = async () => {
-    try {
-      setLoading(true)
-      const res = await getCandidates({
-        search: search.length >= 2 ? search : undefined,
-        status: statusFilter !== 'all' ? statusFilter : undefined,
-      })
-      setCandidates(res.data || [])
-    } catch (error: any) {
-      toast({
-        title: 'Erro ao carregar candidatos',
-        description: error.message,
-        variant: 'destructive',
-      })
-    } finally {
-      setLoading(false)
-    }
-  }
+  useEffect(() => {
+    fetchCandidates()
+  }, [])
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      loadCandidates()
+      if (localSearch.length >= 3 || localSearch.length === 0) {
+        setFilters({ search: localSearch })
+      }
     }, 500)
     return () => clearTimeout(timer)
-  }, [search, statusFilter])
+  }, [localSearch])
 
-  const handleStatusChange = async (id: string, newStatus: string) => {
-    try {
-      await updateCandidate(id, { status: newStatus })
-      toast({ title: 'Status atualizado com sucesso' })
-      loadCandidates()
-    } catch (error: any) {
-      toast({
-        title: 'Erro ao atualizar status',
-        description: error.message,
-        variant: 'destructive',
-      })
-    }
-  }
+  const totalPages = Math.ceil(total / limit)
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto animate-fade-in-up">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Banco de Talentos</h1>
-          <p className="text-muted-foreground mt-1">
-            Gerencie os currículos recebidos e converta talentos em colaboradores.
-          </p>
+    <div className="flex h-full w-full flex-col lg:flex-row bg-background animate-fade-in-up">
+      {/* Sidebar for Desktop */}
+      <div className="hidden lg:flex w-72 flex-col border-r bg-card/40 p-6 shrink-0 h-[calc(100vh-4rem)] sticky top-0 overflow-y-auto">
+        <div className="flex items-center gap-2 mb-8 text-foreground">
+          <div className="p-2 bg-primary/10 rounded-md">
+            <Filter className="h-5 w-5 text-primary" />
+          </div>
+          <h2 className="font-semibold text-lg">Filtros</h2>
+        </div>
+        <CandidateFilters />
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0 h-full">
+        {/* Header */}
+        <div className="p-6 border-b bg-card/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sticky top-0 z-10 backdrop-blur-sm">
+          <div>
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-primary/10 rounded-lg text-primary">
+                <Users className="h-6 w-6" />
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+                Banco de Talentos
+              </h1>
+            </div>
+            <div className="flex items-center gap-3 mt-2">
+              <p className="text-sm sm:text-base text-muted-foreground">
+                Gerencie currículos, triagem e conversões.
+              </p>
+              <Badge variant="secondary" className="hidden sm:inline-flex">
+                {total} encontrados
+              </Badge>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="relative flex-1 sm:w-[320px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome, email ou profissão..."
+                className="pl-9 bg-background focus-visible:ring-primary/50"
+                value={localSearch}
+                onChange={(e) => setLocalSearch(e.target.value)}
+              />
+            </div>
+
+            {/* Mobile Filter Button */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon" className="lg:hidden shrink-0">
+                  <Filter className="h-4 w-4" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-80 p-6 overflow-y-auto">
+                <div className="flex items-center gap-2 mb-8 mt-2">
+                  <div className="p-2 bg-primary/10 rounded-md">
+                    <Filter className="h-5 w-5 text-primary" />
+                  </div>
+                  <h2 className="font-semibold text-lg">Filtros</h2>
+                </div>
+                <CandidateFilters />
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
+
+        {/* List Content */}
+        <div className="p-6 flex-1 overflow-y-auto bg-muted/10">
+          <CandidateList />
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-8 flex justify-center pb-4">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => page > 1 && setPage(page - 1)}
+                      className={page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+
+                  {Array.from({ length: totalPages }).map((_, i) => (
+                    <PaginationItem key={i}>
+                      <PaginationLink
+                        onClick={() => setPage(i + 1)}
+                        isActive={page === i + 1}
+                        className="cursor-pointer"
+                      >
+                        {i + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => page < totalPages && setPage(page + 1)}
+                      className={
+                        page === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'
+                      }
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nome, email ou profissão..."
-            className="pl-9"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Filtrar por Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os Status</SelectItem>
-            <SelectItem value="Novo">Novo</SelectItem>
-            <SelectItem value="Entrevistado">Entrevistado</SelectItem>
-            <SelectItem value="Rejeitado">Rejeitado</SelectItem>
-            <SelectItem value="Contratado">Contratado</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <Card key={i} className="animate-pulse h-48 bg-muted/20" />
-          ))}
-        </div>
-      ) : candidates.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground border rounded-lg border-dashed">
-          <Briefcase className="h-12 w-12 mx-auto mb-4 opacity-20" />
-          <p>Nenhum candidato encontrado com os filtros atuais.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {candidates.map((candidate) => (
-            <Card
-              key={candidate.id}
-              className="overflow-hidden hover:shadow-md transition-shadow group"
-            >
-              <CardHeader className="bg-muted/30 pb-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-lg">{candidate.name}</CardTitle>
-                    <p
-                      className="text-sm text-muted-foreground truncate max-w-[200px]"
-                      title={candidate.email}
-                    >
-                      {candidate.email}
-                    </p>
-                  </div>
-                  <Badge
-                    variant={
-                      candidate.status === 'Novo'
-                        ? 'default'
-                        : candidate.status === 'Contratado'
-                          ? 'secondary'
-                          : 'outline'
-                    }
-                  >
-                    {candidate.status}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-4 space-y-4">
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="flex items-center text-muted-foreground">
-                    <Briefcase className="h-4 w-4 mr-2 shrink-0" />
-                    <span className="truncate">{candidate.profession || 'Não informado'}</span>
-                  </div>
-                  <div className="flex items-center text-muted-foreground">
-                    <Clock className="h-4 w-4 mr-2 shrink-0" />
-                    {format(new Date(candidate.created_at), 'dd/MM/yyyy')}
-                  </div>
-                </div>
-
-                {candidate.disc_result && (
-                  <div className="flex items-center gap-2 mt-2 bg-primary/5 p-2 rounded-md">
-                    <span className="text-xs font-semibold text-primary">DISC:</span>
-                    <span className="text-xs">
-                      {candidate.disc_result.result || candidate.disc_result.tipo_perfil || 'N/A'}
-                    </span>
-                  </div>
-                )}
-
-                <div className="pt-4 flex gap-2 border-t">
-                  <Select
-                    value={candidate.status}
-                    onValueChange={(val) => handleStatusChange(candidate.id, val)}
-                  >
-                    <SelectTrigger className="h-8 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Novo">Novo</SelectItem>
-                      <SelectItem value="Entrevistado">Entrevistado</SelectItem>
-                      <SelectItem value="Rejeitado">Rejeitado</SelectItem>
-                      <SelectItem value="Contratado">Contratado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button variant="outline" size="sm" className="h-8 w-8 p-0" title="Ver currículo">
-                    <FileText className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+      <CandidateDetails />
+      <ConvertCandidateDialog />
     </div>
   )
 }
