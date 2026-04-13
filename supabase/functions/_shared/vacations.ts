@@ -55,7 +55,7 @@ export async function calculateBalance(supabase: any, employeeId: string) {
   expirationDate.setFullYear(expirationDate.getFullYear() + activePeriodStartYear + 2)
 
   const daysToExpiration = Math.ceil(
-    (expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+    (expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
   )
   const expiresSoon = remaining > 0 && daysToExpiration <= 30
 
@@ -71,4 +71,3 @@ export async function calculateBalance(supabase: any, employeeId: string) {
     limit_reached: remaining >= 60,
   }
 }
-
