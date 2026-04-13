@@ -1,7 +1,13 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { z } from 'zod'
-import { corsHeaders } from '../_shared/cors.ts'
+
+export const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, x-supabase-client-platform, apikey, content-type, x-cron-secret',
+}
 
 const updateCandidateSchema = z.object({
   status: z.enum(['Novo', 'Entrevistado', 'Rejeitado', 'Contratado']).optional(),

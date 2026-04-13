@@ -10,6 +10,7 @@
     "submit-talento": 8,
     "custom-auth": 1,
     "candidates-webhook": 1,
-    "employees": 1
+    "employees": 1,
+    "candidates": 1
   }
 }
