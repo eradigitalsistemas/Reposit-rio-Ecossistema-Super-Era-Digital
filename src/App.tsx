@@ -10,6 +10,7 @@ import Agenda from './pages/Agenda'
 import Clients from './pages/Clients'
 import ClientProfile from './pages/ClientProfile'
 import Collaborators from './pages/Collaborators'
+import Employees from './pages/Employees'
 import TalentBank from './pages/TalentBank'
 import Reports from './pages/Reports'
 import Settings from './pages/Settings'
@@ -70,6 +71,7 @@ const App = () => (
                       <Route path="/clientes" element={<Clients />} />
                       <Route path="/clientes/:id" element={<ClientProfile />} />
                       <Route path="/colaboradores" element={<Collaborators />} />
+                      <Route path="/funcionarios" element={<Employees />} />
                       <Route path="/talentos" element={<TalentBank />} />
                       <Route path="/relatorios" element={<Reports />} />
                       <Route path="/configuracoes" element={<Settings />} />
