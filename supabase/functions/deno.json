@@ -18,6 +18,7 @@
     "onboarding": 2,
     "productivity": 1,
     "notifications": 1,
-    "cron-hr-jobs": 1
+    "cron-hr-jobs": 1,
+    "monthly-timesheets": 1
   }
 }

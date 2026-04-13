@@ -1,6 +1,6 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
-import { createClient } from 'npm:@supabase/supabase-js@2'
-import { z } from 'npm:zod@3.23.8'
+import { createClient } from 'jsr:@supabase/supabase-js@2'
+import { z } from 'zod'
 import { corsHeaders } from '../_shared/cors.ts'
 
 const generateSchema = z.object({
