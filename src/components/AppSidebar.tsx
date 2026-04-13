@@ -42,7 +42,8 @@ const MAIN_MENU = [
 
 const HR_MENU = [
   { title: 'Central RH', icon: Briefcase, url: '/rh', roles: ['Admin'] },
-  { title: 'Colaboradores', icon: Users, url: '/colaboradores', roles: ['Admin'] },
+  { title: 'Colaboradores', icon: Users, url: '/funcionarios', roles: ['Admin'] },
+  { title: 'Banco de Talentos', icon: UserPlus, url: '/talentos', roles: ['Admin'] },
   { title: 'Admissão & Onboarding', icon: UserPlus, url: '/onboarding', roles: ['Admin'] },
   { title: 'Meu Ponto & Férias', icon: Clock, url: '/meu-ponto', roles: ['Admin', 'Colaborador'] },
   { title: 'Relatórios RH', icon: BarChart3, url: '/relatorios', roles: ['Admin'] },

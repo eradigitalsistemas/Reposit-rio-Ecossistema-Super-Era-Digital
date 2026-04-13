@@ -163,7 +163,26 @@ export default function RH() {
             </CardHeader>
             <CardContent className="mt-auto pt-4">
               <Button asChild variant="outline" className="w-full justify-between">
-                <Link to="/colaboradores">
+                <Link to="/funcionarios">
+                  Acessar Módulo <ArrowRight className="w-4 h-4" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:border-primary/50 transition-colors group flex flex-col">
+            <CardHeader>
+              <div className="p-3 bg-purple-500/10 rounded-lg w-fit mb-3 group-hover:scale-105 transition-transform">
+                <Briefcase className="w-6 h-6 text-purple-500" />
+              </div>
+              <CardTitle>Banco de Talentos</CardTitle>
+              <CardDescription>
+                Triagem de currículos, gestão de candidatos e conversão para colaboradores.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="mt-auto pt-4">
+              <Button asChild variant="outline" className="w-full justify-between">
+                <Link to="/talentos">
                   Acessar Módulo <ArrowRight className="w-4 h-4" />
                 </Link>
               </Button>

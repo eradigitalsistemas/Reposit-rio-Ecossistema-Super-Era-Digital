@@ -50,6 +50,7 @@ const formSchema = z.object({
       (val) => val <= new Date().toISOString().split('T')[0],
       'Data de contratação não pode ser no futuro',
     ),
+  experience_end_date: z.string().optional(),
   status: z.enum(['Ativo', 'Afastado', 'Demitido', 'Em Experiência']).default('Ativo'),
 })
 
@@ -95,6 +96,7 @@ export default function EmployeeFormModal({
           department_id: employee.department_id || undefined,
           salary: employee.salary ? String(employee.salary) : '',
           hire_date: employee.hire_date,
+          experience_end_date: employee.experience_end_date || '',
           status: employee.status as any,
         })
       } else {
@@ -108,6 +110,7 @@ export default function EmployeeFormModal({
           department_id: undefined,
           salary: '',
           hire_date: new Date().toISOString().split('T')[0],
+          experience_end_date: '',
           status: 'Ativo',
         })
       }
@@ -138,6 +141,7 @@ export default function EmployeeFormModal({
         department_id: values.department_id || null,
         salary: values.salary ? Number(values.salary) : null,
         hire_date: values.hire_date,
+        experience_end_date: values.experience_end_date || null,
         status: values.status,
       }
 
@@ -314,6 +318,19 @@ export default function EmployeeFormModal({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Data de Contratação *</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="experience_end_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Fim da Experiência</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
