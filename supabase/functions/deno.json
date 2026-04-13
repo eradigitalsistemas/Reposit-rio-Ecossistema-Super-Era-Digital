@@ -1,12 +1,14 @@
 {
   "_versions": {
-    "update-demand-priority": 4,
-    "admin-users": 5,
-    "notify-push": 3,
-    "notify-automation": 6,
-    "manage-client-documents": 3,
-    "functions": 1,
-    "process-resume": 7,
+    "update-demand-priority": 2,
+    "admin-users": 2,
+    "notify-push": 1,
+    "notify-automation": 2,
+    "manage-client-documents": 1,
+    "functions": 1
+  }
+}
+process-resume": 7,
     "submit-talento": 8,
     "custom-auth": 1,
     "candidates-webhook": 1,
