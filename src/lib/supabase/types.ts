@@ -1,11 +1,17 @@
 // AVOID UPDATING THIS FILE DIRECTLY. It is automatically generated.
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '14.4'
+    PostgrestVersion: "14.4"
   }
   public: {
     Tables: {
@@ -57,25 +63,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'agenda_eventos_cliente_id_fkey'
-            columns: ['cliente_id']
+            foreignKeyName: "agenda_eventos_cliente_id_fkey"
+            columns: ["cliente_id"]
             isOneToOne: false
-            referencedRelation: 'clientes_externos'
-            referencedColumns: ['id']
+            referencedRelation: "clientes_externos"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'agenda_eventos_demanda_id_fkey'
-            columns: ['demanda_id']
+            foreignKeyName: "agenda_eventos_demanda_id_fkey"
+            columns: ["demanda_id"]
             isOneToOne: false
-            referencedRelation: 'demandas'
-            referencedColumns: ['id']
+            referencedRelation: "demandas"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'agenda_eventos_lead_id_fkey'
-            columns: ['lead_id']
+            foreignKeyName: "agenda_eventos_lead_id_fkey"
+            columns: ["lead_id"]
             isOneToOne: false
-            referencedRelation: 'leads'
-            referencedColumns: ['id']
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -286,18 +292,69 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'demandas_cliente_id_fkey'
-            columns: ['cliente_id']
+            foreignKeyName: "demandas_cliente_id_fkey"
+            columns: ["cliente_id"]
             isOneToOne: false
-            referencedRelation: 'clientes_externos'
-            referencedColumns: ['id']
+            referencedRelation: "clientes_externos"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'demandas_responsavel_id_fkey'
-            columns: ['responsavel_id']
+            foreignKeyName: "demandas_responsavel_id_fkey"
+            columns: ["responsavel_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      department_schedules: {
+        Row: {
+          created_at: string
+          department_id: string
+          end_time: string
+          id: string
+          lunch_duration_minutes: number
+          organization_id: string
+          start_time: string
+          tolerance_minutes: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          department_id: string
+          end_time: string
+          id?: string
+          lunch_duration_minutes: number
+          organization_id: string
+          start_time: string
+          tolerance_minutes: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          department_id?: string
+          end_time?: string
+          id?: string
+          lunch_duration_minutes?: number
+          organization_id?: string
+          start_time?: string
+          tolerance_minutes?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "department_schedules_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "department_schedules_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -322,11 +379,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'departments_manager_id_fkey'
-            columns: ['manager_id']
+            foreignKeyName: "departments_manager_id_fkey"
+            columns: ["manager_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -366,11 +423,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'disc_results_user_id_fkey'
-            columns: ['user_id']
+            foreignKeyName: "disc_results_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -407,11 +464,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'documents_employee_id_fkey'
-            columns: ['employee_id']
+            foreignKeyName: "documents_employee_id_fkey"
+            columns: ["employee_id"]
             isOneToOne: false
-            referencedRelation: 'employees'
-            referencedColumns: ['id']
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -445,11 +502,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'educations_user_id_fkey'
-            columns: ['user_id']
+            foreignKeyName: "educations_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -480,11 +537,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'emails_sent_user_id_fkey'
-            columns: ['user_id']
+            foreignKeyName: "emails_sent_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -536,18 +593,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'employees_candidate_id_fkey'
-            columns: ['candidate_id']
+            foreignKeyName: "employees_candidate_id_fkey"
+            columns: ["candidate_id"]
             isOneToOne: false
-            referencedRelation: 'candidates'
-            referencedColumns: ['id']
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'employees_department_id_fkey'
-            columns: ['department_id']
+            foreignKeyName: "employees_department_id_fkey"
+            columns: ["department_id"]
             isOneToOne: false
-            referencedRelation: 'departments'
-            referencedColumns: ['id']
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -584,11 +641,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'experiences_user_id_fkey'
-            columns: ['user_id']
+            foreignKeyName: "experiences_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -622,11 +679,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'historico_leads_lead_id_fkey'
-            columns: ['lead_id']
+            foreignKeyName: "historico_leads_lead_id_fkey"
+            columns: ["lead_id"]
             isOneToOne: false
-            referencedRelation: 'leads'
-            referencedColumns: ['id']
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -759,18 +816,78 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'logs_auditoria_demanda_id_fkey'
-            columns: ['demanda_id']
+            foreignKeyName: "logs_auditoria_demanda_id_fkey"
+            columns: ["demanda_id"]
             isOneToOne: false
-            referencedRelation: 'demandas'
-            referencedColumns: ['id']
+            referencedRelation: "demandas"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'logs_auditoria_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "logs_auditoria_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      monthly_timesheets: {
+        Row: {
+          days_worked: number
+          employee_id: string
+          generated_at: string
+          generated_by: string | null
+          id: string
+          month: number
+          organization_id: string
+          total_absences: number
+          total_delays_minutes: number
+          total_extra_hours: number
+          total_hours_worked: number
+          year: number
+        }
+        Insert: {
+          days_worked?: number
+          employee_id: string
+          generated_at?: string
+          generated_by?: string | null
+          id?: string
+          month: number
+          organization_id: string
+          total_absences?: number
+          total_delays_minutes?: number
+          total_extra_hours?: number
+          total_hours_worked?: number
+          year: number
+        }
+        Update: {
+          days_worked?: number
+          employee_id?: string
+          generated_at?: string
+          generated_by?: string | null
+          id?: string
+          month?: number
+          organization_id?: string
+          total_absences?: number
+          total_delays_minutes?: number
+          total_extra_hours?: number
+          total_hours_worked?: number
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_timesheets_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monthly_timesheets_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -810,18 +927,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'notificacoes_demanda_id_fkey'
-            columns: ['demanda_id']
+            foreignKeyName: "notificacoes_demanda_id_fkey"
+            columns: ["demanda_id"]
             isOneToOne: false
-            referencedRelation: 'demandas'
-            referencedColumns: ['id']
+            referencedRelation: "demandas"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'notificacoes_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "notificacoes_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -858,20 +975,38 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'onboarding_checklist_assigned_to_fkey'
-            columns: ['assigned_to']
+            foreignKeyName: "onboarding_checklist_assigned_to_fkey"
+            columns: ["assigned_to"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'onboarding_checklist_employee_id_fkey'
-            columns: ['employee_id']
+            foreignKeyName: "onboarding_checklist_employee_id_fkey"
+            columns: ["employee_id"]
             isOneToOne: false
-            referencedRelation: 'employees'
-            referencedColumns: ['id']
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
           },
         ]
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
       }
       push_subscriptions: {
         Row: {
@@ -894,11 +1029,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'push_subscriptions_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "push_subscriptions_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -937,48 +1072,103 @@ export type Database = {
       }
       time_entries: {
         Row: {
-          break_duration: string | null
           created_at: string
-          date: string
-          delay: number | null
+          created_by: string | null
           employee_id: string
-          entry_time: string | null
-          exit_time: string | null
-          hours_worked: number | null
+          entry_date: string
+          entry_type: string
           id: string
-          overtime: number | null
+          notes: string | null
+          organization_id: string
+          timestamp: string
+          updated_at: string
         }
         Insert: {
-          break_duration?: string | null
           created_at?: string
-          date: string
-          delay?: number | null
+          created_by?: string | null
           employee_id: string
-          entry_time?: string | null
-          exit_time?: string | null
-          hours_worked?: number | null
+          entry_date: string
+          entry_type: string
           id?: string
-          overtime?: number | null
+          notes?: string | null
+          organization_id: string
+          timestamp: string
+          updated_at?: string
         }
         Update: {
-          break_duration?: string | null
           created_at?: string
-          date?: string
-          delay?: number | null
+          created_by?: string | null
           employee_id?: string
-          entry_time?: string | null
-          exit_time?: string | null
-          hours_worked?: number | null
+          entry_date?: string
+          entry_type?: string
           id?: string
-          overtime?: number | null
+          notes?: string | null
+          organization_id?: string
+          timestamp?: string
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'time_entries_employee_id_fkey'
-            columns: ['employee_id']
+            foreignKeyName: "time_entries_employee_id_fkey"
+            columns: ["employee_id"]
             isOneToOne: false
-            referencedRelation: 'employees'
-            referencedColumns: ['id']
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "time_entries_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      time_entries_audit: {
+        Row: {
+          action: string
+          changed_at: string
+          changed_by: string | null
+          id: string
+          new_values: Json | null
+          old_values: Json | null
+          organization_id: string
+          time_entry_id: string
+        }
+        Insert: {
+          action: string
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          organization_id: string
+          time_entry_id: string
+        }
+        Update: {
+          action?: string
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          organization_id?: string
+          time_entry_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_entries_audit_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "time_entries_audit_time_entry_id_fkey"
+            columns: ["time_entry_id"]
+            isOneToOne: false
+            referencedRelation: "time_entries"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1081,11 +1271,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'vacation_balance_employee_id_fkey'
-            columns: ['employee_id']
+            foreignKeyName: "vacation_balance_employee_id_fkey"
+            columns: ["employee_id"]
             isOneToOne: false
-            referencedRelation: 'employees'
-            referencedColumns: ['id']
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1125,18 +1315,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'vacation_requests_approved_by_fkey'
-            columns: ['approved_by']
+            foreignKeyName: "vacation_requests_approved_by_fkey"
+            columns: ["approved_by"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'vacation_requests_employee_id_fkey'
-            columns: ['employee_id']
+            foreignKeyName: "vacation_requests_employee_id_fkey"
+            columns: ["employee_id"]
             isOneToOne: false
-            referencedRelation: 'employees'
-            referencedColumns: ['id']
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1180,31 +1370,33 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
-    ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -1213,23 +1405,23 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -1238,23 +1430,23 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -1263,36 +1455,36 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema['Enums']
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
-    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema['CompositeTypes']
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
-    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
@@ -1300,6 +1492,7 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
 
 // ====== DATABASE EXTENDED CONTEXT (auto-generated) ======
 // This section contains actual PostgreSQL column types, constraints, RLS policies,
@@ -1382,6 +1575,16 @@ export const Constants = {
 //   cliente_id: uuid (nullable)
 //   data_atribuicao: timestamp with time zone (nullable)
 //   data_conclusao: timestamp with time zone (nullable)
+// Table: department_schedules
+//   id: uuid (not null, default: gen_random_uuid())
+//   organization_id: uuid (not null)
+//   department_id: uuid (not null)
+//   start_time: time without time zone (not null)
+//   end_time: time without time zone (not null)
+//   lunch_duration_minutes: integer (not null)
+//   tolerance_minutes: integer (not null)
+//   created_at: timestamp with time zone (not null, default: now())
+//   updated_at: timestamp with time zone (not null, default: now())
 // Table: departments
 //   id: uuid (not null, default: gen_random_uuid())
 //   name: text (not null)
@@ -1487,6 +1690,19 @@ export const Constants = {
 //   dados_anteriores: jsonb (nullable)
 //   dados_novos: jsonb (nullable)
 //   data_criacao: timestamp with time zone (not null, default: now())
+// Table: monthly_timesheets
+//   id: uuid (not null, default: gen_random_uuid())
+//   organization_id: uuid (not null)
+//   employee_id: uuid (not null)
+//   year: integer (not null)
+//   month: integer (not null)
+//   total_hours_worked: numeric (not null, default: 0)
+//   total_extra_hours: numeric (not null, default: 0)
+//   total_delays_minutes: integer (not null, default: 0)
+//   total_absences: integer (not null, default: 0)
+//   days_worked: integer (not null, default: 0)
+//   generated_at: timestamp with time zone (not null, default: now())
+//   generated_by: uuid (nullable)
 // Table: notificacoes
 //   id: uuid (not null, default: gen_random_uuid())
 //   usuario_id: uuid (not null)
@@ -1506,6 +1722,10 @@ export const Constants = {
 //   completed_at: timestamp with time zone (nullable)
 //   assigned_to: uuid (nullable)
 //   created_at: timestamp with time zone (not null, default: now())
+// Table: organizations
+//   id: uuid (not null, default: gen_random_uuid())
+//   name: text (not null)
+//   created_at: timestamp with time zone (not null, default: now())
 // Table: push_subscriptions
 //   id: uuid (not null, default: gen_random_uuid())
 //   usuario_id: uuid (not null)
@@ -1522,15 +1742,24 @@ export const Constants = {
 //   updated_at: timestamp with time zone (not null, default: now())
 // Table: time_entries
 //   id: uuid (not null, default: gen_random_uuid())
+//   organization_id: uuid (not null)
 //   employee_id: uuid (not null)
-//   date: date (not null)
-//   entry_time: time without time zone (nullable)
-//   exit_time: time without time zone (nullable)
-//   break_duration: interval (nullable)
-//   hours_worked: numeric (nullable)
-//   overtime: numeric (nullable)
-//   delay: numeric (nullable)
+//   entry_date: date (not null)
+//   entry_type: text (not null)
+//   timestamp: timestamp with time zone (not null)
+//   notes: text (nullable)
 //   created_at: timestamp with time zone (not null, default: now())
+//   updated_at: timestamp with time zone (not null, default: now())
+//   created_by: uuid (nullable)
+// Table: time_entries_audit
+//   id: uuid (not null, default: gen_random_uuid())
+//   time_entry_id: uuid (not null)
+//   organization_id: uuid (not null)
+//   action: text (not null)
+//   old_values: jsonb (nullable)
+//   new_values: jsonb (nullable)
+//   changed_by: uuid (nullable)
+//   changed_at: timestamp with time zone (not null, default: now())
 // Table: users
 //   id: uuid (not null, default: gen_random_uuid())
 //   email: text (not null)
@@ -1599,6 +1828,14 @@ export const Constants = {
 //   PRIMARY KEY demandas_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY demandas_responsavel_id_fkey: FOREIGN KEY (responsavel_id) REFERENCES usuarios(id) ON DELETE SET NULL
 //   FOREIGN KEY demandas_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: department_schedules
+//   CHECK check_lunch_duration: CHECK ((lunch_duration_minutes > 0))
+//   CHECK check_start_end_time: CHECK ((start_time < end_time))
+//   CHECK check_tolerance: CHECK ((tolerance_minutes >= 0))
+//   FOREIGN KEY department_schedules_department_id_fkey: FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE CASCADE
+//   FOREIGN KEY department_schedules_organization_id_fkey: FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+//   PRIMARY KEY department_schedules_pkey: PRIMARY KEY (id)
+//   UNIQUE unique_org_dept_schedule: UNIQUE (organization_id, department_id)
 // Table: departments
 //   FOREIGN KEY departments_manager_id_fkey: FOREIGN KEY (manager_id) REFERENCES usuarios(id) ON DELETE SET NULL
 //   PRIMARY KEY departments_pkey: PRIMARY KEY (id)
@@ -1639,6 +1876,14 @@ export const Constants = {
 //   FOREIGN KEY logs_auditoria_demanda_id_fkey: FOREIGN KEY (demanda_id) REFERENCES demandas(id) ON DELETE SET NULL
 //   PRIMARY KEY logs_auditoria_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY logs_auditoria_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
+// Table: monthly_timesheets
+//   CHECK check_month: CHECK (((month >= 1) AND (month <= 12)))
+//   CHECK check_year: CHECK ((year >= 2020))
+//   FOREIGN KEY monthly_timesheets_employee_id_fkey: FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
+//   FOREIGN KEY monthly_timesheets_generated_by_fkey: FOREIGN KEY (generated_by) REFERENCES auth.users(id) ON DELETE SET NULL
+//   FOREIGN KEY monthly_timesheets_organization_id_fkey: FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+//   PRIMARY KEY monthly_timesheets_pkey: PRIMARY KEY (id)
+//   UNIQUE unique_org_emp_year_month: UNIQUE (organization_id, employee_id, year, month)
 // Table: notificacoes
 //   FOREIGN KEY notificacoes_demanda_id_fkey: FOREIGN KEY (demanda_id) REFERENCES demandas(id) ON DELETE CASCADE
 //   PRIMARY KEY notificacoes_pkey: PRIMARY KEY (id)
@@ -1648,14 +1893,26 @@ export const Constants = {
 //   FOREIGN KEY onboarding_checklist_assigned_to_fkey: FOREIGN KEY (assigned_to) REFERENCES usuarios(id) ON DELETE SET NULL
 //   FOREIGN KEY onboarding_checklist_employee_id_fkey: FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
 //   PRIMARY KEY onboarding_checklist_pkey: PRIMARY KEY (id)
+// Table: organizations
+//   PRIMARY KEY organizations_pkey: PRIMARY KEY (id)
 // Table: push_subscriptions
 //   PRIMARY KEY push_subscriptions_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY push_subscriptions_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 // Table: sync_logs
 //   PRIMARY KEY sync_logs_pkey: PRIMARY KEY (id)
 // Table: time_entries
+//   FOREIGN KEY time_entries_created_by_fkey: FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE SET NULL
 //   FOREIGN KEY time_entries_employee_id_fkey: FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
+//   CHECK time_entries_entry_type_check: CHECK ((entry_type = ANY (ARRAY['entrada'::text, 'intervalo_saida'::text, 'intervalo_entrada'::text, 'saida'::text])))
+//   FOREIGN KEY time_entries_organization_id_fkey: FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
 //   PRIMARY KEY time_entries_pkey: PRIMARY KEY (id)
+//   UNIQUE unique_daily_entry_type: UNIQUE (organization_id, employee_id, entry_date, entry_type)
+// Table: time_entries_audit
+//   CHECK time_entries_audit_action_check: CHECK ((action = ANY (ARRAY['created'::text, 'updated'::text, 'deleted'::text])))
+//   FOREIGN KEY time_entries_audit_changed_by_fkey: FOREIGN KEY (changed_by) REFERENCES auth.users(id) ON DELETE SET NULL
+//   FOREIGN KEY time_entries_audit_organization_id_fkey: FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+//   PRIMARY KEY time_entries_audit_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY time_entries_audit_time_entry_id_fkey: FOREIGN KEY (time_entry_id) REFERENCES time_entries(id) ON DELETE CASCADE
 // Table: users
 //   UNIQUE users_email_key: UNIQUE (email)
 //   PRIMARY KEY users_pkey: PRIMARY KEY (id)
@@ -1724,6 +1981,10 @@ export const Constants = {
 //     WITH CHECK: true
 //   Policy "Colaboradores veem proprias demandas" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: ((auth.uid() = responsavel_id) OR is_admin())
+// Table: department_schedules
+//   Policy "auth_all_department_schedules" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: departments
 //   Policy "auth_all_departments" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
@@ -1787,6 +2048,10 @@ export const Constants = {
 //     WITH CHECK: (auth.uid() = usuario_id)
 //   Policy "Usuarios podem ver logs_auditoria" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: monthly_timesheets
+//   Policy "auth_all_monthly_timesheets" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: notificacoes
 //   Policy "Sistema pode inserir notificacoes" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: true
@@ -1797,6 +2062,10 @@ export const Constants = {
 //     USING: (auth.uid() = usuario_id)
 // Table: onboarding_checklist
 //   Policy "auth_all_onboarding_checklist" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: organizations
+//   Policy "auth_all_organizations" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: push_subscriptions
@@ -1816,6 +2085,10 @@ export const Constants = {
 //     WITH CHECK: true
 // Table: time_entries
 //   Policy "auth_all_time_entries" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: time_entries_audit
+//   Policy "auth_all_time_entries_audit" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: users
@@ -1849,6 +2122,38 @@ export const Constants = {
 //     USING: true
 
 // --- DATABASE FUNCTIONS ---
+// FUNCTION audit_time_entries()
+//   CREATE OR REPLACE FUNCTION public.audit_time_entries()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//       v_user_id UUID;
+//   BEGIN
+//       BEGIN
+//           v_user_id := auth.uid();
+//       EXCEPTION WHEN OTHERS THEN
+//           v_user_id := NULL;
+//       END;
+//   
+//       IF TG_OP = 'INSERT' THEN
+//           INSERT INTO public.time_entries_audit (time_entry_id, organization_id, action, new_values, changed_by)
+//           VALUES (NEW.id, NEW.organization_id, 'created', to_jsonb(NEW), COALESCE(NEW.created_by, v_user_id));
+//           RETURN NEW;
+//       ELSIF TG_OP = 'UPDATE' THEN
+//           INSERT INTO public.time_entries_audit (time_entry_id, organization_id, action, old_values, new_values, changed_by)
+//           VALUES (NEW.id, NEW.organization_id, 'updated', to_jsonb(OLD), to_jsonb(NEW), v_user_id);
+//           RETURN NEW;
+//       ELSIF TG_OP = 'DELETE' THEN
+//           INSERT INTO public.time_entries_audit (time_entry_id, organization_id, action, old_values, changed_by)
+//           VALUES (OLD.id, OLD.organization_id, 'deleted', to_jsonb(OLD), v_user_id);
+//           RETURN OLD;
+//       END IF;
+//       RETURN NULL;
+//   END;
+//   $function$
+//   
 // FUNCTION fix_auth_users_nulls()
 //   CREATE OR REPLACE FUNCTION public.fix_auth_users_nulls()
 //    RETURNS trigger
@@ -1867,7 +2172,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION handle_new_user()
 //   CREATE OR REPLACE FUNCTION public.handle_new_user()
 //    RETURNS trigger
@@ -1877,8 +2182,8 @@ export const Constants = {
 //   BEGIN
 //     INSERT INTO public.usuarios (id, email, nome, perfil, telefone)
 //     VALUES (
-//       new.id,
-//       new.email,
+//       new.id, 
+//       new.email, 
 //       COALESCE(new.raw_user_meta_data->>'full_name', ''),
 //       COALESCE(new.raw_user_meta_data->>'perfil', 'colaborador'),
 //       new.raw_user_meta_data->>'telefone'
@@ -1886,7 +2191,7 @@ export const Constants = {
 //     RETURN new;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION is_admin()
 //   CREATE OR REPLACE FUNCTION public.is_admin()
 //    RETURNS boolean
@@ -1900,7 +2205,7 @@ export const Constants = {
 //     RETURN v_perfil = 'admin';
 //   END;
 //   $function$
-//
+//   
 // FUNCTION log_demanda_changes()
 //   CREATE OR REPLACE FUNCTION public.log_demanda_changes()
 //    RETURNS trigger
@@ -1916,7 +2221,7 @@ export const Constants = {
 //       EXCEPTION WHEN OTHERS THEN
 //           v_usuario_id := NULL;
 //       END;
-//
+//   
 //       IF TG_OP = 'INSERT' THEN
 //           INSERT INTO public.logs_auditoria (demanda_id, usuario_id, acao, detalhes, dados_novos)
 //           VALUES (NEW.id, v_usuario_id, 'Criação', 'Demanda criada', to_jsonb(NEW));
@@ -1925,17 +2230,17 @@ export const Constants = {
 //               INSERT INTO public.logs_auditoria (demanda_id, usuario_id, acao, detalhes, dados_anteriores, dados_novos)
 //               VALUES (NEW.id, v_usuario_id, 'Alteração de Status', 'Status alterado de ' || OLD.status || ' para ' || NEW.status, jsonb_build_object('status', OLD.status), jsonb_build_object('status', NEW.status));
 //           END IF;
-//
+//   
 //           IF NEW.prioridade IS DISTINCT FROM OLD.prioridade THEN
 //               INSERT INTO public.logs_auditoria (demanda_id, usuario_id, acao, detalhes, dados_anteriores, dados_novos)
 //               VALUES (NEW.id, v_usuario_id, 'Alteração de Prioridade', 'Prioridade alterada de ' || OLD.prioridade || ' para ' || NEW.prioridade, jsonb_build_object('prioridade', OLD.prioridade), jsonb_build_object('prioridade', NEW.prioridade));
 //           END IF;
-//
+//   
 //           IF NEW.responsavel_id IS DISTINCT FROM OLD.responsavel_id THEN
 //               INSERT INTO public.logs_auditoria (demanda_id, usuario_id, acao, detalhes, dados_anteriores, dados_novos)
 //               VALUES (NEW.id, v_usuario_id, 'Atribuição', 'Responsável alterado', jsonb_build_object('responsavel_id', OLD.responsavel_id), jsonb_build_object('responsavel_id', NEW.responsavel_id));
 //           END IF;
-//
+//   
 //           IF NEW.resposta IS DISTINCT FROM OLD.resposta AND NEW.resposta IS NOT NULL AND NEW.resposta != '' THEN
 //               INSERT INTO public.logs_auditoria (demanda_id, usuario_id, acao, detalhes, dados_anteriores, dados_novos)
 //               VALUES (NEW.id, v_usuario_id, 'Nova Mensagem', 'Nova nota interna adicionada', jsonb_build_object('resposta', OLD.resposta), jsonb_build_object('resposta', NEW.resposta));
@@ -1944,7 +2249,7 @@ export const Constants = {
 //       RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION set_demanda_dates()
 //   CREATE OR REPLACE FUNCTION public.set_demanda_dates()
 //    RETURNS trigger
@@ -1969,11 +2274,22 @@ export const Constants = {
 //               NEW.data_conclusao := NULL;
 //           END IF;
 //       END IF;
-//
+//   
 //       RETURN NEW;
 //   END;
 //   $function$
-//
+//   
+// FUNCTION set_time_entries_updated_at()
+//   CREATE OR REPLACE FUNCTION public.set_time_entries_updated_at()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   BEGIN
+//       NEW.updated_at = NOW();
+//       RETURN NEW;
+//   END;
+//   $function$
+//   
 // FUNCTION set_updated_at_timestamp()
 //   CREATE OR REPLACE FUNCTION public.set_updated_at_timestamp()
 //    RETURNS trigger
@@ -1984,7 +2300,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION trigger_demanda_push_notification()
 //   CREATE OR REPLACE FUNCTION public.trigger_demanda_push_notification()
 //    RETURNS trigger
@@ -2004,7 +2320,7 @@ export const Constants = {
 //           v_usuario_id := NEW.responsavel_id;
 //           v_title := 'Nova Demanda Atribuída';
 //           v_body := 'A demanda "' || NEW.titulo || '" foi atribuída a você.';
-//
+//   
 //           payload := jsonb_build_object('usuario_id', v_usuario_id, 'notification', jsonb_build_object('title', v_title, 'body', v_body));
 //           PERFORM net.http_post(
 //               url := edge_function_url,
@@ -2012,13 +2328,13 @@ export const Constants = {
 //               body := payload
 //           );
 //       END IF;
-//
+//   
 //       -- Scenario 2: Escalation
 //       IF NEW.prioridade = 'Urgente' AND OLD.prioridade = 'Pode Ficar para Amanhã' AND NEW.responsavel_id IS NOT NULL THEN
 //           v_usuario_id := NEW.responsavel_id;
 //           v_title := 'Demanda Escalada para Urgente';
 //           v_body := 'A demanda "' || NEW.titulo || '" agora é Urgente.';
-//
+//   
 //           payload := jsonb_build_object('usuario_id', v_usuario_id, 'notification', jsonb_build_object('title', v_title, 'body', v_body));
 //           PERFORM net.http_post(
 //               url := edge_function_url,
@@ -2026,11 +2342,11 @@ export const Constants = {
 //               body := payload
 //           );
 //       END IF;
-//
+//   
 //       RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION trigger_notify_automation()
 //   CREATE OR REPLACE FUNCTION public.trigger_notify_automation()
 //    RETURNS trigger
@@ -2050,7 +2366,7 @@ export const Constants = {
 //                   'record', to_jsonb(NEW),
 //                   'old_record', to_jsonb(OLD)
 //               );
-//
+//               
 //               -- Send async HTTP POST request
 //               PERFORM net.http_post(
 //                   url := edge_function_url,
@@ -2066,7 +2382,7 @@ export const Constants = {
 //                   'record', to_jsonb(NEW),
 //                   'old_record', to_jsonb(OLD)
 //               );
-//
+//               
 //               -- Send async HTTP POST request
 //               PERFORM net.http_post(
 //                   url := edge_function_url,
@@ -2075,11 +2391,11 @@ export const Constants = {
 //               );
 //           END IF;
 //       END IF;
-//
+//   
 //       RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION trigger_nova_notificacao_demanda()
 //   CREATE OR REPLACE FUNCTION public.trigger_nova_notificacao_demanda()
 //    RETURNS trigger
@@ -2092,17 +2408,76 @@ export const Constants = {
 //           INSERT INTO public.notificacoes (usuario_id, titulo, mensagem, demanda_id)
 //           VALUES (NEW.responsavel_id, 'Nova Demanda Atribuída', 'A demanda "' || NEW.titulo || '" foi atribuída a você.', NEW.id);
 //       END IF;
-//
+//   
 //       -- Scenario 2: Existing demand reassigned
 //       IF TG_OP = 'UPDATE' AND NEW.responsavel_id IS NOT NULL AND NEW.responsavel_id IS DISTINCT FROM OLD.responsavel_id THEN
 //           INSERT INTO public.notificacoes (usuario_id, titulo, mensagem, demanda_id)
 //           VALUES (NEW.responsavel_id, 'Nova Demanda Atribuída', 'A demanda "' || NEW.titulo || '" foi atribuída a você.', NEW.id);
 //       END IF;
-//
+//   
 //       RETURN NEW;
 //   END;
 //   $function$
-//
+//   
+// FUNCTION update_monthly_timesheet()
+//   CREATE OR REPLACE FUNCTION public.update_monthly_timesheet()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   DECLARE
+//       v_year INTEGER;
+//       v_month INTEGER;
+//   BEGIN
+//       v_year := EXTRACT(YEAR FROM NEW.entry_date);
+//       v_month := EXTRACT(MONTH FROM NEW.entry_date);
+//       
+//       INSERT INTO public.monthly_timesheets (organization_id, employee_id, year, month, days_worked)
+//       VALUES (NEW.organization_id, NEW.employee_id, v_year, v_month, 1)
+//       ON CONFLICT (organization_id, employee_id, year, month) DO UPDATE
+//       SET days_worked = public.monthly_timesheets.days_worked + 1;
+//       
+//       RETURN NEW;
+//   END;
+//   $function$
+//   
+// FUNCTION validate_time_entries_sequence()
+//   CREATE OR REPLACE FUNCTION public.validate_time_entries_sequence()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   DECLARE
+//       v_previous_entry TEXT;
+//   BEGIN
+//       SELECT entry_type INTO v_previous_entry
+//       FROM public.time_entries
+//       WHERE employee_id = NEW.employee_id
+//         AND entry_date = NEW.entry_date
+//         AND id != NEW.id
+//       ORDER BY timestamp DESC
+//       LIMIT 1;
+//   
+//       IF NEW.entry_type = 'intervalo_saida' THEN
+//           IF v_previous_entry IS NULL OR v_previous_entry != 'entrada' THEN
+//               RAISE EXCEPTION 'A saída para intervalo só pode ocorrer após uma entrada.';
+//           END IF;
+//       ELSIF NEW.entry_type = 'intervalo_entrada' THEN
+//           IF v_previous_entry IS NULL OR v_previous_entry != 'intervalo_saida' THEN
+//               RAISE EXCEPTION 'O retorno do intervalo só pode ocorrer após uma saída para intervalo.';
+//           END IF;
+//       ELSIF NEW.entry_type = 'saida' THEN
+//           IF v_previous_entry IS NULL OR v_previous_entry NOT IN ('entrada', 'intervalo_entrada') THEN
+//               RAISE EXCEPTION 'A saída só pode ocorrer após uma entrada ou retorno de intervalo.';
+//           END IF;
+//       ELSIF NEW.entry_type = 'entrada' THEN
+//           IF v_previous_entry IS NOT NULL THEN
+//               RAISE EXCEPTION 'Já existe um registro para este dia anterior à entrada.';
+//           END IF;
+//       END IF;
+//   
+//       RETURN NEW;
+//   END;
+//   $function$
+//   
 
 // --- TRIGGERS ---
 // Table: clientes_externos
@@ -2113,10 +2488,17 @@ export const Constants = {
 //   on_demanda_dates_trigger: CREATE TRIGGER on_demanda_dates_trigger BEFORE INSERT OR UPDATE ON public.demandas FOR EACH ROW EXECUTE FUNCTION set_demanda_dates()
 //   on_demanda_push_notify: CREATE TRIGGER on_demanda_push_notify AFTER UPDATE ON public.demandas FOR EACH ROW EXECUTE FUNCTION trigger_demanda_push_notification()
 //   on_demanda_status_change_notify: CREATE TRIGGER on_demanda_status_change_notify AFTER UPDATE OF status ON public.demandas FOR EACH ROW EXECUTE FUNCTION trigger_notify_automation()
+// Table: department_schedules
+//   trg_department_schedules_updated_at: CREATE TRIGGER trg_department_schedules_updated_at BEFORE UPDATE ON public.department_schedules FOR EACH ROW EXECUTE FUNCTION set_time_entries_updated_at()
 // Table: emails_sent
 //   set_public_emails_sent_updated_at: CREATE TRIGGER set_public_emails_sent_updated_at BEFORE UPDATE ON public.emails_sent FOR EACH ROW EXECUTE FUNCTION set_updated_at_timestamp()
 // Table: employees
 //   set_public_employees_updated_at: CREATE TRIGGER set_public_employees_updated_at BEFORE UPDATE ON public.employees FOR EACH ROW EXECUTE FUNCTION set_updated_at_timestamp()
+// Table: time_entries
+//   trg_audit_time_entries: CREATE TRIGGER trg_audit_time_entries AFTER INSERT OR DELETE OR UPDATE ON public.time_entries FOR EACH ROW EXECUTE FUNCTION audit_time_entries()
+//   trg_time_entries_updated_at: CREATE TRIGGER trg_time_entries_updated_at BEFORE UPDATE ON public.time_entries FOR EACH ROW EXECUTE FUNCTION set_time_entries_updated_at()
+//   trg_update_monthly_timesheet: CREATE TRIGGER trg_update_monthly_timesheet AFTER INSERT ON public.time_entries FOR EACH ROW WHEN ((new.entry_type = 'entrada'::text)) EXECUTE FUNCTION update_monthly_timesheet()
+//   trg_validate_time_entries_sequence: CREATE TRIGGER trg_validate_time_entries_sequence BEFORE INSERT ON public.time_entries FOR EACH ROW EXECUTE FUNCTION validate_time_entries_sequence()
 // Table: users
 //   set_public_users_updated_at: CREATE TRIGGER set_public_users_updated_at BEFORE UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION set_updated_at_timestamp()
 
@@ -2137,6 +2519,9 @@ export const Constants = {
 //   CREATE INDEX idx_demandas_cliente_id ON public.demandas USING btree (cliente_id)
 //   CREATE INDEX idx_demandas_data_conclusao ON public.demandas USING btree (data_conclusao)
 //   CREATE INDEX idx_demandas_responsavel_id ON public.demandas USING btree (responsavel_id)
+// Table: department_schedules
+//   CREATE INDEX idx_dept_schedules_org_dept ON public.department_schedules USING btree (organization_id, department_id)
+//   CREATE UNIQUE INDEX unique_org_dept_schedule ON public.department_schedules USING btree (organization_id, department_id)
 // Table: documents
 //   CREATE INDEX idx_documents_employee_id ON public.documents USING btree (employee_id)
 //   CREATE INDEX idx_documents_status ON public.documents USING btree (status)
@@ -2148,6 +2533,10 @@ export const Constants = {
 //   CREATE INDEX idx_employees_created_at ON public.employees USING btree (created_at)
 //   CREATE INDEX idx_employees_department_id ON public.employees USING btree (department_id)
 //   CREATE INDEX idx_employees_status ON public.employees USING btree (status)
+// Table: monthly_timesheets
+//   CREATE INDEX idx_monthly_timesheets_lookup ON public.monthly_timesheets USING btree (organization_id, employee_id, year, month)
+//   CREATE INDEX idx_monthly_timesheets_org_date ON public.monthly_timesheets USING btree (organization_id, year, month)
+//   CREATE UNIQUE INDEX unique_org_emp_year_month ON public.monthly_timesheets USING btree (organization_id, employee_id, year, month)
 // Table: notificacoes
 //   CREATE INDEX idx_notificacoes_data_criacao ON public.notificacoes USING btree (data_criacao)
 //   CREATE INDEX idx_notificacoes_usuario_id_lida ON public.notificacoes USING btree (usuario_id, lida)
@@ -2155,8 +2544,13 @@ export const Constants = {
 // Table: onboarding_checklist
 //   CREATE INDEX idx_onboarding_checklist_employee_id ON public.onboarding_checklist USING btree (employee_id)
 // Table: time_entries
-//   CREATE INDEX idx_time_entries_date ON public.time_entries USING btree (date)
-//   CREATE INDEX idx_time_entries_employee_id ON public.time_entries USING btree (employee_id)
+//   CREATE INDEX idx_time_entries_emp_date ON public.time_entries USING btree (employee_id, entry_date)
+//   CREATE INDEX idx_time_entries_org_date ON public.time_entries USING btree (organization_id, entry_date)
+//   CREATE INDEX idx_time_entries_org_emp_date ON public.time_entries USING btree (organization_id, employee_id, entry_date)
+//   CREATE UNIQUE INDEX unique_daily_entry_type ON public.time_entries USING btree (organization_id, employee_id, entry_date, entry_type)
+// Table: time_entries_audit
+//   CREATE INDEX idx_time_entries_audit_date ON public.time_entries_audit USING btree (organization_id, changed_at)
+//   CREATE INDEX idx_time_entries_audit_lookup ON public.time_entries_audit USING btree (organization_id, time_entry_id)
 // Table: users
 //   CREATE INDEX idx_users_created_at ON public.users USING btree (created_at)
 //   CREATE INDEX idx_users_email ON public.users USING btree (email)
@@ -2166,3 +2560,4 @@ export const Constants = {
 // Table: vacation_requests
 //   CREATE INDEX idx_vacation_requests_employee_id ON public.vacation_requests USING btree (employee_id)
 //   CREATE INDEX idx_vacation_requests_status ON public.vacation_requests USING btree (status)
+
