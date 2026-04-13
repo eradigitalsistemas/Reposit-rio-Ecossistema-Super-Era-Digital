@@ -21,8 +21,11 @@ export function TimeTrackingReport() {
   useEffect(() => {
     async function fetchData() {
       const { data: entries } = await supabase
-        .from('time_entries')
-        .select('employee_id, hours_worked, overtime, delay, date, employees(personal_data)')
+        .from('monthly_timesheets')
+        .select(
+          'employee_id, total_hours_worked, total_extra_hours, total_delays_minutes, days_worked, month, year, employees(personal_data)',
+        )
+
       const grouped: any = {}
       const monthGroup: any = {}
 
@@ -37,13 +40,13 @@ export function TimeTrackingReport() {
             atraso: 0,
             dias: 0,
           }
-        grouped[id].horas += Number(e.hours_worked || 0)
-        grouped[id].extra += Number(e.overtime || 0)
-        grouped[id].atraso += Number(e.delay || 0)
-        grouped[id].dias += 1
+        grouped[id].horas += Number(e.total_hours_worked || 0)
+        grouped[id].extra += Number(e.total_extra_hours || 0)
+        grouped[id].atraso += Number(e.total_delays_minutes || 0) / 60
+        grouped[id].dias += Number(e.days_worked || 0)
 
-        const m = e.date.substring(0, 7)
-        monthGroup[m] = (monthGroup[m] || 0) + Number(e.hours_worked || 0)
+        const m = `${e.year}-${String(e.month).padStart(2, '0')}`
+        monthGroup[m] = (monthGroup[m] || 0) + Number(e.total_hours_worked || 0)
       })
 
       setData(Object.values(grouped).sort((a: any, b: any) => b.horas - a.horas))

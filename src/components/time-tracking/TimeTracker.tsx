@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select'
 
 export function TimeTracker() {
-  const { todayEntry, fetchToday, fetchMonthly, registerAction, entries, totals } =
+  const { todayEntries, fetchToday, fetchMonthly, registerAction, entries, totals } =
     useTimeTrackingStore()
   const [time, setTime] = useState(new Date())
   const [month, setMonth] = useState((new Date().getMonth() + 1).toString())
@@ -26,7 +26,9 @@ export function TimeTracker() {
     return () => clearInterval(interval)
   }, [month, year])
 
-  const handleAction = async (action: 'entry' | 'break' | 'exit') => {
+  const handleAction = async (
+    action: 'entrada' | 'intervalo_saida' | 'intervalo_entrada' | 'saida',
+  ) => {
     const res = await registerAction(action)
     if (res.success) {
       toast.success('Ponto registrado com sucesso.')
@@ -37,12 +39,20 @@ export function TimeTracker() {
   }
 
   const exportCSV = () => {
-    const csv = ['Data,Entrada,Intervalo,Saída,Horas Trab.,Horas Extras,Atraso']
-    entries.forEach((e: any) =>
+    const csv = [
+      'Data,Entrada,Saída Intervalo,Retorno Intervalo,Saída,Horas Trab.,Horas Extras,Atraso',
+    ]
+    entries.forEach((day: any) => {
+      const getT = (type: string) => {
+        const e = day.entries.find((x: any) => x.entry_type === type)
+        return e
+          ? new Date(e.timestamp).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+          : '-'
+      }
       csv.push(
-        `${e.date},${e.entry_time || '-'},${e.break_duration || '-'},${e.exit_time || '-'},${e.hours_worked || '0'},${e.overtime || '0'},${e.delay || '0'}`,
-      ),
-    )
+        `${day.date},${getT('entrada')},${getT('intervalo_saida')},${getT('intervalo_entrada')},${getT('saida')},${day.hours_worked || '0'},${day.overtime || '0'},${day.delay || '0'}`,
+      )
+    })
     const blob = new Blob([csv.join('\n')], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -51,8 +61,12 @@ export function TimeTracker() {
     a.click()
   }
 
-  const hasEntry = !!todayEntry?.entry_time
-  const hasExit = !!todayEntry?.exit_time
+  const getEntryByType = (type: string) => todayEntries?.find((e: any) => e.entry_type === type)
+
+  const hasEntrada = !!getEntryByType('entrada')
+  const hasIntervaloSaida = !!getEntryByType('intervalo_saida')
+  const hasIntervaloEntrada = !!getEntryByType('intervalo_entrada')
+  const hasSaida = !!getEntryByType('saida')
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -63,32 +77,41 @@ export function TimeTracker() {
           </CardTitle>
           <CardDescription className="text-center">Horário de Brasília (UTC-3)</CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col md:flex-row justify-center gap-4">
+        <CardContent className="flex flex-col md:flex-row flex-wrap justify-center gap-4">
           <Button
             size="lg"
-            disabled={hasEntry}
-            onClick={() => handleAction('entry')}
+            disabled={hasEntrada}
+            onClick={() => handleAction('entrada')}
             className="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white"
           >
-            <Play className="mr-2 h-5 w-5" /> Registrar Entrada
+            <Play className="mr-2 h-5 w-5" /> Entrada
           </Button>
           <Button
             size="lg"
             variant="secondary"
-            disabled={!hasEntry || hasExit}
-            onClick={() => handleAction('break')}
+            disabled={!hasEntrada || hasIntervaloSaida}
+            onClick={() => handleAction('intervalo_saida')}
             className="w-full md:w-auto"
           >
-            <Pause className="mr-2 h-5 w-5" /> Registrar Intervalo
+            <Pause className="mr-2 h-5 w-5" /> Pausa Intervalo
+          </Button>
+          <Button
+            size="lg"
+            variant="secondary"
+            disabled={!hasIntervaloSaida || hasIntervaloEntrada}
+            onClick={() => handleAction('intervalo_entrada')}
+            className="w-full md:w-auto"
+          >
+            <Play className="mr-2 h-5 w-5" /> Retorno Intervalo
           </Button>
           <Button
             size="lg"
             variant="destructive"
-            disabled={!hasEntry || hasExit}
-            onClick={() => handleAction('exit')}
+            disabled={!hasEntrada || hasSaida || (hasIntervaloSaida && !hasIntervaloEntrada)}
+            onClick={() => handleAction('saida')}
             className="w-full md:w-auto"
           >
-            <Square className="mr-2 h-5 w-5" /> Registrar Saída
+            <Square className="mr-2 h-5 w-5" /> Saída
           </Button>
         </CardContent>
       </Card>
@@ -153,6 +176,7 @@ export function TimeTracker() {
                   <th className="p-3">Data</th>
                   <th className="p-3">Entrada</th>
                   <th className="p-3">Intervalo</th>
+                  <th className="p-3">Retorno</th>
                   <th className="p-3">Saída</th>
                   <th className="p-3">Trab.</th>
                   <th className="p-3">Extra</th>
@@ -160,22 +184,33 @@ export function TimeTracker() {
                 </tr>
               </thead>
               <tbody>
-                {entries.map((e: any) => (
-                  <tr key={e.id} className="border-b">
-                    <td className="p-3">
-                      {new Date(`${e.date}T12:00:00Z`).toLocaleDateString('pt-BR')}
-                    </td>
-                    <td className="p-3">{e.entry_time || '-'}</td>
-                    <td className="p-3">{e.break_duration || '-'}</td>
-                    <td className="p-3">{e.exit_time || '-'}</td>
-                    <td className="p-3">{e.hours_worked || 0}h</td>
-                    <td className="p-3 text-green-600">{e.overtime || 0}h</td>
-                    <td className="p-3 text-red-600">{e.delay || 0}h</td>
-                  </tr>
-                ))}
+                {entries.map((day: any) => {
+                  const getT = (type: string) => {
+                    const e = day.entries.find((x: any) => x.entry_type === type)
+                    return e
+                      ? new Date(e.timestamp).toLocaleTimeString('pt-BR', {
+                          timeZone: 'America/Sao_Paulo',
+                        })
+                      : '-'
+                  }
+                  return (
+                    <tr key={day.date} className="border-b">
+                      <td className="p-3">
+                        {new Date(`${day.date}T12:00:00Z`).toLocaleDateString('pt-BR')}
+                      </td>
+                      <td className="p-3">{getT('entrada')}</td>
+                      <td className="p-3 text-muted-foreground">{getT('intervalo_saida')}</td>
+                      <td className="p-3 text-muted-foreground">{getT('intervalo_entrada')}</td>
+                      <td className="p-3">{getT('saida')}</td>
+                      <td className="p-3">{day.hours_worked || 0}h</td>
+                      <td className="p-3 text-green-600">{day.overtime || 0}h</td>
+                      <td className="p-3 text-red-600">{day.delay || 0}h</td>
+                    </tr>
+                  )
+                })}
                 {entries.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="p-4 text-center text-muted-foreground">
+                    <td colSpan={8} className="p-4 text-center text-muted-foreground">
                       Nenhum registro encontrado.
                     </td>
                   </tr>

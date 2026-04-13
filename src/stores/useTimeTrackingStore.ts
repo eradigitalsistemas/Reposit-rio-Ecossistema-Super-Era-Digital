@@ -6,14 +6,14 @@ interface TimeTrackingState {
   loading: boolean
   entries: any[]
   totals: any
-  todayEntry: any
+  todayEntries: any[]
   error: string | null
   fetchEmployeeId: (email: string) => Promise<string | null>
   fetchToday: () => Promise<void>
   fetchMonthly: (month: string, year: string) => Promise<void>
   registerAction: (
-    action: 'entry' | 'break' | 'exit',
-    breakDuration?: string,
+    action: 'entrada' | 'intervalo_saida' | 'intervalo_entrada' | 'saida',
+    notes?: string,
   ) => Promise<{ success: boolean; error?: string }>
 }
 
@@ -22,7 +22,7 @@ export const useTimeTrackingStore = create<TimeTrackingState>((set, get) => ({
   loading: false,
   entries: [],
   totals: { hours_worked: 0, overtime: 0, delay: 0, days_worked: 0 },
-  todayEntry: null,
+  todayEntries: [],
   error: null,
 
   fetchEmployeeId: async (email) => {
@@ -65,7 +65,7 @@ export const useTimeTrackingStore = create<TimeTrackingState>((set, get) => ({
         },
       )
       const json = await res.json()
-      set({ todayEntry: json.data || null })
+      set({ todayEntries: json.data || [] })
     } catch (err) {
       console.error(err)
     }
@@ -93,7 +93,7 @@ export const useTimeTrackingStore = create<TimeTrackingState>((set, get) => ({
     }
   },
 
-  registerAction: async (action, breakDuration) => {
+  registerAction: async (action, notes) => {
     const { employeeId } = get()
     if (!employeeId) return { success: false, error: 'Colaborador não identificado' }
     try {
@@ -101,7 +101,7 @@ export const useTimeTrackingStore = create<TimeTrackingState>((set, get) => ({
         data: { session },
       } = await supabase.auth.getSession()
       const payload: any = { employee_id: employeeId, action }
-      if (breakDuration) payload.break_duration = breakDuration
+      if (notes) payload.notes = notes
 
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/time-entries`, {
         method: 'POST',
