@@ -35,7 +35,7 @@ const employeeSchema = z.object({
   professional_data: z.record(z.any()).optional().nullable(),
   salary: z.number().positive('Salário deve ser positivo').optional().nullable(),
   department_id: z.string().uuid('Departamento inválido').optional().nullable(),
-  status: z.enum(['Ativo', 'Afastado', 'Demitido']).default('Ativo'),
+  status: z.enum(['Ativo', 'Afastado', 'Demitido', 'Em Experiência']).default('Ativo'),
   hire_date: z.string().refine((date) => {
     // Treat date input as midnight UTC to avoid timezone shift on future check
     const hireDate = new Date(`${date}T00:00:00Z`)
