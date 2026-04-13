@@ -14,6 +14,7 @@ import Employees from './pages/Employees'
 import TalentBank from './pages/TalentBank'
 import Reports from './pages/Reports'
 import Settings from './pages/Settings'
+import MeuPonto from './pages/MeuPonto'
 import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
 
@@ -75,6 +76,7 @@ const App = () => (
                       <Route path="/talentos" element={<TalentBank />} />
                       <Route path="/relatorios" element={<Reports />} />
                       <Route path="/configuracoes" element={<Settings />} />
+                      <Route path="/meu-ponto" element={<MeuPonto />} />
                     </Route>
 
                     {/* External Portal Routes */}
