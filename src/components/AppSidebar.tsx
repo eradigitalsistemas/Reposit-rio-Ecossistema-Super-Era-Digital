@@ -9,6 +9,7 @@ import {
   ExternalLink,
   Settings as SettingsIcon,
   Home,
+  UserPlus,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -35,6 +36,7 @@ const MENU_ITEMS = [
   { title: 'Demandas', icon: CheckSquare, url: '/demandas', roles: ['Admin', 'Colaborador'] },
   { title: 'Agenda', icon: Calendar, url: '/agenda', roles: ['Admin', 'Colaborador'] },
   { title: 'Colaboradores', icon: Users, url: '/colaboradores', roles: ['Admin'] },
+  { title: 'Admissão & Onboarding', icon: UserPlus, url: '/onboarding', roles: ['Admin'] },
   { title: 'Clientes Externos', icon: Building2, url: '/clientes', roles: ['Admin'] },
   { title: 'Relatórios', icon: BarChart3, url: '/relatorios', roles: ['Admin'] },
   {

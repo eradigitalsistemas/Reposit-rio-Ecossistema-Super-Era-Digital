@@ -12,6 +12,7 @@ import ClientProfile from './pages/ClientProfile'
 import Collaborators from './pages/Collaborators'
 import Employees from './pages/Employees'
 import TalentBank from './pages/TalentBank'
+import Onboarding from './pages/Onboarding'
 import Reports from './pages/Reports'
 import Settings from './pages/Settings'
 import MeuPonto from './pages/MeuPonto'
@@ -74,6 +75,7 @@ const App = () => (
                       <Route path="/colaboradores" element={<Collaborators />} />
                       <Route path="/funcionarios" element={<Employees />} />
                       <Route path="/talentos" element={<TalentBank />} />
+                      <Route path="/onboarding" element={<Onboarding />} />
                       <Route path="/relatorios" element={<Reports />} />
                       <Route path="/configuracoes" element={<Settings />} />
                       <Route path="/meu-ponto" element={<MeuPonto />} />
