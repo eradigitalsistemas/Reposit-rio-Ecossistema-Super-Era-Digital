@@ -7,6 +7,7 @@
     "manage-client-documents": 3,
     "functions": 1,
     "process-resume": 7,
-    "submit-talento": 7
+    "submit-talento": 7,
+    "custom-auth": 1
   }
 }
