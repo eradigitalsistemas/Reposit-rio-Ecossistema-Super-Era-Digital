@@ -1,0 +1,450 @@
+openapi: 3.0.3
+info:
+  title: Super Era Digital API
+  description: |
+    Documentação completa da API do CRM e RH da Super Era Digital.
+
+    ## Autenticação
+    A maioria dos endpoints requer autenticação via JWT (JSON Web Token) passado no header `Authorization: Bearer <token>`.
+
+    ## Rate Limiting
+    Alguns endpoints públicos (como submissão de talentos e autenticação customizada) possuem proteção contra abusos (Rate Limiting). Se o limite for excedido, a API retornará o status `429 Too Many Requests`.
+
+    ## Paginação e Filtros
+    Endpoints de listagem (como `/employees` e `/candidates`) aceitam os parâmetros `page` e `limit` (default: 10) na query string, além de filtros específicos detalhados em cada rota.
+  version: 1.0.0
+servers:
+  - url: https://fyiukfacrniwpzchpzpx.supabase.co/functions/v1
+    description: Produção (Supabase Edge Functions)
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    UnauthorizedError:
+      description: Token ausente ou inválido.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: Unauthorized
+    NotFoundError:
+      description: Recurso não encontrado.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: Não encontrado
+    RateLimitError:
+      description: Limite de requisições excedido.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: Too many requests. Please try again later.
+    InternalError:
+      description: Erro interno no servidor.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: Erro interno no servidor
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        details:
+          type: array
+          items:
+            type: object
+security:
+  - bearerAuth: []
+paths:
+  /custom-auth:
+    post:
+      summary: Autenticação Customizada
+      description: Login, registro, refresh token e logout.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [login, register, refresh, logout]
+                payload:
+                  type: object
+            example:
+              action: 'login'
+              payload:
+                email: 'usuario@dominio.com'
+                password: 'Password123!'
+      responses:
+        '200':
+          description: Sucesso na autenticação
+        '400':
+          description: Dados inválidos (ex. e-mail ou senha fora do padrão)
+        '401':
+          description: Credenciais inválidas
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /employees:
+    get:
+      summary: Listar Colaboradores
+      description: Retorna a lista paginada de colaboradores com suporte a filtros.
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [Ativo, Afastado, Demitido, 'Em Experiência']
+        - in: query
+          name: department_id
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: hire_date
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Lista de colaboradores e metadados de paginação.
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      summary: Criar Colaborador
+      description: Cadastra um novo colaborador no sistema.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            example:
+              cpf: '12345678901'
+              rg: '1234567'
+              hire_date: '2023-01-01'
+              status: 'Ativo'
+              personal_data:
+                nome: 'João Silva'
+                email: 'joao@email.com'
+              salary: 5000
+      responses:
+        '201':
+          description: Colaborador criado.
+        '400':
+          description: Erro de validação.
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '409':
+          description: Conflito (CPF ou RG já existe).
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /employees/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: Obter Colaborador
+      description: Retorna os detalhes de um colaborador específico.
+      responses:
+        '200':
+          description: Dados do colaborador.
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    put:
+      summary: Atualizar Colaborador
+      description: Atualiza os dados de um colaborador.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Colaborador atualizado.
+        '400':
+          description: Erro de validação.
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: Conflito (CPF/RG).
+    delete:
+      summary: Demitir Colaborador (Soft Delete)
+      description: Altera o status do colaborador para "Demitido".
+      responses:
+        '200':
+          description: Colaborador demitido com sucesso.
+        '400':
+          description: Colaborador já está demitido.
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /candidates:
+    get:
+      summary: Listar Candidatos
+      description: Retorna a lista paginada de candidatos.
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+        - in: query
+          name: search
+          schema:
+            type: string
+            minLength: 2
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [Novo, Entrevistado, Rejeitado, Contratado]
+        - in: query
+          name: sort_by
+          schema:
+            type: string
+            default: created_at
+        - in: query
+          name: sort_order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: Lista de candidatos.
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /candidates/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: Obter Candidato
+      description: Retorna os detalhes de um candidato específico.
+      responses:
+        '200':
+          description: Dados do candidato.
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    put:
+      summary: Atualizar Status do Candidato
+      description: Atualiza o status e observações do candidato.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                observations:
+                  type: string
+      responses:
+        '200':
+          description: Status atualizado.
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /candidates/{id}/convert:
+    post:
+      summary: Converter Candidato em Colaborador
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            example:
+              cpf: '12345678901'
+              salary: 3000
+              hire_date: '2023-10-01'
+      responses:
+        '201':
+          description: Candidato convertido com sucesso.
+        '400':
+          description: Dados inválidos para conversão.
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: Conflito (CPF já existe).
+
+  /time-entries:
+    post:
+      summary: Registrar Ponto
+      description: Registra entrada, saída ou intervalo de um colaborador.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                employee_id:
+                  type: string
+                  format: uuid
+                action:
+                  type: string
+                  enum: [entry, exit, break]
+                date:
+                  type: string
+                  format: date
+                time:
+                  type: string
+                break_duration:
+                  type: string
+            example:
+              employee_id: '00000000-0000-0000-0000-000000000000'
+              action: 'entry'
+      responses:
+        '201':
+          description: Ponto registrado com sucesso.
+        '400':
+          description: Erro nas regras de negócio (ex. saída antes da entrada).
+        '404':
+          description: Colaborador não encontrado.
+
+  /time-entries/{employee_id}/{month}/{year}:
+    get:
+      summary: Relatório Mensal de Ponto
+      parameters:
+        - in: path
+          name: employee_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: month
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: year
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Histórico de ponto do mês e totais (horas trabalhadas, extras, atrasos).
+
+  /vacation-balance/{employee_id}:
+    get:
+      summary: Saldo de Férias
+      description: Calcula em tempo real o saldo de férias do colaborador.
+      parameters:
+        - in: path
+          name: employee_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Dados do saldo de férias.
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /vacation-requests:
+    post:
+      summary: Solicitar Férias
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            example:
+              employee_id: '00000000-0000-0000-0000-000000000000'
+              start_date: '2023-12-01'
+              end_date: '2023-12-15'
+              type: 'Gozar'
+      responses:
+        '201':
+          description: Solicitação criada.
+        '400':
+          description: Saldo insuficiente ou período inválido.
+        '409':
+          description: Período sobreposto a férias já aprovadas.
+
+  /vacation-requests/{id}:
+    put:
+      summary: Aprovar/Rejeitar Férias
+      description: Apenas usuários com perfil "admin" podem aprovar.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [Aprovado, Rejeitado]
+      responses:
+        '200':
+          description: Status atualizado.
+        '403':
+          description: Acesso negado (não é admin).

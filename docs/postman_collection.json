@@ -1,0 +1,276 @@
+{
+  "info": {
+    "name": "Super Era Digital API",
+    "description": "Coleção completa dos endpoints da API do Super Era Digital, incluindo Autenticação, RH (Colaboradores, Candidatos, Ponto, Férias, Onboarding) e CRM.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://fyiukfacrniwpzchpzpx.supabase.co/functions/v1",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "SEU_TOKEN_JWT_AQUI",
+      "type": "string"
+    },
+    {
+      "key": "employee_id",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "candidate_id",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Autenticação Customizada",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/custom-auth",
+              "host": ["{{base_url}}"],
+              "path": ["custom-auth"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"login\",\n  \"payload\": {\n    \"email\": \"admin@eradigital.com.br\",\n    \"password\": \"SenhaForte123!\"\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Registrar",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/custom-auth",
+              "host": ["{{base_url}}"],
+              "path": ["custom-auth"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"register\",\n  \"payload\": {\n    \"email\": \"novo@eradigital.com.br\",\n    \"password\": \"SenhaForte123!\",\n    \"name\": \"Novo Usuário\",\n    \"role\": \"colaborador\"\n  }\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Colaboradores (Employees)",
+      "item": [
+        {
+          "name": "Listar Colaboradores",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/employees?page=1&limit=10&status=Ativo",
+              "host": ["{{base_url}}"],
+              "path": ["employees"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "status", "value": "Ativo" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Criar Colaborador",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/employees",
+              "host": ["{{base_url}}"],
+              "path": ["employees"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cpf\": \"12345678901\",\n  \"hire_date\": \"2023-01-01\",\n  \"status\": \"Ativo\",\n  \"personal_data\": {\n    \"nome\": \"João Silva\",\n    \"email\": \"joao@exemplo.com\"\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Obter Colaborador",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/employees/{{employee_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["employees", "{{employee_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Demitir Colaborador (Soft Delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/employees/{{employee_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["employees", "{{employee_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Candidatos e R&S",
+      "item": [
+        {
+          "name": "Listar Candidatos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/candidates?page=1&limit=10&status=Novo",
+              "host": ["{{base_url}}"],
+              "path": ["candidates"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "status", "value": "Novo" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Converter Candidato em Colaborador",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/candidates/{{candidate_id}}/convert",
+              "host": ["{{base_url}}"],
+              "path": ["candidates", "{{candidate_id}}", "convert"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cpf\": \"09876543210\",\n  \"salary\": 4500,\n  \"hire_date\": \"2024-01-10\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Controle de Ponto",
+      "item": [
+        {
+          "name": "Registrar Ponto (Entrada)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/time-entries",
+              "host": ["{{base_url}}"],
+              "path": ["time-entries"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employee_id\": \"{{employee_id}}\",\n  \"action\": \"entry\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Registrar Ponto (Saída)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/time-entries",
+              "host": ["{{base_url}}"],
+              "path": ["time-entries"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employee_id\": \"{{employee_id}}\",\n  \"action\": \"exit\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Relatório Mensal",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/time-entries/{{employee_id}}/01/2024",
+              "host": ["{{base_url}}"],
+              "path": ["time-entries", "{{employee_id}}", "01", "2024"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Férias",
+      "item": [
+        {
+          "name": "Consultar Saldo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/vacation-balance/{{employee_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["vacation-balance", "{{employee_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Solicitar Férias",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/vacation-requests",
+              "host": ["{{base_url}}"],
+              "path": ["vacation-requests"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employee_id\": \"{{employee_id}}\",\n  \"start_date\": \"2024-12-01\",\n  \"end_date\": \"2024-12-15\",\n  \"type\": \"Gozar\"\n}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

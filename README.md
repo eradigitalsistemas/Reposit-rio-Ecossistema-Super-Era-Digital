@@ -25,6 +25,16 @@ Este projeto foi criado de ponta a ponta com o [Skip](https://goskip.dev).
 npm install
 ```
 
+## 📚 Documentação da API
+
+Este projeto inclui uma documentação técnica completa da API gerada com **OpenAPI 3.0 (Swagger)** e uma coleção do **Postman**.
+
+Os arquivos encontram-se na pasta `docs/`:
+- `docs/openapi.yaml`: Especificação oficial da API, compatível com Swagger UI e ferramentas de geração de código.
+- `docs/postman_collection.json`: Coleção pronta para importar no Postman, contendo variáveis de ambiente e exemplos reais de requisição/resposta para testes rápidos.
+
+A documentação aborda endpoints críticos, como autenticação (JWT), gerenciamento de RH (colaboradores, candidatos, controle de ponto e férias), rate limiting, filtros e paginação.
+
 ## 💻 Scripts Disponíveis
 
 ### Desenvolvimento
