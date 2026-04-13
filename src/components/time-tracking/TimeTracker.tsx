@@ -1,248 +1,152 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useTimeTrackingStore } from '@/stores/useTimeTrackingStore'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { TimeEntryCard } from './TimeEntryCard'
+import { TimeEntryHistory } from './TimeEntryHistory'
+import { TimeEntryModal } from './TimeEntryModal'
+import { Skeleton } from '@/components/ui/skeleton'
+import { useToast } from '@/components/ui/use-toast'
+import { RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { toast } from 'sonner'
-import { Play, Pause, Square, FileDown, AlertCircle } from 'lucide-react'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { cn } from '@/lib/utils'
 
 export function TimeTracker() {
-  const { todayEntries, fetchToday, fetchMonthly, registerAction, entries, totals } =
-    useTimeTrackingStore()
-  const [time, setTime] = useState(new Date())
-  const [month, setMonth] = useState((new Date().getMonth() + 1).toString())
-  const [year, setYear] = useState(new Date().getFullYear().toString())
+  const { fetchToday, todayEntries, loading, error, registerAction } = useTimeTrackingStore()
+  const [init, setInit] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean
+    type: 'entrada' | 'intervalo_saida' | 'intervalo_entrada' | 'saida' | null
+  }>({ isOpen: false, type: null })
+  const { toast } = useToast()
 
   useEffect(() => {
-    fetchToday()
-    fetchMonthly(month, year)
-    const interval = setInterval(() => setTime(new Date()), 1000)
-    return () => clearInterval(interval)
-  }, [month, year])
+    fetchToday().finally(() => setInit(false))
+  }, [fetchToday])
 
-  const handleAction = async (
-    action: 'entrada' | 'intervalo_saida' | 'intervalo_entrada' | 'saida',
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    await fetchToday()
+    setIsRefreshing(false)
+  }
+
+  const entries = useMemo(() => {
+    return [...(todayEntries || [])].sort(
+      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+    )
+  }, [todayEntries])
+
+  const currentStatus = useMemo(() => {
+    if (!entries.length) return 'waiting_entry'
+    const hasEntrada = entries.some((e) => e.entry_type === 'entrada')
+    const hasIntSaida = entries.some((e) => e.entry_type === 'intervalo_saida')
+    const hasIntEntrada = entries.some((e) => e.entry_type === 'intervalo_entrada')
+    const hasSaida = entries.some((e) => e.entry_type === 'saida')
+
+    if (hasSaida) return 'complete'
+    if (hasIntSaida && !hasIntEntrada) return 'waiting_break_return'
+    if (hasEntrada && !hasSaida) return 'waiting_exit'
+    return 'waiting_entry'
+  }, [entries])
+
+  const entryTime = entries.find((e) => e.entry_type === 'entrada')?.timestamp
+  const exitTime = entries.find((e) => e.entry_type === 'saida')?.timestamp
+
+  const calculateWorkedHours = () => {
+    if (!entryTime) return 0
+    let end = new Date()
+    if (exitTime) end = new Date(exitTime)
+
+    let ms = end.getTime() - new Date(entryTime).getTime()
+
+    const intSaida = entries.find((e) => e.entry_type === 'intervalo_saida')?.timestamp
+    const intEntrada = entries.find((e) => e.entry_type === 'intervalo_entrada')?.timestamp
+
+    if (intSaida) {
+      const intEnd = intEntrada ? new Date(intEntrada) : end
+      ms -= intEnd.getTime() - new Date(intSaida).getTime()
+    }
+
+    return Math.max(0, ms / (1000 * 60 * 60))
+  }
+
+  const workedHours = calculateWorkedHours()
+  const extraHours = workedHours > 8 ? workedHours - 8 : 0
+
+  const handleActionClick = (
+    type: 'entrada' | 'intervalo_saida' | 'intervalo_entrada' | 'saida',
   ) => {
-    const res = await registerAction(action)
-    if (res.success) {
-      toast.success('Ponto registrado com sucesso.')
-      fetchMonthly(month, year)
+    setModalState({ isOpen: true, type })
+  }
+
+  const handleConfirmAction = async (notes: string) => {
+    if (!modalState.type) return
+
+    const result = await registerAction(modalState.type, notes)
+
+    if (result.success) {
+      toast({
+        title: 'Sucesso',
+        description: 'Ponto registrado com sucesso.',
+      })
+      setModalState({ isOpen: false, type: null })
     } else {
-      toast.error(res.error || 'Erro ao registrar ponto.')
+      toast({
+        title: 'Erro',
+        description: result.error || 'Erro ao registrar ponto.',
+        variant: 'destructive',
+      })
     }
   }
 
-  const exportCSV = () => {
-    const csv = [
-      'Data,Entrada,Saída Intervalo,Retorno Intervalo,Saída,Horas Trab.,Horas Extras,Atraso',
-    ]
-    entries.forEach((day: any) => {
-      const getT = (type: string) => {
-        const e = day.entries.find((x: any) => x.entry_type === type)
-        return e
-          ? new Date(e.timestamp).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' })
-          : '-'
-      }
-      csv.push(
-        `${day.date},${getT('entrada')},${getT('intervalo_saida')},${getT('intervalo_entrada')},${getT('saida')},${day.hours_worked || '0'},${day.overtime || '0'},${day.delay || '0'}`,
-      )
-    })
-    const blob = new Blob([csv.join('\n')], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `ponto_${month}_${year}.csv`
-    a.click()
+  if (init) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-[350px] w-full rounded-2xl" />
+        <Skeleton className="h-[120px] w-full rounded-2xl" />
+      </div>
+    )
   }
 
-  const getEntryByType = (type: string) => todayEntries?.find((e: any) => e.entry_type === type)
-
-  const hasEntrada = !!getEntryByType('entrada')
-  const hasIntervaloSaida = !!getEntryByType('intervalo_saida')
-  const hasIntervaloEntrada = !!getEntryByType('intervalo_entrada')
-  const hasSaida = !!getEntryByType('saida')
-
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-4xl text-center font-mono py-4">
-            {time.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
-          </CardTitle>
-          <CardDescription className="text-center">Horário de Brasília (UTC-3)</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col md:flex-row flex-wrap justify-center gap-4">
-          <Button
-            size="lg"
-            disabled={hasEntrada}
-            onClick={() => handleAction('entrada')}
-            className="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white"
-          >
-            <Play className="mr-2 h-5 w-5" /> Entrada
-          </Button>
-          <Button
-            size="lg"
-            variant="secondary"
-            disabled={!hasEntrada || hasIntervaloSaida}
-            onClick={() => handleAction('intervalo_saida')}
-            className="w-full md:w-auto"
-          >
-            <Pause className="mr-2 h-5 w-5" /> Pausa Intervalo
-          </Button>
-          <Button
-            size="lg"
-            variant="secondary"
-            disabled={!hasIntervaloSaida || hasIntervaloEntrada}
-            onClick={() => handleAction('intervalo_entrada')}
-            className="w-full md:w-auto"
-          >
-            <Play className="mr-2 h-5 w-5" /> Retorno Intervalo
-          </Button>
-          <Button
-            size="lg"
-            variant="destructive"
-            disabled={!hasEntrada || hasSaida || (hasIntervaloSaida && !hasIntervaloEntrada)}
-            onClick={() => handleAction('saida')}
-            className="w-full md:w-auto"
-          >
-            <Square className="mr-2 h-5 w-5" /> Saída
-          </Button>
-        </CardContent>
-      </Card>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+      <div className="lg:col-span-2 space-y-6">
+        <TimeEntryCard
+          status={currentStatus}
+          entryTime={entryTime}
+          exitTime={exitTime}
+          workedHours={workedHours}
+          extraHours={extraHours}
+          delayMinutes={0}
+          isLoading={loading}
+          error={error || undefined}
+          onActionClick={handleActionClick}
+        />
+      </div>
 
-      <Card>
-        <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <CardTitle>Folha de Ponto Mensal</CardTitle>
-          <div className="flex gap-2">
-            <Select value={month} onValueChange={setMonth}>
-              <SelectTrigger className="w-[120px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <SelectItem key={i + 1} value={(i + 1).toString()}>
-                    {String(i + 1).padStart(2, '0')}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={year} onValueChange={setYear}>
-              <SelectTrigger className="w-[100px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {[2024, 2025, 2026].map((y) => (
-                  <SelectItem key={y} value={y.toString()}>
-                    {y}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button variant="outline" onClick={exportCSV}>
-              <FileDown className="h-4 w-4" />
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-secondary p-4 rounded-lg text-center">
-              <p className="text-sm text-muted-foreground">Dias Trabalhados</p>
-              <p className="text-2xl font-bold">{totals.days_worked || 0}</p>
-            </div>
-            <div className="bg-secondary p-4 rounded-lg text-center">
-              <p className="text-sm text-muted-foreground">Horas Trabalhadas</p>
-              <p className="text-2xl font-bold">{totals.hours_worked || 0}h</p>
-            </div>
-            <div className="bg-secondary p-4 rounded-lg text-center">
-              <p className="text-sm text-muted-foreground">Horas Extras</p>
-              <p className="text-2xl font-bold text-green-500">{totals.overtime || 0}h</p>
-            </div>
-            <div className="bg-secondary p-4 rounded-lg text-center">
-              <p className="text-sm text-muted-foreground">Atrasos</p>
-              <p className="text-2xl font-bold text-red-500">{totals.delay || 0}h</p>
-            </div>
-          </div>
+      <div className="bg-card border rounded-2xl p-6 shadow-sm h-fit">
+        <div className="flex items-center justify-between mb-6 pb-4 border-b">
+          <h3 className="font-semibold text-lg">Atividades de Hoje</h3>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="h-8 w-8 rounded-full hover:bg-secondary"
+          >
+            <RefreshCw
+              className={cn('h-4 w-4 text-muted-foreground', isRefreshing && 'animate-spin')}
+            />
+          </Button>
+        </div>
+        <TimeEntryHistory entries={entries} isLoading={isRefreshing} />
+      </div>
 
-          <div className="border rounded-md overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="bg-muted">
-                <tr>
-                  <th className="p-3">Data</th>
-                  <th className="p-3">Entrada</th>
-                  <th className="p-3">Intervalo</th>
-                  <th className="p-3">Retorno</th>
-                  <th className="p-3">Saída</th>
-                  <th className="p-3">Trab.</th>
-                  <th className="p-3">Extra</th>
-                  <th className="p-3">Atraso</th>
-                </tr>
-              </thead>
-              <tbody>
-                {entries.map((day: any) => {
-                  const getT = (type: string) => {
-                    const e = day.entries.find((x: any) => x.entry_type === type)
-                    return e
-                      ? new Date(e.timestamp).toLocaleTimeString('pt-BR', {
-                          timeZone: 'America/Sao_Paulo',
-                        })
-                      : '-'
-                  }
-                  return (
-                    <tr key={day.date} className="border-b">
-                      <td className="p-3">
-                        {new Date(`${day.date}T12:00:00Z`).toLocaleDateString('pt-BR')}
-                      </td>
-                      <td className="p-3">{getT('entrada')}</td>
-                      <td className="p-3 text-muted-foreground">{getT('intervalo_saida')}</td>
-                      <td className="p-3 text-muted-foreground">{getT('intervalo_entrada')}</td>
-                      <td className="p-3">
-                        <div className="flex items-center">
-                          {getT('saida')}
-                          {day.anomalies && day.anomalies.length > 0 && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button type="button" className="outline-none">
-                                  <AlertCircle className="h-4 w-4 text-amber-500 ml-2" />
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <div className="text-xs">
-                                  {day.anomalies.map((a: any, i: number) => (
-                                    <div key={i} className="text-amber-500 font-medium">
-                                      {a.message}
-                                    </div>
-                                  ))}
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-3">{day.hours_worked || 0}h</td>
-                      <td className="p-3 text-green-600">{day.overtime || 0}h</td>
-                      <td className="p-3 text-red-600">{day.delay || 0}h</td>
-                    </tr>
-                  )
-                })}
-                {entries.length === 0 && (
-                  <tr>
-                    <td colSpan={8} className="p-4 text-center text-muted-foreground">
-                      Nenhum registro encontrado.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+      <TimeEntryModal
+        isOpen={modalState.isOpen}
+        type={modalState.type}
+        onConfirm={handleConfirmAction}
+        onCancel={() => setModalState({ isOpen: false, type: null })}
+      />
     </div>
   )
 }
