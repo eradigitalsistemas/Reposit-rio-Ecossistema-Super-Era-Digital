@@ -66,7 +66,7 @@ Deno.serve(async (req: Request) => {
       if (!parsed.success) {
         return new Response(
           JSON.stringify({ error: 'Dados inválidos', details: parsed.error.errors }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
 
@@ -78,7 +78,7 @@ Deno.serve(async (req: Request) => {
         if (balance.months_worked < 12) {
           return new Response(
             JSON.stringify({ error: 'Colaborador não atingiu 12 meses de contratação' }),
-            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           )
         }
 
@@ -100,10 +100,10 @@ Deno.serve(async (req: Request) => {
 
         if (overlapErr) throw overlapErr
         if (overlaps && overlaps.length > 0) {
-          return new Response(JSON.stringify({ error: 'Período sobrepõe férias já aprovadas' }), {
-            status: 409,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          })
+          return new Response(
+            JSON.stringify({ error: 'Período sobrepõe férias já aprovadas' }),
+            { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
         }
 
         const { data, error } = await supabase
@@ -140,7 +140,7 @@ Deno.serve(async (req: Request) => {
       if (!parsed.success) {
         return new Response(
           JSON.stringify({ error: 'Dados inválidos', details: parsed.error.errors }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
 
@@ -154,7 +154,7 @@ Deno.serve(async (req: Request) => {
       if (!userProfile || userProfile.perfil !== 'admin') {
         return new Response(
           JSON.stringify({ error: 'Acesso negado: Apenas RH pode aprovar ou rejeitar' }),
-          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
 
