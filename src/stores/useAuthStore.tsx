@@ -167,7 +167,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     setLoading(true)
     try {
+      const currentUserEmail = user?.email
       await supabase.auth.signOut()
+      if (currentUserEmail) {
+        await supabase.functions.invoke('custom-auth', {
+          body: { action: 'logout', payload: { email: currentUserEmail } },
+        })
+      }
     } catch (e) {
       // Ignore errors on logout
     }

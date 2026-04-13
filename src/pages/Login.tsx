@@ -21,9 +21,19 @@ export default function Login() {
     setLoading(true)
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      const { data, error } = await supabase.functions.invoke('custom-auth', {
+        body: { action: 'login', payload: { email, password } },
+      })
+
       if (error) throw error
-      if (data?.user) {
+      if (data?.error) throw new Error(data.error)
+
+      if (data?.session) {
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        })
+        if (sessionError) throw sessionError
         navigate('/')
       }
     } catch (error: any) {
