@@ -1,5 +1,5 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
-import { createClient } from 'npm:@supabase/supabase-js@2'
+import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { z } from 'npm:zod@3.22.4'
 import { corsHeaders } from '../_shared/cors.ts'
 
@@ -135,7 +135,6 @@ const formSchema = z.object({
   experiences: experiencesSchema,
   disc: discSchema,
   lgpd: z.boolean().refine((val) => val === true, 'Você deve aceitar os termos de privacidade'),
-  pdf_base64: z.string().optional(),
 })
 
 Deno.serve(async (req: Request) => {
@@ -169,7 +168,6 @@ Deno.serve(async (req: Request) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     )
 
-    // Verificar duplicatas no banco
     const { data: existingUser } = await supabase
       .from('users')
       .select('id')
@@ -192,7 +190,6 @@ Deno.serve(async (req: Request) => {
 
       if (updateError) throw new Error(`Failed to update user: ${updateError.message}`)
 
-      // Remover dados antigos para inserir os novos
       await supabase.from('educations').delete().eq('user_id', userId)
       await supabase.from('experiences').delete().eq('user_id', userId)
       await supabase.from('disc_results').delete().eq('user_id', userId)
@@ -239,10 +236,7 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    let scoreD = 0,
-      scoreI = 0,
-      scoreS = 0,
-      scoreC = 0
+    let scoreD = 0, scoreI = 0, scoreS = 0, scoreC = 0
     Object.values(data.disc).forEach((answer) => {
       if (answer === 'D') scoreD++
       if (answer === 'I') scoreI++
@@ -272,32 +266,53 @@ Deno.serve(async (req: Request) => {
       pontuacao_c: scoreC,
     })
 
-    // Sincronizar via Edge Function existente para envio de e-mail e integração ERP
-    if (data.pdf_base64) {
-      try {
-        await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/process-resume`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
-          },
-          body: JSON.stringify({
-            user_id: userId,
-            email: data.personal.email,
-            nome: data.personal.nome,
-            pdf_base64: data.pdf_base64,
-          }),
-        })
-      } catch (err) {
-        console.error('Failed to trigger process-resume:', err)
-      }
+    // Integração com Banco de Talentos
+    const { error: candidateError } = await supabase
+      .from('candidates')
+      .upsert({
+        email: data.personal.email,
+        name: data.personal.nome,
+        profession: data.experiences[0]?.cargo || 'Não informado',
+        resume_data: {
+          personal: data.personal,
+          educations: data.educations,
+          experiences: data.experiences,
+          disc: data.disc,
+        },
+        disc_result: {
+          type: tipoPerfil,
+          scores: scores
+        },
+        status: 'Novo'
+      }, { onConflict: 'email' })
+
+    if (candidateError) {
+      console.error('Falha ao integrar com banco de talentos:', candidateError)
+    }
+
+    // Processamento paralelo para envio de e-mails / sincronização externa adicional
+    try {
+      fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/process-resume`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          email: data.personal.email,
+          nome: data.personal.nome,
+        }),
+      }).catch(err => console.error('Background fetch process-resume failed:', err))
+    } catch (err) {
+      console.error('Failed to trigger process-resume:', err)
     }
 
     return new Response(
       JSON.stringify({
         success: true,
         user_id: userId,
-        message: 'Currículo validado e processado com sucesso',
+        message: 'Currículo validado e integrado ao Banco de Talentos com sucesso',
       }),
       {
         status: 200,
