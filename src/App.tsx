@@ -19,6 +19,7 @@ import MeuPonto from './pages/MeuPonto'
 import RH from './pages/RH'
 import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
+import FolhaPonto from './pages/FolhaPonto'
 
 import PortalLogin from './pages/portal/PortalLogin'
 import PortalLayout from './components/portal/PortalLayout'
@@ -81,6 +82,7 @@ const App = () => (
                       <Route path="/rh" element={<RH />} />
                       <Route path="/configuracoes" element={<Settings />} />
                       <Route path="/meu-ponto" element={<MeuPonto />} />
+                      <Route path="/folha-ponto" element={<FolhaPonto />} />
                     </Route>
                     {/* External Portal Routes */}
                     <Route path="/portal/login" element={<PortalLogin />} />

@@ -19,18 +19,18 @@ export function DemandColumn({ title, demands, highlightId }: DemandColumnProps)
           variant="secondary"
           className="px-2 font-medium text-sm sm:text-xs text-gray-700 bg-gray-200 dark:bg-secondary dark:text-secondary-foreground"
         >
-          {demands.length}
+          {(demands || []).length}
         </Badge>
       </div>
       <div className="p-3 space-y-3 bg-transparent">
-        {demands.length === 0 ? (
+        {!(demands && demands.length > 0) ? (
           <div className="h-24 flex items-center justify-center border-2 border-dashed border-gray-300 dark:border-white/10 rounded-lg m-2">
             <span className="text-sm text-gray-500 dark:text-white/40 font-medium">
               Sem demandas
             </span>
           </div>
         ) : (
-          demands.map((demand) => (
+          (demands || []).map((demand) => (
             <div
               key={demand.id}
               id={`demand-card-${demand.id}`}

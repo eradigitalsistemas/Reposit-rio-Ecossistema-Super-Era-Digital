@@ -85,8 +85,12 @@ export default function Demands() {
       if (role !== 'Admin' && d.assigneeId !== user?.id) {
         return false
       }
-      if (role === 'Admin' && collaboratorFilter !== 'all' && d.assignee !== collaboratorFilter) {
-        return false
+      if (role === 'Admin' && collaboratorFilter !== 'all') {
+        if (collaboratorFilter === 'Não Atribuído' || collaboratorFilter === 'unassigned') {
+          if (d.assigneeId !== null) return false
+        } else {
+          if (d.assigneeId !== collaboratorFilter) return false
+        }
       }
       if (clientFilter !== 'all' && d.clientId !== clientFilter) {
         return false
@@ -181,11 +185,11 @@ export default function Demands() {
                   <SelectContent>
                     <SelectItem value="all">Todos</SelectItem>
                     {(collaborators || []).map((c) => (
-                      <SelectItem key={c.id} value={c.nome}>
-                        {c.nome}
+                      <SelectItem key={c.id} value={c.id || Math.random().toString()}>
+                        {c.nome || 'Sem Nome'}
                       </SelectItem>
                     ))}
-                    <SelectItem value="Não Atribuído">Não Atribuído</SelectItem>
+                    <SelectItem value="unassigned">Não Atribuído</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -202,8 +206,8 @@ export default function Demands() {
                 <SelectContent>
                   <SelectItem value="all">Todos os clientes</SelectItem>
                   {(clientsList || []).map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.nome}
+                    <SelectItem key={c.id} value={c.id || Math.random().toString()}>
+                      {c.nome || 'Sem Nome'}
                     </SelectItem>
                   ))}
                 </SelectContent>

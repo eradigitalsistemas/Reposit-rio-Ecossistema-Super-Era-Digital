@@ -13,7 +13,7 @@ import {
   CheckCircle,
   Eye,
 } from 'lucide-react'
-import { format } from 'date-fns'
+import { format, isValid } from 'date-fns'
 import { DemandDetailsModal } from './DemandDetailsModal'
 import { EditDemandModal } from './EditDemandModal'
 import { CompleteDemandModal } from './CompleteDemandModal'
@@ -187,7 +187,7 @@ export function DemandCard({ demand }: DemandCardProps) {
               )}
             </div>
 
-            {demand.dueDate && (
+            {demand.dueDate && isValid(new Date(demand.dueDate)) && (
               <div className="flex items-center text-sm sm:text-xs text-muted-foreground">
                 <Calendar className="w-4 h-4 sm:w-3 sm:h-3 mr-1.5 sm:mr-1 shrink-0" />
                 <span>Vence em {format(new Date(demand.dueDate), 'dd/MM/yyyy')}</span>
