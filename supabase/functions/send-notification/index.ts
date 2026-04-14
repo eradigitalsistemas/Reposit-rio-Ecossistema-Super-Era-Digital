@@ -14,7 +14,7 @@ Deno.serve(async (req: Request) => {
 
   try {
     const body = await req.json()
-    
+
     let to: string[] = ['comercial@areradigital.com.br']
     let subject = 'Nova Notificação'
     let html = '<p>Você tem uma nova notificação.</p>'
@@ -25,7 +25,7 @@ Deno.serve(async (req: Request) => {
     // Processamento de gatilho do banco de dados (Webhook)
     if (isWebhook && body.type === 'INSERT' && body.table) {
       const { table, record } = body
-      
+
       if (table === 'leads') {
         subject = `Novo Lead de Contato: ${record.nome}`
         html = `
