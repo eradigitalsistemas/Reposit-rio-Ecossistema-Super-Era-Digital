@@ -6,8 +6,8 @@
     "notify-automation": 7,
     "manage-client-documents": 4,
     "functions": 1,
-    "process-resume": 9,
-    "submit-talento": 10,
+    "process-resume": 10,
+    "submit-talento": 11,
     "custom-auth": 3,
     "candidates-webhook": 2,
     "employees": 4,
@@ -19,6 +19,7 @@
     "productivity": 2,
     "notifications": 2,
     "cron-hr-jobs": 2,
-    "monthly-timesheets": 2
+    "monthly-timesheets": 2,
+    "send-notification": 1
   }
 }
