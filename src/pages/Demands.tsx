@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { isToday, isThisWeek, isThisMonth, parseISO, format } from 'date-fns'
+import { isToday, isThisWeek, isThisMonth, parseISO, format, isValid } from 'date-fns'
 import { DemandColumn } from '@/components/demands/DemandColumn'
 import { AddDemandModal } from '@/components/demands/AddDemandModal'
 import { ChecklistBuilderModal } from '@/components/demands/ChecklistBuilderModal'
@@ -58,9 +58,13 @@ export default function Demands() {
   useEffect(() => {
     if (highlightId) {
       const timer = setTimeout(() => {
-        const el = document.getElementById(`demand-card-${highlightId}`)
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        try {
+          const el = document.getElementById(`demand-card-${highlightId}`)
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          }
+        } catch (e) {
+          // ignorar erro de rolagem
         }
       }, 300)
       return () => clearTimeout(timer)
@@ -68,14 +72,16 @@ export default function Demands() {
   }, [highlightId])
 
   const activeColumns = useMemo(() => {
-    if (statusFilter.length > 0) {
+    if (statusFilter && statusFilter.length > 0) {
       return statusFilter as DemandStatus[]
     }
     return ['Pendente', 'Em Andamento', 'Concluído'] as DemandStatus[]
   }, [statusFilter])
 
   const filteredDemands = useMemo(() => {
-    let filtered = demands.filter((d) => {
+    let filtered = (demands || []).filter((d) => {
+      if (!d) return false
+
       if (role !== 'Admin' && d.assigneeId !== user?.id) {
         return false
       }
@@ -86,32 +92,46 @@ export default function Demands() {
         return false
       }
       if (exactDateFilter && d.createdAt) {
-        const date = parseISO(d.createdAt)
-        if (
-          date.getDate() !== exactDateFilter.getDate() ||
-          date.getMonth() !== exactDateFilter.getMonth() ||
-          date.getFullYear() !== exactDateFilter.getFullYear()
-        ) {
+        try {
+          const date = parseISO(d.createdAt)
+          if (!isValid(date)) return false
+
+          if (
+            date.getDate() !== exactDateFilter.getDate() ||
+            date.getMonth() !== exactDateFilter.getMonth() ||
+            date.getFullYear() !== exactDateFilter.getFullYear()
+          ) {
+            return false
+          }
+        } catch (e) {
           return false
         }
       } else if (dateFilter !== 'all' && d.createdAt) {
-        const date = parseISO(d.createdAt)
-        if (dateFilter === 'today' && !isToday(date)) return false
-        if (dateFilter === 'week' && !isThisWeek(date)) return false
-        if (dateFilter === 'month' && !isThisMonth(date)) return false
+        try {
+          const date = parseISO(d.createdAt)
+          if (!isValid(date)) return false
+
+          if (dateFilter === 'today' && !isToday(date)) return false
+          if (dateFilter === 'week' && !isThisWeek(date)) return false
+          if (dateFilter === 'month' && !isThisMonth(date)) return false
+        } catch (e) {
+          return false
+        }
       }
       return true
     })
 
-    return filtered.sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    )
-  }, [demands, role, user?.id, collaboratorFilter, dateFilter, exactDateFilter])
+    return filtered.sort((a, b) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0
+      return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA)
+    })
+  }, [demands, role, user?.id, collaboratorFilter, dateFilter, exactDateFilter, clientFilter])
 
   const hasFilters =
     (role === 'Admin' && collaboratorFilter !== 'all') ||
     clientFilter !== 'all' ||
-    statusFilter.length > 0 ||
+    (statusFilter && statusFilter.length > 0) ||
     dateFilter !== 'all' ||
     exactDateFilter !== undefined
 
@@ -160,7 +180,7 @@ export default function Demands() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos</SelectItem>
-                    {collaborators.map((c) => (
+                    {(collaborators || []).map((c) => (
                       <SelectItem key={c.id} value={c.nome}>
                         {c.nome}
                       </SelectItem>
@@ -181,7 +201,7 @@ export default function Demands() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos os clientes</SelectItem>
-                  {clientsList.map((c) => (
+                  {(clientsList || []).map((c) => (
                     <SelectItem key={c.id} value={c.id}>
                       {c.nome}
                     </SelectItem>
@@ -225,7 +245,9 @@ export default function Demands() {
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {exactDateFilter ? format(exactDateFilter, 'dd/MM/yyyy') : 'Selecionar data'}
+                    {exactDateFilter && isValid(exactDateFilter)
+                      ? format(exactDateFilter, 'dd/MM/yyyy')
+                      : 'Selecionar data'}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -248,7 +270,7 @@ export default function Demands() {
                 type="multiple"
                 variant="outline"
                 value={statusFilter}
-                onValueChange={setStatusFilter}
+                onValueChange={(val) => setStatusFilter(val || [])}
                 className="bg-gray-100 dark:bg-muted/50 rounded-md min-h-[40px] p-1 border border-gray-300 dark:border-border justify-start flex-wrap sm:flex-nowrap w-full shadow-sm"
               >
                 <ToggleGroupItem
@@ -297,13 +319,13 @@ export default function Demands() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-[90vw] max-w-[220px] sm:w-56">
               <DropdownMenuItem
-                onClick={() => exportToCSV(filteredDemands, `demandas_${Date.now()}.csv`)}
+                onClick={() => exportToCSV(filteredDemands || [], `demandas_${Date.now()}.csv`)}
                 className="min-h-[44px]"
               >
                 Exportar como CSV
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => exportToPDF(filteredDemands)}
+                onClick={() => exportToPDF(filteredDemands || [])}
                 className="min-h-[44px]"
               >
                 Exportar como PDF
@@ -314,11 +336,11 @@ export default function Demands() {
 
         <div className="w-full overflow-x-auto snap-x snap-mandatory hide-scrollbar pb-4">
           <div className="flex items-start gap-4 min-w-max [&>div]:!w-[85vw] sm:[&>div]:!w-[320px] [&>div]:!max-w-[400px] [&>div]:snap-center pr-4">
-            {activeColumns.map((colName) => (
+            {(activeColumns || []).map((colName) => (
               <DemandColumn
                 key={colName}
                 title={colName}
-                demands={filteredDemands.filter((d) => d.status === colName)}
+                demands={(filteredDemands || []).filter((d) => d?.status === colName)}
                 highlightId={highlightId}
               />
             ))}

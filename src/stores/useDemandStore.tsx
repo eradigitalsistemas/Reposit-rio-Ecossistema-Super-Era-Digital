@@ -88,32 +88,41 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
     for (let i = 0; i < updatedChecklist.length; i++) {
       const item = updatedChecklist[i]
       if (item.dueDate && !item.completed) {
-        if (!item.eventId) {
-          const { data } = await supabase
-            .from('agenda_eventos')
-            .insert({
-              titulo: `[Checklist] ${item.text} - ${demandTitle}`,
-              descricao: `Link para demanda original: /demandas?highlight=${demandId}`,
-              data_inicio: new Date(item.dueDate).toISOString(),
-              data_fim: new Date(new Date(item.dueDate).getTime() + 60 * 60 * 1000).toISOString(),
-              tipo: 'Tarefa',
-              usuario_id: assigneeId,
-            })
-            .select('id')
-            .single()
-          if (data) {
-            updatedChecklist[i] = { ...item, eventId: data.id }
+        try {
+          const startDate = new Date(item.dueDate)
+          if (isNaN(startDate.getTime())) continue
+
+          const endDate = new Date(startDate.getTime() + 60 * 60 * 1000)
+
+          if (!item.eventId) {
+            const { data } = await supabase
+              .from('agenda_eventos')
+              .insert({
+                titulo: `[Checklist] ${item.text} - ${demandTitle}`,
+                descricao: `Link para demanda original: /demandas?highlight=${demandId}`,
+                data_inicio: startDate.toISOString(),
+                data_fim: endDate.toISOString(),
+                tipo: 'Tarefa',
+                usuario_id: assigneeId,
+              })
+              .select('id')
+              .single()
+            if (data) {
+              updatedChecklist[i] = { ...item, eventId: data.id }
+            }
+          } else {
+            await supabase
+              .from('agenda_eventos')
+              .update({
+                titulo: `[Checklist] ${item.text} - ${demandTitle}`,
+                data_inicio: startDate.toISOString(),
+                data_fim: endDate.toISOString(),
+                usuario_id: assigneeId,
+              })
+              .eq('id', item.eventId)
           }
-        } else {
-          await supabase
-            .from('agenda_eventos')
-            .update({
-              titulo: `[Checklist] ${item.text} - ${demandTitle}`,
-              data_inicio: new Date(item.dueDate).toISOString(),
-              data_fim: new Date(new Date(item.dueDate).getTime() + 60 * 60 * 1000).toISOString(),
-              usuario_id: assigneeId,
-            })
-            .eq('id', item.eventId)
+        } catch (e) {
+          console.error('Erro ao sincronizar data do checklist na agenda', e)
         }
       }
     }
@@ -141,10 +150,11 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       if (data) {
         const parsedDemands = data.map((d: any) => {
           const sortedLogs = Array.isArray(d.logs_auditoria)
-            ? [...d.logs_auditoria].sort(
-                (a: any, b: any) =>
-                  new Date(b.data_criacao).getTime() - new Date(a.data_criacao).getTime(),
-              )
+            ? [...d.logs_auditoria].sort((a: any, b: any) => {
+                const timeA = a.data_criacao ? new Date(a.data_criacao).getTime() : 0
+                const timeB = b.data_criacao ? new Date(b.data_criacao).getTime() : 0
+                return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA)
+              })
             : []
 
           const mappedLogs: DemandLog[] = sortedLogs.map((l: any) => ({
