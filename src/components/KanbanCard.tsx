@@ -7,6 +7,7 @@ import { EditLeadModal } from './EditLeadModal'
 import { DeleteLeadAlert } from './DeleteLeadAlert'
 import { NewInteractionModal } from './NewInteractionModal'
 import { LeadHistorySheet } from './LeadHistorySheet'
+import { WhatsAppChatSheet } from './WhatsAppChatSheet'
 
 interface KanbanCardProps {
   lead: Lead
@@ -36,6 +37,7 @@ export function KanbanCard({ lead }: KanbanCardProps) {
           </div>
           {/* Always visible icons with muted styling, highlighting on hover */}
           <div className="flex items-center gap-0.5 absolute right-2 top-2 sm:right-1.5 sm:top-1.5 bg-background/90 backdrop-blur-sm rounded-md px-1 z-10 border border-border shadow-sm">
+            <WhatsAppChatSheet lead={lead} />
             <LeadHistorySheet lead={lead} />
             <EditLeadModal lead={lead} />
             <DeleteLeadAlert lead={lead} />

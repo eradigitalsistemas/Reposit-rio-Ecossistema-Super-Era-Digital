@@ -41,6 +41,19 @@ if (typeof window !== 'undefined') {
     if (type === 'focus' || type === 'blur') return
     return originalWinAdd.call(window, type, listener, options)
   }
+
+  // REGRAS DE SEGURANÇA: Logout automático ao fechar a guia
+  if (!sessionStorage.getItem('tab_session_active')) {
+    const keysToRemove = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && key.startsWith('sb-') && key.endsWith('-auth-token')) {
+        keysToRemove.push(key)
+      }
+    }
+    keysToRemove.forEach((k) => localStorage.removeItem(k))
+    sessionStorage.setItem('tab_session_active', 'true')
+  }
 }
 if (typeof document !== 'undefined') {
   const originalDocAdd = document.addEventListener
