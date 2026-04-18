@@ -20,6 +20,7 @@ import RH from './pages/RH'
 import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
 import FolhaPonto from './pages/FolhaPonto'
+import WhatsApp from './pages/WhatsApp'
 
 import PortalLogin from './pages/portal/PortalLogin'
 import PortalLayout from './components/portal/PortalLayout'
@@ -33,6 +34,7 @@ import { AuthProvider } from './stores/useAuthStore'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { ThemeProvider } from './components/ThemeProvider'
 import { GlobalNotifications } from './components/GlobalNotifications'
+import { WhatsAppFAB } from './components/WhatsAppFAB'
 
 // Força Bruta: Bloquear eventos de foco/visibilidade globais que causam perda de dados em re-renders
 if (typeof window !== 'undefined') {
@@ -96,6 +98,7 @@ const App = () => (
                       <Route path="/configuracoes" element={<Settings />} />
                       <Route path="/meu-ponto" element={<MeuPonto />} />
                       <Route path="/folha-ponto" element={<FolhaPonto />} />
+                      <Route path="/whatsapp" element={<WhatsApp />} />
                     </Route>
                     {/* External Portal Routes */}
                     <Route path="/portal/login" element={<PortalLogin />} />
@@ -107,6 +110,7 @@ const App = () => (
 
                     <Route path="*" element={<NotFound />} />
                   </Routes>
+                  <WhatsAppFAB />
                 </DemandProvider>
               </LeadProvider>
             </ClientProvider>
