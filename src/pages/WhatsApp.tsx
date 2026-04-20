@@ -1,14 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import {
-  MessageCircle,
-  Send,
-  Loader2,
-  Bot,
-  Search,
-  ArrowLeft,
-  Phone,
-  RefreshCw,
-} from 'lucide-react'
+import { MessageCircle, Send, Loader2, Bot, Search, ArrowLeft, Phone } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -39,7 +30,6 @@ export default function WhatsApp() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [whatsappConfig, setWhatsappConfig] = useState<any>({})
-  const [syncing, setSyncing] = useState(false)
 
   useEffect(() => {
     supabase
@@ -150,76 +140,6 @@ export default function WhatsApp() {
       console.error(error)
     } finally {
       setLoadingMessages(false)
-    }
-  }
-
-  const handleSyncHistory = async () => {
-    const provider = whatsappConfig.whatsapp_provider || 'uazapi'
-
-    if (provider === 'uazapi' && !whatsappConfig.uazapi_key) {
-      toast({
-        title: 'Configuração Pendente (Uazapi)',
-        description: 'Configure a API Key da Uazapi nas configurações.',
-        variant: 'destructive',
-      })
-      return
-    }
-
-    if (
-      provider === 'evolution' &&
-      (!whatsappConfig.evolution_api_url || !whatsappConfig.evolution_api_key)
-    ) {
-      toast({
-        title: 'Configuração Pendente (Evolution)',
-        description: 'Configure os dados da Evolution API nas configurações.',
-        variant: 'destructive',
-      })
-      return
-    }
-
-    if (!selectedLead || !currentUser) return
-
-    setSyncing(true)
-    try {
-      // Simula a busca de mensagens antigas na API selecionada
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-
-      if (messages.length === 0) {
-        const providerName = provider === 'evolution' ? 'Evolution API' : 'Uazapi'
-        const mockMessages = [
-          {
-            lead_id: selectedLead.id,
-            usuario_id: currentUser.id,
-            contato_nome: 'WhatsApp (Lead)',
-            forma_contato: 'WhatsApp',
-            detalhes: `Lead respondeu: Olá, tenho interesse nos serviços da Era Digital. Pode me ajudar? [Recuperado via ${providerName}]`,
-            data_criacao: new Date(Date.now() - 86400000).toISOString(),
-          },
-          {
-            lead_id: selectedLead.id,
-            usuario_id: currentUser.id,
-            contato_nome: 'WhatsApp',
-            forma_contato: 'WhatsApp',
-            detalhes: `Você: Olá! Claro, qual a sua principal necessidade hoje? [Recuperado via ${providerName}]`,
-            data_criacao: new Date(Date.now() - 86000000).toISOString(),
-          },
-        ]
-        await supabase.from('historico_leads').insert(mockMessages)
-        await fetchMessages(selectedLead.id)
-      }
-
-      toast({
-        title: 'Histórico Sincronizado',
-        description: `Mensagens anteriores carregadas com sucesso via ${provider === 'evolution' ? 'Evolution' : 'Uazapi'}.`,
-      })
-    } catch (error) {
-      toast({
-        title: 'Erro de Sincronização',
-        description: 'Falha ao buscar mensagens da API.',
-        variant: 'destructive',
-      })
-    } finally {
-      setSyncing(false)
     }
   }
 
@@ -374,16 +294,6 @@ export default function WhatsApp() {
                 </span>
               </div>
               <div className="ml-auto flex items-center gap-2 shrink-0">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="hidden sm:flex h-8 gap-2 text-xs"
-                  onClick={handleSyncHistory}
-                  disabled={syncing}
-                >
-                  <RefreshCw className={cn('h-3.5 w-3.5', syncing && 'animate-spin')} />
-                  Sincronizar
-                </Button>
                 <Badge variant="outline" className="bg-background hidden sm:flex">
                   {selectedLead.status_interesse}
                 </Badge>
@@ -421,14 +331,18 @@ export default function WhatsApp() {
                 ) : (
                   <div className="space-y-3 relative z-10 max-w-3xl mx-auto pb-4">
                     {messages.map((msg, idx) => {
-                      const isOutgoing = msg.detalhes.startsWith('Você:')
-                      const text = msg.detalhes
-                        .replace('Você: ', '')
-                        .replace('Lead respondeu: ', '')
+                      const isOutgoing =
+                        msg.detalhes.startsWith('Você:') || msg.contato_nome === 'WhatsApp'
+                      let text = msg.detalhes
+                      if (text.startsWith('Você: ')) text = text.substring(6)
+                      else if (text.startsWith('Lead respondeu: ')) text = text.substring(16)
 
                       // Check if previous message was from the same sender to group bubbles
                       const prevMsg = idx > 0 ? messages[idx - 1] : null
-                      const prevIsOutgoing = prevMsg ? prevMsg.detalhes.startsWith('Você:') : null
+                      const prevIsOutgoing = prevMsg
+                        ? prevMsg.detalhes.startsWith('Você:') ||
+                          prevMsg.contato_nome === 'WhatsApp'
+                        : null
                       const isFirstInGroup = prevIsOutgoing !== isOutgoing
 
                       return (
