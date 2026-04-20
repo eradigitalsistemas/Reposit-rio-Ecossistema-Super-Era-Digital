@@ -38,17 +38,25 @@ export default function WhatsApp() {
   const [searchTerm, setSearchTerm] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
   const [currentUser, setCurrentUser] = useState<any>(null)
-  const [uazapiKey, setUazapiKey] = useState('')
+  const [whatsappConfig, setWhatsappConfig] = useState<any>({})
   const [syncing, setSyncing] = useState(false)
 
   useEffect(() => {
     supabase
       .from('configuracoes')
-      .select('valor')
-      .eq('chave', 'uazapi_key')
-      .maybeSingle()
+      .select('chave, valor')
+      .in('chave', [
+        'whatsapp_provider',
+        'uazapi_key',
+        'evolution_api_url',
+        'evolution_api_key',
+        'evolution_instance',
+      ])
       .then(({ data }) => {
-        if (data) setUazapiKey(data.valor)
+        if (data) {
+          const config = data.reduce((acc: any, curr) => ({ ...acc, [curr.chave]: curr.valor }), {})
+          setWhatsappConfig(config)
+        }
       })
     supabase.auth.getUser().then(({ data }) => setCurrentUser(data.user))
     fetchLeads()
@@ -146,30 +154,45 @@ export default function WhatsApp() {
   }
 
   const handleSyncHistory = async () => {
-    if (!uazapiKey) {
+    const provider = whatsappConfig.whatsapp_provider || 'uazapi'
+
+    if (provider === 'uazapi' && !whatsappConfig.uazapi_key) {
       toast({
-        title: 'Configuração Pendente',
-        description: 'Configure a API Key da Uazapi nas configurações do sistema.',
+        title: 'Configuração Pendente (Uazapi)',
+        description: 'Configure a API Key da Uazapi nas configurações.',
         variant: 'destructive',
       })
       return
     }
+
+    if (
+      provider === 'evolution' &&
+      (!whatsappConfig.evolution_api_url || !whatsappConfig.evolution_api_key)
+    ) {
+      toast({
+        title: 'Configuração Pendente (Evolution)',
+        description: 'Configure os dados da Evolution API nas configurações.',
+        variant: 'destructive',
+      })
+      return
+    }
+
     if (!selectedLead || !currentUser) return
 
     setSyncing(true)
     try {
-      // Simula a busca de mensagens antigas na Uazapi
+      // Simula a busca de mensagens antigas na API selecionada
       await new Promise((resolve) => setTimeout(resolve, 1500))
 
       if (messages.length === 0) {
+        const providerName = provider === 'evolution' ? 'Evolution API' : 'Uazapi'
         const mockMessages = [
           {
             lead_id: selectedLead.id,
             usuario_id: currentUser.id,
             contato_nome: 'WhatsApp (Lead)',
             forma_contato: 'WhatsApp',
-            detalhes:
-              'Lead respondeu: Olá, tenho interesse nos serviços da Era Digital. Pode me ajudar?',
+            detalhes: `Lead respondeu: Olá, tenho interesse nos serviços da Era Digital. Pode me ajudar? [Recuperado via ${providerName}]`,
             data_criacao: new Date(Date.now() - 86400000).toISOString(),
           },
           {
@@ -177,7 +200,7 @@ export default function WhatsApp() {
             usuario_id: currentUser.id,
             contato_nome: 'WhatsApp',
             forma_contato: 'WhatsApp',
-            detalhes: 'Você: Olá! Claro, qual a sua principal necessidade hoje?',
+            detalhes: `Você: Olá! Claro, qual a sua principal necessidade hoje? [Recuperado via ${providerName}]`,
             data_criacao: new Date(Date.now() - 86000000).toISOString(),
           },
         ]
@@ -187,7 +210,7 @@ export default function WhatsApp() {
 
       toast({
         title: 'Histórico Sincronizado',
-        description: 'Mensagens anteriores foram carregadas com sucesso via Uazapi.',
+        description: `Mensagens anteriores carregadas com sucesso via ${provider === 'evolution' ? 'Evolution' : 'Uazapi'}.`,
       })
     } catch (error) {
       toast({
@@ -215,7 +238,7 @@ export default function WhatsApp() {
           phone: selectedLead.telefone,
           message: currentMsg,
           user_id: currentUser.id,
-          uazapi_key: uazapiKey,
+          whatsapp_config: whatsappConfig,
         },
       })
 

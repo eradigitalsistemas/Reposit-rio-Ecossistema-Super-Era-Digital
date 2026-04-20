@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Switch } from '@/components/ui/switch'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import useAuthStore from '@/stores/useAuthStore'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase/client'
@@ -24,8 +25,14 @@ export default function Settings() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+
+  const [whatsappProvider, setWhatsappProvider] = useState('uazapi')
   const [uazapiKey, setUazapiKey] = useState('')
+  const [evolutionApiUrl, setEvolutionApiUrl] = useState('')
+  const [evolutionApiKey, setEvolutionApiKey] = useState('')
+  const [evolutionInstance, setEvolutionInstance] = useState('')
   const [isSavingIntegrations, setIsSavingIntegrations] = useState(false)
+
   const [agendaAlerts, setAgendaAlerts] = useState(() => {
     const saved = localStorage.getItem('agenda_alerts_enabled')
     return saved !== null ? saved === 'true' : true
@@ -38,10 +45,23 @@ export default function Settings() {
     const fetchSettings = async () => {
       const { data } = await supabase
         .from('configuracoes')
-        .select('valor')
-        .eq('chave', 'uazapi_key')
-        .maybeSingle()
-      if (data) setUazapiKey(data.valor)
+        .select('chave, valor')
+        .in('chave', [
+          'whatsapp_provider',
+          'uazapi_key',
+          'evolution_api_url',
+          'evolution_api_key',
+          'evolution_instance',
+        ])
+      if (data) {
+        data.forEach((item) => {
+          if (item.chave === 'whatsapp_provider') setWhatsappProvider(item.valor)
+          if (item.chave === 'uazapi_key') setUazapiKey(item.valor)
+          if (item.chave === 'evolution_api_url') setEvolutionApiUrl(item.valor)
+          if (item.chave === 'evolution_api_key') setEvolutionApiKey(item.valor)
+          if (item.chave === 'evolution_instance') setEvolutionInstance(item.valor)
+        })
+      }
     }
     fetchSettings()
   }, [userName, user])
@@ -55,16 +75,23 @@ export default function Settings() {
     if (!user) return
     setIsSavingIntegrations(true)
     try {
-      const { error } = await supabase.from('configuracoes').upsert({
-        chave: 'uazapi_key',
-        valor: uazapiKey,
+      const configs = [
+        { chave: 'whatsapp_provider', valor: whatsappProvider },
+        { chave: 'uazapi_key', valor: uazapiKey },
+        { chave: 'evolution_api_url', valor: evolutionApiUrl },
+        { chave: 'evolution_api_key', valor: evolutionApiKey },
+        { chave: 'evolution_instance', valor: evolutionInstance },
+      ].map((c) => ({
+        ...c,
         atualizado_por: user.id,
         atualizado_em: new Date().toISOString(),
-      })
+      }))
+
+      const { error } = await supabase.from('configuracoes').upsert(configs)
       if (error) throw error
       toast({
         title: 'Integrações atualizadas',
-        description: 'Sua chave de API foi salva com sucesso.',
+        description: 'Suas configurações de API foram salvas com sucesso.',
       })
     } catch (error: any) {
       toast({
@@ -300,27 +327,89 @@ export default function Settings() {
                 Integrações de API
               </CardTitle>
               <CardDescription className="text-gray-600 dark:text-muted-foreground">
-                Conecte serviços externos como o WhatsApp (Uazapi) para habilitar funcionalidades no
-                sistema.
+                Conecte serviços externos como o WhatsApp para habilitar funcionalidades no sistema.
+                Escolha o seu provedor favorito.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4 px-0 sm:px-6">
-              <div className="grid gap-2 w-full max-w-md">
-                <Label htmlFor="uazapi-key" className="text-gray-900 dark:text-foreground">
-                  Chave de API Uazapi (WhatsApp)
+            <CardContent className="space-y-6 px-0 sm:px-6">
+              <div className="grid gap-4 w-full max-w-md mb-2">
+                <Label className="text-gray-900 dark:text-foreground text-base font-semibold">
+                  Provedor de WhatsApp
                 </Label>
-                <Input
-                  id="uazapi-key"
-                  type="password"
-                  value={uazapiKey}
-                  onChange={(e) => setUazapiKey(e.target.value)}
-                  placeholder="Cole sua API Key aqui..."
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Esta chave será usada para enviar mensagens e buscar o histórico de conversas no
-                  painel do WhatsApp.
-                </p>
+                <RadioGroup
+                  value={whatsappProvider}
+                  onValueChange={setWhatsappProvider}
+                  className="flex flex-col space-y-2 mt-1"
+                >
+                  <div className="flex items-center space-x-2 border p-3 rounded-lg border-border">
+                    <RadioGroupItem value="uazapi" id="uazapi" />
+                    <Label htmlFor="uazapi" className="flex-1 cursor-pointer">
+                      Uazapi
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2 border p-3 rounded-lg border-border">
+                    <RadioGroupItem value="evolution" id="evolution" />
+                    <Label htmlFor="evolution" className="flex-1 cursor-pointer">
+                      Evolution API
+                    </Label>
+                  </div>
+                </RadioGroup>
               </div>
+
+              {whatsappProvider === 'uazapi' && (
+                <div className="grid gap-2 w-full max-w-md animate-in fade-in slide-in-from-top-2 duration-300">
+                  <Label htmlFor="uazapi-key" className="text-gray-900 dark:text-foreground">
+                    Chave de API Uazapi
+                  </Label>
+                  <Input
+                    id="uazapi-key"
+                    type="password"
+                    value={uazapiKey}
+                    onChange={(e) => setUazapiKey(e.target.value)}
+                    placeholder="Cole sua API Key aqui..."
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Esta chave será usada para enviar mensagens e buscar o histórico de conversas no
+                    painel.
+                  </p>
+                </div>
+              )}
+
+              {whatsappProvider === 'evolution' && (
+                <div className="grid gap-4 w-full max-w-md animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="grid gap-2">
+                    <Label htmlFor="evo-url">URL da API</Label>
+                    <Input
+                      id="evo-url"
+                      value={evolutionApiUrl}
+                      onChange={(e) => setEvolutionApiUrl(e.target.value)}
+                      placeholder="Ex: https://evo.dominio.com"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="evo-key">Global API Key</Label>
+                    <Input
+                      id="evo-key"
+                      type="password"
+                      value={evolutionApiKey}
+                      onChange={(e) => setEvolutionApiKey(e.target.value)}
+                      placeholder="Sua API Key Global..."
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="evo-instance">Nome da Instância</Label>
+                    <Input
+                      id="evo-instance"
+                      value={evolutionInstance}
+                      onChange={(e) => setEvolutionInstance(e.target.value)}
+                      placeholder="Ex: kanban_vendas"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      A instância que já está conectada no painel da Evolution.
+                    </p>
+                  </div>
+                </div>
+              )}
             </CardContent>
             <CardFooter className="border-t border-gray-200 dark:border-border px-0 sm:px-6 py-4 mt-4">
               <Button
