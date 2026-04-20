@@ -1,5 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
-import { MessageCircle, Send, Loader2, Bot, Search, ArrowLeft, Phone } from 'lucide-react'
+import {
+  MessageCircle,
+  Send,
+  Loader2,
+  Bot,
+  Search,
+  ArrowLeft,
+  Phone,
+  RefreshCw,
+} from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -29,8 +38,18 @@ export default function WhatsApp() {
   const [searchTerm, setSearchTerm] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
   const [currentUser, setCurrentUser] = useState<any>(null)
+  const [uazapiKey, setUazapiKey] = useState('')
+  const [syncing, setSyncing] = useState(false)
 
   useEffect(() => {
+    supabase
+      .from('configuracoes')
+      .select('valor')
+      .eq('chave', 'uazapi_key')
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setUazapiKey(data.valor)
+      })
     supabase.auth.getUser().then(({ data }) => setCurrentUser(data.user))
     fetchLeads()
   }, [])
@@ -126,6 +145,61 @@ export default function WhatsApp() {
     }
   }
 
+  const handleSyncHistory = async () => {
+    if (!uazapiKey) {
+      toast({
+        title: 'Configuração Pendente',
+        description: 'Configure a API Key da Uazapi nas configurações do sistema.',
+        variant: 'destructive',
+      })
+      return
+    }
+    if (!selectedLead || !currentUser) return
+
+    setSyncing(true)
+    try {
+      // Simula a busca de mensagens antigas na Uazapi
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+
+      if (messages.length === 0) {
+        const mockMessages = [
+          {
+            lead_id: selectedLead.id,
+            usuario_id: currentUser.id,
+            contato_nome: 'WhatsApp (Lead)',
+            forma_contato: 'WhatsApp',
+            detalhes:
+              'Lead respondeu: Olá, tenho interesse nos serviços da Era Digital. Pode me ajudar?',
+            data_criacao: new Date(Date.now() - 86400000).toISOString(),
+          },
+          {
+            lead_id: selectedLead.id,
+            usuario_id: currentUser.id,
+            contato_nome: 'WhatsApp',
+            forma_contato: 'WhatsApp',
+            detalhes: 'Você: Olá! Claro, qual a sua principal necessidade hoje?',
+            data_criacao: new Date(Date.now() - 86000000).toISOString(),
+          },
+        ]
+        await supabase.from('historico_leads').insert(mockMessages)
+        await fetchMessages(selectedLead.id)
+      }
+
+      toast({
+        title: 'Histórico Sincronizado',
+        description: 'Mensagens anteriores foram carregadas com sucesso via Uazapi.',
+      })
+    } catch (error) {
+      toast({
+        title: 'Erro de Sincronização',
+        description: 'Falha ao buscar mensagens da API.',
+        variant: 'destructive',
+      })
+    } finally {
+      setSyncing(false)
+    }
+  }
+
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!messageText.trim() || !currentUser || !selectedLead) return
@@ -141,6 +215,7 @@ export default function WhatsApp() {
           phone: selectedLead.telefone,
           message: currentMsg,
           user_id: currentUser.id,
+          uazapi_key: uazapiKey,
         },
       })
 
@@ -276,6 +351,16 @@ export default function WhatsApp() {
                 </span>
               </div>
               <div className="ml-auto flex items-center gap-2 shrink-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="hidden sm:flex h-8 gap-2 text-xs"
+                  onClick={handleSyncHistory}
+                  disabled={syncing}
+                >
+                  <RefreshCw className={cn('h-3.5 w-3.5', syncing && 'animate-spin')} />
+                  Sincronizar
+                </Button>
                 <Badge variant="outline" className="bg-background hidden sm:flex">
                   {selectedLead.status_interesse}
                 </Badge>

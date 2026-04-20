@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { User, Bell, Shield, Save, Loader2 } from 'lucide-react'
+import { User, Bell, Shield, Save, Loader2, Link as LinkIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -24,6 +24,8 @@ export default function Settings() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+  const [uazapiKey, setUazapiKey] = useState('')
+  const [isSavingIntegrations, setIsSavingIntegrations] = useState(false)
   const [agendaAlerts, setAgendaAlerts] = useState(() => {
     const saved = localStorage.getItem('agenda_alerts_enabled')
     return saved !== null ? saved === 'true' : true
@@ -32,11 +34,47 @@ export default function Settings() {
   useEffect(() => {
     if (userName) setName(userName)
     if (user?.email) setEmail(user.email)
+
+    const fetchSettings = async () => {
+      const { data } = await supabase
+        .from('configuracoes')
+        .select('valor')
+        .eq('chave', 'uazapi_key')
+        .maybeSingle()
+      if (data) setUazapiKey(data.valor)
+    }
+    fetchSettings()
   }, [userName, user])
 
   const handleToggleAgendaAlerts = (checked: boolean) => {
     setAgendaAlerts(checked)
     localStorage.setItem('agenda_alerts_enabled', String(checked))
+  }
+
+  const handleSaveIntegrations = async () => {
+    if (!user) return
+    setIsSavingIntegrations(true)
+    try {
+      const { error } = await supabase.from('configuracoes').upsert({
+        chave: 'uazapi_key',
+        valor: uazapiKey,
+        atualizado_por: user.id,
+        atualizado_em: new Date().toISOString(),
+      })
+      if (error) throw error
+      toast({
+        title: 'Integrações atualizadas',
+        description: 'Sua chave de API foi salva com sucesso.',
+      })
+    } catch (error: any) {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível salvar as configurações. Verifique suas permissões.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsSavingIntegrations(false)
+    }
   }
 
   const handleSaveProfile = async () => {
@@ -93,6 +131,13 @@ export default function Settings() {
           >
             <Shield className="w-4 h-4" />
             Segurança
+          </TabsTrigger>
+          <TabsTrigger
+            value="integrations"
+            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary text-gray-600 dark:text-muted-foreground rounded-none min-h-[48px] px-2 sm:px-0 gap-2 whitespace-nowrap transition-colors"
+          >
+            <LinkIcon className="w-4 h-4" />
+            Integrações
           </TabsTrigger>
         </TabsList>
 
@@ -243,6 +288,52 @@ export default function Settings() {
                 onClick={() => toast({ title: 'Funcionalidade em desenvolvimento' })}
               >
                 Atualizar Senha
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="integrations" className="m-0 space-y-6">
+          <Card className="border-0 sm:border border-gray-300 dark:border-border bg-transparent sm:bg-white sm:dark:bg-card shadow-none sm:shadow-md sm:dark:shadow-sm">
+            <CardHeader className="px-0 sm:px-6">
+              <CardTitle className="text-gray-900 dark:text-foreground">
+                Integrações de API
+              </CardTitle>
+              <CardDescription className="text-gray-600 dark:text-muted-foreground">
+                Conecte serviços externos como o WhatsApp (Uazapi) para habilitar funcionalidades no
+                sistema.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 px-0 sm:px-6">
+              <div className="grid gap-2 w-full max-w-md">
+                <Label htmlFor="uazapi-key" className="text-gray-900 dark:text-foreground">
+                  Chave de API Uazapi (WhatsApp)
+                </Label>
+                <Input
+                  id="uazapi-key"
+                  type="password"
+                  value={uazapiKey}
+                  onChange={(e) => setUazapiKey(e.target.value)}
+                  placeholder="Cole sua API Key aqui..."
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Esta chave será usada para enviar mensagens e buscar o histórico de conversas no
+                  painel do WhatsApp.
+                </p>
+              </div>
+            </CardContent>
+            <CardFooter className="border-t border-gray-200 dark:border-border px-0 sm:px-6 py-4 mt-4">
+              <Button
+                onClick={handleSaveIntegrations}
+                disabled={isSavingIntegrations}
+                className="w-full sm:w-auto gap-2"
+              >
+                {isSavingIntegrations ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                Salvar Configurações
               </Button>
             </CardFooter>
           </Card>
