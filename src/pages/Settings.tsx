@@ -26,7 +26,7 @@ export default function Settings() {
   const [email, setEmail] = useState('')
   const [isSaving, setIsSaving] = useState(false)
 
-  const [whatsappProvider, setWhatsappProvider] = useState('uazapi')
+  const [whatsappProvider, setWhatsappProvider] = useState('evolution')
   const [uazapiKey, setUazapiKey] = useState('')
   const [evolutionApiUrl, setEvolutionApiUrl] = useState('')
   const [evolutionApiKey, setEvolutionApiKey] = useState('')

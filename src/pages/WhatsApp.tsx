@@ -45,6 +45,7 @@ export default function WhatsApp() {
       .then(({ data }) => {
         if (data) {
           const config = data.reduce((acc: any, curr) => ({ ...acc, [curr.chave]: curr.valor }), {})
+          if (!config.whatsapp_provider) config.whatsapp_provider = 'evolution'
           setWhatsappConfig(config)
         }
       })
