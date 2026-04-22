@@ -1,5 +1,16 @@
 import { useState, useEffect, useRef } from 'react'
-import { MessageCircle, Send, Loader2, Bot, Search, ArrowLeft, Phone } from 'lucide-react'
+import {
+  MessageCircle,
+  Send,
+  Loader2,
+  Bot,
+  Search,
+  ArrowLeft,
+  Phone,
+  QrCode,
+  Signal,
+  RefreshCw,
+} from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -30,6 +41,9 @@ export default function WhatsApp() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [whatsappConfig, setWhatsappConfig] = useState<any>({})
+  const [whatsappStatus, setWhatsappStatus] = useState<string>('checking')
+  const [qrCode, setQrCode] = useState<string | null>(null)
+  const [isConnecting, setIsConnecting] = useState(false)
 
   useEffect(() => {
     supabase
@@ -37,7 +51,7 @@ export default function WhatsApp() {
       .select('chave, valor')
       .in('chave', [
         'whatsapp_provider',
-        'uazapi_key',
+        'evolution_url',
         'evolution_api_url',
         'evolution_api_key',
         'evolution_instance',
@@ -47,11 +61,51 @@ export default function WhatsApp() {
           const config = data.reduce((acc: any, curr) => ({ ...acc, [curr.chave]: curr.valor }), {})
           if (!config.whatsapp_provider) config.whatsapp_provider = 'evolution'
           setWhatsappConfig(config)
+          checkConnectionStatus(config)
         }
       })
     supabase.auth.getUser().then(({ data }) => setCurrentUser(data.user))
     fetchLeads()
   }, [])
+
+  const checkConnectionStatus = async (config: any) => {
+    setWhatsappStatus('checking')
+    try {
+      const { data, error } = await supabase.functions.invoke('whatsapp-integration', {
+        body: { action: 'check_status', whatsapp_config: config },
+      })
+      if (data?.state) {
+        setWhatsappStatus(data.state)
+        if (data.state === 'open') setQrCode(null)
+      } else {
+        setWhatsappStatus('offline')
+      }
+    } catch (e) {
+      setWhatsappStatus('offline')
+    }
+  }
+
+  const handleConnect = async () => {
+    setIsConnecting(true)
+    setQrCode(null)
+    try {
+      const { data, error } = await supabase.functions.invoke('whatsapp-integration', {
+        body: { action: 'connect', whatsapp_config: whatsappConfig },
+      })
+      if (data?.base64) {
+        setQrCode(data.base64)
+        setWhatsappStatus('qrCode')
+      } else if (data?.state) {
+        setWhatsappStatus(data.state)
+      } else {
+        toast({ title: 'Erro', description: 'Não foi possível conectar.', variant: 'destructive' })
+      }
+    } catch (e) {
+      toast({ title: 'Erro', description: 'Falha ao solicitar conexão.', variant: 'destructive' })
+    } finally {
+      setIsConnecting(false)
+    }
+  }
 
   const fetchLeads = async () => {
     setLoadingLeads(true)
@@ -203,10 +257,40 @@ export default function WhatsApp() {
         )}
       >
         <div className="p-4 border-b border-border bg-card">
-          <h2 className="text-lg font-semibold flex items-center gap-2 mb-4">
-            <MessageCircle className="h-5 w-5 text-green-500" />
-            WhatsApp Inbox
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <MessageCircle className="h-5 w-5 text-green-500" />
+              WhatsApp Inbox
+            </h2>
+            <div className="flex items-center gap-2">
+              <div
+                className={cn(
+                  'flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] sm:text-xs font-medium border uppercase tracking-wider',
+                  whatsappStatus === 'open'
+                    ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800'
+                    : whatsappStatus === 'checking'
+                      ? 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'
+                      : 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800',
+                )}
+              >
+                <div
+                  className={cn(
+                    'h-1.5 w-1.5 rounded-full animate-pulse',
+                    whatsappStatus === 'open'
+                      ? 'bg-green-500'
+                      : whatsappStatus === 'checking'
+                        ? 'bg-amber-500'
+                        : 'bg-red-500',
+                  )}
+                />
+                {whatsappStatus === 'open'
+                  ? 'Conectado'
+                  : whatsappStatus === 'checking'
+                    ? 'Verificando...'
+                    : 'Desconectado'}
+              </div>
+            </div>
+          </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -418,15 +502,61 @@ export default function WhatsApp() {
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center bg-muted/20 text-muted-foreground p-8 text-center">
-            <div className="h-32 w-32 rounded-full bg-card shadow-sm flex items-center justify-center mb-6 border border-border">
-              <MessageCircle className="h-12 w-12 text-green-500/50" />
-            </div>
-            <h2 className="text-2xl font-light text-foreground mb-3">WhatsApp Inbox</h2>
-            <p className="max-w-md text-sm">
-              Selecione uma conversa ao lado para visualizar o histórico ou enviar uma nova
-              mensagem. As mensagens são processadas pela IA para qualificar os leads
-              automaticamente.
-            </p>
+            {qrCode ? (
+              <div className="flex flex-col items-center bg-card p-8 rounded-2xl shadow-sm border border-border animate-in fade-in zoom-in duration-300">
+                <h3 className="text-xl font-medium text-foreground mb-2">Leia o QR Code</h3>
+                <p className="text-sm mb-6 max-w-sm">
+                  Abra o WhatsApp no seu celular, vá em Aparelhos Conectados e aponte a câmera para
+                  o QR Code abaixo.
+                </p>
+                <div className="bg-white p-4 rounded-xl mb-6 shadow-sm border border-zinc-100">
+                  <img src={qrCode} alt="QR Code WhatsApp" className="w-64 h-64" />
+                </div>
+                <Button
+                  onClick={() => checkConnectionStatus(whatsappConfig)}
+                  variant="outline"
+                  className="gap-2"
+                >
+                  <RefreshCw className="h-4 w-4" /> Atualizar Status
+                </Button>
+              </div>
+            ) : whatsappStatus !== 'open' && whatsappStatus !== 'checking' ? (
+              <div className="flex flex-col items-center max-w-md animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="h-24 w-24 rounded-full bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-500 flex items-center justify-center mb-6 shadow-inner">
+                  <Signal className="h-10 w-10" />
+                </div>
+                <h2 className="text-2xl font-light text-foreground mb-3">WhatsApp Desconectado</h2>
+                <p className="mb-8 text-sm">
+                  Sua instância do WhatsApp não está conectada ou o status é desconhecido. Conecte
+                  agora para habilitar o envio e recebimento de mensagens.
+                </p>
+                <Button
+                  onClick={handleConnect}
+                  disabled={isConnecting}
+                  className="bg-green-600 hover:bg-green-700 text-white gap-2 h-12 px-8 rounded-full text-base shadow-lg shadow-green-600/20 transition-all hover:scale-105 active:scale-95"
+                >
+                  {isConnecting ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <QrCode className="h-5 w-5" />
+                  )}
+                  Conectar WhatsApp
+                </Button>
+              </div>
+            ) : (
+              <div className="animate-in fade-in zoom-in duration-500 flex flex-col items-center">
+                <div className="h-32 w-32 rounded-full bg-card shadow-sm flex items-center justify-center mb-6 border border-border relative">
+                  <div className="absolute inset-0 rounded-full bg-green-500/10 animate-ping" />
+                  <MessageCircle className="h-12 w-12 text-green-500/50" />
+                </div>
+                <h2 className="text-2xl font-light text-foreground mb-3">WhatsApp Inbox</h2>
+                <p className="max-w-md text-sm">
+                  Selecione uma conversa ao lado para visualizar o histórico ou enviar uma nova
+                  mensagem. As mensagens são processadas pela IA para qualificar os leads
+                  automaticamente.
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>

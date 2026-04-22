@@ -21,6 +21,6 @@
     "cron-hr-jobs": 3,
     "monthly-timesheets": 3,
     "send-notification": 6,
-    "whatsapp-integration": 5
+    "whatsapp-integration": 6
   }
 }
