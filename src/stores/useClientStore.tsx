@@ -23,6 +23,9 @@ interface ClientStoreState {
   ) => Promise<boolean>
   deleteDocument: (clientId: string, docId: string, path?: string) => Promise<void>
   deleteClient: (id: string) => Promise<void>
+  importClients: (
+    clients: Omit<Client, 'id' | 'createdAt' | 'documents' | 'history'>[],
+  ) => Promise<void>
 }
 
 const ClientContext = createContext<ClientStoreState | null>(null)
@@ -272,9 +275,56 @@ export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
     toast({ title: 'Sucesso', description: 'Cliente excluído.' })
   }, [])
 
+  const importClients = useCallback(
+    async (newClients: Omit<Client, 'id' | 'createdAt' | 'documents' | 'history'>[]) => {
+      const { data, error } = await supabase
+        .from('clientes_externos' as any)
+        .insert(
+          newClients.map((c) => ({
+            nome: c.name,
+            empresa: c.company,
+            email: c.email,
+            telefone: c.phone,
+            cnpj: c.cnpj,
+          })),
+        )
+        .select()
+
+      if (error) {
+        toast({ title: 'Erro', description: 'Erro ao importar clientes.', variant: 'destructive' })
+        return
+      }
+
+      if (data) {
+        const imported = data.map((d: any) => ({
+          id: d.id,
+          name: d.nome,
+          company: d.empresa || '',
+          email: d.email,
+          phone: d.telefone || '',
+          cnpj: d.cnpj || '',
+          documents: d.documentos || [],
+          history: [],
+          createdAt: d.data_criacao,
+        }))
+        setClients((prev) => [...imported, ...prev])
+        toast({ title: 'Sucesso', description: `${data.length} clientes importados com sucesso.` })
+      }
+    },
+    [],
+  )
+
   const value = useMemo(
-    () => ({ clients, addClient, updateClient, addDocument, deleteDocument, deleteClient }),
-    [clients, addClient, updateClient, addDocument, deleteDocument, deleteClient],
+    () => ({
+      clients,
+      addClient,
+      updateClient,
+      addDocument,
+      deleteDocument,
+      deleteClient,
+      importClients,
+    }),
+    [clients, addClient, updateClient, addDocument, deleteDocument, deleteClient, importClients],
   )
 
   return <ClientContext.Provider value={value}>{children}</ClientContext.Provider>

@@ -13,6 +13,7 @@ import useClientStore from '@/stores/useClientStore'
 import useAuthStore from '@/stores/useAuthStore'
 import { Trash2, ShieldAlert, Building2, Phone, Mail, FileText, Eye } from 'lucide-react'
 import { AddClientModal } from '@/components/AddClientModal'
+import { ImportClientModal } from '@/components/ImportClientModal'
 
 export default function Clients() {
   const { clients, deleteClient } = useClientStore()
@@ -43,7 +44,8 @@ export default function Clients() {
             Gerencie seus contatos externos e parceiros.
           </p>
         </div>
-        <div className="w-full sm:w-auto">
+        <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-2">
+          <ImportClientModal />
           <AddClientModal />
         </div>
       </div>
