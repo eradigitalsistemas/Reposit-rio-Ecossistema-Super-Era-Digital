@@ -78,6 +78,33 @@ export default function Demands() {
     return ['Pendente', 'Em Andamento', 'Concluído'] as DemandStatus[]
   }, [statusFilter])
 
+  const matchDate = (
+    dateToTestStr: string | null | undefined,
+    exact: Date | undefined,
+    filter: string,
+  ) => {
+    if (!dateToTestStr) return false
+    try {
+      const date = parseISO(dateToTestStr)
+      if (!isValid(date)) return false
+
+      if (exact) {
+        return (
+          date.getDate() === exact.getDate() &&
+          date.getMonth() === exact.getMonth() &&
+          date.getFullYear() === exact.getFullYear()
+        )
+      } else if (filter !== 'all') {
+        if (filter === 'today' && isToday(date)) return true
+        if (filter === 'week' && isThisWeek(date)) return true
+        if (filter === 'month' && isThisMonth(date)) return true
+      }
+    } catch (e) {
+      return false
+    }
+    return false
+  }
+
   const filteredDemands = useMemo(() => {
     let filtered = (demands || []).filter((d) => {
       if (!d) return false
@@ -95,40 +122,41 @@ export default function Demands() {
       if (clientFilter !== 'all' && d.clientId !== clientFilter) {
         return false
       }
-      if (exactDateFilter && d.createdAt) {
-        try {
-          const date = parseISO(d.createdAt)
-          if (!isValid(date)) return false
 
-          if (
-            date.getDate() !== exactDateFilter.getDate() ||
-            date.getMonth() !== exactDateFilter.getMonth() ||
-            date.getFullYear() !== exactDateFilter.getFullYear()
-          ) {
-            return false
-          }
-        } catch (e) {
-          return false
-        }
-      } else if (dateFilter !== 'all' && d.createdAt) {
-        try {
-          const date = parseISO(d.createdAt)
-          if (!isValid(date)) return false
+      if (exactDateFilter || dateFilter !== 'all') {
+        const matchesCreated = matchDate(d.createdAt, exactDateFilter, dateFilter)
+        const matchesCompleted = matchDate(d.completedAt, exactDateFilter, dateFilter)
+        const matchesLogs = (d.logs || []).some((l) =>
+          matchDate(l.createdAt, exactDateFilter, dateFilter),
+        )
 
-          if (dateFilter === 'today' && !isToday(date)) return false
-          if (dateFilter === 'week' && !isThisWeek(date)) return false
-          if (dateFilter === 'month' && !isThisMonth(date)) return false
-        } catch (e) {
+        if (!matchesCreated && !matchesCompleted && !matchesLogs) {
           return false
         }
       }
+
       return true
     })
 
     return filtered.sort((a, b) => {
-      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0
-      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0
-      return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA)
+      const getLatestDate = (demand: any) => {
+        let latest = demand.createdAt ? new Date(demand.createdAt).getTime() : 0
+        if (demand.completedAt) {
+          const comp = new Date(demand.completedAt).getTime()
+          if (!isNaN(comp) && comp > latest) latest = comp
+        }
+        if (demand.logs && demand.logs.length > 0) {
+          const logLatest = Math.max(
+            ...demand.logs.map((l: any) => (l.createdAt ? new Date(l.createdAt).getTime() : 0)),
+          )
+          if (!isNaN(logLatest) && logLatest > latest) latest = logLatest
+        }
+        return isNaN(latest) ? 0 : latest
+      }
+
+      const timeA = getLatestDate(a)
+      const timeB = getLatestDate(b)
+      return timeB - timeA
     })
   }, [demands, role, user?.id, collaboratorFilter, dateFilter, exactDateFilter, clientFilter])
 

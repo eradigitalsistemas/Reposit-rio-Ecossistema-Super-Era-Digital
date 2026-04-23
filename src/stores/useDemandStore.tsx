@@ -192,6 +192,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             attachments: d.anexos || [],
             checklist: d.checklist || [],
             createdAt: d.data_criacao || new Date().toISOString(),
+            completedAt: d.data_conclusao || null,
             systemEscalated: !!systemEscalated,
           }
         })
@@ -613,6 +614,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
               ? {
                   ...d,
                   status: 'Concluído',
+                  completedAt: new Date().toISOString(),
                   responses: d.responses ? [...d.responses, resposta] : [resposta],
                   attachments: updatedAttachments,
                 }
