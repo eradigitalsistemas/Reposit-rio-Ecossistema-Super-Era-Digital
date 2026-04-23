@@ -14,6 +14,7 @@ import useAuthStore from '@/stores/useAuthStore'
 import { Trash2, ShieldAlert, Building2, Phone, Mail, FileText, Eye } from 'lucide-react'
 import { AddClientModal } from '@/components/AddClientModal'
 import { ImportClientModal } from '@/components/ImportClientModal'
+import { EditClientModal } from '@/components/EditClientModal'
 
 export default function Clients() {
   const { clients, deleteClient } = useClientStore()
@@ -89,6 +90,11 @@ export default function Clients() {
                       >
                         <Eye className="w-4 h-4" />
                       </Button>
+                      <EditClientModal
+                        client={client}
+                        triggerClassName="h-9 w-9"
+                        iconClassName="w-4 h-4"
+                      />
                       <Button
                         variant="ghost"
                         size="icon"
@@ -141,6 +147,7 @@ export default function Clients() {
                   >
                     <Eye className="w-5 h-5" />
                   </Button>
+                  <EditClientModal client={client} iconClassName="w-5 h-5" />
                   <Button
                     variant="ghost"
                     size="icon"
