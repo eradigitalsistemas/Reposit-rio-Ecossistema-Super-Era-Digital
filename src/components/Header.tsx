@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/breadcrumb'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { AddLeadModal } from './AddLeadModal'
+import { GlobalSearch } from './GlobalSearch'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Badge } from '@/components/ui/badge'
@@ -21,7 +22,6 @@ import { format } from 'date-fns'
 import { useTheme } from 'next-themes'
 
 export function Header() {
-  const { searchQuery, setSearchQuery } = useLeadStore()
   const { notifications, markNotificationsAsRead } = useDemandStore()
   const { role, toggleRole, logout, userName } = useAuthStore()
   const location = useLocation()
@@ -71,42 +71,9 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-1 sm:gap-4 flex-1 justify-end">
-          {location.pathname === '/vendas' && (
-            <>
-              <div className="md:hidden">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="ghost" size="icon" className="text-muted-foreground h-10 w-10">
-                      <Search className="h-5 w-5" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[90vw] p-3 mr-4 mt-2">
-                    <div className="relative w-full">
-                      <Search className="absolute left-2.5 top-3.5 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        type="search"
-                        placeholder="Buscar leads..."
-                        className="w-full pl-9"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        autoFocus
-                      />
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="relative w-full max-w-sm hidden md:block">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Buscar leads..."
-                  className="w-full pl-9"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-            </>
-          )}
+          <div className="flex-1 max-w-[150px] sm:max-w-sm ml-auto flex justify-end">
+            <GlobalSearch />
+          </div>
 
           {location.pathname === '/vendas' && <AddLeadModal />}
 
