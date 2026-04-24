@@ -65,15 +65,12 @@ export function WhatsAppChatSheet({ lead }: WhatsAppChatSheetProps) {
   const fetchMessages = async () => {
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('historico_leads')
-        .select('*')
-        .eq('lead_id', lead.id)
-        .eq('forma_contato', 'WhatsApp')
-        .order('data_criacao', { ascending: true })
+      const { data, error } = await supabase.functions.invoke('uazapi-sync-messages', {
+        body: { lead_id: lead.id },
+      })
 
       if (error) throw error
-      setMessages(data || [])
+      setMessages(data?.messages || [])
       setTimeout(() => {
         scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
       }, 100)
@@ -93,12 +90,13 @@ export function WhatsAppChatSheet({ lead }: WhatsAppChatSheetProps) {
     setMessage('')
 
     try {
-      const { data, error } = await supabase.functions.invoke('whatsapp-integration', {
+      const { data, error } = await supabase.functions.invoke('uazapi-send-message', {
         body: {
           lead_id: lead.id,
           phone: lead.phone,
           message: currentMsg,
           user_id: user.id,
+          instanceName: 'kanban_vendas',
         },
       })
 
@@ -107,8 +105,8 @@ export function WhatsAppChatSheet({ lead }: WhatsAppChatSheetProps) {
       if (data?.status) {
         updateLead(lead.id, { interestStatus: data.status })
         toast({
-          title: 'Lead Qualificado!',
-          description: `Qualidade avaliada pelo WhatsApp: ${data.score}/100. Status alterado para: ${data.status}`,
+          title: 'Mensagem Enviada!',
+          description: `Qualidade avaliada: Score ${data.score}/100. Status: ${data.status}`,
         })
       }
     } catch (error) {

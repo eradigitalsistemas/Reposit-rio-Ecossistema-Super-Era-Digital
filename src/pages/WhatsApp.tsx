@@ -65,12 +65,14 @@ export default function WhatsApp() {
   const checkConnectionStatus = async (config: any) => {
     setWhatsappStatus('checking')
     try {
-      const { data, error } = await supabase.functions.invoke('whatsapp-integration', {
-        body: { action: 'check_status', whatsapp_config: config },
+      const { data, error } = await supabase.functions.invoke('uazapi-get-qr', {
+        body: { instanceName: 'kanban_vendas' },
       })
+      if (error) throw error
       if (data?.state) {
         setWhatsappStatus(data.state)
         if (data.state === 'open') setQrCode(null)
+        if (data.base64) setQrCode(data.base64)
       } else {
         setWhatsappStatus('offline')
       }
@@ -83,9 +85,10 @@ export default function WhatsApp() {
     setIsConnecting(true)
     setQrCode(null)
     try {
-      const { data, error } = await supabase.functions.invoke('whatsapp-integration', {
-        body: { action: 'connect', whatsapp_config: whatsappConfig },
+      const { data, error } = await supabase.functions.invoke('uazapi-get-qr', {
+        body: { instanceName: 'kanban_vendas' },
       })
+      if (error) throw error
       if (data?.base64) {
         setQrCode(data.base64)
         setWhatsappStatus('qrCode')
@@ -173,15 +176,12 @@ export default function WhatsApp() {
   const fetchMessages = async (leadId: string) => {
     setLoadingMessages(true)
     try {
-      const { data, error } = await supabase
-        .from('historico_leads')
-        .select('*')
-        .eq('lead_id', leadId)
-        .eq('forma_contato', 'WhatsApp')
-        .order('data_criacao', { ascending: true })
+      const { data, error } = await supabase.functions.invoke('uazapi-sync-messages', {
+        body: { lead_id: leadId },
+      })
 
       if (error) throw error
-      setMessages(data || [])
+      setMessages(data?.messages || [])
       setTimeout(() => {
         scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
       }, 100)
@@ -201,13 +201,13 @@ export default function WhatsApp() {
     setMessageText('')
 
     try {
-      const { data, error } = await supabase.functions.invoke('whatsapp-integration', {
+      const { data, error } = await supabase.functions.invoke('uazapi-send-message', {
         body: {
           lead_id: selectedLead.id,
           phone: selectedLead.telefone,
           message: currentMsg,
           user_id: currentUser.id,
-          whatsapp_config: whatsappConfig,
+          instanceName: 'kanban_vendas',
         },
       })
 
@@ -224,8 +224,8 @@ export default function WhatsApp() {
         }
 
         toast({
-          title: 'Lead Qualificado!',
-          description: `Score do WhatsApp: ${data.score}/100. Status: ${data.status}`,
+          title: 'Mensagem Enviada!',
+          description: `Qualificação: Score ${data.score}/100. Status: ${data.status}`,
         })
       }
     } catch (error: any) {
