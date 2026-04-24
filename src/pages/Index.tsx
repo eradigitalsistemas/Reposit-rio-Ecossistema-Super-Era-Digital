@@ -11,12 +11,19 @@ import {
   ArrowRight,
   Home,
   Calendar,
+  Download,
+  Database,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import useAuthStore from '@/stores/useAuthStore'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { exportFullDatabaseJSON, exportAllTablesCSV } from '@/utils/export'
+import { useToast } from '@/hooks/use-toast'
 
 export default function Index() {
+  const { toast } = useToast()
+  const [isExporting, setIsExporting] = useState(false)
   const navigate = useNavigate()
   const { user } = useAuthStore()
 
@@ -126,14 +133,70 @@ export default function Index() {
   return (
     <div className="flex-1 w-full bg-background min-h-full overflow-y-auto p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground flex items-center gap-3">
-            <Home className="w-8 h-8 text-primary" />
-            Dashboard Geral
-          </h1>
-          <p className="text-muted-foreground mt-2 text-base sm:text-lg">
-            Bem-vindo ao CRM. Selecione um módulo para começar a trabalhar.
-          </p>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground flex items-center gap-3">
+              <Home className="w-8 h-8 text-primary" />
+              Dashboard Geral
+            </h1>
+            <p className="text-muted-foreground mt-2 text-base sm:text-lg">
+              Bem-vindo ao CRM. Selecione um módulo para começar a trabalhar.
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button
+              variant="outline"
+              onClick={async () => {
+                setIsExporting(true)
+                try {
+                  await exportAllTablesCSV()
+                  toast({
+                    title: 'Exportação concluída',
+                    description: 'Todos os CSVs foram baixados.',
+                  })
+                } catch (e) {
+                  toast({
+                    title: 'Erro',
+                    description: 'Falha na exportação',
+                    variant: 'destructive',
+                  })
+                } finally {
+                  setIsExporting(false)
+                }
+              }}
+              disabled={isExporting}
+              className="gap-2"
+            >
+              <Download className="w-4 h-4" />
+              Exportar CSVs
+            </Button>
+            <Button
+              onClick={async () => {
+                setIsExporting(true)
+                try {
+                  await exportFullDatabaseJSON()
+                  toast({
+                    title: 'Backup concluído',
+                    description: 'Arquivo JSON gerado com sucesso.',
+                  })
+                } catch (e) {
+                  toast({
+                    title: 'Erro',
+                    description: 'Falha na exportação',
+                    variant: 'destructive',
+                  })
+                } finally {
+                  setIsExporting(false)
+                }
+              }}
+              disabled={isExporting}
+              className="gap-2"
+            >
+              <Database className="w-4 h-4" />
+              Backup Completo (JSON)
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">

@@ -4,7 +4,8 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, x-supabase-client-platform, apikey, content-type, x-cron-secret',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, x-supabase-client-platform, apikey, content-type, x-cron-secret',
 }
 
 Deno.serve(async (req: Request) => {
@@ -35,7 +36,7 @@ Deno.serve(async (req: Request) => {
       usuario_id: user_id,
       contato_nome: 'WhatsApp',
       forma_contato: 'WhatsApp',
-      detalhes: `Você: ${message}`
+      detalhes: `Você: ${message}`,
     })
 
     if (insertErr) throw insertErr
@@ -43,22 +44,34 @@ Deno.serve(async (req: Request) => {
     let newStatus = 'Interessado'
     let qualityScore = 50
     const msgLower = message.toLowerCase()
-    
-    if (msgLower.includes('comprar') || msgLower.includes('preço') || msgLower.includes('fechar') || msgLower.includes('contrato')) {
+
+    if (
+      msgLower.includes('comprar') ||
+      msgLower.includes('preço') ||
+      msgLower.includes('fechar') ||
+      msgLower.includes('contrato')
+    ) {
       newStatus = 'Muito Interessado'
       qualityScore = 90
-    } else if (msgLower.includes('não quero') || msgLower.includes('caro') || msgLower.includes('depois')) {
+    } else if (
+      msgLower.includes('não quero') ||
+      msgLower.includes('caro') ||
+      msgLower.includes('depois')
+    ) {
       newStatus = 'Não Interessado'
       qualityScore = 20
     } else {
-      qualityScore = Math.min(100, 50 + (message.length / 2))
+      qualityScore = Math.min(100, 50 + message.length / 2)
       if (qualityScore > 75) newStatus = 'Muito Interessado'
     }
 
-    await supabase.from('leads').update({
-      status_interesse: newStatus,
-      observacoes: `Qualificação IA WA: Score ${Math.round(qualityScore)}/100.`
-    }).eq('id', lead_id)
+    await supabase
+      .from('leads')
+      .update({
+        status_interesse: newStatus,
+        observacoes: `Qualificação IA WA: Score ${Math.round(qualityScore)}/100.`,
+      })
+      .eq('id', lead_id)
 
     if (UAZAPI_URL && UAZAPI_TOKEN) {
       const apiUrl = UAZAPI_URL.endsWith('/') ? UAZAPI_URL.slice(0, -1) : UAZAPI_URL
@@ -67,8 +80,12 @@ Deno.serve(async (req: Request) => {
       try {
         const res = await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
           method: 'POST',
-          headers: { 'apikey': UAZAPI_TOKEN, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ number: formattedPhone, options: { delay: 1200 }, textMessage: { text: message } })
+          headers: { apikey: UAZAPI_TOKEN, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            number: formattedPhone,
+            options: { delay: 1200 },
+            textMessage: { text: message },
+          }),
         })
 
         if (!res.ok) {
@@ -79,14 +96,16 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    return new Response(JSON.stringify({ success: true, status: newStatus, score: Math.round(qualityScore) }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    })
-
+    return new Response(
+      JSON.stringify({ success: true, status: newStatus, score: Math.round(qualityScore) }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      },
+    )
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
 })

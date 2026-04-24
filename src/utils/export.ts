@@ -1,5 +1,96 @@
 import { Demand } from '@/types/demand'
 import { format, isWithinInterval, startOfDay, endOfDay } from 'date-fns'
+import { supabase } from '@/lib/supabase/client'
+
+async function fetchAllRecords(table: string) {
+  let allData: any[] = []
+  let from = 0
+  const limit = 1000
+  while (true) {
+    const { data } = await supabase
+      .from(table)
+      .select('*')
+      .range(from, from + limit - 1)
+    if (!data || data.length === 0) break
+    allData = allData.concat(data)
+    if (data.length < limit) break
+    from += limit
+  }
+  return allData
+}
+
+export async function exportFullDatabaseJSON() {
+  const tables = [
+    'leads',
+    'historico_leads',
+    'clientes_externos',
+    'leads_parceiros',
+    'demandas',
+    'agenda_eventos',
+    'employees',
+    'candidates',
+    'departments',
+    'usuarios',
+    'notificacoes',
+    'configuracoes',
+  ]
+  const data: Record<string, any> = {}
+
+  for (const table of tables) {
+    data[table] = await fetchAllRecords(table)
+  }
+
+  const jsonContent = JSON.stringify(data, null, 2)
+  const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.setAttribute('href', url)
+  link.setAttribute('download', `backup_completo_${new Date().toISOString().split('T')[0]}.json`)
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
+export async function exportAllTablesCSV() {
+  const tables = [
+    'leads',
+    'historico_leads',
+    'clientes_externos',
+    'leads_parceiros',
+    'demandas',
+    'agenda_eventos',
+    'employees',
+    'candidates',
+    'usuarios',
+  ]
+
+  for (const table of tables) {
+    const tableData = await fetchAllRecords(table)
+    if (tableData && tableData.length > 0) {
+      const headers = Object.keys(tableData[0])
+      const escapeCSV = (str: any) => {
+        if (str === null || str === undefined) return '""'
+        if (typeof str === 'object') return `"${JSON.stringify(str).replace(/"/g, '""')}"`
+        return `"${String(str).replace(/"/g, '""').replace(/\n/g, ' ')}"`
+      }
+
+      const rows = tableData.map((row) => headers.map((h) => escapeCSV(row[h])))
+      const csvContent = [headers.join(','), ...rows.map((r: any[]) => r.join(','))].join('\n')
+      const bom = '\uFEFF'
+      const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.setAttribute('href', url)
+      link.setAttribute('download', `${table}_${new Date().toISOString().split('T')[0]}.csv`)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+
+      // Small delay to help browsers not block multiple downloads
+      await new Promise((resolve) => setTimeout(resolve, 300))
+    }
+  }
+}
 
 export function exportToCSV(demands: Demand[], filename: string = 'relatorio.csv') {
   const headers = ['Título', 'Descrição', 'Prioridade', 'Status', 'Prazo', 'Responsável']

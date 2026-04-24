@@ -1,5 +1,14 @@
 import { useState, useEffect } from 'react'
-import { User, Bell, Shield, Save, Loader2, Link as LinkIcon } from 'lucide-react'
+import {
+  User,
+  Bell,
+  Shield,
+  Save,
+  Loader2,
+  Link as LinkIcon,
+  Database,
+  Download,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -17,6 +26,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import useAuthStore from '@/stores/useAuthStore'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase/client'
+import { exportFullDatabaseJSON, exportAllTablesCSV } from '@/utils/export'
 
 export default function Settings() {
   const { user, userName, role } = useAuthStore()
@@ -32,6 +42,7 @@ export default function Settings() {
   const [evolutionApiKey, setEvolutionApiKey] = useState('')
   const [evolutionInstance, setEvolutionInstance] = useState('')
   const [isSavingIntegrations, setIsSavingIntegrations] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
 
   const [agendaAlerts, setAgendaAlerts] = useState(() => {
     const saved = localStorage.getItem('agenda_alerts_enabled')
@@ -165,6 +176,13 @@ export default function Settings() {
           >
             <LinkIcon className="w-4 h-4" />
             Integrações
+          </TabsTrigger>
+          <TabsTrigger
+            value="export"
+            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary text-gray-600 dark:text-muted-foreground rounded-none min-h-[48px] px-2 sm:px-0 gap-2 whitespace-nowrap transition-colors"
+          >
+            <Database className="w-4 h-4" />
+            Exportação
           </TabsTrigger>
         </TabsList>
 
@@ -425,6 +443,104 @@ export default function Settings() {
                 Salvar Configurações
               </Button>
             </CardFooter>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="export" className="m-0 space-y-6">
+          <Card className="border-0 sm:border border-gray-300 dark:border-border bg-transparent sm:bg-white sm:dark:bg-card shadow-none sm:shadow-md sm:dark:shadow-sm">
+            <CardHeader className="px-0 sm:px-6">
+              <CardTitle className="text-gray-900 dark:text-foreground">
+                Backup e Exportação de Dados
+              </CardTitle>
+              <CardDescription className="text-gray-600 dark:text-muted-foreground">
+                Faça o download de todas as informações do banco de dados para segurança ou análise
+                externa.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6 px-0 sm:px-6">
+              <div className="grid gap-6 sm:grid-cols-2 max-w-2xl">
+                <div className="flex flex-col space-y-3 p-4 border border-border rounded-lg bg-muted/30">
+                  <div className="flex items-center gap-2">
+                    <Database className="w-5 h-5 text-primary" />
+                    <h3 className="font-semibold text-foreground">Backup Completo (JSON)</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Gera um único arquivo JSON contendo todas as tabelas do sistema, mantendo a
+                    estrutura exata do banco de dados.
+                  </p>
+                  <Button
+                    onClick={async () => {
+                      setIsExporting(true)
+                      try {
+                        await exportFullDatabaseJSON()
+                        toast({
+                          title: 'Backup concluído',
+                          description: 'Arquivo JSON gerado com sucesso.',
+                        })
+                      } catch (e) {
+                        toast({
+                          title: 'Erro',
+                          description: 'Falha na exportação',
+                          variant: 'destructive',
+                        })
+                      } finally {
+                        setIsExporting(false)
+                      }
+                    }}
+                    disabled={isExporting}
+                    className="w-full mt-auto"
+                  >
+                    {isExporting ? (
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    ) : (
+                      <Download className="w-4 h-4 mr-2" />
+                    )}
+                    Baixar JSON
+                  </Button>
+                </div>
+
+                <div className="flex flex-col space-y-3 p-4 border border-border rounded-lg bg-muted/30">
+                  <div className="flex items-center gap-2">
+                    <Database className="w-5 h-5 text-secondary-foreground" />
+                    <h3 className="font-semibold text-foreground">Tabelas Separadas (CSV)</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Gera e baixa múltiplos arquivos CSV, um para cada tabela principal do sistema
+                    (Leads, Clientes, Demandas, etc).
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={async () => {
+                      setIsExporting(true)
+                      try {
+                        await exportAllTablesCSV()
+                        toast({
+                          title: 'Exportação concluída',
+                          description: 'Todos os CSVs foram baixados.',
+                        })
+                      } catch (e) {
+                        toast({
+                          title: 'Erro',
+                          description: 'Falha na exportação',
+                          variant: 'destructive',
+                        })
+                      } finally {
+                        setIsExporting(false)
+                      }
+                    }}
+                    disabled={isExporting}
+                    className="w-full mt-auto"
+                  >
+                    {isExporting ? (
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    ) : (
+                      <Download className="w-4 h-4 mr-2" />
+                    )}
+                    Baixar CSVs
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
