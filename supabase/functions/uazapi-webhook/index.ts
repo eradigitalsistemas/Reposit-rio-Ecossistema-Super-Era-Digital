@@ -4,8 +4,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, x-supabase-client-platform, apikey, content-type, x-cron-secret',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, x-supabase-client-platform, apikey, content-type, x-cron-secret',
 }
 
 Deno.serve(async (req: Request) => {
@@ -15,10 +14,10 @@ Deno.serve(async (req: Request) => {
     const body = await req.json()
 
     const eventType = body.event || body.event_type
-
+    
     if (eventType === 'messages.upsert' || eventType === 'message') {
       const msg = body.data?.message || body.message || body.data
-
+      
       if (msg.key?.fromMe || msg.fromMe) {
         return new Response('ok', { status: 200 })
       }
@@ -29,18 +28,14 @@ Deno.serve(async (req: Request) => {
       }
 
       const phone = remoteJid.split('@')[0]
-      const text =
-        msg.message?.conversation ||
-        msg.message?.extendedTextMessage?.text ||
-        msg.text ||
-        'Mensagem recebida'
+      const text = msg.message?.conversation || msg.message?.extendedTextMessage?.text || msg.text || 'Mensagem recebida'
 
       const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
       const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
       const supabase = createClient(supabaseUrl, supabaseKey)
 
       const phoneDigits = phone.substring(2)
-
+      
       const { data: leads } = await supabase
         .from('leads')
         .select('id, usuario_id')
@@ -49,13 +44,13 @@ Deno.serve(async (req: Request) => {
 
       if (leads && leads.length > 0) {
         const lead = leads[0]
-
+        
         await supabase.from('historico_leads').insert({
           lead_id: lead.id,
           usuario_id: lead.usuario_id,
           contato_nome: 'WhatsApp (Lead)',
           forma_contato: 'WhatsApp',
-          detalhes: `Lead respondeu: ${text}`,
+          detalhes: `Lead respondeu: ${text}`
         })
       }
     }
