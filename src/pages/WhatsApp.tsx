@@ -67,7 +67,7 @@ export default function WhatsApp() {
     try {
       const { data, error } = await supabase.functions.invoke('uazapi-get-qr', {
         body: {
-          instanceName: config?.uazapi_instance || 'kanban_vendas',
+          instanceName: config?.uazapi_instance || 'comercial_era',
           uazapi_url: config?.uazapi_url,
           uazapi_token: config?.uazapi_token,
         },
@@ -91,7 +91,7 @@ export default function WhatsApp() {
     try {
       const { data, error } = await supabase.functions.invoke('uazapi-get-qr', {
         body: {
-          instanceName: whatsappConfig?.uazapi_instance || 'kanban_vendas',
+          instanceName: whatsappConfig?.uazapi_instance || 'comercial_era',
           uazapi_url: whatsappConfig?.uazapi_url,
           uazapi_token: whatsappConfig?.uazapi_token,
         },
@@ -215,7 +215,7 @@ export default function WhatsApp() {
           phone: selectedLead.telefone,
           message: currentMsg,
           user_id: currentUser.id,
-          instanceName: whatsappConfig?.uazapi_instance || 'kanban_vendas',
+          instanceName: whatsappConfig?.uazapi_instance || 'comercial_era',
           uazapi_url: whatsappConfig?.uazapi_url,
           uazapi_token: whatsappConfig?.uazapi_token,
         },

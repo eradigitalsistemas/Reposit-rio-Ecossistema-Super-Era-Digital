@@ -96,7 +96,7 @@ export function WhatsAppChatSheet({ lead }: WhatsAppChatSheetProps) {
           phone: lead.phone,
           message: currentMsg,
           user_id: user.id,
-          instanceName: 'kanban_vendas',
+          instanceName: 'comercial_era',
         },
       })
 

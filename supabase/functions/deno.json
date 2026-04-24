@@ -21,12 +21,12 @@
     "cron-hr-jobs": 3,
     "monthly-timesheets": 3,
     "send-notification": 6,
-    "whatsapp-integration": 7,
-    "uazapi-get-qr": 2,
-    "uazapi-send-message": 2,
+    "whatsapp-integration": 8,
+    "uazapi-get-qr": 3,
+    "uazapi-send-message": 3,
     "uazapi-sync-messages": 1,
     "uazapi-webhook": 1,
-    "uazapi-disconnect": 2,
+    "uazapi-disconnect": 3,
     "ai-classify-contacts": 1
   }
 }
