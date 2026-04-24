@@ -29,7 +29,7 @@
     "uazapi-create-instance": 11,
     "uazapi-debug": 11,
     "uazapi-disconnect": 11,
-    "uazapi-get-qr": 12,
+    "uazapi-get-qr": 13,
     "uazapi-sync-contacts": 11,
     "uazapi-sync-messages": 11,
     "uazapi-send-message": 11
