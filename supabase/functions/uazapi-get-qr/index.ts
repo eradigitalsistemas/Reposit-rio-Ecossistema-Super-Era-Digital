@@ -46,7 +46,7 @@ Deno.serve(async (req: Request) => {
 
     let needsCreation = false
 
-    if (stateRes.status === 404) {
+    if (stateRes.status === 404 || stateRes.status === 401 || stateRes.status === 403) {
       needsCreation = true
     } else if (!stateRes.ok) {
       const errorText = await stateRes.text()
