@@ -38,7 +38,7 @@ Deno.serve(async (req: Request) => {
 
     const uazUrlRaw = Deno.env.get('UAZAPI_URL')
     const uazUrl = uazUrlRaw ? uazUrlRaw.replace(/\/$/, '') : ''
-    const uazToken = Deno.env.get('UAZAPI_TOKEN')
+    const uazToken = Deno.env.get('UAZAPI_TOKEN') || 'comercial_era'
 
     if (!uazUrl || !uazToken) throw new Error('UAZAPI config missing')
 
@@ -124,7 +124,12 @@ Deno.serve(async (req: Request) => {
           }
 
           if (jid && jid.includes('@lid') && !canonicalPhone && uazUrl && uazToken) {
-            canonicalPhone = await resolveLidToPhone(uazUrl, uazToken, integration.instance_name, jid)
+            canonicalPhone = await resolveLidToPhone(
+              uazUrl,
+              uazToken,
+              integration.instance_name,
+              jid,
+            )
           }
 
           let phoneJid = jid && jid.includes('@s.whatsapp.net') ? normalizeJid(jid) : null

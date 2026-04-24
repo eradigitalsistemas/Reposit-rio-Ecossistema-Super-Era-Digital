@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
@@ -11,17 +11,17 @@ serve(async (req) => {
 
   try {
     const { integrationId } = await req.json()
-    
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
-    
-    // Simplificando sem usar regex para evitar erro de parsing
+
     let uazUrl = Deno.env.get('UAZAPI_URL') || ''
     if (uazUrl.endsWith('/')) {
-        uazUrl = uazUrl.slice(0, -1)
+      uazUrl = uazUrl.slice(0, -1)
     }
-    
+
     const uazAdminToken = Deno.env.get('UAZAPI_ADMIN_TOKEN') || ''
+    const uazToken = Deno.env.get('UAZAPI_TOKEN') || 'comercial_era'
     const instanceName = 'comercial_era'
 
     const supabase = createClient(supabaseUrl, supabaseKey)
@@ -38,19 +38,29 @@ serve(async (req) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'admintoken': uazAdminToken,
+        admintoken: uazAdminToken,
       },
       body: JSON.stringify({
         instanceName: instanceName,
-        token: instanceName,
+        token: uazToken,
       }),
     })
 
-    const data = await response.json()
+    if (!response.ok && response.status !== 409) {
+      const errorText = await response.text()
+      throw new Error(`UAZAPI create failed: ${response.status} - ${errorText}`)
+    }
+
+    let data = {}
+    try {
+      data = await response.json()
+    } catch {
+      data = { success: true, message: 'Instance created or already exists' }
+    }
+
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
-
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message }), {
       status: 400,

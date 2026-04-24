@@ -49,7 +49,7 @@ Deno.serve(async (req: Request) => {
       try {
         const uazUrlRaw = Deno.env.get('UAZAPI_URL')
         const uazUrl = uazUrlRaw ? uazUrlRaw.replace(/\/$/, '') : ''
-        const uazToken = Deno.env.get('UAZAPI_TOKEN')
+        const uazToken = Deno.env.get('UAZAPI_TOKEN') || 'comercial_era'
         const instanceName = integ?.instance_name
 
         let validJids: string[] = []

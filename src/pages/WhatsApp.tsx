@@ -84,19 +84,34 @@ export default function WhatsApp() {
         body: { integrationId: intId },
       })
       if (error) throw error
-      if (data?.base64) {
-        setQrCode(data.base64)
+
+      const isConnected =
+        data?.instance?.state === 'open' ||
+        data?.state === 'open' ||
+        data?.connected ||
+        data?.instance?.status === 'connected' ||
+        data?.status === 'CONNECTED'
+      const qrBase64 = data?.base64 || data?.qrcode?.base64
+      const isConnecting =
+        data?.instance?.state === 'connecting' ||
+        data?.state === 'connecting' ||
+        data?.message?.includes('Connecting') ||
+        data?.error === 'qr_not_ready_yet'
+
+      if (qrBase64) {
+        setQrCode(qrBase64)
         setWhatsappStatus('qrCode')
-      } else if (data?.connected || data?.state === 'open') {
+      } else if (isConnected) {
         setWhatsappStatus('open')
         setQrCode(null)
-      } else if (data?.error === 'qr_not_ready_yet') {
+      } else if (isConnecting) {
         setWhatsappStatus('checking')
-        setTimeout(() => checkConnectionStatus(intId), 2500)
+        setTimeout(() => checkConnectionStatus(intId), 3000)
       } else {
         setWhatsappStatus('offline')
       }
     } catch (e) {
+      console.error('Error checking connection status:', e)
       setWhatsappStatus('offline')
     }
   }
@@ -104,6 +119,7 @@ export default function WhatsApp() {
   const handleConnect = async () => {
     setIsConnecting(true)
     setQrCode(null)
+    setWhatsappStatus('checking')
     try {
       let currentIntegrationId = integrationId
 
@@ -142,26 +158,10 @@ export default function WhatsApp() {
         throw new Error('Não foi possível criar ou encontrar a integração.')
       }
 
-      const { data, error } = await supabase.functions.invoke('uazapi-get-qr', {
-        body: { integrationId: currentIntegrationId },
-      })
-
-      if (error) throw error
-
-      if (data?.base64) {
-        setQrCode(data.base64)
-        setWhatsappStatus('qrCode')
-      } else if (data?.connected || data?.state === 'open') {
-        setWhatsappStatus('open')
-      } else if (data?.error === 'qr_not_ready_yet') {
-        setWhatsappStatus('checking')
-        toast({ title: 'Aguarde', description: 'Gerando QR Code...' })
-        setTimeout(() => checkConnectionStatus(currentIntegrationId!), 2500)
-      } else {
-        toast({ title: 'Erro', description: 'Não foi possível conectar.', variant: 'destructive' })
-      }
+      await checkConnectionStatus(currentIntegrationId)
     } catch (e: any) {
       console.error(e)
+      setWhatsappStatus('offline')
       toast({
         title: 'Erro',
         description: 'Falha ao solicitar conexão: ' + e.message,

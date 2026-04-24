@@ -23,13 +23,12 @@ Deno.serve(async (req: Request) => {
 
     const uazUrlRaw = Deno.env.get('UAZAPI_URL') || ''
     const uazUrl = uazUrlRaw.replace(/\/$/, '')
-    const uazAdminToken = Deno.env.get('UAZAPI_ADMIN_TOKEN') || ''
-    const instanceName = integ.instance_name
+    const uazToken = Deno.env.get('UAZAPI_TOKEN') || 'comercial_era'
 
-    if (instanceName && uazUrl && uazAdminToken) {
+    if (uazUrl && uazToken) {
       const response = await fetch(`${uazUrl}/instance/logout`, {
         method: 'DELETE',
-        headers: { token: instanceName },
+        headers: { token: uazToken },
       })
 
       if (!response.ok) {

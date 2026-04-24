@@ -93,12 +93,13 @@ Deno.serve(async (req: Request) => {
         return new Response('Ignored - No messageid', { status: 200 })
       }
 
-      const pushName = msgObj.pushName || msgObj.pushname || msgObj.verifiedName || msgObj.name || 'Unknown'
+      const pushName =
+        msgObj.pushName || msgObj.pushname || msgObj.verifiedName || msgObj.name || 'Unknown'
       let canonicalPhone = extractCanonicalPhone({ remoteJid, ...msgObj })
 
       const uazUrlRaw = Deno.env.get('UAZAPI_URL')
       const uazUrl = uazUrlRaw ? uazUrlRaw.replace(/\/$/, '') : ''
-      const uazToken = Deno.env.get('UAZAPI_TOKEN')
+      const uazToken = Deno.env.get('UAZAPI_TOKEN') || 'comercial_era'
 
       if (remoteJid && remoteJid.includes('@lid') && !canonicalPhone && uazUrl && uazToken) {
         canonicalPhone = await resolveLidToPhone(uazUrl, uazToken, instanceName, remoteJid)

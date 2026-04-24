@@ -38,7 +38,7 @@ Deno.serve(async (req: Request) => {
 
     const uazUrlRaw = Deno.env.get('UAZAPI_URL')
     const uazUrl = uazUrlRaw ? uazUrlRaw.replace(/\/$/, '') : ''
-    const uazToken = Deno.env.get('UAZAPI_TOKEN')
+    const uazToken = Deno.env.get('UAZAPI_TOKEN') || 'comercial_era'
 
     const { data: contact } = await supabaseClient
       .from('whatsapp_contacts')

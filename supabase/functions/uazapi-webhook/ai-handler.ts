@@ -149,11 +149,9 @@ ${history}
     }
 
     const uazUrl = (Deno.env.get('UAZAPI_URL') || '').replace(/\/$/, '')
-    const uazToken = Deno.env.get('UAZAPI_TOKEN')
+    const uazToken = Deno.env.get('UAZAPI_TOKEN') || 'comercial_era'
 
-    console.log(
-      `[AI Handler] Attempting to send message to UAZAPI. Phone: ${contact.remote_jid}`,
-    )
+    console.log(`[AI Handler] Attempting to send message to UAZAPI. Phone: ${contact.remote_jid}`)
 
     const sendRes = await fetch(`${uazUrl}/message/text`, {
       method: 'POST',
