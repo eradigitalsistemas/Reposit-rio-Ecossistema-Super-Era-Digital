@@ -25,6 +25,11 @@
     "vacation-balance": 23,
     "vacation-requests": 23,
     "receive-message": 1,
-    "get-chat-history": 1
+    "get-chat-history": 1,
+    "uazapi-create-instance": 1,
+    "uazapi-disconnect": 1,
+    "uazapi-sync-contacts": 1,
+    "uazapi-sync-messages": 1,
+    "uazapi-sync-history": 1
   }
 }
