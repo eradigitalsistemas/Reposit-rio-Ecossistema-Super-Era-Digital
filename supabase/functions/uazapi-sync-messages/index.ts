@@ -26,8 +26,9 @@ Deno.serve(async (req: Request) => {
     const { data: integration, error: integrationError } = await supabaseClient
       .from('user_integrations')
       .select('*')
-      .eq('user_id', user.id)
-      .single()
+      .eq('instance_name', 'comercial_era')
+      .limit(1)
+      .maybeSingle()
 
     if (integrationError || !integration || !integration.instance_name) {
       throw new Error('Integration not found or not connected')
@@ -83,7 +84,6 @@ Deno.serve(async (req: Request) => {
         const { data: dbContacts } = await supabaseClient
           .from('whatsapp_contacts')
           .select('id, remote_jid, phone_number, push_name')
-          .eq('user_id', user.id)
 
         const contactMap = new Map<string, string>()
         const phoneMap = new Map<string, string>()
@@ -122,7 +122,12 @@ Deno.serve(async (req: Request) => {
           }
 
           if (!canonicalPhone && jid.includes('@lid') && uazUrl && uazToken) {
-            canonicalPhone = await resolveLidToPhone(uazUrl, uazToken, integration.instance_name, jid)
+            canonicalPhone = await resolveLidToPhone(
+              uazUrl,
+              uazToken,
+              integration.instance_name,
+              jid,
+            )
             if (canonicalPhone) identityMap.set(jid, canonicalPhone)
           }
           let skip = false
@@ -161,7 +166,7 @@ Deno.serve(async (req: Request) => {
                 : normalizeJid(jid)
 
             return {
-              user_id: user.id,
+              user_id: integration.user_id,
               remote_jid: effJid,
               phone_number: phone,
               push_name: pushName || null,
@@ -199,7 +204,9 @@ Deno.serve(async (req: Request) => {
 
             // Extract phone from remoteJidAlt (avoids extra API call for LID contacts)
             if (!canonicalPhone && jid.includes('@lid')) {
-              const chat = cList.find((c: any) => (c.remoteJid || c.jid || c.id || c.chatid) === jid)
+              const chat = cList.find(
+                (c: any) => (c.remoteJid || c.jid || c.id || c.chatid) === jid,
+              )
               const altJid = chat?.lastMessage?.key?.remoteJidAlt
               if (altJid && altJid.includes('@s.whatsapp.net')) {
                 const altPhone = altJid.split('@')[0].replace(/\D/g, '')
@@ -252,8 +259,8 @@ Deno.serve(async (req: Request) => {
             else if (msgData?.data && Array.isArray(msgData.data)) allMessages = msgData.data
 
             // Filtrar apenas as mensagens deste JID
-            const filteredMessages = allMessages.filter(m => 
-              (m.key?.remoteJid || m.remoteJid || m.jid || m.chatid) === jid
+            const filteredMessages = allMessages.filter(
+              (m) => (m.key?.remoteJid || m.remoteJid || m.jid || m.chatid) === jid,
             )
 
             if (filteredMessages.length === 0) {
@@ -296,7 +303,7 @@ Deno.serve(async (req: Request) => {
                   timestamp = new Date(ts * 1000).toISOString()
                 }
                 return {
-                  user_id: user.id,
+                  user_id: integration.user_id,
                   contact_id: contactId,
                   message_id: messageId,
                   from_me: m.key?.fromMe ?? false,

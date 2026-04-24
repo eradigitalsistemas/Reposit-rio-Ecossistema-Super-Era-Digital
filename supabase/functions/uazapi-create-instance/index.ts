@@ -30,7 +30,7 @@ Deno.serve(async (req: Request) => {
       throw new Error('Integration not found')
     }
 
-    const instanceName = integ.user_id
+    const instanceName = 'comercial_era'
 
     if (integ.instance_name !== instanceName) {
       await supabase
@@ -64,13 +64,10 @@ Deno.serve(async (req: Request) => {
         text.includes('already exists') ||
         text.includes('Duplicated instance')
       ) {
-        const stateRes = await fetch(
-          `${uazUrl}/instance/status`,
-          {
-            method: 'GET',
-            headers: { token: instanceName },
-          },
-        )
+        const stateRes = await fetch(`${uazUrl}/instance/status`, {
+          method: 'GET',
+          headers: { token: instanceName },
+        })
 
         if (stateRes.ok) {
           const stateData = await stateRes.json()

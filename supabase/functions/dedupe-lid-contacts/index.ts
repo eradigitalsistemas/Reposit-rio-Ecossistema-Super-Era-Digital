@@ -43,8 +43,9 @@ Deno.serve(async (req: Request) => {
     const { data: integration } = await supabase
       .from('user_integrations')
       .select('*')
-      .eq('user_id', user.id)
-      .single()
+      .eq('instance_name', 'comercial_era')
+      .limit(1)
+      .maybeSingle()
 
     if (!integration?.instance_name) throw new Error('Integration not found')
 
@@ -72,7 +73,6 @@ Deno.serve(async (req: Request) => {
         const { data: lidContacts } = await supabase
           .from('whatsapp_contacts')
           .select('id, remote_jid, push_name, profile_picture_url')
-          .eq('user_id', user.id)
           .like('remote_jid', '%@lid%')
 
         if (!lidContacts || lidContacts.length === 0) {
@@ -115,7 +115,6 @@ Deno.serve(async (req: Request) => {
         const { data: fromMeMessages } = await supabase
           .from('whatsapp_messages')
           .select('message_id, contact_id')
-          .eq('user_id', user.id)
           .eq('from_me', true)
 
         const msgIdToContactId = new Map<string, string>()
@@ -127,7 +126,6 @@ Deno.serve(async (req: Request) => {
         const { data: phoneContacts } = await supabase
           .from('whatsapp_contacts')
           .select('id, remote_jid, phone_number, push_name, profile_picture_url')
-          .eq('user_id', user.id)
           .like('remote_jid', '%@s.whatsapp.net%')
 
         const phoneContactById = new Map<string, any>()
@@ -200,7 +198,7 @@ Deno.serve(async (req: Request) => {
 
               // Merge: phone is primary, LID is secondary
               const { error: mergeError } = await supabase.rpc('merge_whatsapp_contacts', {
-                p_user_id: user.id,
+                p_user_id: integration.user_id,
                 p_primary_contact_id: phoneContactId,
                 p_secondary_contact_ids: [lidContact.id],
               })
@@ -240,7 +238,7 @@ Deno.serve(async (req: Request) => {
                 } else {
                   await supabase.from('contact_identity').insert({
                     instance_id: integration.id,
-                    user_id: user.id,
+                    user_id: integration.user_id,
                     canonical_phone: canonicalPhone,
                     phone_jid: phoneJid,
                     lid_jid: lid,

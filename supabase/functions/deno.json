@@ -25,7 +25,7 @@
     "vacation-balance": 15,
     "vacation-requests": 15,
     "uazapi-webhook": 11,
-    "uazapi-sync-messages-trace": 11,
+    "uazapi-sync-messages-trace": 12,
     "uazapi-create-instance": 11,
     "uazapi-debug": 11,
     "uazapi-disconnect": 11,

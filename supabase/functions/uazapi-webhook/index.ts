@@ -30,7 +30,8 @@ Deno.serve(async (req: Request) => {
       .from('user_integrations')
       .select('id, user_id, evolution_api_url, evolution_api_key')
       .eq('instance_name', instanceName)
-      .single()
+      .limit(1)
+      .maybeSingle()
     if (!integ) {
       console.log(`[WEBHOOK] Ignored: Integration not found for instance: ${instanceName}`)
       return new Response('Integration not found', { status: 200 })
@@ -92,7 +93,8 @@ Deno.serve(async (req: Request) => {
         return new Response('Ignored - No messageid', { status: 200 })
       }
 
-      const pushName = msgObj.pushName || msgObj.pushname || msgObj.verifiedName || msgObj.name || 'Unknown'
+      const pushName =
+        msgObj.pushName || msgObj.pushname || msgObj.verifiedName || msgObj.name || 'Unknown'
       let canonicalPhone = extractCanonicalPhone({ remoteJid, ...msgObj })
 
       const uazUrlRaw = Deno.env.get('UAZAPI_URL')

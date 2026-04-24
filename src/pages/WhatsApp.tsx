@@ -57,16 +57,16 @@ export default function WhatsApp() {
     supabase.auth.getUser().then(({ data }) => {
       setCurrentUser(data.user)
       if (data.user) {
-        checkIntegration(data.user.id)
+        checkIntegration()
       }
     })
   }, [])
 
-  const checkIntegration = async (userId: string) => {
+  const checkIntegration = async () => {
     const { data } = await supabase
       .from('user_integrations')
       .select('id, status')
-      .eq('user_id', userId)
+      .eq('instance_name', 'comercial_era')
       .maybeSingle()
 
     if (data) {
@@ -112,7 +112,7 @@ export default function WhatsApp() {
           .from('user_integrations')
           .insert({
             user_id: currentUser.id,
-            instance_name: currentUser.id,
+            instance_name: 'comercial_era',
             status: 'DISCONNECTED',
           })
           .select('id')
@@ -123,8 +123,8 @@ export default function WhatsApp() {
             const { data: existing } = await supabase
               .from('user_integrations')
               .select('id')
-              .eq('user_id', currentUser.id)
-              .single()
+              .eq('instance_name', 'comercial_era')
+              .maybeSingle()
             if (existing) currentIntegrationId = existing.id
           } else {
             throw insertError

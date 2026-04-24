@@ -29,7 +29,7 @@ Deno.serve(async (req: Request) => {
       .single()
     if (!integ) throw new Error('Missing configuration')
 
-    const instanceName = integ.user_id
+    const instanceName = 'comercial_era'
 
     if (integ.instance_name !== instanceName) {
       await supabase

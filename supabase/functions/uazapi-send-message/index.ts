@@ -28,8 +28,9 @@ Deno.serve(async (req: Request) => {
     const { data: integration } = await supabaseClient
       .from('user_integrations')
       .select('*')
-      .eq('user_id', user.id)
-      .single()
+      .eq('instance_name', 'comercial_era')
+      .limit(1)
+      .maybeSingle()
 
     if (!integration || !integration.instance_name) {
       throw new Error('Integration not found or not connected')
@@ -43,8 +44,7 @@ Deno.serve(async (req: Request) => {
       .from('whatsapp_contacts')
       .select('remote_jid')
       .eq('id', contactId)
-      .eq('user_id', user.id)
-      .single()
+      .maybeSingle()
 
     if (!contact || !contact.remote_jid) throw new Error('Contact not found')
 
@@ -78,7 +78,7 @@ Deno.serve(async (req: Request) => {
     // Optimistically save the message
     await supabaseClient.from('whatsapp_messages').upsert(
       {
-        user_id: user.id,
+        user_id: integration.user_id,
         contact_id: contactId,
         message_id: messageId,
         from_me: true,

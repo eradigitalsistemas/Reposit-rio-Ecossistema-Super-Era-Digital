@@ -28,8 +28,9 @@ Deno.serve(async (req: Request) => {
     const { data: integration, error: integrationError } = await supabaseClient
       .from('user_integrations')
       .select('*')
-      .eq('user_id', user.id)
-      .single()
+      .eq('instance_name', 'comercial_era')
+      .limit(1)
+      .maybeSingle()
 
     if (integrationError || !integration || !integration.instance_name) {
       throw new Error('Integration not found or not connected')
@@ -101,7 +102,6 @@ Deno.serve(async (req: Request) => {
         const { data: existingContacts } = await supabaseClient
           .from('whatsapp_contacts')
           .select('*')
-          .eq('user_id', user.id)
 
         let processed = 0
         await supabaseClient
@@ -124,7 +124,12 @@ Deno.serve(async (req: Request) => {
           }
 
           if (jid && jid.includes('@lid') && !canonicalPhone && uazUrl && uazToken) {
-            canonicalPhone = await resolveLidToPhone(uazUrl, uazToken, integration.instance_name, jid)
+            canonicalPhone = await resolveLidToPhone(
+              uazUrl,
+              uazToken,
+              integration.instance_name,
+              jid,
+            )
           }
 
           let phoneJid = jid && jid.includes('@s.whatsapp.net') ? normalizeJid(jid) : null
@@ -167,7 +172,7 @@ Deno.serve(async (req: Request) => {
             } else {
               await supabaseClient.from('contact_identity').insert({
                 instance_id: integration.id,
-                user_id: user.id,
+                user_id: integration.user_id,
                 canonical_phone: canonicalPhone,
                 phone_jid: phoneJid,
                 lid_jid: lidJid,
@@ -205,7 +210,7 @@ Deno.serve(async (req: Request) => {
 
             if (secondaries.length > 0) {
               await supabaseClient.rpc('merge_whatsapp_contacts', {
-                p_user_id: user.id,
+                p_user_id: integration.user_id,
                 p_primary_contact_id: primary.id,
                 p_secondary_contact_ids: secondaries.map((s) => s.id),
               })
@@ -240,7 +245,7 @@ Deno.serve(async (req: Request) => {
             const { data: newContact } = await supabaseClient
               .from('whatsapp_contacts')
               .insert({
-                user_id: user.id,
+                user_id: integration.user_id,
                 remote_jid: effectiveJid,
                 phone_number: effectivePhone,
                 push_name: pushName || null,

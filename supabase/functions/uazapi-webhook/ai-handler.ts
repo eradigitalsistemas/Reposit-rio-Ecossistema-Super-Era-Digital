@@ -137,8 +137,9 @@ ${history}
     const { data: integration } = await supabase
       .from('user_integrations')
       .select('*')
-      .eq('user_id', userId)
-      .single()
+      .eq('instance_name', 'comercial_era')
+      .limit(1)
+      .maybeSingle()
 
     if (!integration || !integration.instance_name) {
       console.error(
@@ -150,9 +151,7 @@ ${history}
     const uazUrl = (Deno.env.get('UAZAPI_URL') || '').replace(/\/$/, '')
     const uazToken = Deno.env.get('UAZAPI_TOKEN')
 
-    console.log(
-      `[AI Handler] Attempting to send message to UAZAPI. Phone: ${contact.remote_jid}`,
-    )
+    console.log(`[AI Handler] Attempting to send message to UAZAPI. Phone: ${contact.remote_jid}`)
 
     const sendRes = await fetch(`${uazUrl}/message/text`, {
       method: 'POST',

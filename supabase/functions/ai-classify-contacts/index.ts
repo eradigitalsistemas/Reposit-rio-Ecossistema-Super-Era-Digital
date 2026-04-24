@@ -27,8 +27,9 @@ Deno.serve(async (req: Request) => {
     const { data: integ } = await supabase
       .from('user_integrations')
       .select('*')
-      .eq('user_id', user.id)
-      .single()
+      .eq('instance_name', 'comercial_era')
+      .limit(1)
+      .maybeSingle()
 
     const { data: job, error: jobError } = await supabase
       .from('import_jobs')
@@ -88,7 +89,6 @@ Deno.serve(async (req: Request) => {
         const { data: contacts } = await supabase
           .from('whatsapp_contacts')
           .select('id, remote_jid')
-          .eq('user_id', user.id)
           .in('remote_jid', validJids)
 
         if (!contacts || contacts.length === 0) {
