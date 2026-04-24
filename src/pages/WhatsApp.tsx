@@ -40,38 +40,20 @@ export default function WhatsApp() {
   const [searchTerm, setSearchTerm] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
   const [currentUser, setCurrentUser] = useState<any>(null)
-  const [whatsappConfig, setWhatsappConfig] = useState<any>({})
   const [whatsappStatus, setWhatsappStatus] = useState<string>('checking')
   const [qrCode, setQrCode] = useState<string | null>(null)
   const [isConnecting, setIsConnecting] = useState(false)
 
   useEffect(() => {
-    supabase
-      .from('configuracoes')
-      .select('chave, valor')
-      .in('chave', ['whatsapp_provider', 'uazapi_url', 'uazapi_token', 'uazapi_instance'])
-      .then(({ data }) => {
-        if (data) {
-          const config = data.reduce((acc: any, curr) => ({ ...acc, [curr.chave]: curr.valor }), {})
-          if (!config.whatsapp_provider) config.whatsapp_provider = 'uazapi'
-          setWhatsappConfig(config)
-          checkConnectionStatus(config)
-        }
-      })
     supabase.auth.getUser().then(({ data }) => setCurrentUser(data.user))
+    checkConnectionStatus()
     fetchLeads()
   }, [])
 
-  const checkConnectionStatus = async (config: any) => {
+  const checkConnectionStatus = async () => {
     setWhatsappStatus('checking')
     try {
-      const { data, error } = await supabase.functions.invoke('uazapi-get-qr', {
-        body: {
-          instanceName: config?.uazapi_instance,
-          uazapi_url: config?.uazapi_url,
-          uazapi_token: config?.uazapi_token,
-        },
-      })
+      const { data, error } = await supabase.functions.invoke('uazapi-get-qr')
       if (error) throw error
       if (data?.state) {
         setWhatsappStatus(data.state)
@@ -89,13 +71,7 @@ export default function WhatsApp() {
     setIsConnecting(true)
     setQrCode(null)
     try {
-      const { data, error } = await supabase.functions.invoke('uazapi-get-qr', {
-        body: {
-          instanceName: whatsappConfig?.uazapi_instance,
-          uazapi_url: whatsappConfig?.uazapi_url,
-          uazapi_token: whatsappConfig?.uazapi_token,
-        },
-      })
+      const { data, error } = await supabase.functions.invoke('uazapi-get-qr')
       if (error) throw error
       if (data?.base64) {
         setQrCode(data.base64)
@@ -215,9 +191,6 @@ export default function WhatsApp() {
           phone: selectedLead.telefone,
           message: currentMsg,
           user_id: currentUser.id,
-          instanceName: whatsappConfig?.uazapi_instance,
-          uazapi_url: whatsappConfig?.uazapi_url,
-          uazapi_token: whatsappConfig?.uazapi_token,
         },
       })
 
@@ -516,11 +489,7 @@ export default function WhatsApp() {
                 <div className="bg-white p-4 rounded-xl mb-6 shadow-sm border border-zinc-100">
                   <img src={qrCode} alt="QR Code WhatsApp" className="w-64 h-64" />
                 </div>
-                <Button
-                  onClick={() => checkConnectionStatus(whatsappConfig)}
-                  variant="outline"
-                  className="gap-2"
-                >
+                <Button onClick={() => checkConnectionStatus()} variant="outline" className="gap-2">
                   <RefreshCw className="h-4 w-4" /> Atualizar Status
                 </Button>
               </div>
