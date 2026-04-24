@@ -90,6 +90,9 @@ export default function WhatsApp() {
       } else if (data?.connected || data?.state === 'open') {
         setWhatsappStatus('open')
         setQrCode(null)
+      } else if (data?.error === 'qr_not_ready_yet') {
+        setWhatsappStatus('checking')
+        setTimeout(() => checkConnectionStatus(intId), 2500)
       } else {
         setWhatsappStatus('offline')
       }
@@ -99,24 +102,71 @@ export default function WhatsApp() {
   }
 
   const handleConnect = async () => {
-    if (!integrationId) return
     setIsConnecting(true)
     setQrCode(null)
     try {
+      let currentIntegrationId = integrationId
+
+      if (!currentIntegrationId && currentUser) {
+        const { data: newInt, error: insertError } = await supabase
+          .from('user_integrations')
+          .insert({
+            user_id: currentUser.id,
+            instance_name: currentUser.id,
+            status: 'DISCONNECTED',
+          })
+          .select('id')
+          .single()
+
+        if (insertError) {
+          if (insertError.code === '23505') {
+            const { data: existing } = await supabase
+              .from('user_integrations')
+              .select('id')
+              .eq('user_id', currentUser.id)
+              .single()
+            if (existing) currentIntegrationId = existing.id
+          } else {
+            throw insertError
+          }
+        } else if (newInt) {
+          currentIntegrationId = newInt.id
+        }
+
+        if (currentIntegrationId) {
+          setIntegrationId(currentIntegrationId)
+        }
+      }
+
+      if (!currentIntegrationId) {
+        throw new Error('Não foi possível criar ou encontrar a integração.')
+      }
+
       const { data, error } = await supabase.functions.invoke('uazapi-get-qr', {
-        body: { integrationId },
+        body: { integrationId: currentIntegrationId },
       })
+
       if (error) throw error
+
       if (data?.base64) {
         setQrCode(data.base64)
         setWhatsappStatus('qrCode')
       } else if (data?.connected || data?.state === 'open') {
         setWhatsappStatus('open')
+      } else if (data?.error === 'qr_not_ready_yet') {
+        setWhatsappStatus('checking')
+        toast({ title: 'Aguarde', description: 'Gerando QR Code...' })
+        setTimeout(() => checkConnectionStatus(currentIntegrationId!), 2500)
       } else {
         toast({ title: 'Erro', description: 'Não foi possível conectar.', variant: 'destructive' })
       }
-    } catch (e) {
-      toast({ title: 'Erro', description: 'Falha ao solicitar conexão.', variant: 'destructive' })
+    } catch (e: any) {
+      console.error(e)
+      toast({
+        title: 'Erro',
+        description: 'Falha ao solicitar conexão: ' + e.message,
+        variant: 'destructive',
+      })
     } finally {
       setIsConnecting(false)
     }
