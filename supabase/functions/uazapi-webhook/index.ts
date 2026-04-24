@@ -1,7 +1,7 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { extractCanonicalPhone, normalizeJid, resolveLidToPhone } from '../_shared/utils.ts'
-import { linkLidToPhone } from '../_shared/contact-linking.ts'
+import { linkLidToPhone } from './contact-linking.ts'
 import { processAiResponse } from './ai-handler.ts'
 
 Deno.serve(async (req: Request) => {

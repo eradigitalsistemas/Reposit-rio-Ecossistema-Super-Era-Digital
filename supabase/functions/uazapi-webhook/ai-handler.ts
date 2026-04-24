@@ -1,5 +1,5 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2'
-import { linkLidToPhone } from '../_shared/contact-linking.ts'
+import { linkLidToPhone } from './contact-linking.ts'
 
 export async function processAiResponse(
   userId: string,
