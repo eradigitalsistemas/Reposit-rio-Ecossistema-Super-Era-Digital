@@ -27,50 +27,103 @@ export function WhatsAppChatSheet({ lead }: WhatsAppChatSheetProps) {
   const { user } = useAuthStore()
   const { updateLead } = useLeadStore()
 
+  const [contactId, setContactId] = useState<string | null>(null)
+
   useEffect(() => {
-    if (open) {
+    if (open && lead.phone) {
       fetchMessages()
-
-      const channel = supabase
-        .channel(`whatsapp-${lead.id}`)
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'historico_leads',
-            filter: `lead_id=eq.${lead.id}`,
-          },
-          (payload) => {
-            if (payload.new.forma_contato === 'WhatsApp') {
-              setMessages((prev) => {
-                const exists = prev.find((m) => m.id === payload.new.id)
-                if (exists) return prev
-                return [...prev, payload.new]
-              })
-              setTimeout(() => {
-                scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
-              }, 100)
-            }
-          },
-        )
-        .subscribe()
-
-      return () => {
-        supabase.removeChannel(channel)
-      }
     }
-  }, [open, lead.id])
+  }, [open, lead.phone])
+
+  useEffect(() => {
+    if (!contactId || !open) return
+
+    const channel = supabase
+      .channel(`whatsapp-lead-${contactId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'whatsapp_messages',
+          filter: `contact_id=eq.${contactId}`,
+        },
+        (payload) => {
+          setMessages((prev) => {
+            const exists = prev.find((m) => m.id === payload.new.id)
+            if (exists) return prev
+            return [...prev, payload.new]
+          })
+          setTimeout(() => {
+            scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
+          }, 100)
+        },
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [contactId, open])
 
   const fetchMessages = async () => {
+    if (!lead.phone) return
     setLoading(true)
     try {
-      const { data, error } = await supabase.functions.invoke('uazapi-sync-messages', {
-        body: { lead_id: lead.id },
-      })
+      const canonicalPhone = lead.phone.replace(/\D/g, '')
+      let targetContactId = null
+      let targetJid = null
 
-      if (error) throw error
-      setMessages(data?.messages || [])
+      // Find contact by phone
+      let { data: contactList } = await supabase
+        .from('whatsapp_contacts')
+        .select('id, remote_jid')
+        .like('remote_jid', `${canonicalPhone}%`)
+        .limit(1)
+
+      if (contactList && contactList.length > 0) {
+        targetContactId = contactList[0].id
+        targetJid = contactList[0].remote_jid
+      } else {
+        const { data: contactByPhone } = await supabase
+          .from('whatsapp_contacts')
+          .select('id, remote_jid')
+          .eq('phone_number', canonicalPhone)
+          .limit(1)
+
+        if (contactByPhone && contactByPhone.length > 0) {
+          targetContactId = contactByPhone[0].id
+          targetJid = contactByPhone[0].remote_jid
+        }
+      }
+
+      if (targetContactId && targetJid) {
+        setContactId(targetContactId)
+
+        // Sincronizar o histórico com a nova rota refatorada
+        await supabase.functions
+          .invoke('uazapi-sync-history', {
+            body: {
+              instanceName: 'comercial_era',
+              chatid: targetJid,
+            },
+          })
+          .catch(console.error)
+
+        const { data, error } = await supabase
+          .from('whatsapp_messages')
+          .select('*')
+          .eq('contact_id', targetContactId)
+          .order('timestamp', { ascending: true })
+
+        if (!error) {
+          setMessages(data || [])
+        }
+      } else {
+        setMessages([])
+        setContactId(null)
+      }
+
       setTimeout(() => {
         scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
       }, 100)
@@ -83,32 +136,42 @@ export function WhatsAppChatSheet({ lead }: WhatsAppChatSheetProps) {
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!message.trim() || !user) return
+    if (!message.trim() || !user || !lead.phone) return
 
     setSending(true)
     const currentMsg = message
     setMessage('')
 
     try {
+      let chatId = `${lead.phone.replace(/\D/g, '')}@s.whatsapp.net`
+      if (contactId) {
+        const { data } = await supabase
+          .from('whatsapp_contacts')
+          .select('remote_jid')
+          .eq('id', contactId)
+          .single()
+        if (data?.remote_jid) chatId = data.remote_jid
+      }
+
       const { data, error } = await supabase.functions.invoke('uazapi-send-message', {
         body: {
-          lead_id: lead.id,
-          phone: lead.phone,
-          message: currentMsg,
-          user_id: user.id,
           instanceName: 'comercial_era',
+          contactId: contactId,
+          number: chatId,
+          text: currentMsg,
         },
       })
 
       if (error) throw error
 
-      if (data?.status) {
-        updateLead(lead.id, { interestStatus: data.status })
-        toast({
-          title: 'Mensagem Enviada!',
-          description: `Qualidade avaliada: Score ${data.score}/100. Status: ${data.status}`,
-        })
+      if (!contactId) {
+        setTimeout(fetchMessages, 2000)
       }
+
+      toast({
+        title: 'Mensagem Enviada!',
+        description: `Mensagem enviada com sucesso para o WhatsApp do Lead.`,
+      })
     } catch (error) {
       console.error(error)
       toast({
@@ -179,8 +242,8 @@ export function WhatsAppChatSheet({ lead }: WhatsAppChatSheetProps) {
             ) : (
               <div className="space-y-4">
                 {messages.map((msg) => {
-                  const isOutgoing = msg.detalhes.startsWith('Você:')
-                  const text = msg.detalhes.replace('Você: ', '').replace('Lead respondeu: ', '')
+                  const isOutgoing = msg.from_me
+                  const text = msg.text || ''
                   return (
                     <div
                       key={msg.id}
@@ -204,7 +267,7 @@ export function WhatsAppChatSheet({ lead }: WhatsAppChatSheetProps) {
                             isOutgoing ? 'text-green-100' : 'text-muted-foreground',
                           )}
                         >
-                          {new Date(msg.data_criacao).toLocaleTimeString('pt-BR', {
+                          {new Date(msg.timestamp || msg.created_at).toLocaleTimeString('pt-BR', {
                             hour: '2-digit',
                             minute: '2-digit',
                           })}

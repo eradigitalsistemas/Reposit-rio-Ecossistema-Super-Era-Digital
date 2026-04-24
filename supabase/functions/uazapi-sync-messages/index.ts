@@ -5,7 +5,8 @@ import { extractCanonicalPhone, normalizeJid, resolveLidToPhone } from '../_shar
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
 }
 
 Deno.serve(async (req: Request) => {
@@ -127,7 +128,12 @@ Deno.serve(async (req: Request) => {
           }
 
           if (!canonicalPhone && jid.includes('@lid') && uazUrl && uazToken) {
-            canonicalPhone = await resolveLidToPhone(uazUrl, uazToken, integration.instance_name, jid)
+            canonicalPhone = await resolveLidToPhone(
+              uazUrl,
+              uazToken,
+              integration.instance_name,
+              jid,
+            )
             if (canonicalPhone) identityMap.set(jid, canonicalPhone)
           }
           let skip = false
@@ -204,7 +210,9 @@ Deno.serve(async (req: Request) => {
 
             // Extract phone from remoteJidAlt (avoids extra API call for LID contacts)
             if (!canonicalPhone && jid.includes('@lid')) {
-              const chat = cList.find((c: any) => (c.remoteJid || c.jid || c.id || c.chatid) === jid)
+              const chat = cList.find(
+                (c: any) => (c.remoteJid || c.jid || c.id || c.chatid) === jid,
+              )
               const altJid = chat?.lastMessage?.key?.remoteJidAlt
               if (altJid && altJid.includes('@s.whatsapp.net')) {
                 const altPhone = altJid.split('@')[0].replace(/\D/g, '')
@@ -257,8 +265,8 @@ Deno.serve(async (req: Request) => {
             else if (msgData?.data && Array.isArray(msgData.data)) allMessages = msgData.data
 
             // Filtrar apenas as mensagens deste JID
-            const filteredMessages = allMessages.filter(m => 
-              (m.key?.remoteJid || m.remoteJid || m.jid || m.chatid) === jid
+            const filteredMessages = allMessages.filter(
+              (m) => (m.key?.remoteJid || m.remoteJid || m.jid || m.chatid) === jid,
             )
 
             if (filteredMessages.length === 0) {

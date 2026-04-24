@@ -51,52 +51,45 @@ export default function WhatsApp() {
   const [whatsappStatus, setWhatsappStatus] = useState<string>('checking')
   const [qrCode, setQrCode] = useState<string | null>(null)
   const [isConnecting, setIsConnecting] = useState(false)
-  const [integrationId, setIntegrationId] = useState<string | null>(null)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setCurrentUser(data.user)
       if (data.user) {
-        checkIntegration()
+        checkConnectionStatus()
       }
     })
   }, [])
 
-  const checkIntegration = async () => {
-    const { data } = await supabase
-      .from('user_integrations')
-      .select('id, status')
-      .eq('instance_name', 'comercial_era')
-      .maybeSingle()
-
-    if (data) {
-      setIntegrationId(data.id)
-      checkConnectionStatus(data.id)
-    } else {
-      setWhatsappStatus('offline')
-    }
-  }
-
-  const checkConnectionStatus = async (intId: string) => {
+  const checkConnectionStatus = async () => {
     setWhatsappStatus('checking')
     try {
       const { data, error } = await supabase.functions.invoke('uazapi-get-qr', {
-        body: { integrationId: intId },
+        body: { instanceName: 'comercial_era' },
       })
       if (error) throw error
 
+      let parsedBody = data
+      if (data?.body && typeof data.body === 'string') {
+        try {
+          parsedBody = JSON.parse(data.body)
+        } catch {
+          /* intentionally ignored */
+        }
+      }
+
+      const instanceData = parsedBody?.instance || parsedBody
       const isConnected =
-        data?.instance?.state === 'open' ||
-        data?.state === 'open' ||
-        data?.connected ||
-        data?.instance?.status === 'connected' ||
-        data?.status === 'CONNECTED'
-      const qrBase64 = data?.base64 || data?.qrcode?.base64
+        instanceData?.state === 'open' ||
+        instanceData?.status === 'CONNECTED' ||
+        instanceData?.connected === true
+
+      const qrBase64 = instanceData?.base64 || instanceData?.qrcode?.base64 || parsedBody?.base64
+
       const isConnecting =
-        data?.instance?.state === 'connecting' ||
-        data?.state === 'connecting' ||
-        data?.message?.includes('Connecting') ||
-        data?.error === 'qr_not_ready_yet'
+        instanceData?.state === 'connecting' ||
+        instanceData?.message?.includes('Connecting') ||
+        instanceData?.error === 'qr_not_ready_yet'
 
       if (qrBase64) {
         setQrCode(qrBase64)
@@ -106,7 +99,7 @@ export default function WhatsApp() {
         setQrCode(null)
       } else if (isConnecting) {
         setWhatsappStatus('checking')
-        setTimeout(() => checkConnectionStatus(intId), 3000)
+        setTimeout(checkConnectionStatus, 3000)
       } else {
         setWhatsappStatus('offline')
       }
@@ -121,44 +114,7 @@ export default function WhatsApp() {
     setQrCode(null)
     setWhatsappStatus('checking')
     try {
-      let currentIntegrationId = integrationId
-
-      if (!currentIntegrationId && currentUser) {
-        const { data: newInt, error: insertError } = await supabase
-          .from('user_integrations')
-          .insert({
-            user_id: currentUser.id,
-            instance_name: 'comercial_era',
-            status: 'DISCONNECTED',
-          })
-          .select('id')
-          .single()
-
-        if (insertError) {
-          if (insertError.code === '23505') {
-            const { data: existing } = await supabase
-              .from('user_integrations')
-              .select('id')
-              .eq('instance_name', 'comercial_era')
-              .maybeSingle()
-            if (existing) currentIntegrationId = existing.id
-          } else {
-            throw insertError
-          }
-        } else if (newInt) {
-          currentIntegrationId = newInt.id
-        }
-
-        if (currentIntegrationId) {
-          setIntegrationId(currentIntegrationId)
-        }
-      }
-
-      if (!currentIntegrationId) {
-        throw new Error('Não foi possível criar ou encontrar a integração.')
-      }
-
-      await checkConnectionStatus(currentIntegrationId)
+      await checkConnectionStatus()
     } catch (e: any) {
       console.error(e)
       setWhatsappStatus('offline')
@@ -194,6 +150,21 @@ export default function WhatsApp() {
   useEffect(() => {
     if (currentUser) {
       fetchContacts()
+
+      const channel = supabase
+        .channel('whatsapp-contacts-changes')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'whatsapp_contacts' },
+          () => {
+            fetchContacts()
+          },
+        )
+        .subscribe()
+
+      return () => {
+        supabase.removeChannel(channel)
+      }
     }
   }, [currentUser])
 
@@ -214,7 +185,22 @@ export default function WhatsApp() {
   useEffect(() => {
     if (!selectedContact) return
 
-    fetchMessages(selectedContact.id)
+    const syncAndFetch = async () => {
+      setLoadingMessages(true)
+      try {
+        await supabase.functions.invoke('uazapi-sync-history', {
+          body: {
+            instanceName: 'comercial_era',
+            chatid: selectedContact.remote_jid,
+          },
+        })
+      } catch (err) {
+        console.error('Failed to sync history:', err)
+      }
+      await fetchMessages(selectedContact.id)
+    }
+
+    syncAndFetch()
 
     const channel = supabase
       .channel(`whatsapp-page-${selectedContact.id}`)
@@ -276,6 +262,7 @@ export default function WhatsApp() {
     try {
       const { data, error } = await supabase.functions.invoke('uazapi-send-message', {
         body: {
+          instanceName: 'comercial_era',
           contactId: selectedContact.id,
           text: currentMsg,
         },
@@ -441,7 +428,6 @@ export default function WhatsApp() {
 
             {/* Chat Area */}
             <div className="flex-1 overflow-hidden relative">
-              {/* WhatsApp background pattern overlay */}
               <div
                 className="absolute inset-0 opacity-40 dark:opacity-10 pointer-events-none"
                 style={{
@@ -558,11 +544,7 @@ export default function WhatsApp() {
                 <div className="bg-white p-4 rounded-xl mb-6 shadow-sm border border-zinc-100">
                   <img src={qrCode} alt="QR Code WhatsApp" className="w-64 h-64" />
                 </div>
-                <Button
-                  onClick={() => integrationId && checkConnectionStatus(integrationId)}
-                  variant="outline"
-                  className="gap-2"
-                >
+                <Button onClick={() => checkConnectionStatus()} variant="outline" className="gap-2">
                   <RefreshCw className="h-4 w-4" /> Atualizar Status
                 </Button>
               </div>

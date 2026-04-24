@@ -5,7 +5,8 @@ import { extractCanonicalPhone, normalizeJid, resolveLidToPhone } from '../_shar
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
 }
 
 Deno.serve(async (req: Request) => {
@@ -129,7 +130,12 @@ Deno.serve(async (req: Request) => {
           }
 
           if (jid && jid.includes('@lid') && !canonicalPhone && uazUrl && uazToken) {
-            canonicalPhone = await resolveLidToPhone(uazUrl, uazToken, integration.instance_name, jid)
+            canonicalPhone = await resolveLidToPhone(
+              uazUrl,
+              uazToken,
+              integration.instance_name,
+              jid,
+            )
           }
 
           let phoneJid = jid && jid.includes('@s.whatsapp.net') ? normalizeJid(jid) : null
