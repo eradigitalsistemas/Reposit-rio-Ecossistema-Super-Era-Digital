@@ -23,6 +23,7 @@
     "time-entries": 23,
     "update-demand-priority": 23,
     "vacation-balance": 23,
-    "vacation-requests": 23
+    "vacation-requests": 23,
+    "receive-message": 1
   }
 }
