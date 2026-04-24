@@ -1,45 +1,57 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, x-supabase-client-platform, apikey, content-type, x-cron-secret',
-}
+import { createClient } from 'jsr:@supabase/supabase-js@2'
+import { corsHeaders } from '../_shared/cors.ts'
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
-    const instanceName = Deno.env.get('INSTANCE_NAME')
-    const UAZAPI_URL = Deno.env.get('UAZAPI_URL')
-    const UAZAPI_TOKEN = Deno.env.get('UAZAPI_TOKEN')
+    const { integrationId } = await req.json()
+    if (!integrationId) throw new Error('Missing integrationId')
 
-    if (!instanceName || !UAZAPI_URL || !UAZAPI_TOKEN) {
-      throw new Error('Credenciais UAZAPI não configuradas nas variáveis de ambiente')
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+
+    const supabase = createClient(supabaseUrl, supabaseKey)
+
+    const { data: integ } = await supabase
+      .from('user_integrations')
+      .select('*')
+      .eq('id', integrationId)
+      .single()
+    if (!integ) throw new Error('Integration not found')
+
+    const uazUrlRaw = Deno.env.get('UAZAPI_URL') || ''
+    const uazUrl = uazUrlRaw.replace(/\/$/, '')
+    const uazAdminToken = Deno.env.get('UAZAPI_ADMIN_TOKEN') || ''
+    const instanceName = integ.instance_name
+
+    if (instanceName && uazUrl && uazAdminToken) {
+      const response = await fetch(`${uazUrl}/instance/logout`, {
+        method: 'DELETE',
+        headers: { token: instanceName },
+      })
+
+      if (!response.ok) {
+        const text = await response.text()
+        console.warn(
+          'Failed to logout instance cleanly, proceeding to set as DISCONNECTED anyway. Details:',
+          text,
+        )
+      }
     }
 
-    const apiUrl = UAZAPI_URL.endsWith('/') ? UAZAPI_URL.slice(0, -1) : UAZAPI_URL
+    await supabase
+      .from('user_integrations')
+      .update({ status: 'DISCONNECTED' })
+      .eq('id', integrationId)
 
-    const res = await fetch(`${apiUrl}/instance/logout/${instanceName}`, {
-      method: 'DELETE',
-      headers: { apikey: UAZAPI_TOKEN },
-    }).catch((e) => {
-      console.error('Error fetching logout:', e)
-      return null
-    })
-
-    let data = {}
-    if (res && res.ok) {
-      data = await res.json()
-    }
-
-    return new Response(JSON.stringify({ success: true, data }), {
+    return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
+      status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }

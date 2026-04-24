@@ -1,110 +1,110 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
-import { createClient } from 'npm:@supabase/supabase-js@2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, x-supabase-client-platform, apikey, content-type, x-cron-secret',
-}
+import { createClient } from 'jsr:@supabase/supabase-js@2'
+import { corsHeaders } from '../_shared/cors.ts'
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
-    const body = await req.json()
-    const { lead_id, message, phone, user_id } = body
-    const instanceName = Deno.env.get('INSTANCE_NAME')
-
-    if (!lead_id || !message || !user_id || !phone) {
-      throw new Error('Campos obrigatórios ausentes')
-    }
-
-    const UAZAPI_URL = Deno.env.get('UAZAPI_URL')
-    const UAZAPI_TOKEN = Deno.env.get('UAZAPI_TOKEN')
-
-    if (!instanceName || !UAZAPI_URL || !UAZAPI_TOKEN) {
-      throw new Error('Credenciais UAZAPI não configuradas nas variáveis de ambiente')
-    }
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) throw new Error('Missing Authorization header')
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    const supabase = createClient(supabaseUrl, supabaseKey)
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
 
-    const { error: insertErr } = await supabase.from('historico_leads').insert({
-      lead_id,
-      usuario_id: user_id,
-      contato_nome: 'WhatsApp',
-      forma_contato: 'WhatsApp',
-      detalhes: `Você: ${message}`,
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
     })
 
-    if (insertErr) throw insertErr
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseClient.auth.getUser()
+    if (userError || !user) throw new Error('Unauthorized')
 
-    let newStatus = 'Interessado'
-    let qualityScore = 50
-    const msgLower = message.toLowerCase()
+    const { contactId, text } = await req.json()
+    if (!contactId || !text) throw new Error('Missing contactId or text')
 
-    if (
-      msgLower.includes('comprar') ||
-      msgLower.includes('preço') ||
-      msgLower.includes('fechar') ||
-      msgLower.includes('contrato')
-    ) {
-      newStatus = 'Muito Interessado'
-      qualityScore = 90
-    } else if (
-      msgLower.includes('não quero') ||
-      msgLower.includes('caro') ||
-      msgLower.includes('depois')
-    ) {
-      newStatus = 'Não Interessado'
-      qualityScore = 20
-    } else {
-      qualityScore = Math.min(100, 50 + message.length / 2)
-      if (qualityScore > 75) newStatus = 'Muito Interessado'
+    const { data: integration } = await supabaseClient
+      .from('user_integrations')
+      .select('*')
+      .eq('user_id', user.id)
+      .single()
+
+    if (!integration || !integration.instance_name) {
+      throw new Error('Integration not found or not connected')
     }
 
-    await supabase
-      .from('leads')
-      .update({
-        status_interesse: newStatus,
-        observacoes: `Qualificação IA WA: Score ${Math.round(qualityScore)}/100.`,
-      })
-      .eq('id', lead_id)
+    const uazUrlRaw = Deno.env.get('UAZAPI_URL')
+    const uazUrl = uazUrlRaw ? uazUrlRaw.replace(/\/$/, '') : ''
+    const uazToken = Deno.env.get('UAZAPI_TOKEN')
 
-    if (UAZAPI_URL && UAZAPI_TOKEN) {
-      const apiUrl = UAZAPI_URL.endsWith('/') ? UAZAPI_URL.slice(0, -1) : UAZAPI_URL
-      const formattedPhone = phone.replace(/\D/g, '')
+    const { data: contact } = await supabaseClient
+      .from('whatsapp_contacts')
+      .select('remote_jid')
+      .eq('id', contactId)
+      .eq('user_id', user.id)
+      .single()
 
-      try {
-        const res = await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
-          method: 'POST',
-          headers: { apikey: UAZAPI_TOKEN, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            number: formattedPhone,
-            options: { delay: 1200 },
-            textMessage: { text: message },
-          }),
-        })
+    if (!contact || !contact.remote_jid) throw new Error('Contact not found')
 
-        if (!res.ok) {
-          console.error('Erro ao enviar via UAZAPI:', await res.text())
-        }
-      } catch (err) {
-        console.error('Erro de rede ao enviar via UAZAPI:', err)
-      }
-    }
-
-    return new Response(
-      JSON.stringify({ success: true, status: newStatus, score: Math.round(qualityScore) }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    const response = await fetch(`${uazUrl}/message/text`, {
+      method: 'POST',
+      headers: {
+        token: uazToken,
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        number: contact.remote_jid,
+        text: text,
+      }),
+    })
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        throw new Error('UAZAPI error: Limite de instâncias atingido (429)')
+      }
+      if (response.status === 463) {
+        throw new Error('UAZAPI error: Restrição de envio pelo WhatsApp (463)')
+      }
+      const errText = await response.text()
+      throw new Error(`UAZAPI error: ${errText}`)
+    }
+
+    const result = await response.json()
+    const messageId = result?.key?.id || result?.id || crypto.randomUUID()
+    const timestamp = new Date().toISOString()
+
+    // Optimistically save the message
+    await supabaseClient.from('whatsapp_messages').upsert(
+      {
+        user_id: user.id,
+        contact_id: contactId,
+        message_id: messageId,
+        from_me: true,
+        text: text,
+        type: 'text',
+        timestamp: timestamp,
+        raw: result,
+      },
+      { onConflict: 'user_id,message_id' },
     )
+
+    // Update contact pipeline stage
+    await supabaseClient
+      .from('whatsapp_contacts')
+      .update({
+        pipeline_stage: 'Em Conversa',
+        last_message_at: timestamp,
+      })
+      .eq('id', contactId)
+
+    return new Response(JSON.stringify({ success: true, messageId }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
+      status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
