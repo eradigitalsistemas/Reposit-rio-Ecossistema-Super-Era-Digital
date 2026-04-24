@@ -1,5 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
-import { Plus, Paperclip, X, File as FileIcon, Image as ImageIcon } from 'lucide-react'
+import {
+  Plus,
+  Paperclip,
+  X,
+  File as FileIcon,
+  Image as ImageIcon,
+  Search,
+  Check,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,6 +28,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
+import { cn } from '@/lib/utils'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import useDemandStore from '@/stores/useDemandStore'
 import useAuthStore from '@/stores/useAuthStore'
@@ -43,6 +61,10 @@ export function AddDemandModal() {
   const [schedTitle, setSchedTitle] = useState('')
   const [schedDesc, setSchedDesc] = useState('')
 
+  const [clientsList, setClientsList] = useState<{ id: string; nome: string }[]>([])
+  const [selectedClient, setSelectedClient] = useState<string>('none')
+  const [clientOpen, setClientOpen] = useState(false)
+
   const { user } = useAuthStore()
   const { toast } = useToast()
 
@@ -59,6 +81,15 @@ export function AddDemandModal() {
       fetchCollaborators()
       fetchChecklistTemplates()
       setSchedEnabled(false)
+      setSelectedClient('none')
+
+      supabase
+        .from('clientes_externos')
+        .select('id, nome')
+        .order('nome')
+        .then(({ data }) => {
+          if (data) setClientsList(data)
+        })
     }
   }, [open, fetchCollaborators, fetchChecklistTemplates])
 
@@ -112,6 +143,7 @@ export function AddDemandModal() {
         status: formData.get('status') as DemandStatus,
         dueDate: finalDueDate,
         assigneeId: assigneeIdStr === 'none' ? null : assigneeIdStr,
+        clientId: selectedClient === 'none' ? null : selectedClient,
         attachments,
         checklist,
       })
@@ -189,6 +221,73 @@ export function AddDemandModal() {
                   disabled={loading}
                   className="bg-background text-foreground border-input"
                 />
+              </div>
+
+              <div className="grid gap-2">
+                <Label className="text-foreground font-medium">Cliente</Label>
+                <Popover open={clientOpen} onOpenChange={setClientOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={clientOpen}
+                      className="w-full justify-between bg-background text-foreground border-input"
+                      disabled={loading}
+                    >
+                      {selectedClient === 'none'
+                        ? 'Selecione um cliente...'
+                        : clientsList.find((c) => c.id === selectedClient)?.nome ||
+                          'Selecione um cliente...'}
+                      <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-[var(--radix-popover-trigger-width)] p-0"
+                    align="start"
+                  >
+                    <Command>
+                      <CommandInput placeholder="Buscar cliente..." />
+                      <CommandList>
+                        <CommandEmpty>Nenhum cliente encontrado.</CommandEmpty>
+                        <CommandGroup>
+                          <CommandItem
+                            value="nenhum cliente"
+                            onSelect={() => {
+                              setSelectedClient('none')
+                              setClientOpen(false)
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                'mr-2 h-4 w-4',
+                                selectedClient === 'none' ? 'opacity-100' : 'opacity-0',
+                              )}
+                            />
+                            Nenhum cliente
+                          </CommandItem>
+                          {clientsList.map((client) => (
+                            <CommandItem
+                              key={client.id}
+                              value={client.nome}
+                              onSelect={() => {
+                                setSelectedClient(client.id)
+                                setClientOpen(false)
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  'mr-2 h-4 w-4',
+                                  selectedClient === client.id ? 'opacity-100' : 'opacity-0',
+                                )}
+                              />
+                              {client.nome}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

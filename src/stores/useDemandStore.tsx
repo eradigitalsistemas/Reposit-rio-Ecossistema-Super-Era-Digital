@@ -37,12 +37,14 @@ interface DemandStoreState {
   addDemand: (
     demand: Omit<Demand, 'id' | 'createdAt' | 'responses' | 'logs'> & {
       assigneeId?: string | null
+      clientId?: string | null
     },
   ) => Promise<Demand | undefined>
   editDemand: (
     demandId: string,
     updates: Partial<Omit<Demand, 'id' | 'createdAt' | 'responses' | 'logs'>> & {
       attachments?: DemandAttachment[]
+      clientId?: string | null
     },
   ) => Promise<void>
   updateStatus: (demandId: string, status: DemandStatus) => Promise<void>
@@ -410,11 +412,14 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             status: newDemand.status || 'Pendente',
             data_vencimento: newDemand.dueDate || null,
             responsavel_id: newDemand.assigneeId || null,
+            cliente_id: newDemand.clientId || null,
             usuario_id: user.id,
             anexos: newDemand.attachments || [],
             checklist: newDemand.checklist || [],
           })
-          .select('*, responsavel:usuarios(nome)')
+          .select(
+            '*, responsavel:usuarios!demandas_responsavel_id_fkey(nome), cliente:clientes_externos(id, nome)',
+          )
 
         if (error) throw error
         if (data && data.length > 0) {
@@ -446,6 +451,8 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             dueDate: d.data_vencimento,
             assignee: (d as any).responsavel?.nome || 'Sem responsável',
             assigneeId: d.responsavel_id,
+            clientId: d.cliente_id,
+            clientName: (d as any).cliente?.nome || null,
             responses: [],
             logs: [],
             attachments: d.anexos || [],
@@ -487,6 +494,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         if (updates.priority !== undefined) updateData.prioridade = updates.priority
         if (updates.dueDate !== undefined) updateData.data_vencimento = updates.dueDate
         if (updates.attachments !== undefined) updateData.anexos = updates.attachments
+        if (updates.clientId !== undefined) updateData.cliente_id = updates.clientId
 
         if (updates.assigneeId !== undefined) {
           updateData.responsavel_id = updates.assigneeId

@@ -12,6 +12,7 @@ import {
   Check,
   CheckCircle,
   Eye,
+  Briefcase,
 } from 'lucide-react'
 import { format, isValid } from 'date-fns'
 import { DemandDetailsModal } from './DemandDetailsModal'
@@ -174,6 +175,13 @@ export function DemandCard({ demand }: DemandCardProps) {
           </div>
 
           <div className="flex flex-col gap-1.5 mt-2">
+            {demand.clientName && (
+              <div className="flex items-center text-sm sm:text-xs text-muted-foreground w-full mb-0.5">
+                <Briefcase className="w-4 h-4 sm:w-3 sm:h-3 mr-1.5 sm:mr-1 shrink-0" />
+                <span className="truncate">{demand.clientName}</span>
+              </div>
+            )}
+
             <div className="flex items-center justify-between text-sm sm:text-xs text-muted-foreground w-full">
               <div className="flex items-center truncate max-w-[65%]">
                 <User2 className="w-4 h-4 sm:w-3 sm:h-3 mr-1.5 sm:mr-1 shrink-0" />
