@@ -105,7 +105,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           .from('usuarios')
           .select('nome, perfil')
           .eq('id', user.id)
-          .single()
+          .maybeSingle()
 
         if (error) throw error
 
