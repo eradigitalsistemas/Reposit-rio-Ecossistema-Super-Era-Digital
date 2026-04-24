@@ -22,7 +22,7 @@ import { cn } from '@/lib/utils'
 
 type Lead = {
   id: string
-  nome: string
+  name: string
   telefone: string | null
   status_interesse: string
   empresa?: string | null
@@ -93,13 +93,17 @@ export default function WhatsApp() {
     try {
       const { data, error } = await supabase
         .from('leads')
-        .select('id, nome, telefone, status_interesse, empresa')
+        .select('id, name, telefone, status_interesse, empresa')
         .not('telefone', 'is', null)
         .order('data_criacao', { ascending: false })
 
       if (error) throw error
-      setLeads(data || [])
-      setFilteredLeads(data || [])
+      const mappedData = (data || []).map((l: any) => ({
+        ...l,
+        name: l.name || l.nome,
+      }))
+      setLeads(mappedData)
+      setFilteredLeads(mappedData)
     } catch (error: any) {
       console.error(error)
       toast({ title: 'Erro', description: 'Falha ao carregar leads', variant: 'destructive' })
@@ -113,7 +117,7 @@ export default function WhatsApp() {
       setFilteredLeads(
         leads.filter(
           (l) =>
-            l.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            l.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (l.telefone && l.telefone.includes(searchTerm)),
         ),
       )
@@ -301,12 +305,12 @@ export default function WhatsApp() {
                 >
                   <Avatar className="h-12 w-12 border border-background shrink-0">
                     <AvatarFallback className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 font-medium">
-                      {lead.nome.substring(0, 2).toUpperCase()}
+                      {lead.name.substring(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 overflow-hidden">
                     <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-medium text-sm truncate pr-2">{lead.nome}</h3>
+                      <h3 className="font-medium text-sm truncate pr-2">{lead.name}</h3>
                     </div>
                     <p className="text-xs text-muted-foreground truncate mb-1.5 flex items-center gap-1.5">
                       <Phone className="h-3 w-3 shrink-0" /> {lead.telefone}
@@ -346,11 +350,11 @@ export default function WhatsApp() {
               </Button>
               <Avatar className="h-10 w-10 border border-border shrink-0">
                 <AvatarFallback className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 font-medium">
-                  {selectedLead.nome.substring(0, 2).toUpperCase()}
+                  {selectedLead.name.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col min-w-0">
-                <span className="font-semibold text-sm truncate">{selectedLead.nome}</span>
+                <span className="font-semibold text-sm truncate">{selectedLead.name}</span>
                 <span className="text-xs text-muted-foreground truncate">
                   {selectedLead.telefone}
                 </span>

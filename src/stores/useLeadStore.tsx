@@ -50,7 +50,7 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
       setLeads(
         data.map((d: any) => ({
           id: d.id,
-          name: d.nome,
+          name: d.name || d.nome,
           company: d.empresa || '',
           email: d.email,
           phone: d.telefone || '',
@@ -78,7 +78,7 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
       const { data, error } = await supabase
         .from('leads')
         .insert({
-          nome: newLead.name,
+          name: newLead.name,
           empresa: newLead.company,
           email: newLead.email,
           telefone: newLead.phone,
@@ -100,7 +100,7 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
         const d = data as any
         const createdLead: Lead = {
           id: d.id,
-          name: d.nome,
+          name: d.name || d.nome,
           company: d.empresa || '',
           email: d.email,
           phone: d.telefone || '',
@@ -121,7 +121,7 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
   const updateLead = useCallback(
     async (id: string, updates: Partial<Omit<Lead, 'id' | 'createdAt'>>) => {
       const dbUpdates: any = {}
-      if (updates.name !== undefined) dbUpdates.nome = updates.name
+      if (updates.name !== undefined) dbUpdates.name = updates.name
       if (updates.company !== undefined) dbUpdates.empresa = updates.company
       if (updates.email !== undefined) dbUpdates.email = updates.email
       if (updates.phone !== undefined) dbUpdates.telefone = updates.phone
