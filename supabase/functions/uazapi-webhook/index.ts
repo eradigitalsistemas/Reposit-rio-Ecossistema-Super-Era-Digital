@@ -93,8 +93,7 @@ Deno.serve(async (req: Request) => {
         return new Response('Ignored - No messageid', { status: 200 })
       }
 
-      const pushName =
-        msgObj.pushName || msgObj.pushname || msgObj.verifiedName || msgObj.name || 'Unknown'
+      const pushName = msgObj.pushName || msgObj.pushname || msgObj.verifiedName || msgObj.name || 'Unknown'
       let canonicalPhone = extractCanonicalPhone({ remoteJid, ...msgObj })
 
       const uazUrlRaw = Deno.env.get('UAZAPI_URL')

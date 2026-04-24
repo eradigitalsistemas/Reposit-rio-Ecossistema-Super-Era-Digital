@@ -26,7 +26,10 @@ export async function linkLidToPhone(supabase: SupabaseClient, args: LinkLidArgs
     if (displayName && !existingIdentity.display_name) updates.display_name = displayName
 
     if (Object.keys(updates).length > 0) {
-      await supabase.from('contact_identity').update(updates).eq('id', existingIdentity.id)
+      await supabase
+        .from('contact_identity')
+        .update(updates)
+        .eq('id', existingIdentity.id)
     }
   } else {
     await supabase.from('contact_identity').insert({

@@ -26,10 +26,10 @@
     "vacation-requests": 15,
     "uazapi-webhook": 12,
     "uazapi-sync-messages-trace": 12,
-    "uazapi-create-instance": 12,
+    "uazapi-create-instance": 13,
     "uazapi-debug": 11,
     "uazapi-disconnect": 12,
-    "uazapi-get-qr": 14,
+    "uazapi-get-qr": 15,
     "uazapi-sync-contacts": 12,
     "uazapi-sync-messages": 12,
     "uazapi-send-message": 12
