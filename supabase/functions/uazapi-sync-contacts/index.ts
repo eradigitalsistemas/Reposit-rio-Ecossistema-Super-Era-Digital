@@ -124,12 +124,7 @@ Deno.serve(async (req: Request) => {
           }
 
           if (jid && jid.includes('@lid') && !canonicalPhone && uazUrl && uazToken) {
-            canonicalPhone = await resolveLidToPhone(
-              uazUrl,
-              uazToken,
-              integration.instance_name,
-              jid,
-            )
+            canonicalPhone = await resolveLidToPhone(uazUrl, uazToken, integration.instance_name, jid)
           }
 
           let phoneJid = jid && jid.includes('@s.whatsapp.net') ? normalizeJid(jid) : null
