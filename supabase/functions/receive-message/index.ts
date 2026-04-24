@@ -15,10 +15,10 @@ Deno.serve(async (req: Request) => {
     // 1. VALIDAÇÃO DE SEGURANÇA
     if (!token || token !== webhookSecret) {
       console.error('Invalid token or missing Authorization header')
-      return new Response(JSON.stringify({ error: 'Unauthorized', message: 'Token inválido' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized', message: 'Token inválido' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
     }
 
     let payload
