@@ -62,8 +62,8 @@ Deno.serve(async (req: Request) => {
     else if (msgDataRaw?.data && Array.isArray(msgDataRaw.data)) allMessages = msgDataRaw.data
 
     // Filtrar apenas as mensagens deste JID
-    const messages = allMessages.filter(m => 
-      (m.key?.remoteJid || m.remoteJid || m.jid || m.chatid) === targetJid
+    const messages = allMessages.filter(
+      (m) => (m.key?.remoteJid || m.remoteJid || m.jid || m.chatid) === targetJid,
     )
 
     log('findMessages_shape', {
@@ -72,7 +72,10 @@ Deno.serve(async (req: Request) => {
       keys: typeof msgDataRaw === 'object' ? Object.keys(msgDataRaw) : null,
     })
 
-    log('parsed_messages', { count: messages.length, firstMsgId: messages[0]?.key?.id || messages[0]?.messageid })
+    log('parsed_messages', {
+      count: messages.length,
+      firstMsgId: messages[0]?.key?.id || messages[0]?.messageid,
+    })
 
     if (!contact || messages.length === 0) {
       return new Response(JSON.stringify(trace, null, 2), {
