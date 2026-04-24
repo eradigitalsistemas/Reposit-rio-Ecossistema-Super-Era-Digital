@@ -3,13 +3,12 @@ import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, x-supabase-client-platform, apikey, content-type, x-cron-secret',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, x-supabase-client-platform, apikey, content-type, x-cron-secret',
 }
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
-
+  
   try {
     const { instanceName = 'kanban_vendas' } = await req.json().catch(() => ({}))
     const UAZAPI_URL = Deno.env.get('UAZAPI_URL')
@@ -23,18 +22,19 @@ Deno.serve(async (req: Request) => {
 
     const res = await fetch(`${apiUrl}/instance/logout/${instanceName}`, {
       method: 'DELETE',
-      headers: { apikey: UAZAPI_TOKEN },
+      headers: { 'apikey': UAZAPI_TOKEN }
     })
-
+    
     const data = await res.json()
-
-    return new Response(JSON.stringify({ success: true, data }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    
+    return new Response(JSON.stringify({ success: true, data }), { 
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
     })
+
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
   }
 })
