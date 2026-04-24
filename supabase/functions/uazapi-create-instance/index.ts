@@ -64,10 +64,13 @@ Deno.serve(async (req: Request) => {
         text.includes('already exists') ||
         text.includes('Duplicated instance')
       ) {
-        const stateRes = await fetch(`${uazUrl}/instance/status`, {
-          method: 'GET',
-          headers: { token: instanceName },
-        })
+        const stateRes = await fetch(
+          `${uazUrl}/instance/status`,
+          {
+            method: 'GET',
+            headers: { token: instanceName },
+          },
+        )
 
         if (stateRes.ok) {
           const stateData = await stateRes.json()
