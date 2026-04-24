@@ -4,8 +4,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 export const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, x-supabase-client-platform, apikey, content-type, x-cron-secret',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, x-supabase-client-platform, apikey, content-type, x-cron-secret',
 }
 
 Deno.serve(async (req: Request) => {
@@ -17,72 +16,51 @@ Deno.serve(async (req: Request) => {
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
     const provider = whatsapp_config?.whatsapp_provider || 'uazapi'
     const uazapi_url = whatsapp_config?.uazapi_url || Deno.env.get('UAZAPI_URL')
     const uazapi_token = whatsapp_config?.uazapi_token || Deno.env.get('UAZAPI_TOKEN')
-    const uazapi_instance =
-      whatsapp_config?.uazapi_instance ||
-      Deno.env.get('INSTANCE_NAME') ||
-      Deno.env.get('UAZAPI_INSTANCE') ||
-      'comercial_era'
+    const uazapi_instance = whatsapp_config?.uazapi_instance || Deno.env.get('INSTANCE_NAME') || Deno.env.get('UAZAPI_INSTANCE') || 'comercial_era'
 
-    const apiUrl = uazapi_url
-      ? uazapi_url.endsWith('/')
-        ? uazapi_url.slice(0, -1)
-        : uazapi_url
-      : ''
+    const apiUrl = uazapi_url ? (uazapi_url.endsWith('/') ? uazapi_url.slice(0, -1) : uazapi_url) : ''
 
     if (action === 'check_status') {
-      if (!apiUrl || !uazapi_token || !uazapi_instance) {
-        return new Response(JSON.stringify({ state: 'offline', error: 'Credenciais ausentes' }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
-      try {
-        const res = await fetch(`${apiUrl}/instance/connectionState/${uazapi_instance}`, {
-          headers: { apikey: uazapi_token },
-        })
-        const data = await res.json()
-        return new Response(
-          JSON.stringify({ state: data?.instance?.state || data?.state || 'offline' }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-        )
-      } catch (err: any) {
-        return new Response(JSON.stringify({ state: 'offline', error: err.message }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
+       if (!apiUrl || !uazapi_token || !uazapi_instance) {
+         return new Response(JSON.stringify({ state: 'offline', error: 'Credenciais ausentes' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+       }
+       try {
+         const res = await fetch(`${apiUrl}/instance/connectionState/${uazapi_instance}`, {
+           headers: { 'apikey': uazapi_token }
+         })
+         const data = await res.json()
+         return new Response(JSON.stringify({ state: data?.instance?.state || data?.state || 'offline' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+       } catch (err: any) {
+         return new Response(JSON.stringify({ state: 'offline', error: err.message }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+       }
     }
 
     if (action === 'connect') {
-      if (!apiUrl || !uazapi_token || !uazapi_instance) {
-        return new Response(JSON.stringify({ state: 'offline', error: 'Credenciais ausentes' }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
-      try {
-        const res = await fetch(`${apiUrl}/instance/connect/${uazapi_instance}`, {
-          headers: { apikey: uazapi_token },
-        })
-        const data = await res.json()
-        return new Response(JSON.stringify(data), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      } catch (err: any) {
-        return new Response(JSON.stringify({ error: err.message }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
+       if (!apiUrl || !uazapi_token || !uazapi_instance) {
+         return new Response(JSON.stringify({ state: 'offline', error: 'Credenciais ausentes' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+       }
+       try {
+         const res = await fetch(`${apiUrl}/instance/connect/${uazapi_instance}`, {
+           headers: { 'apikey': uazapi_token }
+         })
+         const data = await res.json()
+         return new Response(JSON.stringify(data), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+       } catch (err: any) {
+         return new Response(JSON.stringify({ error: err.message }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+       }
     }
 
     if (action === 'send_message') {
       if (!lead_id || !message || !user_id) {
         return new Response(JSON.stringify({ error: 'Missing required fields' }), {
           status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         })
       }
 
@@ -92,7 +70,7 @@ Deno.serve(async (req: Request) => {
         usuario_id: user_id,
         contato_nome: 'WhatsApp',
         forma_contato: 'WhatsApp',
-        detalhes: `Você: ${message}`,
+        detalhes: `Você: ${message}`
       })
 
       if (insertErr1) throw insertErr1
@@ -101,58 +79,38 @@ Deno.serve(async (req: Request) => {
       let newStatus = 'Interessado'
       let qualityScore = 50
       const msgLower = message.toLowerCase()
-
-      if (
-        msgLower.includes('comprar') ||
-        msgLower.includes('preço') ||
-        msgLower.includes('urgente') ||
-        msgLower.includes('fechar') ||
-        msgLower.includes('contrato')
-      ) {
+      
+      if (msgLower.includes('comprar') || msgLower.includes('preço') || msgLower.includes('urgente') || msgLower.includes('fechar') || msgLower.includes('contrato')) {
         newStatus = 'Muito Interessado'
         qualityScore = 90
-      } else if (
-        msgLower.includes('não quero') ||
-        msgLower.includes('caro') ||
-        msgLower.includes('depois') ||
-        msgLower.includes('desistir')
-      ) {
+      } else if (msgLower.includes('não quero') || msgLower.includes('caro') || msgLower.includes('depois') || msgLower.includes('desistir')) {
         newStatus = 'Não Interessado'
         qualityScore = 20
       } else {
-        qualityScore = Math.min(100, 50 + message.length / 2)
+        qualityScore = Math.min(100, 50 + (message.length / 2))
         if (qualityScore > 75) newStatus = 'Muito Interessado'
       }
 
       // 3. Atualizar a qualificação do lead no banco de dados
-      await supabase
-        .from('leads')
-        .update({
-          status_interesse: newStatus,
-          observacoes: `Qualificação Automática WhatsApp: Score ${Math.round(qualityScore)}/100. Última interação registrada via WA.`,
-        })
-        .eq('id', lead_id)
+      await supabase.from('leads').update({
+        status_interesse: newStatus,
+        observacoes: `Qualificação Automática WhatsApp: Score ${Math.round(qualityScore)}/100. Última interação registrada via WA.`
+      }).eq('id', lead_id)
 
       // 4. Envio Real para API do WhatsApp (agora Agnóstico ao Provedor)
       if (apiUrl && uazapi_token && uazapi_instance && phone) {
         const formattedPhone = phone.replace(/\D/g, '')
-
+        
         try {
-          const res = await fetch(`${apiUrl}/message/sendText/${uazapi_instance}`, {
+          const res = await fetch(`${apiUrl}/message/sendText/${uazapi_instance}`, { 
             method: 'POST',
-            headers: { apikey: uazapi_token, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              number: formattedPhone,
-              options: { delay: 1200 },
-              textMessage: { text: message },
-            }),
+            headers: { 'apikey': uazapi_token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ number: formattedPhone, options: { delay: 1200 }, textMessage: { text: message } })
           })
           if (!res.ok) {
             console.error('Erro na UAZAPI:', await res.text())
           } else {
-            console.log(
-              `Mensagem processada e encaminhada via UAZAPI (Instância: ${uazapi_instance})`,
-            )
+            console.log(`Mensagem processada e encaminhada via UAZAPI (Instância: ${uazapi_instance})`)
           }
         } catch (fetchErr) {
           console.error('Falha de conexão com a UAZAPI:', fetchErr)
@@ -166,26 +124,24 @@ Deno.serve(async (req: Request) => {
           usuario_id: user_id,
           contato_nome: 'WhatsApp (Lead)',
           forma_contato: 'WhatsApp',
-          detalhes: `Lead respondeu: Mensagem recebida! Vamos conversar sobre os próximos passos. [via ${provider}]`,
+          detalhes: `Lead respondeu: Mensagem recebida! Vamos conversar sobre os próximos passos. [via ${provider}]`
         })
       }, 3000)
 
-      return new Response(
-        JSON.stringify({ success: true, status: newStatus, score: Math.round(qualityScore) }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        },
-      )
+      return new Response(JSON.stringify({ success: true, status: newStatus, score: Math.round(qualityScore) }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
     }
 
     return new Response(JSON.stringify({ error: 'Ação inválida' }), {
       status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
+
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
   }
 })

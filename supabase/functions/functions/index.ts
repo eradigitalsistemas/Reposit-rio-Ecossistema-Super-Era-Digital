@@ -6,10 +6,7 @@ Deno.serve(async (req: Request) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  return new Response(
-    JSON.stringify({ status: 'ok', message: 'Dummy function to satisfy entrypoint requirement' }),
-    {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    },
-  )
+  return new Response(JSON.stringify({ status: 'ok', message: 'Dummy function to satisfy entrypoint requirement' }), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  })
 })
