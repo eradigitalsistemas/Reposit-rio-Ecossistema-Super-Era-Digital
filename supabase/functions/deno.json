@@ -1,13 +1,13 @@
 {
   "_versions": {
     "admin-users": 15,
-    "ai-classify-contacts": 17,
+    "ai-classify-contacts": 18,
     "ai-pipeline-monitor": 15,
     "candidates-webhook": 15,
     "candidates": 15,
     "cron-hr-jobs": 15,
     "custom-auth": 15,
-    "dedupe-lid-contacts": 15,
+    "dedupe-lid-contacts": 16,
     "employees": 15,
     "functions": 15,
     "manage-client-documents": 15,
@@ -24,14 +24,14 @@
     "update-demand-priority": 15,
     "vacation-balance": 15,
     "vacation-requests": 15,
-    "uazapi-webhook": 11,
+    "uazapi-webhook": 12,
     "uazapi-sync-messages-trace": 12,
-    "uazapi-create-instance": 11,
+    "uazapi-create-instance": 12,
     "uazapi-debug": 11,
-    "uazapi-disconnect": 11,
-    "uazapi-get-qr": 13,
-    "uazapi-sync-contacts": 11,
-    "uazapi-sync-messages": 11,
-    "uazapi-send-message": 11
+    "uazapi-disconnect": 12,
+    "uazapi-get-qr": 14,
+    "uazapi-sync-contacts": 12,
+    "uazapi-sync-messages": 12,
+    "uazapi-send-message": 12
   }
 }
