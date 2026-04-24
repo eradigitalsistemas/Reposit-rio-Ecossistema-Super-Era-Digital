@@ -35,7 +35,7 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
     const { data, error } = await supabase
       .from('leads')
       .select('*')
-      .order('data_criacao', { ascending: false })
+      .order('created_at', { ascending: false })
 
     if (error) {
       toast({
