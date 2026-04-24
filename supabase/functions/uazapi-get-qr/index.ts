@@ -1,86 +1,33 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: { 'Access-Control-Allow-Origin': '*' } })
 
   try {
-    const { integrationId } = await req.json()
-
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
-    let uazUrl = Deno.env.get('UAZAPI_URL') || ''
-    if (uazUrl.endsWith('/')) uazUrl = uazUrl.slice(0, -1)
-
+    const uazUrl = (Deno.env.get('UAZAPI_URL') || '').replace(/\/$/, '')
     const uazAdminToken = Deno.env.get('UAZAPI_ADMIN_TOKEN') || ''
-    const uazToken = Deno.env.get('UAZAPI_TOKEN') || 'comercial_era'
-    const instanceName = 'comercial_era' // Nome fixo para garantir consistência
 
-    const supabase = createClient(supabaseUrl, supabaseKey)
-
-    // 1. Tentar criar (se já existir, a API ignora ou retorna 409)
-    const createRes = await fetch(uazUrl + '/instance/create', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        admintoken: uazAdminToken,
-      },
-      body: JSON.stringify({
-        instanceName: instanceName,
-        token: uazToken,
-      }),
-    })
-
-    if (!createRes.ok && createRes.status !== 409) {
-      const errorText = await createRes.text()
-      console.warn(`[uazapi-get-qr] /instance/create failed: ${createRes.status} - ${errorText}`)
-    }
-
-    // 2. Buscar o estado da conexão e/ou QR Code
-    const connectRes = await fetch(uazUrl + '/instance/connect', {
+    // Testaremos a rota mais simples possível e mudaremos o header para Authorization
+    const url = uazUrl + "/instance/list"
+    
+    const res = await fetch(url, {
       method: 'GET',
-      headers: { token: uazToken },
-    })
-
-    if (!connectRes.ok) {
-      const errorText = await connectRes.text()
-      console.error(`[uazapi-get-qr] /instance/connect failed: ${connectRes.status} - ${errorText}`)
-
-      const stateRes = await fetch(uazUrl + '/instance/connectionState', {
-        method: 'GET',
-        headers: { token: uazToken },
-      }).catch(() => null)
-
-      if (stateRes && stateRes.ok) {
-        const stateData = await stateRes.json()
-        return new Response(JSON.stringify(stateData), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+      headers: { 
+        'Authorization': 'Bearer ' + uazAdminToken,
+        'admintoken': uazAdminToken // Testando ambos
       }
-
-      return new Response(
-        JSON.stringify({ error: `UAZAPI error: ${connectRes.status}`, details: errorText }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        },
-      )
-    }
-
-    const data = await connectRes.json()
-
-    return new Response(JSON.stringify(data), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+    
+    const text = await res.text()
+    
+    return new Response(JSON.stringify({ 
+      endpoint: url,
+      status: res.status, 
+      body: text 
+    }), {
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
     })
   } catch (error: any) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 })
   }
 })
