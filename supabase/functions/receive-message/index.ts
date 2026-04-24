@@ -15,10 +15,10 @@ Deno.serve(async (req: Request) => {
     // 1. VALIDAÇÃO DE SEGURANÇA
     if (!token || token !== webhookSecret) {
       console.error('Invalid token or missing Authorization header')
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized', message: 'Token inválido' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      )
+      return new Response(JSON.stringify({ error: 'Unauthorized', message: 'Token inválido' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
     }
 
     let payload
@@ -140,7 +140,15 @@ Deno.serve(async (req: Request) => {
       console.error('Error updating contact status:', updateContactError)
     }
 
-    // 5. RESPOSTA DE SUCESSO
+    // 5. REGISTRO DE LOG (Confirmação de disparo para UI)
+    await supabase.from('sync_logs').insert({
+      entity_type: 'webhook_receive',
+      entity_id: newMessage.id,
+      status: 'success',
+      error_message: null,
+    })
+
+    // 6. RESPOSTA DE SUCESSO
     return new Response(
       JSON.stringify({
         success: true,
@@ -152,6 +160,22 @@ Deno.serve(async (req: Request) => {
     )
   } catch (error: any) {
     console.error('Internal Server Error:', error)
+
+    // Tenta registrar o erro no log se possível (não aguarda para não travar)
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    if (supabaseUrl && supabaseServiceKey) {
+      const sb = createClient(supabaseUrl, supabaseServiceKey)
+      sb.from('sync_logs')
+        .insert({
+          entity_type: 'webhook_receive',
+          entity_id: 'error',
+          status: 'failed',
+          error_message: error.message || 'Internal Server Error',
+        })
+        .then()
+    }
+
     return new Response(
       JSON.stringify({ error: 'Internal Server Error', message: 'Falha ao processar mensagem' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
