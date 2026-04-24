@@ -49,17 +49,11 @@ export default function WhatsApp() {
     supabase
       .from('configuracoes')
       .select('chave, valor')
-      .in('chave', [
-        'whatsapp_provider',
-        'evolution_url',
-        'evolution_api_url',
-        'evolution_api_key',
-        'evolution_instance',
-      ])
+      .in('chave', ['whatsapp_provider', 'uazapi_url', 'uazapi_token', 'uazapi_instance'])
       .then(({ data }) => {
         if (data) {
           const config = data.reduce((acc: any, curr) => ({ ...acc, [curr.chave]: curr.valor }), {})
-          if (!config.whatsapp_provider) config.whatsapp_provider = 'evolution'
+          if (!config.whatsapp_provider) config.whatsapp_provider = 'uazapi'
           setWhatsappConfig(config)
           checkConnectionStatus(config)
         }
