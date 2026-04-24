@@ -24,6 +24,7 @@
     "update-demand-priority": 23,
     "vacation-balance": 23,
     "vacation-requests": 23,
-    "receive-message": 1
+    "receive-message": 1,
+    "get-chat-history": 1
   }
 }
