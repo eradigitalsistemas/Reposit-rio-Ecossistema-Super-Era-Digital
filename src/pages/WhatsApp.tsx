@@ -14,26 +14,34 @@ import {
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 
-type Lead = {
+type Contact = {
   id: string
-  name: string
-  telefone: string | null
-  status_interesse: string
-  empresa?: string | null
+  push_name: string | null
+  phone_number: string | null
+  pipeline_stage: string | null
+  profile_pic_url: string | null
+  remote_jid: string
+}
+
+type Message = {
+  id: string
+  text: string | null
+  from_me: boolean
+  timestamp: string
 }
 
 export default function WhatsApp() {
-  const [leads, setLeads] = useState<Lead[]>([])
-  const [filteredLeads, setFilteredLeads] = useState<Lead[]>([])
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
-  const [messages, setMessages] = useState<any[]>([])
-  const [loadingLeads, setLoadingLeads] = useState(true)
+  const [contacts, setContacts] = useState<Contact[]>([])
+  const [filteredContacts, setFilteredContacts] = useState<Contact[]>([])
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null)
+  const [messages, setMessages] = useState<Message[]>([])
+  const [loadingContacts, setLoadingContacts] = useState(true)
   const [loadingMessages, setLoadingMessages] = useState(false)
   const [messageText, setMessageText] = useState('')
   const [sending, setSending] = useState(false)
@@ -43,22 +51,45 @@ export default function WhatsApp() {
   const [whatsappStatus, setWhatsappStatus] = useState<string>('checking')
   const [qrCode, setQrCode] = useState<string | null>(null)
   const [isConnecting, setIsConnecting] = useState(false)
+  const [integrationId, setIntegrationId] = useState<string | null>(null)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setCurrentUser(data.user))
-    checkConnectionStatus()
-    fetchLeads()
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrentUser(data.user)
+      if (data.user) {
+        checkIntegration(data.user.id)
+      }
+    })
   }, [])
 
-  const checkConnectionStatus = async () => {
+  const checkIntegration = async (userId: string) => {
+    const { data } = await supabase
+      .from('user_integrations')
+      .select('id, status')
+      .eq('user_id', userId)
+      .maybeSingle()
+
+    if (data) {
+      setIntegrationId(data.id)
+      checkConnectionStatus(data.id)
+    } else {
+      setWhatsappStatus('offline')
+    }
+  }
+
+  const checkConnectionStatus = async (intId: string) => {
     setWhatsappStatus('checking')
     try {
-      const { data, error } = await supabase.functions.invoke('uazapi-get-qr')
+      const { data, error } = await supabase.functions.invoke('uazapi-get-qr', {
+        body: { integrationId: intId },
+      })
       if (error) throw error
-      if (data?.state) {
-        setWhatsappStatus(data.state)
-        if (data.state === 'open') setQrCode(null)
-        if (data.base64) setQrCode(data.base64)
+      if (data?.base64) {
+        setQrCode(data.base64)
+        setWhatsappStatus('qrCode')
+      } else if (data?.connected || data?.state === 'open') {
+        setWhatsappStatus('open')
+        setQrCode(null)
       } else {
         setWhatsappStatus('offline')
       }
@@ -68,16 +99,19 @@ export default function WhatsApp() {
   }
 
   const handleConnect = async () => {
+    if (!integrationId) return
     setIsConnecting(true)
     setQrCode(null)
     try {
-      const { data, error } = await supabase.functions.invoke('uazapi-get-qr')
+      const { data, error } = await supabase.functions.invoke('uazapi-get-qr', {
+        body: { integrationId },
+      })
       if (error) throw error
       if (data?.base64) {
         setQrCode(data.base64)
         setWhatsappStatus('qrCode')
-      } else if (data?.state) {
-        setWhatsappStatus(data.state)
+      } else if (data?.connected || data?.state === 'open') {
+        setWhatsappStatus('open')
       } else {
         toast({ title: 'Erro', description: 'Não foi possível conectar.', variant: 'destructive' })
       }
@@ -88,70 +122,69 @@ export default function WhatsApp() {
     }
   }
 
-  const fetchLeads = async () => {
-    setLoadingLeads(true)
+  const fetchContacts = async () => {
+    setLoadingContacts(true)
     try {
       const { data, error } = await supabase
-        .from('leads')
-        .select('id, name, telefone, status_interesse, empresa')
-        .not('telefone', 'is', null)
-        .order('data_criacao', { ascending: false })
+        .from('whatsapp_contacts')
+        .select('*')
+        .order('last_message_at', { ascending: false })
 
       if (error) throw error
-      const mappedData = (data || []).map((l: any) => ({
-        ...l,
-        name: l.name || l.nome,
-      }))
-      setLeads(mappedData)
-      setFilteredLeads(mappedData)
+      setContacts(data || [])
+      setFilteredContacts(data || [])
     } catch (error: any) {
       console.error(error)
-      toast({ title: 'Erro', description: 'Falha ao carregar leads', variant: 'destructive' })
+      toast({ title: 'Erro', description: 'Falha ao carregar contatos', variant: 'destructive' })
     } finally {
-      setLoadingLeads(false)
+      setLoadingContacts(false)
     }
   }
 
   useEffect(() => {
+    if (currentUser) {
+      fetchContacts()
+    }
+  }, [currentUser])
+
+  useEffect(() => {
     if (searchTerm) {
-      setFilteredLeads(
-        leads.filter(
-          (l) =>
-            l.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (l.telefone && l.telefone.includes(searchTerm)),
+      setFilteredContacts(
+        contacts.filter(
+          (c) =>
+            (c.push_name && c.push_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (c.phone_number && c.phone_number.includes(searchTerm)),
         ),
       )
     } else {
-      setFilteredLeads(leads)
+      setFilteredContacts(contacts)
     }
-  }, [searchTerm, leads])
+  }, [searchTerm, contacts])
 
   useEffect(() => {
-    if (!selectedLead) return
+    if (!selectedContact) return
 
-    fetchMessages(selectedLead.id)
+    fetchMessages(selectedContact.id)
 
     const channel = supabase
-      .channel(`whatsapp-page-${selectedLead.id}`)
+      .channel(`whatsapp-page-${selectedContact.id}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'historico_leads',
-          filter: `lead_id=eq.${selectedLead.id}`,
+          table: 'whatsapp_messages',
+          filter: `contact_id=eq.${selectedContact.id}`,
         },
         (payload) => {
-          if (payload.new.forma_contato === 'WhatsApp') {
-            setMessages((prev) => {
-              const exists = prev.find((m) => m.id === payload.new.id)
-              if (exists) return prev
-              return [...prev, payload.new]
-            })
-            setTimeout(() => {
-              scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
-            }, 100)
-          }
+          setMessages((prev) => {
+            const exists = prev.find((m) => m.id === payload.new.id)
+            if (exists) return prev
+            return [...prev, payload.new as Message]
+          })
+          setTimeout(() => {
+            scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
+          }, 100)
         },
       )
       .subscribe()
@@ -159,17 +192,19 @@ export default function WhatsApp() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [selectedLead])
+  }, [selectedContact])
 
-  const fetchMessages = async (leadId: string) => {
+  const fetchMessages = async (contactId: string) => {
     setLoadingMessages(true)
     try {
-      const { data, error } = await supabase.functions.invoke('uazapi-sync-messages', {
-        body: { lead_id: leadId },
-      })
+      const { data, error } = await supabase
+        .from('whatsapp_messages')
+        .select('id, text, from_me, timestamp')
+        .eq('contact_id', contactId)
+        .order('timestamp', { ascending: true })
 
       if (error) throw error
-      setMessages(data?.messages || [])
+      setMessages(data || [])
       setTimeout(() => {
         scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
       }, 100)
@@ -182,7 +217,7 @@ export default function WhatsApp() {
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!messageText.trim() || !currentUser || !selectedLead) return
+    if (!messageText.trim() || !currentUser || !selectedContact) return
 
     setSending(true)
     const currentMsg = messageText
@@ -191,35 +226,17 @@ export default function WhatsApp() {
     try {
       const { data, error } = await supabase.functions.invoke('uazapi-send-message', {
         body: {
-          lead_id: selectedLead.id,
-          phone: selectedLead.telefone,
-          message: currentMsg,
-          user_id: currentUser.id,
+          contactId: selectedContact.id,
+          text: currentMsg,
         },
       })
 
       if (error) throw error
-
-      if (data?.status) {
-        // Atualiza a UI do lead em tempo real com a nota da IA
-        const updatedLeads = leads.map((l) =>
-          l.id === selectedLead.id ? { ...l, status_interesse: data.status } : l,
-        )
-        setLeads(updatedLeads)
-        if (selectedLead.id === selectedLead.id) {
-          setSelectedLead({ ...selectedLead, status_interesse: data.status })
-        }
-
-        toast({
-          title: 'Mensagem Enviada!',
-          description: `Qualificação: Score ${data.score}/100. Status: ${data.status}`,
-        })
-      }
     } catch (error: any) {
       console.error(error)
       toast({
         title: 'Erro de Envio',
-        description: 'Falha ao enviar mensagem para o WhatsApp do Lead.',
+        description: 'Falha ao enviar mensagem.',
         variant: 'destructive',
       })
       setMessageText(currentMsg)
@@ -234,7 +251,7 @@ export default function WhatsApp() {
       <div
         className={cn(
           'w-full sm:w-[350px] md:w-[400px] flex-shrink-0 border-r border-border flex flex-col bg-card/50',
-          selectedLead ? 'hidden sm:flex' : 'flex',
+          selectedContact ? 'hidden sm:flex' : 'flex',
         )}
       >
         <div className="p-4 border-b border-border bg-card">
@@ -284,42 +301,45 @@ export default function WhatsApp() {
         </div>
 
         <ScrollArea className="flex-1">
-          {loadingLeads ? (
+          {loadingContacts ? (
             <div className="flex justify-center p-8">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
-          ) : filteredLeads.length === 0 ? (
+          ) : filteredContacts.length === 0 ? (
             <div className="text-center p-8 text-muted-foreground">
               Nenhuma conversa encontrada.
             </div>
           ) : (
             <div className="flex flex-col">
-              {filteredLeads.map((lead) => (
+              {filteredContacts.map((contact) => (
                 <button
-                  key={lead.id}
-                  onClick={() => setSelectedLead(lead)}
+                  key={contact.id}
+                  onClick={() => setSelectedContact(contact)}
                   className={cn(
                     'flex items-start gap-3 p-4 text-left transition-colors border-b border-border/50 hover:bg-accent',
-                    selectedLead?.id === lead.id && 'bg-accent/80',
+                    selectedContact?.id === contact.id && 'bg-accent/80',
                   )}
                 >
                   <Avatar className="h-12 w-12 border border-background shrink-0">
+                    <AvatarImage src={contact.profile_pic_url || ''} />
                     <AvatarFallback className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 font-medium">
-                      {lead.name.substring(0, 2).toUpperCase()}
+                      {(contact.push_name || 'U').substring(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 overflow-hidden">
                     <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-medium text-sm truncate pr-2">{lead.name}</h3>
+                      <h3 className="font-medium text-sm truncate pr-2">
+                        {contact.push_name || contact.phone_number || contact.remote_jid}
+                      </h3>
                     </div>
                     <p className="text-xs text-muted-foreground truncate mb-1.5 flex items-center gap-1.5">
-                      <Phone className="h-3 w-3 shrink-0" /> {lead.telefone}
+                      <Phone className="h-3 w-3 shrink-0" /> {contact.phone_number}
                     </p>
                     <Badge
                       variant="secondary"
                       className="text-[10px] font-normal h-5 bg-background"
                     >
-                      {lead.status_interesse}
+                      {contact.pipeline_stage || 'Novo Contato'}
                     </Badge>
                   </div>
                 </button>
@@ -333,10 +353,10 @@ export default function WhatsApp() {
       <div
         className={cn(
           'flex-1 flex flex-col bg-[#efeae2] dark:bg-[#0b141a]',
-          !selectedLead ? 'hidden sm:flex' : 'flex',
+          !selectedContact ? 'hidden sm:flex' : 'flex',
         )}
       >
-        {selectedLead ? (
+        {selectedContact ? (
           <>
             {/* Header */}
             <div className="h-16 px-4 flex items-center gap-3 bg-card border-b border-border shadow-sm z-10">
@@ -344,24 +364,27 @@ export default function WhatsApp() {
                 variant="ghost"
                 size="icon"
                 className="sm:hidden -ml-2 shrink-0"
-                onClick={() => setSelectedLead(null)}
+                onClick={() => setSelectedContact(null)}
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <Avatar className="h-10 w-10 border border-border shrink-0">
+                <AvatarImage src={selectedContact.profile_pic_url || ''} />
                 <AvatarFallback className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 font-medium">
-                  {selectedLead.name.substring(0, 2).toUpperCase()}
+                  {(selectedContact.push_name || 'U').substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col min-w-0">
-                <span className="font-semibold text-sm truncate">{selectedLead.name}</span>
+                <span className="font-semibold text-sm truncate">
+                  {selectedContact.push_name || selectedContact.phone_number}
+                </span>
                 <span className="text-xs text-muted-foreground truncate">
-                  {selectedLead.telefone}
+                  {selectedContact.phone_number}
                 </span>
               </div>
               <div className="ml-auto flex items-center gap-2 shrink-0">
                 <Badge variant="outline" className="bg-background hidden sm:flex">
-                  {selectedLead.status_interesse}
+                  {selectedContact.pipeline_stage || 'Novo Contato'}
                 </Badge>
               </div>
             </div>
@@ -389,26 +412,18 @@ export default function WhatsApp() {
                       <Bot className="h-12 w-12 mx-auto mb-4 text-green-600/60" />
                       <h3 className="font-medium mb-2">Inicie a conversa</h3>
                       <p className="text-sm text-muted-foreground">
-                        Envie a primeira mensagem para este lead. Nossa IA qualificará o lead
-                        automaticamente com base nas interações.
+                        Envie a primeira mensagem para este contato.
                       </p>
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-3 relative z-10 max-w-3xl mx-auto pb-4">
                     {messages.map((msg, idx) => {
-                      const isOutgoing =
-                        msg.detalhes.startsWith('Você:') || msg.contato_nome === 'WhatsApp'
-                      let text = msg.detalhes
-                      if (text.startsWith('Você: ')) text = text.substring(6)
-                      else if (text.startsWith('Lead respondeu: ')) text = text.substring(16)
+                      const isOutgoing = msg.from_me
+                      const text = msg.text
 
-                      // Check if previous message was from the same sender to group bubbles
                       const prevMsg = idx > 0 ? messages[idx - 1] : null
-                      const prevIsOutgoing = prevMsg
-                        ? prevMsg.detalhes.startsWith('Você:') ||
-                          prevMsg.contato_nome === 'WhatsApp'
-                        : null
+                      const prevIsOutgoing = prevMsg ? prevMsg.from_me : null
                       const isFirstInGroup = prevIsOutgoing !== isOutgoing
 
                       return (
@@ -440,7 +455,7 @@ export default function WhatsApp() {
                               )}
                             >
                               <span className="text-[10px] leading-none font-medium">
-                                {new Date(msg.data_criacao).toLocaleTimeString('pt-BR', {
+                                {new Date(msg.timestamp).toLocaleTimeString('pt-BR', {
                                   hour: '2-digit',
                                   minute: '2-digit',
                                 })}
@@ -493,7 +508,11 @@ export default function WhatsApp() {
                 <div className="bg-white p-4 rounded-xl mb-6 shadow-sm border border-zinc-100">
                   <img src={qrCode} alt="QR Code WhatsApp" className="w-64 h-64" />
                 </div>
-                <Button onClick={() => checkConnectionStatus()} variant="outline" className="gap-2">
+                <Button
+                  onClick={() => integrationId && checkConnectionStatus(integrationId)}
+                  variant="outline"
+                  className="gap-2"
+                >
                   <RefreshCw className="h-4 w-4" /> Atualizar Status
                 </Button>
               </div>
@@ -529,8 +548,7 @@ export default function WhatsApp() {
                 <h2 className="text-2xl font-light text-foreground mb-3">WhatsApp Inbox</h2>
                 <p className="max-w-md text-sm">
                   Selecione uma conversa ao lado para visualizar o histórico ou enviar uma nova
-                  mensagem. As mensagens são processadas pela IA para qualificar os leads
-                  automaticamente.
+                  mensagem.
                 </p>
               </div>
             )}

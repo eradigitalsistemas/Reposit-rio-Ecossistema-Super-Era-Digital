@@ -50,15 +50,15 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
       setLeads(
         data.map((d: any) => ({
           id: d.id,
-          name: d.name || d.nome,
-          company: d.empresa || '',
+          name: d.name,
+          company: d.company || '',
           email: d.email,
-          phone: d.telefone || '',
+          phone: d.phone || '',
           address: d.endereco || '',
-          notes: d.observacoes || '',
-          stage: d.estagio as LeadStage,
+          notes: d.observacoes || d.details || '',
+          stage: (d.estagio as LeadStage) || 'Novo Lead',
           interestStatus: (d.status_interesse as InterestStatus) || 'Interessado',
-          createdAt: d.data_criacao,
+          createdAt: d.created_at,
         })),
       )
     }
@@ -79,14 +79,15 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
         .from('leads')
         .insert({
           name: newLead.name,
-          empresa: newLead.company,
+          company: newLead.company || '',
           email: newLead.email,
-          telefone: newLead.phone,
+          phone: newLead.phone || '',
           endereco: newLead.address,
           observacoes: newLead.notes,
           estagio: newLead.stage,
           status_interesse: newLead.interestStatus,
           usuario_id: user.id,
+          details: newLead.notes || '',
         } as any)
         .select()
         .single()
@@ -100,15 +101,15 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
         const d = data as any
         const createdLead: Lead = {
           id: d.id,
-          name: d.name || d.nome,
-          company: d.empresa || '',
+          name: d.name,
+          company: d.company || '',
           email: d.email,
-          phone: d.telefone || '',
+          phone: d.phone || '',
           address: d.endereco || '',
-          notes: d.observacoes || '',
-          stage: d.estagio as LeadStage,
+          notes: d.observacoes || d.details || '',
+          stage: (d.estagio as LeadStage) || 'Novo Lead',
           interestStatus: (d.status_interesse as InterestStatus) || 'Interessado',
-          createdAt: d.data_criacao,
+          createdAt: d.created_at,
         }
         setLeads((prev) => [createdLead, ...prev])
         toast({ title: 'Lead Criado', description: 'O lead foi adicionado com sucesso.' })
@@ -122,9 +123,9 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
     async (id: string, updates: Partial<Omit<Lead, 'id' | 'createdAt'>>) => {
       const dbUpdates: any = {}
       if (updates.name !== undefined) dbUpdates.name = updates.name
-      if (updates.company !== undefined) dbUpdates.empresa = updates.company
+      if (updates.company !== undefined) dbUpdates.company = updates.company
       if (updates.email !== undefined) dbUpdates.email = updates.email
-      if (updates.phone !== undefined) dbUpdates.telefone = updates.phone
+      if (updates.phone !== undefined) dbUpdates.phone = updates.phone
       if (updates.notes !== undefined) dbUpdates.observacoes = updates.notes
       if (updates.address !== undefined) dbUpdates.endereco = updates.address
       if (updates.stage !== undefined) dbUpdates.estagio = updates.stage

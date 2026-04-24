@@ -193,15 +193,12 @@ Deno.serve(async (req: Request) => {
       let isWebhookEnabled = (integ as any).is_webhook_enabled
       if (!isWebhookEnabled) {
         const webhookUrl = `${supabaseUrl}/functions/v1/uazapi-webhook`
-        const webhookRes = await fetch(`${evolutionApiUrl}/webhook/set/${instanceName}`, {
+        const webhookRes = await fetch(`${uazUrl}/instance/webhook`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', apikey: evolutionApiKey },
+          headers: { 'Content-Type': 'application/json', token: instanceName },
           body: JSON.stringify({
-            webhook: {
-              enabled: true,
-              url: webhookUrl,
-              events: ['MESSAGES_UPSERT', 'CONNECTION_UPDATE', 'CONTACTS_UPSERT'],
-            },
+            url: webhookUrl,
+            enabled: true,
           }),
         })
         isWebhookEnabled = webhookRes.ok
