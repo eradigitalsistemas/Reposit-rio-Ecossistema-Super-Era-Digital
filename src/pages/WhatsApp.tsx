@@ -66,7 +66,11 @@ export default function WhatsApp() {
     setWhatsappStatus('checking')
     try {
       const { data, error } = await supabase.functions.invoke('uazapi-get-qr', {
-        body: { instanceName: 'kanban_vendas' },
+        body: {
+          instanceName: config?.uazapi_instance || 'kanban_vendas',
+          uazapi_url: config?.uazapi_url,
+          uazapi_token: config?.uazapi_token,
+        },
       })
       if (error) throw error
       if (data?.state) {
@@ -86,7 +90,11 @@ export default function WhatsApp() {
     setQrCode(null)
     try {
       const { data, error } = await supabase.functions.invoke('uazapi-get-qr', {
-        body: { instanceName: 'kanban_vendas' },
+        body: {
+          instanceName: whatsappConfig?.uazapi_instance || 'kanban_vendas',
+          uazapi_url: whatsappConfig?.uazapi_url,
+          uazapi_token: whatsappConfig?.uazapi_token,
+        },
       })
       if (error) throw error
       if (data?.base64) {
@@ -207,7 +215,9 @@ export default function WhatsApp() {
           phone: selectedLead.telefone,
           message: currentMsg,
           user_id: currentUser.id,
-          instanceName: 'kanban_vendas',
+          instanceName: whatsappConfig?.uazapi_instance || 'kanban_vendas',
+          uazapi_url: whatsappConfig?.uazapi_url,
+          uazapi_token: whatsappConfig?.uazapi_token,
         },
       })
 
