@@ -6,17 +6,19 @@ import {
   Search,
   ArrowLeft,
   Phone,
-  Info,
   Activity,
   RefreshCw,
   ListTodo,
   Check,
   CheckCheck,
   Clock,
+  Send,
+  Paperclip,
+  AlertCircle,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -26,6 +28,7 @@ import {
   SheetDescription,
   SheetTrigger,
 } from '@/components/ui/sheet'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
@@ -74,7 +77,12 @@ export default function WhatsApp() {
   const [searchTerm, setSearchTerm] = useState('')
 
   const scrollRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [currentUser, setCurrentUser] = useState<any>(null)
+
+  const [inputValue, setInputValue] = useState('')
+  const [sending, setSending] = useState(false)
+  const [instanceStatus, setInstanceStatus] = useState<string>('disconnected')
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -116,7 +124,7 @@ export default function WhatsApp() {
 
   const fetchSyncLogs = async () => {
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('sync_logs')
         .select('*')
         .in('entity_type', ['uazapi_sync_messages', 'webhook_receive', 'whatsapp_events'])
@@ -219,6 +227,18 @@ export default function WhatsApp() {
 
     fetchMessages(selectedChat.id)
 
+    const fetchInstance = async () => {
+      const { data } = await supabase
+        .from('whatsapp_instances')
+        .select('status')
+        .eq('instance_id', selectedChat.instance_id)
+        .single()
+      if (data) {
+        setInstanceStatus(data.status || 'disconnected')
+      }
+    }
+    fetchInstance()
+
     const msgChannel = supabase
       .channel(`whatsapp-messages-${selectedChat.id}`)
       .on(
@@ -291,6 +311,64 @@ export default function WhatsApp() {
       toast({ title: 'Erro na Sincronização', description: err.message, variant: 'destructive' })
     } finally {
       setIsSyncing(false)
+    }
+  }
+
+  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputValue(e.target.value)
+    e.target.style.height = 'auto'
+    e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSend()
+    }
+  }
+
+  const handleSend = async () => {
+    const text = inputValue.trim()
+    if (!text || !selectedChat) return
+    if (instanceStatus !== 'connected') {
+      toast({ title: 'Instância desconectada', variant: 'destructive' })
+      return
+    }
+    if (text.length > 4096) {
+      toast({ title: 'Mensagem muito longa (máximo 4096 caracteres)', variant: 'destructive' })
+      return
+    }
+
+    setInputValue('')
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+    }
+    setSending(true)
+
+    try {
+      const { data, error } = await supabase.functions.invoke('send-message', {
+        body: {
+          instance_id: selectedChat.instance_id,
+          phone: selectedChat.phone,
+          message: text,
+        },
+      })
+
+      if (error) throw error
+      if (!data?.success) throw new Error(data?.error || 'Falha ao enviar')
+
+      setTimeout(() => {
+        scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
+      }, 100)
+    } catch (err: any) {
+      toast({ title: `Falha ao enviar: ${err.message}`, variant: 'destructive' })
+      setInputValue(text)
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto'
+        textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`
+      }
+    } finally {
+      setSending(false)
     }
   }
 
@@ -548,7 +626,8 @@ export default function WhatsApp() {
                       <Bot className="h-12 w-12 mx-auto mb-4 text-blue-600/60" />
                       <h3 className="font-medium mb-2">Sem mensagens</h3>
                       <p className="text-sm text-muted-foreground">
-                        Aguardando o recebimento de mensagens para este contato.
+                        Nenhuma mensagem encontrada neste histórico. Envie a primeira mensagem
+                        abaixo.
                       </p>
                     </div>
                   </div>
@@ -597,15 +676,28 @@ export default function WhatsApp() {
                                 })}
                               </span>
                               {isOutgoing && (
-                                <span className="ml-0.5">
+                                <span className="ml-0.5 flex items-center">
                                   {msg.status === 'pending' && (
-                                    <Clock className="h-3 w-3 opacity-70" />
+                                    <Clock className="h-3 w-3 text-[#999999]" />
                                   )}
                                   {msg.status === 'sent' && (
-                                    <Check className="h-3 w-3 opacity-70" />
+                                    <Check className="h-3 w-3 text-[#999999]" />
+                                  )}
+                                  {msg.status === 'delivered' && (
+                                    <CheckCheck className="h-3 w-3 text-[#999999]" />
                                   )}
                                   {msg.status === 'read' && (
-                                    <CheckCheck className="h-3 w-3 text-blue-500 dark:text-blue-400" />
+                                    <CheckCheck className="h-3 w-3 text-[#53bdeb]" />
+                                  )}
+                                  {msg.status === 'failed' && (
+                                    <Tooltip>
+                                      <TooltipTrigger>
+                                        <AlertCircle className="h-3 w-3 text-red-500 cursor-help" />
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Falha ao enviar. Toque para tentar novamente.</p>
+                                      </TooltipContent>
+                                    </Tooltip>
                                   )}
                                 </span>
                               )}
@@ -620,13 +712,36 @@ export default function WhatsApp() {
               </ScrollArea>
             </div>
 
-            {/* Mirror Banner */}
-            <div className="p-3 bg-muted/80 border-t border-border z-10 flex items-center justify-center text-sm text-muted-foreground shadow-inner backdrop-blur-sm">
-              <Info className="h-4 w-4 mr-2 shrink-0 text-blue-500" />
-              <span>
-                <strong>Modo Espelhamento:</strong> Apenas leitura. As mensagens são sincronizadas
-                automaticamente via Webhook.
-              </span>
+            {/* Message Input Area */}
+            <div className="p-3 bg-[#f0f2f5] dark:bg-[#1f2c34] flex items-end gap-2 z-10 border-t border-border">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0 h-10 w-10 text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5 rounded-full"
+                disabled
+              >
+                <Paperclip className="h-5 w-5" />
+              </Button>
+              <textarea
+                ref={textareaRef}
+                value={inputValue}
+                onChange={handleInput}
+                onKeyDown={handleKeyDown}
+                placeholder="Digite uma mensagem"
+                className="flex-1 bg-white dark:bg-[#2a3942] border border-transparent rounded-lg px-3 py-2.5 text-[15px] focus:outline-none focus:ring-0 resize-none min-h-[40px] max-h-[120px] overflow-y-auto shadow-sm"
+                rows={1}
+              />
+              <Button
+                onClick={handleSend}
+                disabled={!inputValue.trim() || sending || instanceStatus !== 'connected'}
+                className="shrink-0 h-10 w-10 rounded-full bg-[#25D366] hover:bg-[#128C7E] text-white p-0 flex items-center justify-center shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {sending ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <Send className="h-5 w-5 ml-1" />
+                )}
+              </Button>
             </div>
           </>
         ) : (
@@ -637,10 +752,10 @@ export default function WhatsApp() {
                 <div className="absolute inset-0 rounded-full bg-blue-500/10 animate-ping" />
                 <MessageCircle className="h-12 w-12 text-blue-500/50" />
               </div>
-              <h2 className="text-2xl font-light text-foreground mb-3">WhatsApp Mirror</h2>
+              <h2 className="text-2xl font-light text-foreground mb-3">WhatsApp CRM</h2>
               <p className="max-w-md text-sm">
-                Selecione uma conversa na lateral para visualizar o histórico de mensagens
-                sincronizadas pelo sistema UAZAPI.
+                Selecione uma conversa na lateral para visualizar o histórico de mensagens e
+                interagir com o contato.
               </p>
             </div>
           </div>
