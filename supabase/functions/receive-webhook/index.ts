@@ -4,7 +4,21 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
+}
+
+function normalizePayload(payload: any) {
+  const event =
+    payload?.event || payload?.EventType || payload?.type || payload?.eventType || 'unknown'
+  const instance =
+    payload?.instance ||
+    payload?.instanceId ||
+    payload?.instance_id ||
+    payload?.instanceName ||
+    payload?.instance_name ||
+    'unknown'
+  return { normalizedEvent: String(event), normalizedInstance: String(instance) }
 }
 
 Deno.serve(async (req: Request) => {
@@ -12,75 +26,115 @@ Deno.serve(async (req: Request) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  let payload: any;
+  const supabaseAdmin = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+  )
 
+  let rawBody = ''
   try {
+    rawBody = await req.text()
+    const headersObj = Object.fromEntries(req.headers.entries())
+
+    console.log(
+      JSON.stringify({
+        stage: 'raw_body_received',
+        rawBody: rawBody.substring(0, 2000),
+        headers: headersObj,
+      }),
+    )
+
+    console.log(
+      JSON.stringify({
+        stage: 'received',
+        contentType: req.headers.get('content-type'),
+        bodySize: rawBody.length,
+      }),
+    )
+
+    let payload: any
+
     try {
-      payload = await req.json()
+      if (!rawBody.trim()) throw new Error('Empty body')
+      payload = JSON.parse(rawBody)
     } catch (e) {
-      console.error(JSON.stringify({ error: 'Invalid JSON', context: 'req.json()' }))
-      return new Response(JSON.stringify({ error: 'Invalid JSON payload' }), {
-        status: 400,
+      console.log(JSON.stringify({ stage: 'invalid_json_or_empty', error: (e as Error).message }))
+
+      await supabaseAdmin.from('whatsapp_events').insert({
+        instance_name: 'unknown',
+        event_type: 'ping_or_invalid',
+        payload: { raw: rawBody, headers: headersObj },
+      })
+
+      return new Response(JSON.stringify({ status: 'ping_received' }), {
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    const { event, instance: instanceName, data } = payload
+    const { normalizedEvent, normalizedInstance } = normalizePayload(payload)
 
-    if (typeof event !== 'string' || typeof instanceName !== 'string') {
-      console.error(JSON.stringify({ 
-        error: 'Missing or invalid fields', 
-        context: 'payload validation', 
-        payload_summary: { event, instanceName } 
-      }))
-      return new Response(JSON.stringify({ error: 'Missing required fields: event and instance must be strings' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
+    console.log(
+      JSON.stringify({
+        stage: 'parsed',
+        event: payload?.event,
+        instance: payload?.instance,
+      }),
+    )
 
-    console.log(JSON.stringify({ event, instance: instanceName, timestamp: new Date().toISOString() }))
-
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    console.log(
+      JSON.stringify({
+        stage: 'normalized',
+        normalizedEvent,
+        normalizedInstance,
+      }),
     )
 
     const { error: insertEvtErr } = await supabaseAdmin.from('whatsapp_events').insert({
-      instance_name: instanceName,
-      event_type: event,
-      payload: payload
+      instance_name: normalizedInstance,
+      event_type: normalizedEvent,
+      payload: payload,
     })
-    
+
     if (insertEvtErr) {
-      console.error(JSON.stringify({ error: insertEvtErr.message, context: 'insert whatsapp_events', payload_summary: { event, instanceName } }))
-    } else {
-      console.log(JSON.stringify({ action: 'insert', table: 'whatsapp_events', status: 'success' }))
+      console.error(
+        JSON.stringify({ error: insertEvtErr.message, stage: 'insert_whatsapp_events' }),
+      )
     }
 
     const { data: instanceRecord } = await supabaseAdmin
       .from('whatsapp_instances')
       .select('user_id, instance_id')
-      .eq('instance_name', instanceName)
+      .eq('instance_name', normalizedInstance)
       .maybeSingle()
 
     if (!instanceRecord) {
-      console.warn(JSON.stringify({ error: 'Instância não cadastrada', context: 'instance validation', payload_summary: { instanceName } }))
-      return new Response(JSON.stringify({ success: true, warning: 'Instância não cadastrada' }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      console.warn(
+        JSON.stringify({
+          error: 'Instância não cadastrada',
+          stage: 'instance_validation',
+          instance: normalizedInstance,
+        }),
+      )
+      return new Response(
+        JSON.stringify({ status: 'ok', processed: false, warning: 'Instância não cadastrada' }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      )
     }
 
     const userId = instanceRecord.user_id
     const instanceId = instanceRecord.instance_id
 
-    if (!data) {
-      return new Response(JSON.stringify({ success: true, ignored: true, reason: 'No data payload' }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
+    const event = normalizedEvent
+    const data = payload.data || payload
+
+    console.log(JSON.stringify({ stage: 'routed', eventHandler: event }))
+
+    let insertedCount = 0
+    let updatedCount = 0
 
     if (event === 'messages') {
       const messages = Array.isArray(data) ? data : [data]
@@ -101,7 +155,7 @@ Deno.serve(async (req: Request) => {
             .from('whatsapp_contacts')
             .select('id')
             .eq('remote_jid', remoteJid)
-          
+
           if (userId) {
             contactQuery.eq('user_id', userId)
           } else {
@@ -125,7 +179,7 @@ Deno.serve(async (req: Request) => {
               .single()
             if (newContact) {
               contactId = newContact.id
-              console.log(JSON.stringify({ action: 'insert', table: 'whatsapp_contacts', status: 'success' }))
+              insertedCount++
             }
           }
 
@@ -155,7 +209,7 @@ Deno.serve(async (req: Request) => {
             text = messageContent.documentMessage.fileName || ''
           }
 
-          const timestamp = msg.messageTimestamp 
+          const timestamp = msg.messageTimestamp
             ? new Date(msg.messageTimestamp * 1000).toISOString()
             : new Date().toISOString()
 
@@ -172,29 +226,43 @@ Deno.serve(async (req: Request) => {
             status: status,
             timestamp: timestamp,
             raw: msg,
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           }
 
           const { error: upsertErr } = await supabaseAdmin
             .from('whatsapp_messages')
             .upsert(msgToUpsert, { onConflict: 'user_id, message_id' })
-          
+
           if (upsertErr) {
-             console.error(JSON.stringify({ error: upsertErr.message, context: 'upsert whatsapp_messages', payload_summary: { messageId } }))
+            console.error(
+              JSON.stringify({
+                error: upsertErr.message,
+                context: 'upsert whatsapp_messages',
+                payload_summary: { messageId },
+              }),
+            )
           } else {
-             console.log(JSON.stringify({ action: 'upsert', table: 'whatsapp_messages', status: 'success' }))
+            insertedCount++
           }
 
-          await supabaseAdmin.from('whatsapp_contacts').update({
-            last_message_at: timestamp,
-            updated_at: new Date().toISOString()
-          }).eq('id', contactId)
-
+          await supabaseAdmin
+            .from('whatsapp_contacts')
+            .update({
+              last_message_at: timestamp,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', contactId)
+          updatedCount++
         } catch (msgErr: any) {
-          console.error(JSON.stringify({ error: msgErr.message, context: 'process message', payload_summary: { msg_id: msg.key?.id } }))
+          console.error(
+            JSON.stringify({
+              error: msgErr.message,
+              context: 'process message',
+              payload_summary: { msg_id: msg.key?.id },
+            }),
+          )
         }
       }
-
     } else if (event === 'messages_update') {
       const updates = Array.isArray(data) ? data : [data]
 
@@ -214,29 +282,38 @@ Deno.serve(async (req: Request) => {
             isRead = true
           } else if (updateStatus === 'SERVER_ACK') newStatus = 'sent'
 
-          const updateQuery = supabaseAdmin.from('whatsapp_messages').update({
-            status: newStatus,
-            is_read: isRead,
-            updated_at: new Date().toISOString()
-          }).eq('message_id', messageId)
+          const updateQuery = supabaseAdmin
+            .from('whatsapp_messages')
+            .update({
+              status: newStatus,
+              is_read: isRead,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('message_id', messageId)
 
           if (userId) {
             updateQuery.eq('user_id', userId)
           }
 
           const { error: updErr } = await updateQuery
-          
-          if (updErr) {
-            console.error(JSON.stringify({ error: updErr.message, context: 'update whatsapp_messages', payload_summary: { messageId } }))
-          } else {
-            console.log(JSON.stringify({ action: 'update', table: 'whatsapp_messages', status: 'success' }))
-          }
 
+          if (updErr) {
+            console.error(
+              JSON.stringify({
+                error: updErr.message,
+                context: 'update whatsapp_messages',
+                payload_summary: { messageId },
+              }),
+            )
+          } else {
+            updatedCount++
+          }
         } catch (updErr: any) {
-          console.error(JSON.stringify({ error: updErr.message, context: 'process messages_update' }))
+          console.error(
+            JSON.stringify({ error: updErr.message, context: 'process messages_update' }),
+          )
         }
       }
-
     } else if (event === 'presence') {
       try {
         const remoteJid = data.id
@@ -244,28 +321,36 @@ Deno.serve(async (req: Request) => {
 
         if (remoteJid) {
           const isOnline = presence === 'available' || presence === 'composing'
-          const presQuery = supabaseAdmin.from('whatsapp_contacts').update({
-            is_online: isOnline,
-            last_seen: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }).eq('remote_jid', remoteJid)
+          const presQuery = supabaseAdmin
+            .from('whatsapp_contacts')
+            .update({
+              is_online: isOnline,
+              last_seen: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .eq('remote_jid', remoteJid)
 
           if (userId) {
             presQuery.eq('user_id', userId)
           }
 
           const { error: presErr } = await presQuery
-          
+
           if (presErr) {
-            console.error(JSON.stringify({ error: presErr.message, context: 'update whatsapp_contacts presence', payload_summary: { remoteJid } }))
+            console.error(
+              JSON.stringify({
+                error: presErr.message,
+                context: 'update whatsapp_contacts presence',
+                payload_summary: { remoteJid },
+              }),
+            )
           } else {
-            console.log(JSON.stringify({ action: 'update', table: 'whatsapp_contacts', status: 'success' }))
+            updatedCount++
           }
         }
       } catch (presErr: any) {
         console.error(JSON.stringify({ error: presErr.message, context: 'process presence' }))
       }
-
     } else if (event === 'connection') {
       try {
         const status = data.state
@@ -273,33 +358,46 @@ Deno.serve(async (req: Request) => {
         if (status === 'open') dbStatus = 'connected'
         else if (status === 'connecting') dbStatus = 'qr_waiting'
 
-        const { error: connErr } = await supabaseAdmin.from('whatsapp_instances').update({
-          status: dbStatus,
-          updated_at: new Date().toISOString()
-        }).eq('instance_name', instanceName)
+        const { error: connErr } = await supabaseAdmin
+          .from('whatsapp_instances')
+          .update({
+            status: dbStatus,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('instance_name', normalizedInstance)
 
         if (connErr) {
-          console.error(JSON.stringify({ error: connErr.message, context: 'update whatsapp_instances connection', payload_summary: { instanceName } }))
+          console.error(
+            JSON.stringify({
+              error: connErr.message,
+              context: 'update whatsapp_instances connection',
+              payload_summary: { normalizedInstance },
+            }),
+          )
         } else {
-          console.log(JSON.stringify({ action: 'update', table: 'whatsapp_instances', status: 'success' }))
+          updatedCount++
         }
       } catch (connErr: any) {
         console.error(JSON.stringify({ error: connErr.message, context: 'process connection' }))
       }
     }
 
-    return new Response(JSON.stringify({ success: true, processed: true }), {
+    console.log(
+      JSON.stringify({ stage: 'completed', inserted: insertedCount, updated: updatedCount }),
+    )
+
+    return new Response(JSON.stringify({ status: 'ok', processed: true }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
-
   } catch (error: any) {
-    console.error(JSON.stringify({ 
-      error: error.message, 
-      context: 'Fatal Error', 
-      payload_summary: payload ? { event: payload?.event, instance: payload?.instance } : null 
-    }))
-    return new Response(JSON.stringify({ success: false, error: 'Internal error logged' }), {
+    console.error(
+      JSON.stringify({
+        error: error.message,
+        stage: 'fatal_error',
+      }),
+    )
+    return new Response(JSON.stringify({ status: 'error', error: 'Internal error logged' }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
