@@ -1,11 +1,17 @@
 // AVOID UPDATING THIS FILE DIRECTLY. It is automatically generated.
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '14.4'
+    PostgrestVersion: "14.4"
   }
   public: {
     Tables: {
@@ -180,30 +186,6 @@ export type Database = {
         }
         Relationships: []
       }
-      chats: {
-        Row: {
-          created_at: string | null
-          id: string
-          instance_id: string
-          phone: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          instance_id: string
-          phone: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          instance_id?: string
-          phone?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       checklist_templates: {
         Row: {
           data_criacao: string | null
@@ -375,43 +357,13 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'contact_identity_instance_id_fkey'
-            columns: ['instance_id']
+            foreignKeyName: "contact_identity_instance_id_fkey"
+            columns: ["instance_id"]
             isOneToOne: false
-            referencedRelation: 'user_integrations'
-            referencedColumns: ['id']
+            referencedRelation: "user_integrations"
+            referencedColumns: ["id"]
           },
         ]
-      }
-      contacts: {
-        Row: {
-          created_at: string | null
-          id: string
-          instance_id: string
-          is_online: boolean | null
-          last_seen: string | null
-          name: string | null
-          phone: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          instance_id: string
-          is_online?: boolean | null
-          last_seen?: string | null
-          name?: string | null
-          phone: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          instance_id?: string
-          is_online?: boolean | null
-          last_seen?: string | null
-          name?: string | null
-          phone?: string
-        }
-        Relationships: []
       }
       demandas: {
         Row: {
@@ -479,18 +431,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'demandas_cliente_id_fkey'
-            columns: ['cliente_id']
+            foreignKeyName: "demandas_cliente_id_fkey"
+            columns: ["cliente_id"]
             isOneToOne: false
-            referencedRelation: 'clientes_externos'
-            referencedColumns: ['id']
+            referencedRelation: "clientes_externos"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'demandas_responsavel_id_fkey'
-            columns: ['responsavel_id']
+            foreignKeyName: "demandas_responsavel_id_fkey"
+            columns: ["responsavel_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -515,11 +467,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'departments_manager_id_fkey'
-            columns: ['manager_id']
+            foreignKeyName: "departments_manager_id_fkey"
+            columns: ["manager_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -559,11 +511,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'disc_results_user_id_fkey'
-            columns: ['user_id']
+            foreignKeyName: "disc_results_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -597,11 +549,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'educations_user_id_fkey'
-            columns: ['user_id']
+            foreignKeyName: "educations_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -632,11 +584,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'emails_sent_user_id_fkey'
-            columns: ['user_id']
+            foreignKeyName: "emails_sent_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -685,18 +637,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'employees_candidate_id_fkey'
-            columns: ['candidate_id']
+            foreignKeyName: "employees_candidate_id_fkey"
+            columns: ["candidate_id"]
             isOneToOne: false
-            referencedRelation: 'candidates'
-            referencedColumns: ['id']
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'employees_department_id_fkey'
-            columns: ['department_id']
+            foreignKeyName: "employees_department_id_fkey"
+            columns: ["department_id"]
             isOneToOne: false
-            referencedRelation: 'departments'
-            referencedColumns: ['id']
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -733,11 +685,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'experiences_user_id_fkey'
-            columns: ['user_id']
+            foreignKeyName: "experiences_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: 'users'
-            referencedColumns: ['id']
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -768,11 +720,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'historico_leads_lead_id_fkey'
-            columns: ['lead_id']
+            foreignKeyName: "historico_leads_lead_id_fkey"
+            columns: ["lead_id"]
             isOneToOne: false
-            referencedRelation: 'leads'
-            referencedColumns: ['id']
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -944,18 +896,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'logs_auditoria_demanda_id_fkey'
-            columns: ['demanda_id']
+            foreignKeyName: "logs_auditoria_demanda_id_fkey"
+            columns: ["demanda_id"]
             isOneToOne: false
-            referencedRelation: 'demandas'
-            referencedColumns: ['id']
+            referencedRelation: "demandas"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'logs_auditoria_usuario_id_fkey'
-            columns: ['usuario_id']
+            foreignKeyName: "logs_auditoria_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -982,41 +934,6 @@ export type Database = {
           tipo_demanda?: string
         }
         Relationships: []
-      }
-      messages: {
-        Row: {
-          chat_id: string
-          content: string
-          direction: string
-          id: string
-          status: string
-          timestamp: string | null
-        }
-        Insert: {
-          chat_id: string
-          content: string
-          direction: string
-          id?: string
-          status?: string
-          timestamp?: string | null
-        }
-        Update: {
-          chat_id?: string
-          content?: string
-          direction?: string
-          id?: string
-          status?: string
-          timestamp?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'messages_chat_id_fkey'
-            columns: ['chat_id']
-            isOneToOne: false
-            referencedRelation: 'chats'
-            referencedColumns: ['id']
-          },
-        ]
       }
       midia_demanda: {
         Row: {
@@ -1048,11 +965,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'midia_demanda_demanda_id_fkey'
-            columns: ['demanda_id']
+            foreignKeyName: "midia_demanda_demanda_id_fkey"
+            columns: ["demanda_id"]
             isOneToOne: false
-            referencedRelation: 'demandas'
-            referencedColumns: ['id']
+            referencedRelation: "demandas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1092,11 +1009,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'notificacoes_demanda_id_fkey'
-            columns: ['demanda_id']
+            foreignKeyName: "notificacoes_demanda_id_fkey"
+            columns: ["demanda_id"]
             isOneToOne: false
-            referencedRelation: 'demandas'
-            referencedColumns: ['id']
+            referencedRelation: "demandas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1272,35 +1189,59 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          instance_id: string | null
+          is_group: boolean | null
+          is_online: boolean | null
           last_message_at: string | null
+          last_seen: string | null
           phone_number: string | null
           pipeline_stage: string | null
           profile_pic_url: string | null
           push_name: string | null
           remote_jid: string
+          sync_error_message: string | null
+          sync_status: string | null
+          updated_at: string | null
           user_id: string | null
+          verified_name: string | null
         }
         Insert: {
           created_at?: string | null
           id?: string
+          instance_id?: string | null
+          is_group?: boolean | null
+          is_online?: boolean | null
           last_message_at?: string | null
+          last_seen?: string | null
           phone_number?: string | null
           pipeline_stage?: string | null
           profile_pic_url?: string | null
           push_name?: string | null
           remote_jid: string
+          sync_error_message?: string | null
+          sync_status?: string | null
+          updated_at?: string | null
           user_id?: string | null
+          verified_name?: string | null
         }
         Update: {
           created_at?: string | null
           id?: string
+          instance_id?: string | null
+          is_group?: boolean | null
+          is_online?: boolean | null
           last_message_at?: string | null
+          last_seen?: string | null
           phone_number?: string | null
           pipeline_stage?: string | null
           profile_pic_url?: string | null
           push_name?: string | null
           remote_jid?: string
+          sync_error_message?: string | null
+          sync_status?: string | null
+          updated_at?: string | null
           user_id?: string | null
+          verified_name?: string | null
         }
         Relationships: []
       }
@@ -1330,81 +1271,138 @@ export type Database = {
       }
       whatsapp_instances: {
         Row: {
-          created: string | null
+          config: Json | null
+          connection_error: string | null
+          contacts_synced: number | null
+          created_at: string | null
           id: string
-          is_business: boolean | null
-          name: string | null
-          owner: string | null
+          instance_id: string
+          instance_name: string | null
+          last_activity: string | null
+          last_sync: string | null
+          messages_synced: number | null
+          phone_number: string | null
           status: string | null
-          token: string | null
-          updated: string | null
+          sync_status: string | null
+          updated_at: string | null
+          user_id: string | null
+          webhook_failure_count: number | null
+          webhook_last_success: string | null
+          webhook_status: string | null
+          webhook_url: string | null
         }
         Insert: {
-          created?: string | null
-          id: string
-          is_business?: boolean | null
-          name?: string | null
-          owner?: string | null
+          config?: Json | null
+          connection_error?: string | null
+          contacts_synced?: number | null
+          created_at?: string | null
+          id?: string
+          instance_id: string
+          instance_name?: string | null
+          last_activity?: string | null
+          last_sync?: string | null
+          messages_synced?: number | null
+          phone_number?: string | null
           status?: string | null
-          token?: string | null
-          updated?: string | null
+          sync_status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          webhook_failure_count?: number | null
+          webhook_last_success?: string | null
+          webhook_status?: string | null
+          webhook_url?: string | null
         }
         Update: {
-          created?: string | null
+          config?: Json | null
+          connection_error?: string | null
+          contacts_synced?: number | null
+          created_at?: string | null
           id?: string
-          is_business?: boolean | null
-          name?: string | null
-          owner?: string | null
+          instance_id?: string
+          instance_name?: string | null
+          last_activity?: string | null
+          last_sync?: string | null
+          messages_synced?: number | null
+          phone_number?: string | null
           status?: string | null
-          token?: string | null
-          updated?: string | null
+          sync_status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          webhook_failure_count?: number | null
+          webhook_last_success?: string | null
+          webhook_status?: string | null
+          webhook_url?: string | null
         }
         Relationships: []
       }
       whatsapp_messages: {
         Row: {
           contact_id: string | null
+          correlation_id: string | null
           created_at: string | null
+          error_message: string | null
           from_me: boolean | null
           id: string
+          is_read: boolean | null
+          media_type: string | null
+          media_url: string | null
           message_id: string
           raw: Json | null
+          status: string | null
           text: string | null
           timestamp: string | null
           type: string | null
+          uazapi_message_id: string | null
+          updated_at: string | null
           user_id: string | null
         }
         Insert: {
           contact_id?: string | null
+          correlation_id?: string | null
           created_at?: string | null
+          error_message?: string | null
           from_me?: boolean | null
           id?: string
+          is_read?: boolean | null
+          media_type?: string | null
+          media_url?: string | null
           message_id: string
           raw?: Json | null
+          status?: string | null
           text?: string | null
           timestamp?: string | null
           type?: string | null
+          uazapi_message_id?: string | null
+          updated_at?: string | null
           user_id?: string | null
         }
         Update: {
           contact_id?: string | null
+          correlation_id?: string | null
           created_at?: string | null
+          error_message?: string | null
           from_me?: boolean | null
           id?: string
+          is_read?: boolean | null
+          media_type?: string | null
+          media_url?: string | null
           message_id?: string
           raw?: Json | null
+          status?: string | null
           text?: string | null
           timestamp?: string | null
           type?: string | null
+          uazapi_message_id?: string | null
+          updated_at?: string | null
           user_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: 'whatsapp_messages_contact_id_fkey'
-            columns: ['contact_id']
+            foreignKeyName: "whatsapp_messages_contact_id_fkey"
+            columns: ["contact_id"]
             isOneToOne: false
-            referencedRelation: 'whatsapp_contacts'
-            referencedColumns: ['id']
+            referencedRelation: "whatsapp_contacts"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1430,15 +1428,7 @@ export type Database = {
           instance_id?: string | null
           url?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: 'whatsapp_webhooks_instance_id_fkey'
-            columns: ['instance_id']
-            isOneToOne: false
-            referencedRelation: 'whatsapp_instances'
-            referencedColumns: ['id']
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {
@@ -1456,31 +1446,33 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
-    ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -1489,23 +1481,23 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -1514,23 +1506,23 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -1539,36 +1531,36 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema['Enums']
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
-    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema['CompositeTypes']
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
-    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
@@ -1576,6 +1568,7 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
 
 // ====== DATABASE EXTENDED CONTEXT (auto-generated) ======
 // This section contains actual PostgreSQL column types, constraints, RLS policies,
@@ -1634,12 +1627,6 @@ export const Constants = {
 //   description: text (not null)
 //   benefits: _text (not null)
 //   created_at: timestamp with time zone (not null, default: timezone('utc'::text, now()))
-// Table: chats
-//   id: uuid (not null, default: gen_random_uuid())
-//   phone: text (not null)
-//   instance_id: text (not null)
-//   created_at: timestamp with time zone (nullable, default: now())
-//   updated_at: timestamp with time zone (nullable, default: now())
 // Table: checklist_templates
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -1684,14 +1671,6 @@ export const Constants = {
 //   phone_jid: text (nullable)
 //   lid_jid: text (nullable)
 //   display_name: text (nullable)
-//   created_at: timestamp with time zone (nullable, default: now())
-// Table: contacts
-//   id: uuid (not null, default: gen_random_uuid())
-//   phone: text (not null)
-//   name: text (nullable)
-//   is_online: boolean (nullable, default: false)
-//   last_seen: timestamp with time zone (nullable)
-//   instance_id: text (not null)
 //   created_at: timestamp with time zone (nullable, default: now())
 // Table: demandas
 //   id: uuid (not null, default: gen_random_uuid())
@@ -1824,13 +1803,6 @@ export const Constants = {
 //   responsavel_id: uuid (nullable)
 //   descricao: text (nullable)
 //   data_criacao: timestamp without time zone (nullable, default: now())
-// Table: messages
-//   id: uuid (not null, default: gen_random_uuid())
-//   chat_id: uuid (not null)
-//   content: text (not null)
-//   direction: text (not null)
-//   status: text (not null, default: 'pending'::text)
-//   timestamp: timestamp with time zone (nullable, default: now())
 // Table: midia_demanda
 //   id: uuid (not null, default: gen_random_uuid())
 //   demanda_id: uuid (nullable)
@@ -1903,6 +1875,14 @@ export const Constants = {
 //   last_message_at: timestamp with time zone (nullable, default: now())
 //   pipeline_stage: text (nullable, default: 'Novo Lead'::text)
 //   created_at: timestamp with time zone (nullable, default: now())
+//   is_online: boolean (nullable, default: false)
+//   last_seen: timestamp with time zone (nullable)
+//   is_group: boolean (nullable, default: false)
+//   verified_name: text (nullable)
+//   sync_status: text (nullable, default: 'pending'::text)
+//   sync_error_message: text (nullable)
+//   instance_id: text (nullable)
+//   updated_at: timestamp with time zone (nullable, default: now())
 // Table: whatsapp_events
 //   id: uuid (not null, default: gen_random_uuid())
 //   instance_name: text (not null)
@@ -1910,14 +1890,25 @@ export const Constants = {
 //   payload: jsonb (not null)
 //   created_at: timestamp with time zone (nullable, default: now())
 // Table: whatsapp_instances
-//   id: text (not null)
-//   name: text (nullable)
-//   status: text (nullable)
-//   token: text (nullable)
-//   owner: text (nullable)
-//   is_business: boolean (nullable)
-//   created: timestamp with time zone (nullable)
-//   updated: timestamp with time zone (nullable)
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_id: uuid (nullable)
+//   instance_id: text (not null)
+//   instance_name: text (nullable)
+//   status: text (nullable, default: 'disconnected'::text)
+//   phone_number: text (nullable)
+//   webhook_url: text (nullable)
+//   webhook_status: text (nullable, default: 'inactive'::text)
+//   webhook_last_success: timestamp with time zone (nullable)
+//   webhook_failure_count: integer (nullable, default: 0)
+//   last_activity: timestamp with time zone (nullable)
+//   connection_error: text (nullable)
+//   sync_status: text (nullable, default: 'idle'::text)
+//   last_sync: timestamp with time zone (nullable)
+//   messages_synced: integer (nullable, default: 0)
+//   contacts_synced: integer (nullable, default: 0)
+//   config: jsonb (nullable, default: '{}'::jsonb)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
 // Table: whatsapp_messages
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_id: uuid (nullable)
@@ -1929,6 +1920,14 @@ export const Constants = {
 //   raw: jsonb (nullable)
 //   timestamp: timestamp with time zone (nullable, default: now())
 //   created_at: timestamp with time zone (nullable, default: now())
+//   status: text (nullable, default: 'pending'::text)
+//   correlation_id: text (nullable)
+//   media_url: text (nullable)
+//   media_type: text (nullable)
+//   uazapi_message_id: text (nullable)
+//   is_read: boolean (nullable, default: false)
+//   error_message: text (nullable)
+//   updated_at: timestamp with time zone (nullable, default: now())
 // Table: whatsapp_webhooks
 //   id: text (not null)
 //   instance_id: text (nullable)
@@ -1949,9 +1948,6 @@ export const Constants = {
 //   PRIMARY KEY candidatos_pkey: PRIMARY KEY (id)
 // Table: certificates
 //   PRIMARY KEY certificates_pkey: PRIMARY KEY (id)
-// Table: chats
-//   UNIQUE chats_phone_instance_id_key: UNIQUE (phone, instance_id)
-//   PRIMARY KEY chats_pkey: PRIMARY KEY (id)
 // Table: checklist_templates
 //   PRIMARY KEY checklist_templates_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY checklist_templates_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE SET NULL
@@ -1971,9 +1967,6 @@ export const Constants = {
 //   FOREIGN KEY contact_identity_instance_id_fkey: FOREIGN KEY (instance_id) REFERENCES user_integrations(id) ON DELETE CASCADE
 //   PRIMARY KEY contact_identity_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY contact_identity_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
-// Table: contacts
-//   UNIQUE contacts_phone_key: UNIQUE (phone)
-//   PRIMARY KEY contacts_pkey: PRIMARY KEY (id)
 // Table: demandas
 //   FOREIGN KEY demandas_cliente_id_fkey: FOREIGN KEY (cliente_id) REFERENCES clientes_externos(id) ON DELETE SET NULL
 //   PRIMARY KEY demandas_pkey: PRIMARY KEY (id)
@@ -2017,11 +2010,6 @@ export const Constants = {
 // Table: mapeamento_demandas_responsaveis
 //   PRIMARY KEY mapeamento_demandas_responsaveis_pkey: PRIMARY KEY (id)
 //   UNIQUE mapeamento_demandas_responsaveis_tipo_demanda_key: UNIQUE (tipo_demanda)
-// Table: messages
-//   FOREIGN KEY messages_chat_id_fkey: FOREIGN KEY (chat_id) REFERENCES chats(id) ON DELETE CASCADE
-//   CHECK messages_direction_check: CHECK ((direction = ANY (ARRAY['inbound'::text, 'outbound'::text])))
-//   PRIMARY KEY messages_pkey: PRIMARY KEY (id)
-//   CHECK messages_status_check: CHECK ((status = ANY (ARRAY['pending'::text, 'sent'::text, 'read'::text, 'failed'::text])))
 // Table: midia_demanda
 //   FOREIGN KEY midia_demanda_demanda_id_fkey: FOREIGN KEY (demanda_id) REFERENCES demandas(id)
 //   PRIMARY KEY midia_demanda_pkey: PRIMARY KEY (id)
@@ -2048,19 +2036,23 @@ export const Constants = {
 //   PRIMARY KEY whatsapp_clicks_pkey: PRIMARY KEY (id)
 // Table: whatsapp_contacts
 //   PRIMARY KEY whatsapp_contacts_pkey: PRIMARY KEY (id)
+//   CHECK whatsapp_contacts_sync_status_check: CHECK ((sync_status = ANY (ARRAY['pending'::text, 'synced'::text, 'failed'::text])))
 //   FOREIGN KEY whatsapp_contacts_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 //   UNIQUE whatsapp_contacts_user_id_remote_jid_key: UNIQUE (user_id, remote_jid)
 // Table: whatsapp_events
 //   PRIMARY KEY whatsapp_events_pkey: PRIMARY KEY (id)
 // Table: whatsapp_instances
+//   UNIQUE whatsapp_instances_instance_id_key: UNIQUE (instance_id)
 //   PRIMARY KEY whatsapp_instances_pkey: PRIMARY KEY (id)
 // Table: whatsapp_messages
 //   FOREIGN KEY whatsapp_messages_contact_id_fkey: FOREIGN KEY (contact_id) REFERENCES whatsapp_contacts(id) ON DELETE CASCADE
+//   UNIQUE whatsapp_messages_correlation_id_key: UNIQUE (correlation_id)
 //   PRIMARY KEY whatsapp_messages_pkey: PRIMARY KEY (id)
+//   CHECK whatsapp_messages_status_check: CHECK ((status = ANY (ARRAY['pending'::text, 'sent'::text, 'read'::text, 'failed'::text])))
+//   UNIQUE whatsapp_messages_uazapi_message_id_key: UNIQUE (uazapi_message_id)
 //   FOREIGN KEY whatsapp_messages_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 //   UNIQUE whatsapp_messages_user_id_message_id_key: UNIQUE (user_id, message_id)
 // Table: whatsapp_webhooks
-//   FOREIGN KEY whatsapp_webhooks_instance_id_fkey: FOREIGN KEY (instance_id) REFERENCES whatsapp_instances(id)
 //   PRIMARY KEY whatsapp_webhooks_pkey: PRIMARY KEY (id)
 
 // --- ROW LEVEL SECURITY POLICIES ---
@@ -2083,16 +2075,6 @@ export const Constants = {
 // Table: certificates
 //   Policy "Allow public select from certificates" (SELECT, PERMISSIVE) roles={public}
 //     USING: true
-// Table: chats
-//   Policy "authenticated_delete_chats" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: true
-//   Policy "authenticated_insert_chats" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: true
-//   Policy "authenticated_select_chats" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: true
-//   Policy "authenticated_update_chats" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: true
-//     WITH CHECK: true
 // Table: checklist_templates
 //   Policy "allow_all_checklist_templates" (ALL, PERMISSIVE) roles={public}
 //     USING: true
@@ -2110,16 +2092,6 @@ export const Constants = {
 //     USING: true
 // Table: contact_identity
 //   Policy "Users can manage their own identities" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: true
-//     WITH CHECK: true
-// Table: contacts
-//   Policy "authenticated_delete_contacts" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: true
-//   Policy "authenticated_insert_contacts" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: true
-//   Policy "authenticated_select_contacts" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: true
-//   Policy "authenticated_update_contacts" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
 // Table: demandas
@@ -2178,16 +2150,6 @@ export const Constants = {
 // Table: mapeamento_demandas_responsaveis
 //   Policy "allow_all_mapeamento_demandas_responsaveis" (ALL, PERMISSIVE) roles={public}
 //     USING: true
-// Table: messages
-//   Policy "authenticated_delete_messages" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: true
-//   Policy "authenticated_insert_messages" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: true
-//   Policy "authenticated_select_messages" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: true
-//   Policy "authenticated_update_messages" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: true
-//     WITH CHECK: true
 // Table: midia_demanda
 //   Policy "allow_all_midia_demanda" (ALL, PERMISSIVE) roles={public}
 //     USING: true
@@ -2226,6 +2188,13 @@ export const Constants = {
 //   Policy "Users can manage their own whatsapp contacts" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
+// Table: whatsapp_instances
+//   Policy "whatsapp_instances_insert" (INSERT, PERMISSIVE) roles={public}
+//     WITH CHECK: true
+//   Policy "whatsapp_instances_select" (SELECT, PERMISSIVE) roles={public}
+//     USING: true
+//   Policy "whatsapp_instances_update" (UPDATE, PERMISSIVE) roles={public}
+//     USING: true
 // Table: whatsapp_messages
 //   Policy "Users can manage their own whatsapp messages" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: true
@@ -2237,7 +2206,6 @@ export const Constants = {
 // for non-superuser roles (including the anon and authenticated roles used by the app).
 // You MUST create RLS policies for these tables to allow data access.
 //   - whatsapp_events
-//   - whatsapp_instances
 //   - whatsapp_webhooks
 
 // --- DATABASE FUNCTIONS ---
@@ -2254,7 +2222,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION rls_auto_enable()
 //   CREATE OR REPLACE FUNCTION public.rls_auto_enable()
 //    RETURNS event_trigger
@@ -2285,7 +2253,7 @@ export const Constants = {
 //     END LOOP;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION set_updated_at_timestamp()
 //   CREATE OR REPLACE FUNCTION public.set_updated_at_timestamp()
 //    RETURNS trigger
@@ -2296,7 +2264,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION update_chats_updated_at()
 //   CREATE OR REPLACE FUNCTION public.update_chats_updated_at()
 //    RETURNS trigger
@@ -2309,13 +2277,11 @@ export const Constants = {
 //       RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 
 // --- TRIGGERS ---
 // Table: emails_sent
 //   set_public_emails_sent_updated_at: CREATE TRIGGER set_public_emails_sent_updated_at BEFORE UPDATE ON public.emails_sent FOR EACH ROW EXECUTE FUNCTION set_updated_at_timestamp()
-// Table: messages
-//   update_chats_updated_at_trigger: CREATE TRIGGER update_chats_updated_at_trigger AFTER INSERT ON public.messages FOR EACH ROW EXECUTE FUNCTION update_chats_updated_at()
 // Table: users
 //   set_public_users_updated_at: CREATE TRIGGER set_public_users_updated_at BEFORE UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION set_updated_at_timestamp()
 
@@ -2326,10 +2292,6 @@ export const Constants = {
 //   CREATE INDEX idx_candidatos_email ON public.candidatos USING btree (email)
 //   CREATE INDEX idx_candidatos_empresa ON public.candidatos USING btree (empresa_id)
 //   CREATE INDEX idx_candidatos_status ON public.candidatos USING btree (status)
-// Table: chats
-//   CREATE INDEX chats_instance_id_idx ON public.chats USING btree (instance_id)
-//   CREATE INDEX chats_phone_idx ON public.chats USING btree (phone)
-//   CREATE UNIQUE INDEX chats_phone_instance_id_key ON public.chats USING btree (phone, instance_id)
 // Table: clientes
 //   CREATE UNIQUE INDEX clientes_telefone_key ON public.clientes USING btree (telefone)
 //   CREATE INDEX idx_clientes_telefone ON public.clientes USING btree (telefone)
@@ -2340,10 +2302,6 @@ export const Constants = {
 //   CREATE UNIQUE INDEX configuracoes_chave_key ON public.configuracoes USING btree (chave)
 // Table: contact_identity
 //   CREATE UNIQUE INDEX contact_identity_instance_id_canonical_phone_key ON public.contact_identity USING btree (instance_id, canonical_phone)
-// Table: contacts
-//   CREATE INDEX contacts_instance_id_idx ON public.contacts USING btree (instance_id)
-//   CREATE INDEX contacts_phone_idx ON public.contacts USING btree (phone)
-//   CREATE UNIQUE INDEX contacts_phone_key ON public.contacts USING btree (phone)
 // Table: demandas
 //   CREATE INDEX idx_demandas_cliente ON public.demandas USING btree (cliente_id)
 //   CREATE INDEX idx_demandas_responsavel ON public.demandas USING btree (responsavel_id)
@@ -2354,9 +2312,6 @@ export const Constants = {
 //   CREATE UNIQUE INDEX employees_cpf_key ON public.employees USING btree (cpf)
 // Table: mapeamento_demandas_responsaveis
 //   CREATE UNIQUE INDEX mapeamento_demandas_responsaveis_tipo_demanda_key ON public.mapeamento_demandas_responsaveis USING btree (tipo_demanda)
-// Table: messages
-//   CREATE INDEX messages_chat_id_idx ON public.messages USING btree (chat_id)
-//   CREATE INDEX messages_timestamp_idx ON public.messages USING btree ("timestamp" DESC)
 // Table: midia_demanda
 //   CREATE INDEX idx_midia_demanda ON public.midia_demanda USING btree (demanda_id)
 // Table: user_integrations
@@ -2368,6 +2323,24 @@ export const Constants = {
 // Table: usuarios
 //   CREATE UNIQUE INDEX usuarios_email_key ON public.usuarios USING btree (email)
 // Table: whatsapp_contacts
+//   CREATE INDEX idx_whatsapp_contacts_instance_id ON public.whatsapp_contacts USING btree (instance_id)
+//   CREATE INDEX idx_whatsapp_contacts_is_online ON public.whatsapp_contacts USING btree (is_online)
+//   CREATE INDEX idx_whatsapp_contacts_last_seen ON public.whatsapp_contacts USING btree (last_seen DESC)
+//   CREATE INDEX idx_whatsapp_contacts_remote_jid ON public.whatsapp_contacts USING btree (remote_jid)
+//   CREATE INDEX idx_whatsapp_contacts_user_id ON public.whatsapp_contacts USING btree (user_id)
 //   CREATE UNIQUE INDEX whatsapp_contacts_user_id_remote_jid_key ON public.whatsapp_contacts USING btree (user_id, remote_jid)
+// Table: whatsapp_instances
+//   CREATE INDEX idx_whatsapp_instances_instance_id ON public.whatsapp_instances USING btree (instance_id)
+//   CREATE INDEX idx_whatsapp_instances_status ON public.whatsapp_instances USING btree (status)
+//   CREATE INDEX idx_whatsapp_instances_user_id ON public.whatsapp_instances USING btree (user_id)
+//   CREATE UNIQUE INDEX whatsapp_instances_instance_id_key ON public.whatsapp_instances USING btree (instance_id)
 // Table: whatsapp_messages
+//   CREATE INDEX idx_whatsapp_messages_contact_id_timestamp ON public.whatsapp_messages USING btree (contact_id, "timestamp" DESC)
+//   CREATE INDEX idx_whatsapp_messages_created_at ON public.whatsapp_messages USING btree (created_at DESC)
+//   CREATE INDEX idx_whatsapp_messages_is_read ON public.whatsapp_messages USING btree (is_read)
+//   CREATE INDEX idx_whatsapp_messages_status ON public.whatsapp_messages USING btree (status)
+//   CREATE INDEX idx_whatsapp_messages_uazapi_message_id ON public.whatsapp_messages USING btree (uazapi_message_id)
+//   CREATE UNIQUE INDEX whatsapp_messages_correlation_id_key ON public.whatsapp_messages USING btree (correlation_id)
+//   CREATE UNIQUE INDEX whatsapp_messages_uazapi_message_id_key ON public.whatsapp_messages USING btree (uazapi_message_id)
 //   CREATE UNIQUE INDEX whatsapp_messages_user_id_message_id_key ON public.whatsapp_messages USING btree (user_id, message_id)
+
