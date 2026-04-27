@@ -24,12 +24,7 @@
     "update-demand-priority": 26,
     "vacation-balance": 26,
     "vacation-requests": 26,
-    "receive-message": 13,
     "get-chat-history": 4,
-    "uazapi-create-instance": 4,
-    "uazapi-disconnect": 4,
-    "uazapi-sync-contacts": 4,
-    "uazapi-sync-messages": 5,
-    "uazapi-sync-history": 4
+    "uazapi-sync-messages": 5
   }
 }

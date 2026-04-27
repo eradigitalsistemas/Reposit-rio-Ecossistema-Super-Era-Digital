@@ -85,18 +85,23 @@ export default function WhatsApp() {
   const fetchChats = async () => {
     setLoadingChats(true)
     try {
-      const [chatsRes, contactsRes] = await Promise.all([
-        supabase.from('chats').select('*').order('updated_at', { ascending: false }),
-        supabase.from('contacts').select('*'),
-      ])
+      const { data: contactsRes, error } = await supabase
+        .from('whatsapp_contacts')
+        .select('*')
+        .order('last_message_at', { ascending: false, nullsFirst: false })
 
-      if (chatsRes.error) throw chatsRes.error
+      if (error) throw error
 
-      const contactsMap = new Map((contactsRes.data || []).map((c) => [c.phone, c]))
-
-      const formattedChats = (chatsRes.data || []).map((chat) => ({
-        ...chat,
-        contact: contactsMap.get(chat.phone) as ContactInfo | undefined,
+      const formattedChats = (contactsRes || []).map((contact) => ({
+        id: contact.id,
+        phone: contact.remote_jid.split('@')[0],
+        instance_id: contact.instance_id || '',
+        updated_at: contact.last_message_at || contact.created_at || new Date().toISOString(),
+        contact: {
+          name: contact.push_name || contact.verified_name || null,
+          is_online: contact.is_online,
+          last_seen: contact.last_seen,
+        },
       }))
 
       setChats(formattedChats)
@@ -114,7 +119,7 @@ export default function WhatsApp() {
       const { data, error } = await supabase
         .from('sync_logs')
         .select('*')
-        .in('entity_type', ['uazapi_sync_messages', 'webhook_receive'])
+        .in('entity_type', ['uazapi_sync_messages', 'webhook_receive', 'whatsapp_events'])
         .order('created_at', { ascending: false })
         .limit(30)
       if (data) setSyncLogs(data)
@@ -129,10 +134,14 @@ export default function WhatsApp() {
       fetchSyncLogs()
 
       const chatChannel = supabase
-        .channel('whatsapp-chats-changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, () => {
-          fetchChats()
-        })
+        .channel('whatsapp-contacts-changes')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'whatsapp_contacts' },
+          () => {
+            fetchChats()
+          },
+        )
         .subscribe()
 
       const logsChannel = supabase
@@ -142,7 +151,11 @@ export default function WhatsApp() {
           { event: 'INSERT', schema: 'public', table: 'sync_logs' },
           (payload) => {
             const newLog = payload.new as SyncLog
-            if (['uazapi_sync_messages', 'webhook_receive'].includes(newLog.entity_type)) {
+            if (
+              ['uazapi_sync_messages', 'webhook_receive', 'whatsapp_events'].includes(
+                newLog.entity_type,
+              )
+            ) {
               setSyncLogs((prev) => [newLog, ...prev].slice(0, 30))
             }
           },
@@ -174,13 +187,23 @@ export default function WhatsApp() {
     setLoadingMessages(true)
     try {
       const { data, error } = await supabase
-        .from('messages')
+        .from('whatsapp_messages')
         .select('*')
-        .eq('chat_id', chatId)
+        .eq('contact_id', chatId)
         .order('timestamp', { ascending: true })
 
       if (error) throw error
-      setMessages(data || [])
+
+      const formattedMessages = (data || []).map((m: any) => ({
+        id: m.id,
+        chat_id: m.contact_id || '',
+        content: m.text || '',
+        direction: m.from_me ? 'outbound' : 'inbound',
+        status: m.status || 'read',
+        timestamp: m.timestamp || new Date().toISOString(),
+      }))
+
+      setMessages(formattedMessages)
       setTimeout(() => {
         scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
       }, 100)
@@ -203,14 +226,24 @@ export default function WhatsApp() {
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'messages',
-          filter: `chat_id=eq.${selectedChat.id}`,
+          table: 'whatsapp_messages',
+          filter: `contact_id=eq.${selectedChat.id}`,
         },
         (payload) => {
+          const m = payload.new as any
+          const msg: Message = {
+            id: m.id,
+            chat_id: m.contact_id || '',
+            content: m.text || '',
+            direction: m.from_me ? 'outbound' : 'inbound',
+            status: m.status || 'read',
+            timestamp: m.timestamp || new Date().toISOString(),
+          }
+
           setMessages((prev) => {
-            const exists = prev.find((m) => m.id === payload.new.id)
+            const exists = prev.find((x) => x.id === msg.id)
             if (exists) return prev
-            return [...prev, payload.new as Message]
+            return [...prev, msg]
           })
           setTimeout(() => {
             scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -222,13 +255,20 @@ export default function WhatsApp() {
         {
           event: 'UPDATE',
           schema: 'public',
-          table: 'messages',
-          filter: `chat_id=eq.${selectedChat.id}`,
+          table: 'whatsapp_messages',
+          filter: `contact_id=eq.${selectedChat.id}`,
         },
         (payload) => {
-          setMessages((prev) =>
-            prev.map((m) => (m.id === payload.new.id ? (payload.new as Message) : m)),
-          )
+          const m = payload.new as any
+          const msg: Message = {
+            id: m.id,
+            chat_id: m.contact_id || '',
+            content: m.text || '',
+            direction: m.from_me ? 'outbound' : 'inbound',
+            status: m.status || 'read',
+            timestamp: m.timestamp || new Date().toISOString(),
+          }
+          setMessages((prev) => prev.map((x) => (x.id === msg.id ? msg : x)))
         },
       )
       .subscribe()
