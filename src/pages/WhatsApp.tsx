@@ -327,6 +327,36 @@ export default function WhatsApp() {
     }
   }
 
+  const handleDebugSend = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('send-message', {
+        body: {
+          instance_id: 'da5f1f9f-7d94-4b41-b1e5-b09e3148f983',
+          phone: '558699577548',
+          message: 'Teste enviado pelo botão de debug',
+        },
+      })
+
+      console.log('data:', data)
+      console.log('error:', error)
+
+      if (error) {
+        toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+      } else if (data?.success) {
+        toast({ title: 'Enviado!', description: `ID: ${data.uazapi_message_id}` })
+      } else {
+        toast({
+          title: 'Falha',
+          description: data?.error || 'desconhecido',
+          variant: 'destructive',
+        })
+      }
+    } catch (err: any) {
+      console.error(err)
+      toast({ title: 'Erro inesperado', description: err.message, variant: 'destructive' })
+    }
+  }
+
   const handleSend = async () => {
     const text = inputValue.trim()
     if (!text || !selectedChat) return
@@ -387,126 +417,138 @@ export default function WhatsApp() {
               <MessageCircle className="h-5 w-5 text-blue-500" />
               WhatsApp Mirror
             </h2>
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 gap-2 bg-green-50/50 text-green-700 border-green-200 hover:bg-green-100 hover:text-green-800 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800 dark:hover:bg-green-900/40"
-                >
-                  <Activity className="h-3.5 w-3.5" />
-                  <span className="text-xs font-medium">Webhook Status</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent className="w-[90vw] sm:max-w-md flex flex-col gap-0 p-0">
-                <SheetHeader className="p-6 border-b border-border bg-card/50">
-                  <SheetTitle className="flex items-center gap-2">
-                    <Activity className="h-5 w-5 text-green-500" />
-                    Status da Integração
-                  </SheetTitle>
-                  <SheetDescription>
-                    Acompanhe o recebimento de mensagens e force a sincronização com a UAZAPI.
-                  </SheetDescription>
-                </SheetHeader>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDebugSend}
+                className="h-8 text-xs bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100 hover:text-orange-700 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800 dark:hover:bg-orange-900/40"
+              >
+                Testar Envio WhatsApp
+              </Button>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-2 bg-green-50/50 text-green-700 border-green-200 hover:bg-green-100 hover:text-green-800 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800 dark:hover:bg-green-900/40"
+                  >
+                    <Activity className="h-3.5 w-3.5" />
+                    <span className="text-xs font-medium">Webhook Status</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent className="w-[90vw] sm:max-w-md flex flex-col gap-0 p-0">
+                  <SheetHeader className="p-6 border-b border-border bg-card/50">
+                    <SheetTitle className="flex items-center gap-2">
+                      <Activity className="h-5 w-5 text-green-500" />
+                      Status da Integração
+                    </SheetTitle>
+                    <SheetDescription>
+                      Acompanhe o recebimento de mensagens e force a sincronização com a UAZAPI.
+                    </SheetDescription>
+                  </SheetHeader>
 
-                <div className="flex-1 overflow-hidden flex flex-col p-6 gap-6 bg-muted/20">
-                  {/* Sincronização */}
-                  <div className="p-5 border border-border rounded-xl bg-card shadow-sm space-y-4 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-                      <RefreshCw className="w-24 h-24" />
+                  <div className="flex-1 overflow-hidden flex flex-col p-6 gap-6 bg-muted/20">
+                    {/* Sincronização */}
+                    <div className="p-5 border border-border rounded-xl bg-card shadow-sm space-y-4 relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                        <RefreshCw className="w-24 h-24" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold flex items-center gap-2 text-foreground">
+                          <RefreshCw className="h-4 w-4 text-blue-500" />
+                          Sincronização Manual
+                        </h3>
+                        <p className="text-sm text-muted-foreground mt-1 relative z-10">
+                          Dispare uma busca manual para puxar as mensagens e chats mais recentes da
+                          instância conectada.
+                        </p>
+                      </div>
+                      <Button
+                        onClick={handleSync}
+                        disabled={isSyncing}
+                        className="w-full gap-2 relative z-10 shadow-sm"
+                      >
+                        {isSyncing ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <RefreshCw className="h-4 w-4" />
+                        )}
+                        {isSyncing ? 'Sincronizando...' : 'Sincronizar Agora'}
+                      </Button>
                     </div>
-                    <div>
-                      <h3 className="font-semibold flex items-center gap-2 text-foreground">
-                        <RefreshCw className="h-4 w-4 text-blue-500" />
-                        Sincronização Manual
-                      </h3>
-                      <p className="text-sm text-muted-foreground mt-1 relative z-10">
-                        Dispare uma busca manual para puxar as mensagens e chats mais recentes da
-                        instância conectada.
-                      </p>
-                    </div>
-                    <Button
-                      onClick={handleSync}
-                      disabled={isSyncing}
-                      className="w-full gap-2 relative z-10 shadow-sm"
-                    >
-                      {isSyncing ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <RefreshCw className="h-4 w-4" />
-                      )}
-                      {isSyncing ? 'Sincronizando...' : 'Sincronizar Agora'}
-                    </Button>
-                  </div>
 
-                  {/* Logs de Webhook */}
-                  <div className="flex-1 flex flex-col min-h-0 bg-card rounded-xl border border-border shadow-sm overflow-hidden">
-                    <div className="p-4 border-b border-border bg-muted/30">
-                      <h3 className="font-semibold flex items-center gap-2 text-sm">
-                        <ListTodo className="h-4 w-4 text-muted-foreground" />
-                        Últimos Eventos (Real-time)
-                      </h3>
+                    {/* Logs de Webhook */}
+                    <div className="flex-1 flex flex-col min-h-0 bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+                      <div className="p-4 border-b border-border bg-muted/30">
+                        <h3 className="font-semibold flex items-center gap-2 text-sm">
+                          <ListTodo className="h-4 w-4 text-muted-foreground" />
+                          Últimos Eventos (Real-time)
+                        </h3>
+                      </div>
+                      <ScrollArea className="flex-1 p-2">
+                        {syncLogs.length === 0 ? (
+                          <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground">
+                            <Activity className="h-8 w-8 mb-2 opacity-20" />
+                            <p className="text-sm">Nenhum evento registrado ainda.</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-1">
+                            {syncLogs.map((log, i) => (
+                              <div
+                                key={`${log.id}-${i}`}
+                                className="text-xs p-3 rounded-lg hover:bg-muted/50 transition-colors flex flex-col gap-1.5 border border-transparent hover:border-border"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span className="font-medium text-foreground">
+                                    {log.entity_type === 'webhook_receive'
+                                      ? 'Recebimento de Webhook'
+                                      : 'Sincronização Manual'}
+                                  </span>
+                                  <span className="text-[10px] text-muted-foreground font-mono">
+                                    {new Date(log.created_at).toLocaleTimeString('pt-BR', {
+                                      hour: '2-digit',
+                                      minute: '2-digit',
+                                      second: '2-digit',
+                                    })}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span
+                                    className={cn(
+                                      'uppercase text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded-full flex items-center gap-1',
+                                      log.status === 'success'
+                                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                        : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+                                    )}
+                                  >
+                                    {log.status === 'success' ? (
+                                      <Check className="w-3 h-3" />
+                                    ) : null}
+                                    {log.status}
+                                  </span>
+                                  {log.entity_type === 'webhook_receive' &&
+                                    log.status === 'success' && (
+                                      <span className="text-muted-foreground text-[10px] truncate max-w-[200px]">
+                                        ID: {log.entity_id}
+                                      </span>
+                                    )}
+                                </div>
+                                {log.error_message && (
+                                  <p className="text-red-500 mt-1 font-mono bg-red-50 dark:bg-red-950/20 p-2 rounded text-[10px]">
+                                    {log.error_message}
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </ScrollArea>
                     </div>
-                    <ScrollArea className="flex-1 p-2">
-                      {syncLogs.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground">
-                          <Activity className="h-8 w-8 mb-2 opacity-20" />
-                          <p className="text-sm">Nenhum evento registrado ainda.</p>
-                        </div>
-                      ) : (
-                        <div className="space-y-1">
-                          {syncLogs.map((log, i) => (
-                            <div
-                              key={`${log.id}-${i}`}
-                              className="text-xs p-3 rounded-lg hover:bg-muted/50 transition-colors flex flex-col gap-1.5 border border-transparent hover:border-border"
-                            >
-                              <div className="flex items-center justify-between">
-                                <span className="font-medium text-foreground">
-                                  {log.entity_type === 'webhook_receive'
-                                    ? 'Recebimento de Webhook'
-                                    : 'Sincronização Manual'}
-                                </span>
-                                <span className="text-[10px] text-muted-foreground font-mono">
-                                  {new Date(log.created_at).toLocaleTimeString('pt-BR', {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                    second: '2-digit',
-                                  })}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span
-                                  className={cn(
-                                    'uppercase text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded-full flex items-center gap-1',
-                                    log.status === 'success'
-                                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                      : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-                                  )}
-                                >
-                                  {log.status === 'success' ? <Check className="w-3 h-3" /> : null}
-                                  {log.status}
-                                </span>
-                                {log.entity_type === 'webhook_receive' &&
-                                  log.status === 'success' && (
-                                    <span className="text-muted-foreground text-[10px] truncate max-w-[200px]">
-                                      ID: {log.entity_id}
-                                    </span>
-                                  )}
-                              </div>
-                              {log.error_message && (
-                                <p className="text-red-500 mt-1 font-mono bg-red-50 dark:bg-red-950/20 p-2 rounded text-[10px]">
-                                  {log.error_message}
-                                </p>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </ScrollArea>
                   </div>
-                </div>
-              </SheetContent>
-            </Sheet>
+                </SheetContent>
+              </Sheet>
+            </div>
           </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
