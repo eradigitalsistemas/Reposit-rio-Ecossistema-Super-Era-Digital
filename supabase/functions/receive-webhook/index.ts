@@ -4,8 +4,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
 }
 
 Deno.serve(async (req: Request) => {
@@ -29,23 +28,20 @@ Deno.serve(async (req: Request) => {
 
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
     await supabaseAdmin.from('whatsapp_events').insert({
       instance_name: instanceName || 'unknown',
       event_type: event || 'unknown',
-      payload: payload,
+      payload: payload
     })
 
     if (!instanceName || !event || !data) {
-      return new Response(
-        JSON.stringify({ success: true, ignored: true, reason: 'Invalid payload' }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        },
-      )
+      return new Response(JSON.stringify({ success: true, ignored: true, reason: 'Invalid payload' }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
     }
 
     const { data: instanceRecord } = await supabaseAdmin
@@ -77,7 +73,7 @@ Deno.serve(async (req: Request) => {
             .from('whatsapp_contacts')
             .select('id')
             .eq('remote_jid', remoteJid)
-
+          
           if (userId) {
             contactQuery.eq('user_id', userId)
           } else {
@@ -128,7 +124,7 @@ Deno.serve(async (req: Request) => {
             text = messageContent.documentMessage.fileName || ''
           }
 
-          const timestamp = msg.messageTimestamp
+          const timestamp = msg.messageTimestamp 
             ? new Date(msg.messageTimestamp * 1000).toISOString()
             : new Date().toISOString()
 
@@ -145,28 +141,27 @@ Deno.serve(async (req: Request) => {
             status: status,
             timestamp: timestamp,
             raw: msg,
-            updated_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           }
 
           const { error: upsertErr } = await supabaseAdmin
             .from('whatsapp_messages')
             .upsert(msgToUpsert, { onConflict: 'user_id, message_id' })
-
+          
           if (upsertErr) {
-            console.error('[receive-webhook] Error upserting message:', upsertErr)
+             console.error('[receive-webhook] Error upserting message:', upsertErr)
           }
 
-          await supabaseAdmin
-            .from('whatsapp_contacts')
-            .update({
-              last_message_at: timestamp,
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', contactId)
+          await supabaseAdmin.from('whatsapp_contacts').update({
+            last_message_at: timestamp,
+            updated_at: new Date().toISOString()
+          }).eq('id', contactId)
+
         } catch (msgErr) {
           console.error('[receive-webhook] Error processing message:', msgErr)
         }
       }
+
     } else if (event === 'messages_update') {
       const updates = Array.isArray(data) ? data : [data]
 
@@ -186,24 +181,23 @@ Deno.serve(async (req: Request) => {
             isRead = true
           } else if (updateStatus === 'SERVER_ACK') newStatus = 'sent'
 
-          const updateQuery = supabaseAdmin
-            .from('whatsapp_messages')
-            .update({
-              status: newStatus,
-              is_read: isRead,
-              updated_at: new Date().toISOString(),
-            })
-            .eq('message_id', messageId)
+          const updateQuery = supabaseAdmin.from('whatsapp_messages').update({
+            status: newStatus,
+            is_read: isRead,
+            updated_at: new Date().toISOString()
+          }).eq('message_id', messageId)
 
           if (userId) {
             updateQuery.eq('user_id', userId)
           }
 
           await updateQuery
+
         } catch (updErr) {
           console.error('[receive-webhook] Error processing message update:', updErr)
         }
       }
+
     } else if (event === 'presence') {
       try {
         const remoteJid = data.id
@@ -211,14 +205,11 @@ Deno.serve(async (req: Request) => {
 
         if (remoteJid) {
           const isOnline = presence === 'available' || presence === 'composing'
-          const presQuery = supabaseAdmin
-            .from('whatsapp_contacts')
-            .update({
-              is_online: isOnline,
-              last_seen: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            })
-            .eq('remote_jid', remoteJid)
+          const presQuery = supabaseAdmin.from('whatsapp_contacts').update({
+            is_online: isOnline,
+            last_seen: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }).eq('remote_jid', remoteJid)
 
           if (userId) {
             presQuery.eq('user_id', userId)
@@ -229,6 +220,7 @@ Deno.serve(async (req: Request) => {
       } catch (presErr) {
         console.error('[receive-webhook] Error processing presence:', presErr)
       }
+
     } else if (event === 'connection') {
       try {
         const status = data.state
@@ -236,13 +228,10 @@ Deno.serve(async (req: Request) => {
         if (status === 'open') dbStatus = 'connected'
         else if (status === 'connecting') dbStatus = 'qr_waiting'
 
-        await supabaseAdmin
-          .from('whatsapp_instances')
-          .update({
-            status: dbStatus,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('instance_name', instanceName)
+        await supabaseAdmin.from('whatsapp_instances').update({
+          status: dbStatus,
+          updated_at: new Date().toISOString()
+        }).eq('instance_name', instanceName)
       } catch (connErr) {
         console.error('[receive-webhook] Error processing connection:', connErr)
       }
@@ -252,6 +241,7 @@ Deno.serve(async (req: Request) => {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
+
   } catch (error: any) {
     console.error('[receive-webhook] Fatal Error:', error.message)
     return new Response(JSON.stringify({ success: false, error: 'Internal error logged' }), {
