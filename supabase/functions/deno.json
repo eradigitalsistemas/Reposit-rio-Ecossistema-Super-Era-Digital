@@ -25,6 +25,7 @@
     "vacation-balance": 26,
     "vacation-requests": 26,
     "get-chat-history": 4,
-    "uazapi-sync-messages": 5
+    "uazapi-sync-messages": 5,
+    "receive-webhook": 1
   }
 }
