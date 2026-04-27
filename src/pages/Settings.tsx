@@ -94,11 +94,12 @@ export default function Settings() {
         { chave: 'evolution_instance', valor: evolutionInstance },
       ].map((c) => ({
         ...c,
-        atualizado_por: user.id,
-        atualizado_em: new Date().toISOString(),
+        data_atualizacao: new Date().toISOString(),
       }))
 
-      const { error } = await supabase.from('configuracoes').upsert(configs)
+      const { error } = await supabase
+        .from('configuracoes')
+        .upsert(configs, { onConflict: 'chave' })
       if (error) throw error
       toast({
         title: 'Integrações atualizadas',
