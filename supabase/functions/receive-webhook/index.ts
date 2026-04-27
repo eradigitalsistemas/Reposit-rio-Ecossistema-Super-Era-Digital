@@ -1,405 +1,349 @@
-import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
-import { createClient } from 'jsr:@supabase/supabase-js@2'
+/**
+ * Supabase Edge Function: receive-webhook v3
+ * Recebe webhooks da Uazapi (WhatsApp Business API), valida instância,
+ * persiste evento bruto + contato + mensagem, atualiza status de leitura/entrega.
+ * Timestamp blindado com normalizeTimestamp.
+ */
+
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
-}
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
+};
 
-function normalizePayload(payload: any) {
-  const event =
-    payload?.event || payload?.EventType || payload?.type || payload?.eventType || 'unknown'
-  const instance =
-    payload?.instance ||
-    payload?.instanceId ||
-    payload?.instance_id ||
-    payload?.instanceName ||
-    payload?.instance_name ||
-    'unknown'
-  return { normalizedEvent: String(event), normalizedInstance: String(instance) }
-}
-
-Deno.serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+const supabase = createClient(
+  Deno.env.get('SUPABASE_URL') ?? '',
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
   }
+);
 
-  const supabaseAdmin = createClient(
-    Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-  )
-
-  let rawBody = ''
+function normalizeTimestamp(ts: unknown): string {
   try {
-    rawBody = await req.text()
-    const headersObj = Object.fromEntries(req.headers.entries())
-
-    console.log(
-      JSON.stringify({
-        stage: 'raw_body_received',
-        rawBody: rawBody.substring(0, 2000),
-        headers: headersObj,
-      }),
-    )
-
-    console.log(
-      JSON.stringify({
-        stage: 'received',
-        contentType: req.headers.get('content-type'),
-        bodySize: rawBody.length,
-      }),
-    )
-
-    let payload: any
-
-    try {
-      if (!rawBody.trim()) throw new Error('Empty body')
-      payload = JSON.parse(rawBody)
-    } catch (e) {
-      console.log(JSON.stringify({ stage: 'invalid_json_or_empty', error: (e as Error).message }))
-
-      await supabaseAdmin.from('whatsapp_events').insert({
-        instance_name: 'unknown',
-        event_type: 'ping_or_invalid',
-        payload: { raw: rawBody, headers: headersObj },
-      })
-
-      return new Response(JSON.stringify({ status: 'ping_received' }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+    if (!ts || ts === '') {
+      return new Date().toISOString();
     }
-
-    const { normalizedEvent, normalizedInstance } = normalizePayload(payload)
-
-    console.log(
-      JSON.stringify({
-        stage: 'parsed',
-        event: payload?.event,
-        instance: payload?.instance,
-      }),
-    )
-
-    console.log(
-      JSON.stringify({
-        stage: 'normalized',
-        normalizedEvent,
-        normalizedInstance,
-      }),
-    )
-
-    const { error: insertEvtErr } = await supabaseAdmin.from('whatsapp_events').insert({
-      instance_name: normalizedInstance,
-      event_type: normalizedEvent,
-      payload: payload,
-    })
-
-    if (insertEvtErr) {
-      console.error(
-        JSON.stringify({ error: insertEvtErr.message, stage: 'insert_whatsapp_events' }),
-      )
-    }
-
-    const { data: instanceRecord } = await supabaseAdmin
-      .from('whatsapp_instances')
-      .select('user_id, instance_id')
-      .eq('instance_name', normalizedInstance)
-      .maybeSingle()
-
-    if (!instanceRecord) {
-      console.warn(
-        JSON.stringify({
-          error: 'Instância não cadastrada',
-          stage: 'instance_validation',
-          instance: normalizedInstance,
-        }),
-      )
-      return new Response(
-        JSON.stringify({ status: 'ok', processed: false, warning: 'Instância não cadastrada' }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        },
-      )
-    }
-
-    const userId = instanceRecord.user_id
-    const instanceId = instanceRecord.instance_id
-
-    const event = normalizedEvent
-    const data = payload.data || payload
-
-    console.log(JSON.stringify({ stage: 'routed', eventHandler: event }))
-
-    let insertedCount = 0
-    let updatedCount = 0
-
-    if (event === 'messages') {
-      const messages = Array.isArray(data) ? data : [data]
-
-      for (const msg of messages) {
-        try {
-          const key = msg.key || {}
-          const remoteJid = key.remoteJid
-          const fromMe = key.fromMe || false
-          const messageId = key.id
-
-          if (!remoteJid || !messageId) continue
-
-          if (remoteJid.includes('@g.us')) continue
-
-          let contactId = null
-          const contactQuery = supabaseAdmin
-            .from('whatsapp_contacts')
-            .select('id')
-            .eq('remote_jid', remoteJid)
-
-          if (userId) {
-            contactQuery.eq('user_id', userId)
-          } else {
-            contactQuery.is('user_id', null)
-          }
-
-          const { data: existingContact } = await contactQuery.maybeSingle()
-
-          if (existingContact) {
-            contactId = existingContact.id
-          } else {
-            const { data: newContact } = await supabaseAdmin
-              .from('whatsapp_contacts')
-              .insert({
-                user_id: userId,
-                remote_jid: remoteJid,
-                instance_id: instanceId,
-                push_name: msg.pushName || null,
-              })
-              .select('id')
-              .single()
-            if (newContact) {
-              contactId = newContact.id
-              insertedCount++
-            }
-          }
-
-          if (!contactId) continue
-
-          const messageContent = msg.message || {}
-          let text = ''
-          let type = 'text'
-          let mediaUrl = null
-
-          if (messageContent.conversation) {
-            text = messageContent.conversation
-          } else if (messageContent.extendedTextMessage?.text) {
-            text = messageContent.extendedTextMessage.text
-          } else if (messageContent.imageMessage) {
-            type = 'image'
-            text = messageContent.imageMessage.caption || ''
-            mediaUrl = messageContent.imageMessage.url
-          } else if (messageContent.videoMessage) {
-            type = 'video'
-            text = messageContent.videoMessage.caption || ''
-            mediaUrl = messageContent.videoMessage.url
-          } else if (messageContent.audioMessage) {
-            type = 'audio'
-          } else if (messageContent.documentMessage) {
-            type = 'document'
-            text = messageContent.documentMessage.fileName || ''
-          }
-
-          const timestamp = msg.messageTimestamp
-            ? new Date(msg.messageTimestamp * 1000).toISOString()
-            : new Date().toISOString()
-
-          const status = fromMe ? 'sent' : 'read'
-
-          const msgToUpsert = {
-            user_id: userId,
-            contact_id: contactId,
-            message_id: messageId,
-            from_me: fromMe,
-            type: type,
-            text: text,
-            media_url: mediaUrl,
-            status: status,
-            timestamp: timestamp,
-            raw: msg,
-            updated_at: new Date().toISOString(),
-          }
-
-          const { error: upsertErr } = await supabaseAdmin
-            .from('whatsapp_messages')
-            .upsert(msgToUpsert, { onConflict: 'user_id, message_id' })
-
-          if (upsertErr) {
-            console.error(
-              JSON.stringify({
-                error: upsertErr.message,
-                context: 'upsert whatsapp_messages',
-                payload_summary: { messageId },
-              }),
-            )
-          } else {
-            insertedCount++
-          }
-
-          await supabaseAdmin
-            .from('whatsapp_contacts')
-            .update({
-              last_message_at: timestamp,
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', contactId)
-          updatedCount++
-        } catch (msgErr: any) {
-          console.error(
-            JSON.stringify({
-              error: msgErr.message,
-              context: 'process message',
-              payload_summary: { msg_id: msg.key?.id },
-            }),
-          )
+    if (typeof ts === 'string') {
+      if (/^\d{4}-\d{2}-\d{2}T/.test(ts)) {
+        const d = new Date(ts);
+        if (!isNaN(d.getTime())) {
+          return d.toISOString();
+        }
+      } else {
+        const num = Number(ts);
+        if (isFinite(num) && num > 0) {
+          return normalizeNumber(num);
         }
       }
-    } else if (event === 'messages_update') {
-      const updates = Array.isArray(data) ? data : [data]
-
-      for (const update of updates) {
-        try {
-          const key = update.key || {}
-          const messageId = key.id
-          const updateStatus = update.update?.status
-
-          if (!messageId || !updateStatus) continue
-
-          let newStatus = 'sent'
-          let isRead = false
-          if (updateStatus === 'DELIVERY_ACK') newStatus = 'sent'
-          else if (updateStatus === 'READ') {
-            newStatus = 'read'
-            isRead = true
-          } else if (updateStatus === 'SERVER_ACK') newStatus = 'sent'
-
-          const updateQuery = supabaseAdmin
-            .from('whatsapp_messages')
-            .update({
-              status: newStatus,
-              is_read: isRead,
-              updated_at: new Date().toISOString(),
-            })
-            .eq('message_id', messageId)
-
-          if (userId) {
-            updateQuery.eq('user_id', userId)
-          }
-
-          const { error: updErr } = await updateQuery
-
-          if (updErr) {
-            console.error(
-              JSON.stringify({
-                error: updErr.message,
-                context: 'update whatsapp_messages',
-                payload_summary: { messageId },
-              }),
-            )
-          } else {
-            updatedCount++
-          }
-        } catch (updErr: any) {
-          console.error(
-            JSON.stringify({ error: updErr.message, context: 'process messages_update' }),
-          )
-        }
-      }
-    } else if (event === 'presence') {
-      try {
-        const remoteJid = data.id
-        const presence = data.presence
-
-        if (remoteJid) {
-          const isOnline = presence === 'available' || presence === 'composing'
-          const presQuery = supabaseAdmin
-            .from('whatsapp_contacts')
-            .update({
-              is_online: isOnline,
-              last_seen: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            })
-            .eq('remote_jid', remoteJid)
-
-          if (userId) {
-            presQuery.eq('user_id', userId)
-          }
-
-          const { error: presErr } = await presQuery
-
-          if (presErr) {
-            console.error(
-              JSON.stringify({
-                error: presErr.message,
-                context: 'update whatsapp_contacts presence',
-                payload_summary: { remoteJid },
-              }),
-            )
-          } else {
-            updatedCount++
-          }
-        }
-      } catch (presErr: any) {
-        console.error(JSON.stringify({ error: presErr.message, context: 'process presence' }))
-      }
-    } else if (event === 'connection') {
-      try {
-        const status = data.state
-        let dbStatus = 'disconnected'
-        if (status === 'open') dbStatus = 'connected'
-        else if (status === 'connecting') dbStatus = 'qr_waiting'
-
-        const { error: connErr } = await supabaseAdmin
-          .from('whatsapp_instances')
-          .update({
-            status: dbStatus,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('instance_name', normalizedInstance)
-
-        if (connErr) {
-          console.error(
-            JSON.stringify({
-              error: connErr.message,
-              context: 'update whatsapp_instances connection',
-              payload_summary: { normalizedInstance },
-            }),
-          )
-        } else {
-          updatedCount++
-        }
-      } catch (connErr: any) {
-        console.error(JSON.stringify({ error: connErr.message, context: 'process connection' }))
+    } else if (typeof ts === 'number') {
+      if (isFinite(ts) && ts > 0) {
+        return normalizeNumber(ts);
       }
     }
-
-    console.log(
-      JSON.stringify({ stage: 'completed', inserted: insertedCount, updated: updatedCount }),
-    )
-
-    return new Response(JSON.stringify({ status: 'ok', processed: true }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
-  } catch (error: any) {
-    console.error(
-      JSON.stringify({
-        error: error.message,
-        stage: 'fatal_error',
-      }),
-    )
-    return new Response(JSON.stringify({ status: 'error', error: 'Internal error logged' }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return new Date().toISOString();
+  } catch {
+    return new Date().toISOString();
   }
-})
+}
+
+function normalizeNumber(num: number): string {
+  let ms = num > 9999999999n ? num : num * 1000;
+  if (ms < 946684800000 || ms > 4102444800000) {
+    return new Date().toISOString();
+  }
+  const d = new Date(ms);
+  if (isNaN(d.getTime())) {
+    return new Date().toISOString();
+  }
+  return d.toISOString();
+}
+
+function cleanPhone(jid: string): string {
+  return jid.replace(/[^0-9]/g, '');
+}
+
+function extractInstanceName(body: unknown): string {
+  const b = body as Record<string, unknown>;
+  return ((b.instanceName || b.instance || '') as string).trim() || '';
+}
+
+function extractEventType(body: unknown): string {
+  const b = body as Record<string, unknown>;
+  return ((b.EventType || b.event_type || 'unknown') as string).trim() || 'unknown';
+}
+
+function mapMessageType(rawType: string): string {
+  const t = rawType.toLowerCase();
+  if (t.includes('conversation') || t === 'text') return 'text';
+  if (t.includes('image')) return 'image';
+  if (t.includes('audio')) return 'audio';
+  if (t.includes('video')) return 'video';
+  if (t.includes('document')) return 'document';
+  if (t.includes('sticker')) return 'sticker';
+  if (t.includes('location')) return 'location';
+  return 'unknown';
+}
+
+function mapStatus(state: string): string {
+  const s = state.toLowerCase();
+  switch (s) {
+    case 'delivered': return 'delivered';
+    case 'read': return 'read';
+    case 'played': return 'played';
+    case 'sent': return 'sent';
+    default: return 'sent';
+  }
+}
+
+async function processMessage(
+  supabaseClient: typeof supabase,
+  body: unknown,
+  instance: { id: string; instance_id: string; user_id?: string }
+): Promise<void> {
+  const b = body as Record<string, unknown>;
+  const chat = b.chat as Record<string, unknown> | undefined;
+  const message = b.message as Record<string, unknown> | undefined;
+
+  if (!message) {
+    console.log(JSON.stringify({ stage: 'ignored', reason: 'no_message' }));
+    return;
+  }
+
+  const remoteJid = (chat?.wa_chatid as string || message.chatid as string || '').trim();
+  if (!remoteJid) {
+    console.log(JSON.stringify({ stage: 'ignored', reason: 'no_remote_jid' }));
+    return;
+  }
+
+  // Upsert contact
+  const contactUpsert = {
+    instance_id: instance.instance_id,
+    remote_jid: remoteJid,
+    push_name: (chat?.wa_contactName as string || chat?.wa_name as string || message.senderName as string || null),
+    profile_pic_url: chat?.imagePreview as string | null,
+    phone: (chat?.phone as string || cleanPhone(remoteJid)) || null,
+    is_group: !!(chat?.wa_isGroup as boolean),
+    is_archived: !!(chat?.wa_archived as boolean),
+    is_pinned: !!(chat?.wa_isPinned as boolean),
+    is_blocked: !!(chat?.wa_isBlocked as boolean),
+    updated_at: new Date().toISOString(),
+  };
+
+  const { data: contact, error: contactError } = await supabaseClient
+    .from('whatsapp_contacts')
+    .upsert(contactUpsert, { onConflict: 'remote_jid' })
+    .select('id')
+    .single();
+
+  if (contactError || !contact) {
+    console.log(JSON.stringify({
+      stage: 'contact_db_error',
+      error: contactError?.message,
+      remoteJid,
+    }));
+    return;
+  }
+
+  const contactId = contact.id;
+
+  // Build message row
+  const messageRow = {
+    message_id: message.messageid as string,
+    contact_id: contactId,
+    instance_id: instance.instance_id,
+    from_me: !!(message.fromMe as boolean),
+    type: mapMessageType(message.type as string || message.messageType as string || ''),
+    text: (message.text as string || message.content as string || null),
+    media_url: null,
+    media_type: message.mediaType as string | null,
+    media_mime_type: null,
+    timestamp: normalizeTimestamp(message.messageTimestamp),
+    status: (message.fromMe as boolean) ? 'sent' : 'delivered',
+    is_read: false,
+    sender_phone: cleanPhone((message.sender_pn as string || message.sender as string || '')),
+    sender_name: message.senderName as string | null,
+    reply_to_message_id: message.quoted as string | null,
+    raw_payload: b,
+    correlation_id: null,
+    uazapi_message_id: message.id as string | null,
+  };
+
+  const { error: msgError } = await supabaseClient
+    .from('whatsapp_messages')
+    .upsert(messageRow, { onConflict: 'message_id' });
+
+  if (msgError) {
+    console.log(JSON.stringify({
+      stage: 'messages_db_error',
+      error: msgError.message,
+      message_id: messageRow.message_id,
+    }));
+  } else {
+    console.log(JSON.stringify({
+      stage: 'persisted',
+      contactId,
+      messageId: messageRow.message_id,
+    }));
+  }
+}
+
+async function processMessageUpdate(
+  supabaseClient: typeof supabase,
+  body: unknown,
+  instance: { instance_id: string }
+): Promise<void> {
+  const b = body as Record<string, unknown>;
+  const event = b.event as Record<string, unknown> | undefined;
+
+  if (!event) {
+    console.log(JSON.stringify({ stage: 'ignored', reason: 'no_event' }));
+    return;
+  }
+
+  const state = (b.state as string || event.Type as string || '').trim();
+  const messageIds = (event.MessageIDs as string[] || []);
+
+  if (!messageIds.length) {
+    return;
+  }
+
+  const status = mapStatus(state);
+  const isRead = status === 'read';
+
+  const { count, error: updateError } = await supabaseClient
+    .from('whatsapp_messages')
+    .update({ status, is_read: isRead })
+    .eq('instance_id', instance.instance_id)
+    .in('message_id', messageIds);
+
+  if (updateError) {
+    console.log(JSON.stringify({
+      stage: 'status_updated',
+      error: updateError.message,
+      status,
+    }));
+  } else {
+    console.log(JSON.stringify({
+      stage: 'status_updated',
+      count: count || 0,
+      status,
+      messageIdsCount: messageIds.length,
+    }));
+  }
+}
+
+serve(async (req) => {
+  // CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { status: 200, headers: corsHeaders });
+  }
+
+  // Health check
+  if (req.method === 'GET') {
+    return new Response(
+      JSON.stringify({ ok: true }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // Method not allowed
+  if (req.method !== 'POST') {
+    return new Response('Method not allowed', {
+      status: 405,
+      headers: corsHeaders,
+    });
+  }
+
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch (parseError) {
+    console.log(JSON.stringify({ stage: 'raw_body_received', error: 'invalid_json', parseError: String(parseError) }));
+    return new Response(
+      JSON.stringify({ ok: true }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+    );
+  }
+
+  console.log(JSON.stringify({ stage: 'raw_body_received', body_size: JSON.stringify(body).length }));
+
+  try {
+    const instanceName = extractInstanceName(body);
+    const eventType = extractEventType(body);
+
+    console.log(JSON.stringify({ stage: 'normalized', instanceName, eventType }));
+
+    if (!instanceName) {
+      console.log(JSON.stringify({ stage: 'instance_validation', failed: true, reason: 'empty_instance_name' }));
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      });
+    }
+
+    const { data: instance, error: instanceError } = await supabase
+      .from('whatsapp_instances')
+      .select('id, instance_id, user_id')
+      .eq('instance_name', instanceName)
+      .single();
+
+    if (instanceError || !instance) {
+      console.log(JSON.stringify({
+        stage: 'instance_validation',
+        failed: true,
+        instanceName,
+        error: instanceError?.message,
+      }));
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      });
+    }
+
+    console.log(JSON.stringify({ stage: 'instance_validation', success: true, instanceId: instance.id }));
+
+    // Log raw event
+    const { error: eventError } = await supabase
+      .from('whatsapp_events')
+      .insert({
+        instance_name: instanceName,
+        event_type: eventType,
+        payload: body,
+      });
+
+    if (eventError) {
+      console.log(JSON.stringify({ stage: 'event_logged', error: eventError.message }));
+    } else {
+      console.log(JSON.stringify({ stage: 'event_logged', success: true }));
+    }
+
+    // Process by event type
+    if (eventType === 'messages') {
+      await processMessage(supabase, body, instance);
+    } else if (eventType === 'messages_update') {
+      await processMessageUpdate(supabase, body, instance);
+    } else {
+      console.log(JSON.stringify({ stage: 'ignored', eventType, reason: 'unsupported_event_type' }));
+    }
+
+    console.log(JSON.stringify({ stage: 'persisted' }));
+
+    return new Response(JSON.stringify({ ok: true }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
+    });
+  } catch (e) {
+    console.log(JSON.stringify({ stage: 'fatal_error', error: String(e) }));
+    return new Response(JSON.stringify({ ok: true }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
+    });
+  }
+});
