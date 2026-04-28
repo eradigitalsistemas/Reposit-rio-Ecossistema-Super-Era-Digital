@@ -43,6 +43,7 @@ export interface Demand {
   attachments?: DemandAttachment[]
   checklist?: ChecklistItem[]
   createdAt: string
+  updatedAt?: string
   completedAt?: string | null
   systemEscalated?: boolean
 }

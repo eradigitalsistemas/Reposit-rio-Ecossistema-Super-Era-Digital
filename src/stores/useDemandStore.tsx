@@ -35,14 +35,14 @@ interface DemandStoreState {
   notifications: DemandNotification[]
   checklistTemplates: ChecklistTemplate[]
   addDemand: (
-    demand: Omit<Demand, 'id' | 'createdAt' | 'responses' | 'logs'> & {
+    demand: Omit<Demand, 'id' | 'createdAt' | 'updatedAt' | 'responses' | 'logs'> & {
       assigneeId?: string | null
       clientId?: string | null
     },
   ) => Promise<Demand | undefined>
   editDemand: (
     demandId: string,
-    updates: Partial<Omit<Demand, 'id' | 'createdAt' | 'responses' | 'logs'>> & {
+    updates: Partial<Omit<Demand, 'id' | 'createdAt' | 'updatedAt' | 'responses' | 'logs'>> & {
       attachments?: DemandAttachment[]
       clientId?: string | null
     },
@@ -195,6 +195,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             attachments: d.anexos || [],
             checklist: d.checklist || [],
             createdAt: d.data_criacao || new Date().toISOString(),
+            updatedAt: d.data_atualizacao || d.data_criacao || new Date().toISOString(),
             completedAt: d.data_conclusao || null,
             systemEscalated: !!systemEscalated,
           }
@@ -398,7 +399,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
   const addDemand = useCallback(
     async (
-      newDemand: Omit<Demand, 'id' | 'createdAt' | 'responses' | 'logs'> & {
+      newDemand: Omit<Demand, 'id' | 'createdAt' | 'updatedAt' | 'responses' | 'logs'> & {
         assigneeId?: string | null
       },
     ) => {
@@ -460,7 +461,8 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             logs: [],
             attachments: d.anexos || [],
             checklist: finalChecklist,
-            createdAt: d.data_criacao,
+            createdAt: d.data_criacao || new Date().toISOString(),
+            updatedAt: d.data_atualizacao || d.data_criacao || new Date().toISOString(),
             systemEscalated: false,
           }
           setDemands((prev) => [createdDemand, ...prev])
@@ -482,14 +484,14 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
     async (
       demandId: string,
       updates: Partial<
-        Omit<Demand, 'id' | 'createdAt' | 'responses' | 'logs'> & {
+        Omit<Demand, 'id' | 'createdAt' | 'updatedAt' | 'responses' | 'logs'> & {
           attachments?: DemandAttachment[]
         }
       >,
     ) => {
       try {
         const currentDemand = demands.find((d) => d.id === demandId)
-        const updateData: any = {}
+        const updateData: any = { data_atualizacao: new Date().toISOString() }
         let statusChangedToPending = false
 
         if (updates.title !== undefined) updateData.titulo = updates.title
@@ -547,8 +549,12 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   )
 
   const updateStatus = useCallback(async (demandId: string, status: DemandStatus) => {
-    setDemands((prev) => prev.map((d) => (d.id === demandId ? { ...d, status } : d)))
-    await supabase.from('demandas').update({ status }).eq('id', demandId)
+    const updatedAt = new Date().toISOString()
+    setDemands((prev) => prev.map((d) => (d.id === demandId ? { ...d, status, updatedAt } : d)))
+    await supabase
+      .from('demandas')
+      .update({ status, data_atualizacao: updatedAt })
+      .eq('id', demandId)
   }, [])
 
   const deleteDemand = useCallback(async (demandId: string) => {
@@ -568,17 +574,28 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
       const newAssigneeId = demand.assigneeId || user.id
       const newAssigneeName = demand.assigneeId ? demand.assignee : userName || 'Você'
+      const updatedAt = new Date().toISOString()
 
       setDemands((prev) =>
         prev.map((d) =>
           d.id === demandId
-            ? { ...d, status: 'Em Andamento', assigneeId: newAssigneeId, assignee: newAssigneeName }
+            ? {
+                ...d,
+                status: 'Em Andamento',
+                assigneeId: newAssigneeId,
+                assignee: newAssigneeName,
+                updatedAt,
+              }
             : d,
         ),
       )
       const { error } = await supabase
         .from('demandas')
-        .update({ status: 'Em Andamento', responsavel_id: newAssigneeId })
+        .update({
+          status: 'Em Andamento',
+          responsavel_id: newAssigneeId,
+          data_atualizacao: updatedAt,
+        })
         .eq('id', demandId)
 
       if (!error) {
@@ -607,12 +624,15 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           .single()
         const updatedAttachments = [...(data?.anexos || []), ...newAttachments]
 
+        const nowIso = new Date().toISOString()
         const { error } = await supabase
           .from('demandas')
           .update({
             status: 'Concluído',
             resposta,
-            data_resposta: new Date().toISOString(),
+            data_resposta: nowIso,
+            data_conclusao: nowIso,
+            data_atualizacao: nowIso,
             anexos: updatedAttachments,
           })
           .eq('id', demandId)
@@ -625,7 +645,8 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
               ? {
                   ...d,
                   status: 'Concluído',
-                  completedAt: new Date().toISOString(),
+                  updatedAt: nowIso,
+                  completedAt: nowIso,
                   responses: d.responses ? [...d.responses, resposta] : [resposta],
                   attachments: updatedAttachments,
                 }
@@ -664,6 +685,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
       try {
         let finalAttachments = attachments
+        const nowIso = new Date().toISOString()
 
         if (hasAttachments) {
           const { data, error: fetchErr } = await supabase
@@ -680,13 +702,16 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           finalAttachments = [...(data?.anexos || []), ...attachments]
           const { error: updateErr } = await supabase
             .from('demandas')
-            .update({ anexos: finalAttachments })
+            .update({ anexos: finalAttachments, data_atualizacao: nowIso })
             .eq('id', demandId)
 
           if (updateErr) {
             console.error('Erro ao atualizar anexos na demanda:', updateErr)
             throw updateErr
           }
+        } else {
+          // Apenas atualiza a data de atualização
+          await supabase.from('demandas').update({ data_atualizacao: nowIso }).eq('id', demandId)
         }
 
         const { error } = await supabase.from('logs_auditoria').insert({
@@ -707,7 +732,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           id: newLogId,
           acao: acaoType,
           detalhes: detalhesText,
-          createdAt: new Date().toISOString(),
+          createdAt: nowIso,
           usuario_id: user.id,
           userName: userName || 'Você',
           dados_novos: hasAttachments ? { anexos: attachments } : undefined,
@@ -720,6 +745,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
                   ...d,
                   logs: [...(d.logs || []), newLog],
                   attachments: hasAttachments ? finalAttachments : d.attachments,
+                  updatedAt: nowIso,
                 }
               : d,
           ),
@@ -757,8 +783,14 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         )
       }
 
-      setDemands((prev) => prev.map((d) => (d.id === demandId ? { ...d, checklist } : d)))
-      await supabase.from('demandas').update({ checklist }).eq('id', demandId)
+      const updatedAt = new Date().toISOString()
+      setDemands((prev) =>
+        prev.map((d) => (d.id === demandId ? { ...d, checklist, updatedAt } : d)),
+      )
+      await supabase
+        .from('demandas')
+        .update({ checklist, data_atualizacao: updatedAt })
+        .eq('id', demandId)
 
       if (actionText) {
         await supabase.from('logs_auditoria').insert({
@@ -778,12 +810,13 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       if (!user) return
       try {
         const newLogId = crypto.randomUUID()
+        const nowIso = new Date().toISOString()
         const newLog: DemandLog = {
           id: newLogId,
           acao: 'Anexo',
           detalhes: `Arquivo(s) anexado(s): ${newAttachments.map((a) => a.name).join(', ')}`,
           dados_novos: { anexos: newAttachments },
-          createdAt: new Date().toISOString(),
+          createdAt: nowIso,
           usuario_id: user.id,
           userName: userName || 'Você',
         }
@@ -792,7 +825,12 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           prev.map((d) => {
             if (d.id === demandId) {
               const updatedAttachments = [...(d.attachments || []), ...newAttachments]
-              return { ...d, attachments: updatedAttachments, logs: [...(d.logs || []), newLog] }
+              return {
+                ...d,
+                attachments: updatedAttachments,
+                logs: [...(d.logs || []), newLog],
+                updatedAt: nowIso,
+              }
             }
             return d
           }),
@@ -804,7 +842,10 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           .eq('id', demandId)
           .single()
         const updatedAttachments = [...(data?.anexos || []), ...newAttachments]
-        await supabase.from('demandas').update({ anexos: updatedAttachments }).eq('id', demandId)
+        await supabase
+          .from('demandas')
+          .update({ anexos: updatedAttachments, data_atualizacao: nowIso })
+          .eq('id', demandId)
 
         await supabase.from('logs_auditoria').insert({
           demanda_id: demandId,

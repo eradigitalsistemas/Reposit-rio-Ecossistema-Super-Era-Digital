@@ -143,11 +143,12 @@ export default function Demands() {
       if (exactDateFilter || dateFilter !== 'all') {
         const matchesCreated = matchDate(d.createdAt, exactDateFilter, dateFilter)
         const matchesCompleted = matchDate(d.completedAt, exactDateFilter, dateFilter)
+        const matchesUpdated = matchDate(d.updatedAt, exactDateFilter, dateFilter)
         const matchesLogs = (d.logs || []).some((l) =>
           matchDate(l.createdAt, exactDateFilter, dateFilter),
         )
 
-        if (!matchesCreated && !matchesCompleted && !matchesLogs) {
+        if (!matchesCreated && !matchesCompleted && !matchesUpdated && !matchesLogs) {
           return false
         }
       }
@@ -157,7 +158,12 @@ export default function Demands() {
 
     return filtered.sort((a, b) => {
       const getLatestDate = (demand: any) => {
-        let latest = demand.createdAt ? new Date(demand.createdAt).getTime() : 0
+        let latest = demand.updatedAt
+          ? new Date(demand.updatedAt).getTime()
+          : demand.createdAt
+            ? new Date(demand.createdAt).getTime()
+            : 0
+
         if (demand.completedAt) {
           const comp = new Date(demand.completedAt).getTime()
           if (!isNaN(comp) && comp > latest) latest = comp
