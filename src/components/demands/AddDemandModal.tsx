@@ -150,13 +150,16 @@ export function AddDemandModal() {
 
       if (newDemand && schedEnabled && user && schedDate) {
         const formattedDate = schedDate.length === 16 ? `${schedDate}:00-03:00` : schedDate
+        const descText = schedDesc
+          ? `${schedDesc}\n\nLink para demanda original: /demandas?highlight=${newDemand.id}`
+          : `Link para demanda original: /demandas?highlight=${newDemand.id}`
+
         const { error: agendaError } = await supabase.from('agenda_eventos').insert({
           titulo: schedTitle,
-          descricao: schedDesc,
+          descricao: descText,
           data_inicio: formattedDate,
           data_fim: formattedDate,
           tipo: schedType as any,
-          demanda_id: newDemand.id,
           usuario_id: user.id,
         })
         if (agendaError) throw agendaError
