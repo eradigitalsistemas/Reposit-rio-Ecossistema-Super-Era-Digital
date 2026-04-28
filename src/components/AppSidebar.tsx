@@ -79,7 +79,9 @@ export function AppSidebar() {
   }
 
   const renderMenu = (items: typeof MAIN_MENU) => {
-    const visibleItems = items.filter((item) => item.roles.includes(role as string))
+    const visibleItems = items.filter((item) =>
+      item.roles.some((r) => r.toLowerCase() === (role as string)?.toLowerCase()),
+    )
     if (visibleItems.length === 0) return null
 
     return (
@@ -110,7 +112,9 @@ export function AppSidebar() {
     )
   }
 
-  const hrItemsVisible = HR_MENU.filter((i) => i.roles.includes(role as string)).length > 0
+  const hrItemsVisible =
+    HR_MENU.filter((i) => i.roles.some((r) => r.toLowerCase() === (role as string)?.toLowerCase()))
+      .length > 0
 
   return (
     <Sidebar>
