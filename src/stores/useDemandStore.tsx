@@ -189,6 +189,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             assigneeId: d.responsavel_id || null,
             clientId: d.cliente_id || null,
             clientName: (d as any).cliente?.nome || null,
+            category: d.tipo_demanda as any,
             responses: d.resposta ? [d.resposta] : [],
             logs: mappedLogs,
             attachments: d.anexos || [],
@@ -414,6 +415,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             responsavel_id: newDemand.assigneeId || null,
             cliente_id: newDemand.clientId || null,
             usuario_id: user.id,
+            tipo_demanda: newDemand.category || 'Geral',
             anexos: newDemand.attachments || [],
             checklist: newDemand.checklist || [],
           })
@@ -453,6 +455,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             assigneeId: d.responsavel_id,
             clientId: d.cliente_id,
             clientName: (d as any).cliente?.nome || null,
+            category: d.tipo_demanda as any,
             responses: [],
             logs: [],
             attachments: d.anexos || [],
