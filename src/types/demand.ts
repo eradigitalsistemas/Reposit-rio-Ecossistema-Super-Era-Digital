@@ -35,6 +35,7 @@ export interface Demand {
   dueDate: string | null
   assignee: string
   assigneeId?: string | null
+  creatorId?: string | null
   clientId?: string | null
   clientName?: string | null
   category?: DemandCategory

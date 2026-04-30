@@ -136,6 +136,19 @@ export function AddDemandModal() {
     }
 
     try {
+      const eventDetails =
+        schedEnabled && user && schedDate
+          ? {
+              enabled: true,
+              title: schedTitle,
+              description: schedDesc
+                ? `${schedDesc}\n\nLembrete de demanda`
+                : `Lembrete de demanda`,
+              date: schedDate,
+              type: schedType,
+            }
+          : null
+
       const newDemand = await addDemand({
         title: demandTitle,
         description: formData.get('description') as string,
@@ -146,29 +159,18 @@ export function AddDemandModal() {
         clientId: selectedClient === 'none' ? null : selectedClient,
         attachments,
         checklist,
+        eventDetails,
       })
 
-      if (newDemand && schedEnabled && user && schedDate) {
-        const formattedDate = schedDate.length === 16 ? `${schedDate}:00-03:00` : schedDate
-        const descText = schedDesc
-          ? `${schedDesc}\n\nLink para demanda original: /demandas?highlight=${newDemand.id}`
-          : `Link para demanda original: /demandas?highlight=${newDemand.id}`
-
-        const { error: agendaError } = await supabase.from('agenda_eventos').insert({
-          titulo: schedTitle,
-          descricao: descText,
-          data_inicio: formattedDate,
-          data_fim: formattedDate,
-          tipo: schedType as any,
-          usuario_id: user.id,
-        })
-        if (agendaError) throw agendaError
-        toast({
-          title: 'Demanda e Ação Salvas',
-          description: 'Ação agendada na agenda com sucesso.',
-        })
-      } else if (newDemand) {
-        toast({ title: 'Demanda Criada', description: 'Sua demanda foi cadastrada com sucesso.' })
+      if (newDemand) {
+        if (schedEnabled && schedDate) {
+          toast({
+            title: 'Demanda e Ação Salvas',
+            description: 'Ação agendada na agenda com sucesso.',
+          })
+        } else {
+          toast({ title: 'Demanda Criada', description: 'Sua demanda foi cadastrada com sucesso.' })
+        }
       }
 
       setFiles([])

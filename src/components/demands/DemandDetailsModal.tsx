@@ -60,6 +60,7 @@ export function DemandDetailsModal({
     addAttachments,
     updateChecklist,
     checklistTemplates,
+    collaborators,
   } = useDemandStore()
   const { user } = useAuthStore()
   const [responseText, setResponseText] = useState('')
@@ -253,7 +254,16 @@ export function DemandDetailsModal({
           <div className="flex-1 overflow-y-auto lg:border-r border-gray-200 dark:border-border bg-white dark:bg-card">
             <div className="p-4 sm:p-6 space-y-6">
               {/* Properties Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-gray-50 dark:bg-[rgba(255,255,255,0.02)] rounded-xl border border-gray-200 dark:border-white/10 shadow-sm">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 p-4 bg-gray-50 dark:bg-[rgba(255,255,255,0.02)] rounded-xl border border-gray-200 dark:border-white/10 shadow-sm">
+                <div className="space-y-1">
+                  <span className="text-xs font-semibold text-gray-500 dark:text-white/50 uppercase tracking-wider">
+                    Criado por
+                  </span>
+                  <div className="flex items-center gap-2 font-medium text-sm text-gray-900 dark:text-white">
+                    <User2 className="w-4 h-4 text-gray-400" />
+                    {collaborators.find((c) => c.id === currentDemand.creatorId)?.nome || 'Sistema'}
+                  </div>
+                </div>
                 <div className="space-y-1">
                   <span className="text-xs font-semibold text-gray-500 dark:text-white/50 uppercase tracking-wider">
                     Responsável

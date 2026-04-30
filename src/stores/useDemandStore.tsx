@@ -38,6 +38,13 @@ interface DemandStoreState {
     demand: Omit<Demand, 'id' | 'createdAt' | 'updatedAt' | 'responses' | 'logs'> & {
       assigneeId?: string | null
       clientId?: string | null
+      eventDetails?: {
+        enabled: boolean
+        title: string
+        description: string
+        date: string
+        type: string
+      } | null
     },
   ) => Promise<Demand | undefined>
   editDemand: (
@@ -187,6 +194,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             dueDate: d.data_vencimento || null,
             assignee: (d as any).responsavel?.nome || 'Sem responsável',
             assigneeId: d.responsavel_id || null,
+            creatorId: d.usuario_id || null,
             clientId: d.cliente_id || null,
             clientName: (d as any).cliente?.nome || null,
             category: d.tipo_demanda as any,
@@ -401,33 +409,90 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
     async (
       newDemand: Omit<Demand, 'id' | 'createdAt' | 'updatedAt' | 'responses' | 'logs'> & {
         assigneeId?: string | null
+        clientId?: string | null
+        eventDetails?: {
+          enabled: boolean
+          title: string
+          description: string
+          date: string
+          type: string
+        } | null
       },
     ) => {
       if (!user) return undefined
       try {
-        const { data, error } = await supabase
-          .from('demandas')
-          .insert({
-            titulo: newDemand.title || 'Sem título',
-            descricao: newDemand.description || null,
-            prioridade: newDemand.priority || 'Pode Ficar para Amanhã',
-            status: newDemand.status || 'Pendente',
-            data_vencimento: newDemand.dueDate || null,
-            responsavel_id: newDemand.assigneeId || null,
-            cliente_id: newDemand.clientId || null,
-            usuario_id: user.id,
-            tipo_demanda: newDemand.category || 'Geral',
-            anexos: newDemand.attachments || [],
-            checklist: newDemand.checklist || [],
-          })
-          .select(
-            '*, responsavel:usuarios!demandas_responsavel_id_fkey(nome), cliente:clientes_externos(id, nome)',
+        let d: any = null
+
+        if (newDemand.eventDetails?.enabled && newDemand.eventDetails.date) {
+          const formattedDate =
+            newDemand.eventDetails.date.length === 16
+              ? `${newDemand.eventDetails.date}:00-03:00`
+              : newDemand.eventDetails.date
+
+          const { data: rpcData, error: rpcError } = await supabase.rpc(
+            'create_demand_with_event',
+            {
+              p_titulo: newDemand.title || 'Sem título',
+              p_descricao: newDemand.description || null,
+              p_prioridade: newDemand.priority || 'Pode Ficar para Amanhã',
+              p_status: newDemand.status || 'Pendente',
+              p_data_vencimento: newDemand.dueDate || null,
+              p_responsavel_id: newDemand.assigneeId || null,
+              p_cliente_id: newDemand.clientId || null,
+              p_usuario_id: user.id,
+              p_tipo_demanda: newDemand.category || 'Geral',
+              p_anexos: newDemand.attachments || [],
+              p_checklist: newDemand.checklist || [],
+              p_create_event: true,
+              p_event_titulo: newDemand.eventDetails.title,
+              p_event_descricao: newDemand.eventDetails.description,
+              p_event_data_inicio: formattedDate,
+              p_event_data_fim: formattedDate,
+              p_event_tipo: newDemand.eventDetails.type,
+            },
           )
 
-        if (error) throw error
-        if (data && data.length > 0) {
-          const d = data[0]
+          if (rpcError) throw rpcError
 
+          if (rpcData && rpcData.demanda_id) {
+            const { data: fetchedDemand, error: fetchErr } = await supabase
+              .from('demandas')
+              .select(
+                '*, responsavel:usuarios!demandas_responsavel_id_fkey(nome), cliente:clientes_externos(id, nome)',
+              )
+              .eq('id', rpcData.demanda_id)
+              .single()
+
+            if (fetchErr) throw fetchErr
+            d = fetchedDemand
+          }
+        } else {
+          const { data, error } = await supabase
+            .from('demandas')
+            .insert({
+              titulo: newDemand.title || 'Sem título',
+              descricao: newDemand.description || null,
+              prioridade: newDemand.priority || 'Pode Ficar para Amanhã',
+              status: newDemand.status || 'Pendente',
+              data_vencimento: newDemand.dueDate || null,
+              responsavel_id: newDemand.assigneeId || null,
+              cliente_id: newDemand.clientId || null,
+              usuario_id: user.id,
+              tipo_demanda: newDemand.category || 'Geral',
+              anexos: newDemand.attachments || [],
+              checklist: newDemand.checklist || [],
+            })
+            .select(
+              '*, responsavel:usuarios!demandas_responsavel_id_fkey(nome), cliente:clientes_externos(id, nome)',
+            )
+
+          if (error) throw error
+          if (data && data.length > 0) {
+            d = data[0]
+          }
+        }
+
+        if (d) {
           let finalChecklist = newDemand.checklist || []
           if (d.responsavel_id && finalChecklist.length > 0) {
             finalChecklist = await syncChecklistAgenda(
@@ -454,6 +519,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             dueDate: d.data_vencimento,
             assignee: (d as any).responsavel?.nome || 'Sem responsável',
             assigneeId: d.responsavel_id,
+            creatorId: d.usuario_id || null,
             clientId: d.cliente_id,
             clientName: (d as any).cliente?.nome || null,
             category: d.tipo_demanda as any,
