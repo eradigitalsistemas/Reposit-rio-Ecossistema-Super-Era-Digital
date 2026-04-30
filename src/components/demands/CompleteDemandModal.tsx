@@ -15,6 +15,7 @@ import { Demand, DemandAttachment } from '@/types/demand'
 import useDemandStore from '@/stores/useDemandStore'
 import { supabase } from '@/lib/supabase/client'
 import { sanitizeFilename } from '@/lib/utils'
+import { useToast } from '@/hooks/use-toast'
 
 interface CompleteDemandModalProps {
   open: boolean
@@ -24,6 +25,7 @@ interface CompleteDemandModalProps {
 
 export function CompleteDemandModal({ open, onOpenChange, demand }: CompleteDemandModalProps) {
   const { completeDemand } = useDemandStore()
+  const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [files, setFiles] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -43,22 +45,36 @@ export function CompleteDemandModal({ open, onOpenChange, demand }: CompleteDema
 
     const attachments: DemandAttachment[] = []
     for (const file of files) {
-      const sanitizedName = sanitizeFilename(file.name)
-      const fileName = `${crypto.randomUUID()}_${sanitizedName}`
-      const { data, error } = await supabase.storage.from('anexos').upload(fileName, file)
-      if (error) {
-        console.error('Error uploading file:', error)
-        continue
+      try {
+        const sanitizedName = sanitizeFilename(file.name)
+        const fileName = `${crypto.randomUUID()}_${sanitizedName}`
+        const { data, error } = await supabase.storage.from('anexos').upload(fileName, file)
+        if (error) {
+          console.error('Error uploading file:', error)
+          toast({
+            title: 'Erro de Anexo',
+            description: `Não foi possível anexar o arquivo ${file.name}.`,
+            variant: 'destructive',
+          })
+          continue
+        }
+        if (data) attachments.push({ name: file.name, url: data.path, type: file.type })
+      } catch (err) {
+        console.error('File upload exception:', err)
       }
-      if (data) attachments.push({ name: file.name, url: data.path, type: file.type })
     }
 
     try {
       await completeDemand(demand.id, observations, attachments)
       setFiles([])
       onOpenChange(false)
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error completing demand:', err)
+      toast({
+        title: 'Erro ao concluir',
+        description: err?.message || 'Houve um erro ao tentar concluir a demanda.',
+        variant: 'destructive',
+      })
     } finally {
       setLoading(false)
     }

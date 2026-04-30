@@ -720,7 +720,9 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           dados_novos: newAttachments.length > 0 ? { anexos: newAttachments } : null,
         })
 
-        if (logErr) throw logErr
+        if (logErr) {
+          console.error('Erro ao registrar log de auditoria (ignorado):', logErr)
+        }
 
         const newLog: DemandLog = {
           id: newLogId,
@@ -825,8 +827,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         })
 
         if (error) {
-          console.error('Erro real do Supabase ao inserir log_auditoria:', error)
-          throw error
+          console.error('Erro real do Supabase ao inserir log_auditoria (ignorado):', error)
         }
 
         const newLog: DemandLog = {
@@ -958,7 +959,9 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           detalhes: `Arquivo(s) anexado(s): ${newAttachments.map((a) => a.name).join(', ')}`,
           dados_novos: { anexos: newAttachments },
         })
-        if (logErr) throw logErr
+        if (logErr) {
+          console.error('Error inserting attachment log (ignored):', logErr)
+        }
 
         fetchDemands()
       } catch (e) {

@@ -108,14 +108,42 @@ export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalP
     const attachments: DemandAttachment[] = [...existingAttachments]
 
     for (const file of newFiles) {
-      const sanitizedName = sanitizeFilename(file.name)
-      const fileName = `${crypto.randomUUID()}_${sanitizedName}`
-      const { data } = await supabase.storage.from('anexos').upload(fileName, file)
-      if (data) attachments.push({ name: file.name, url: data.path, type: file.type })
+      try {
+        const sanitizedName = sanitizeFilename(file.name)
+        const fileName = `${crypto.randomUUID()}_${sanitizedName}`
+        const { data, error } = await supabase.storage.from('anexos').upload(fileName, file)
+        if (error) {
+          console.error('Error uploading file:', error)
+          toast({
+            title: 'Erro de Anexo',
+            description: `Não foi possível anexar o arquivo ${file.name}.`,
+            variant: 'destructive',
+          })
+          continue
+        }
+        if (data) attachments.push({ name: file.name, url: data.path, type: file.type })
+      } catch (err) {
+        console.error('File upload exception:', err)
+      }
     }
 
     const dueDateStr = formData.get('dueDate') as string
-    const finalDueDate = dueDateStr ? new Date(dueDateStr + 'T12:00:00').toISOString() : null
+    let finalDueDate = null
+    if (dueDateStr) {
+      const parsedDate = new Date(dueDateStr + 'T12:00:00')
+      if (!isNaN(parsedDate.getTime())) {
+        finalDueDate = parsedDate.toISOString()
+      } else {
+        toast({
+          title: 'Data Inválida',
+          description: 'Por favor, insira uma data de vencimento válida.',
+          variant: 'destructive',
+        })
+        setLoading(false)
+        return
+      }
+    }
+
     const assigneeIdStr = formData.get('assigneeId') as string
 
     try {
@@ -131,24 +159,49 @@ export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalP
       })
 
       if (schedEnabled && user && schedDate) {
-        const formattedDate = schedDate.length === 16 ? `${schedDate}:00-03:00` : schedDate
-        const { error: agendaError } = await supabase.from('agenda_eventos').insert({
-          titulo: schedTitle,
-          descricao: schedDesc,
-          data_inicio: formattedDate,
-          data_fim: formattedDate,
-          tipo: schedType as any,
-          demanda_id: demand.id,
-          usuario_id: user.id,
-        } as any)
-        if (agendaError) throw agendaError
-        toast({ title: 'Ação Agendada', description: 'O lembrete da demanda foi atualizado.' })
+        try {
+          const parsedSched = new Date(schedDate)
+          if (!isNaN(parsedSched.getTime())) {
+            const formattedDate = schedDate.length === 16 ? `${schedDate}:00-03:00` : schedDate
+            const { error: agendaError } = await supabase.from('agenda_eventos').insert({
+              titulo: schedTitle || 'Ação da Demanda',
+              descricao: schedDesc || '',
+              data_inicio: formattedDate,
+              data_fim: formattedDate,
+              tipo: schedType as any,
+              demanda_id: demand.id,
+              usuario_id: user.id,
+            } as any)
+            if (agendaError) {
+              console.error('Erro ao agendar ação:', agendaError)
+              toast({
+                title: 'Aviso',
+                description: 'Demanda salva, mas falha ao criar agendamento.',
+                variant: 'destructive',
+              })
+            } else {
+              toast({
+                title: 'Ação Agendada',
+                description: 'O lembrete da demanda foi atualizado.',
+              })
+            }
+          } else {
+            toast({
+              title: 'Data Inválida',
+              description: 'A data do agendamento é inválida e foi ignorada.',
+              variant: 'destructive',
+            })
+          }
+        } catch (err) {
+          console.error('Exception scheduling:', err)
+        }
       }
       onOpenChange(false)
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error saving demand:', error)
       toast({
         title: 'Erro',
-        description: 'Não foi possível salvar as alterações.',
+        description: error?.message || 'Não foi possível salvar as alterações.',
         variant: 'destructive',
       })
     } finally {
