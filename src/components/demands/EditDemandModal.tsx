@@ -140,7 +140,7 @@ export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalP
           tipo: schedType as any,
           demanda_id: demand.id,
           usuario_id: user.id,
-        })
+        } as any)
         if (agendaError) throw agendaError
         toast({ title: 'Ação Agendada', description: 'O lembrete da demanda foi atualizado.' })
       }
