@@ -45,7 +45,7 @@ export function CompleteDemandModal({ open, onOpenChange, demand }: CompleteDema
     for (const file of files) {
       const sanitizedName = sanitizeFilename(file.name)
       const fileName = `${crypto.randomUUID()}_${sanitizedName}`
-      const { data, error } = await supabase.storage.from('demandas_anexos').upload(fileName, file)
+      const { data, error } = await supabase.storage.from('anexos').upload(fileName, file)
       if (error) {
         console.error('Error uploading file:', error)
         continue
@@ -53,10 +53,15 @@ export function CompleteDemandModal({ open, onOpenChange, demand }: CompleteDema
       if (data) attachments.push({ name: file.name, url: data.path, type: file.type })
     }
 
-    await completeDemand(demand.id, observations, attachments)
-    setLoading(false)
-    setFiles([])
-    onOpenChange(false)
+    try {
+      await completeDemand(demand.id, observations, attachments)
+      setFiles([])
+      onOpenChange(false)
+    } catch (err) {
+      console.error('Error completing demand:', err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (

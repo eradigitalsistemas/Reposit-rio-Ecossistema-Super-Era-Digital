@@ -683,12 +683,16 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   const completeDemand = useCallback(
     async (demandId: string, resposta: string, newAttachments: DemandAttachment[]) => {
       try {
-        const { data } = await supabase
+        const { data, error: selectErr } = await supabase
           .from('demandas')
           .select('anexos')
           .eq('id', demandId)
           .single()
-        const updatedAttachments = [...(data?.anexos || []), ...newAttachments]
+
+        if (selectErr && selectErr.code !== 'PGRST116') throw selectErr
+
+        const existingAnexos = Array.isArray(data?.anexos) ? data.anexos : []
+        const updatedAttachments = [...existingAnexos, ...newAttachments]
 
         const nowIso = new Date().toISOString()
         const { error } = await supabase
@@ -707,14 +711,16 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
         const newLogId = crypto.randomUUID()
 
-        await supabase.from('logs_auditoria').insert({
+        const { error: logErr } = await supabase.from('logs_auditoria').insert({
           id: newLogId,
           demanda_id: demandId,
-          usuario_id: user?.id,
+          usuario_id: user?.id || null,
           acao: 'Conclusão',
           detalhes: resposta,
-          dados_novos: newAttachments.length > 0 ? { anexos: newAttachments } : undefined,
+          dados_novos: newAttachments.length > 0 ? { anexos: newAttachments } : null,
         })
+
+        if (logErr) throw logErr
 
         const newLog: DemandLog = {
           id: newLogId,
@@ -748,8 +754,14 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           className:
             'bg-zinc-950 border-green-500/50 text-white shadow-[0_0_15px_rgba(34,197,94,0.2)]',
         })
-      } catch (e) {
-        toast({ title: 'Erro', description: 'Erro ao concluir demanda.', variant: 'destructive' })
+      } catch (e: any) {
+        console.error('Erro ao concluir demanda:', e)
+        toast({
+          title: 'Erro',
+          description: e.message || 'Erro ao concluir demanda.',
+          variant: 'destructive',
+        })
+        throw e
       }
     },
     [user, userName],
@@ -782,12 +794,13 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             .eq('id', demandId)
             .single()
 
-          if (fetchErr) {
+          if (fetchErr && fetchErr.code !== 'PGRST116') {
             console.error('Erro ao buscar anexos da demanda:', fetchErr)
             throw fetchErr
           }
 
-          finalAttachments = [...(data?.anexos || []), ...attachments]
+          const existingAnexos = Array.isArray(data?.anexos) ? data.anexos : []
+          finalAttachments = [...existingAnexos, ...attachments]
           const { error: updateErr } = await supabase
             .from('demandas')
             .update({ anexos: finalAttachments, data_atualizacao: nowIso })
@@ -808,7 +821,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           usuario_id: user.id,
           acao: acaoType,
           detalhes: detalhesText,
-          dados_novos: hasAttachments ? { anexos: attachments } : undefined,
+          dados_novos: hasAttachments ? { anexos: attachments } : null,
         })
 
         if (error) {
@@ -881,12 +894,13 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         .eq('id', demandId)
 
       if (actionText) {
-        await supabase.from('logs_auditoria').insert({
+        const { error: logErr } = await supabase.from('logs_auditoria').insert({
           demanda_id: demandId,
           usuario_id: user.id,
           acao: 'Checklist',
           detalhes: actionText,
         })
+        if (logErr) console.error('Error inserting checklist log:', logErr)
         fetchDemands()
       }
     },
@@ -912,7 +926,8 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         setDemands((prev) =>
           prev.map((d) => {
             if (d.id === demandId) {
-              const updatedAttachments = [...(d.attachments || []), ...newAttachments]
+              const existingList = Array.isArray(d.attachments) ? d.attachments : []
+              const updatedAttachments = [...existingList, ...newAttachments]
               return {
                 ...d,
                 attachments: updatedAttachments,
@@ -929,19 +944,21 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           .select('anexos')
           .eq('id', demandId)
           .single()
-        const updatedAttachments = [...(data?.anexos || []), ...newAttachments]
+        const existingAnexos = Array.isArray(data?.anexos) ? data.anexos : []
+        const updatedAttachments = [...existingAnexos, ...newAttachments]
         await supabase
           .from('demandas')
           .update({ anexos: updatedAttachments, data_atualizacao: nowIso })
           .eq('id', demandId)
 
-        await supabase.from('logs_auditoria').insert({
+        const { error: logErr } = await supabase.from('logs_auditoria').insert({
           demanda_id: demandId,
           usuario_id: user.id,
           acao: 'Anexo',
           detalhes: `Arquivo(s) anexado(s): ${newAttachments.map((a) => a.name).join(', ')}`,
           dados_novos: { anexos: newAttachments },
         })
+        if (logErr) throw logErr
 
         fetchDemands()
       } catch (e) {
