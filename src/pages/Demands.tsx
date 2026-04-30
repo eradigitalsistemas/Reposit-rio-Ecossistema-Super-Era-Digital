@@ -75,13 +75,14 @@ export default function Demands() {
   const highlightId = searchParams.get('highlight')
 
   useEffect(() => {
-    if (searchParams.get('protocolo')) {
+    const protocoloParam = searchParams.get('protocolo')
+    if (protocoloParam) {
       setCollaboratorFilter('all')
       setClientFilter('all')
       setStatusFilter([])
       setDateFilter('all')
       setExactDateFilter(undefined)
-      setSearchQuery('')
+      setSearchQuery(protocoloParam)
     }
   }, [searchParams.get('protocolo')])
 
@@ -205,7 +206,16 @@ export default function Demands() {
       const timeB = getLatestDate(b)
       return timeB - timeA
     })
-  }, [demands, role, user?.id, collaboratorFilter, dateFilter, exactDateFilter, clientFilter])
+  }, [
+    demands,
+    role,
+    user?.id,
+    collaboratorFilter,
+    dateFilter,
+    exactDateFilter,
+    clientFilter,
+    searchQuery,
+  ])
 
   const hasFilters =
     (role === 'Admin' && collaboratorFilter !== 'all') ||
