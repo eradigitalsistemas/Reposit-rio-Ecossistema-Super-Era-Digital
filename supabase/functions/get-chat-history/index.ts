@@ -13,7 +13,7 @@ Deno.serve(async (req: Request) => {
     if (!authHeader) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized', message: 'Missing Authorization header' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -26,11 +26,8 @@ Deno.serve(async (req: Request) => {
     // Validação de dados de entrada obrigatórios
     if (!phone || !instance_id) {
       return new Response(
-        JSON.stringify({
-          error: 'Bad Request',
-          message: 'phone and instance_id are required parameters',
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        JSON.stringify({ error: 'Bad Request', message: 'phone and instance_id are required parameters' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -47,18 +44,15 @@ Deno.serve(async (req: Request) => {
 
     // Inicialização do cliente Supabase para verificar a autenticação (RLS)
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
+      global: { headers: { Authorization: authHeader } }
     })
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized', message: 'Invalid token' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized', message: 'Invalid token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     // 1. Buscar o chat
@@ -73,7 +67,7 @@ Deno.serve(async (req: Request) => {
       console.error('Error fetching chat:', chatError)
       return new Response(
         JSON.stringify({ error: 'Internal Server Error', message: 'Database error fetching chat' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -88,19 +82,15 @@ Deno.serve(async (req: Request) => {
             limit,
             offset,
             total: 0,
-            hasMore: false,
-          },
+            hasMore: false
+          }
         }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
     // 2. Buscar as mensagens do chat
-    const {
-      data: messages,
-      error: messagesError,
-      count,
-    } = await supabase
+    const { data: messages, error: messagesError, count } = await supabase
       .from('messages')
       .select('id, content, direction, status, timestamp', { count: 'exact' })
       .eq('chat_id', chat.id)
@@ -110,11 +100,8 @@ Deno.serve(async (req: Request) => {
     if (messagesError) {
       console.error('Error fetching messages:', messagesError)
       return new Response(
-        JSON.stringify({
-          error: 'Internal Server Error',
-          message: 'Database error fetching messages',
-        }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        JSON.stringify({ error: 'Internal Server Error', message: 'Database error fetching messages' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -130,23 +117,23 @@ Deno.serve(async (req: Request) => {
           phone: chat.phone,
           instance_id: chat.instance_id,
           created_at: chat.created_at,
-          updated_at: chat.updated_at,
+          updated_at: chat.updated_at
         },
         messages: messages || [],
         pagination: {
           limit,
           offset,
           total,
-          hasMore,
-        },
+          hasMore
+        }
       }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error: any) {
     console.error('Internal Server Error:', error)
     return new Response(
       JSON.stringify({ error: 'Internal Server Error', message: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
 })
