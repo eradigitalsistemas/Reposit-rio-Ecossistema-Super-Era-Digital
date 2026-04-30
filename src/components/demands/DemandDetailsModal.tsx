@@ -205,11 +205,21 @@ export function DemandDetailsModal({
                     onClick={(e) => {
                       e.stopPropagation()
                       const url = `${window.location.origin}/demandas?protocolo=${currentDemand.protocolo}`
-                      navigator.clipboard.writeText(url)
-                      toast({
-                        title: 'Link copiado!',
-                        description: 'O link do protocolo foi copiado.',
-                      })
+                      navigator.clipboard
+                        .writeText(url)
+                        .then(() => {
+                          toast({
+                            title: 'Link copiado!',
+                            description: 'O link do protocolo foi copiado.',
+                          })
+                        })
+                        .catch(() => {
+                          toast({
+                            title: 'Erro ao copiar',
+                            description: 'Não foi possível copiar o link.',
+                            variant: 'destructive',
+                          })
+                        })
                     }}
                     title="Copiar link do protocolo"
                   >

@@ -19,7 +19,7 @@ import { format, isValid } from 'date-fns'
 import { DemandDetailsModal } from './DemandDetailsModal'
 import { EditDemandModal } from './EditDemandModal'
 import { CompleteDemandModal } from './CompleteDemandModal'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import useDemandStore from '@/stores/useDemandStore'
 import { Button } from '@/components/ui/button'
 import {
