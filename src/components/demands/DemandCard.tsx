@@ -1,6 +1,7 @@
 import { Demand } from '@/types/demand'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { useSearchParams } from 'react-router-dom'
 import {
   Calendar,
   User2,
@@ -41,8 +42,17 @@ export function DemandCard({ demand }: DemandCardProps) {
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [completeOpen, setCompleteOpen] = useState(false)
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const { acceptDemand, deleteDemand } = useDemandStore()
+
+  useEffect(() => {
+    if (demand.protocolo && searchParams.get('protocolo') === demand.protocolo) {
+      setOpen(true)
+      searchParams.delete('protocolo')
+      setSearchParams(searchParams, { replace: true })
+    }
+  }, [searchParams, demand.protocolo, setSearchParams])
 
   const getPriorityColor = (p: string) => {
     switch (p) {
@@ -102,6 +112,7 @@ export function DemandCard({ demand }: DemandCardProps) {
       </AlertDialog>
 
       <Card
+        id={`demand-card-${demand.id}`}
         onClick={handleCardClick}
         className="cursor-pointer transition-all duration-200 group bg-white dark:bg-card border-gray-300 dark:border-border shadow-md dark:shadow-sm hover:shadow-lg dark:hover:shadow-md hover:border-primary/50 dark:hover:shadow-[0_0_15px_rgba(34,197,94,0.1)] overflow-hidden"
       >
@@ -113,9 +124,16 @@ export function DemandCard({ demand }: DemandCardProps) {
           )}
 
           <div className="flex justify-between items-start gap-2">
-            <h4 className="font-semibold sm:font-medium text-base sm:text-sm leading-tight text-gray-900 dark:text-card-foreground group-hover:text-primary transition-colors pr-16">
-              {demand.title}
-            </h4>
+            <div className="flex flex-col gap-1 pr-16">
+              {demand.protocolo && (
+                <span className="text-[10px] font-mono text-muted-foreground font-semibold tracking-wider">
+                  {demand.protocolo}
+                </span>
+              )}
+              <h4 className="font-semibold sm:font-medium text-base sm:text-sm leading-tight text-gray-900 dark:text-card-foreground group-hover:text-primary transition-colors">
+                {demand.title}
+              </h4>
+            </div>
 
             <div className="absolute right-2 top-2 flex items-center gap-1 bg-white/90 dark:bg-background/90 backdrop-blur-sm rounded-md p-0.5 border border-gray-200 dark:border-border sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10 shadow-sm">
               {demand.status !== 'Concluído' ? (

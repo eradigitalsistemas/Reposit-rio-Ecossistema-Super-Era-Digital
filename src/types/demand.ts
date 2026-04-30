@@ -28,6 +28,7 @@ export interface ChecklistItem {
 
 export interface Demand {
   id: string
+  protocolo?: string
   title: string
   description: string
   priority: DemandPriority

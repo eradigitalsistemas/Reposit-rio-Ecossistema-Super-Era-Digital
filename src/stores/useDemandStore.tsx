@@ -187,6 +187,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
           return {
             id: d.id,
+            protocolo: d.protocolo,
             title: d.titulo || 'Sem título',
             description: d.descricao || '',
             priority: (d.prioridade as DemandPriority) || 'Pode Ficar para Amanhã',

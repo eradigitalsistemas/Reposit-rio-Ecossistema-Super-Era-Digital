@@ -6,6 +6,7 @@ import { ChecklistBuilderModal } from '@/components/demands/ChecklistBuilderModa
 import useDemandStore from '@/stores/useDemandStore'
 import useAuthStore from '@/stores/useAuthStore'
 import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -56,6 +57,7 @@ export default function Demands() {
   const [exactDateFilter, setExactDateFilter] = useState<Date | undefined>(undefined)
   const [clientsList, setClientsList] = useState<{ id: string; nome: string }[]>([])
   const [clientFilterOpen, setClientFilterOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     import('@/lib/supabase/client').then(({ supabase }) => {
@@ -71,6 +73,17 @@ export default function Demands() {
 
   const [searchParams] = useSearchParams()
   const highlightId = searchParams.get('highlight')
+
+  useEffect(() => {
+    if (searchParams.get('protocolo')) {
+      setCollaboratorFilter('all')
+      setClientFilter('all')
+      setStatusFilter([])
+      setDateFilter('all')
+      setExactDateFilter(undefined)
+      setSearchQuery('')
+    }
+  }, [searchParams.get('protocolo')])
 
   useEffect(() => {
     if (highlightId) {
@@ -140,6 +153,17 @@ export default function Demands() {
         return false
       }
 
+      if (searchQuery.trim() !== '') {
+        const q = searchQuery.toLowerCase().trim()
+        if (
+          !d.protocolo?.toLowerCase().includes(q) &&
+          !d.title.toLowerCase().includes(q) &&
+          !d.clientName?.toLowerCase().includes(q)
+        ) {
+          return false
+        }
+      }
+
       if (exactDateFilter || dateFilter !== 'all') {
         const matchesCreated = matchDate(d.createdAt, exactDateFilter, dateFilter)
         const matchesCompleted = matchDate(d.completedAt, exactDateFilter, dateFilter)
@@ -188,7 +212,8 @@ export default function Demands() {
     clientFilter !== 'all' ||
     (statusFilter && statusFilter.length > 0) ||
     dateFilter !== 'all' ||
-    exactDateFilter !== undefined
+    exactDateFilter !== undefined ||
+    searchQuery.trim() !== ''
 
   const clearFilters = () => {
     setCollaboratorFilter('all')
@@ -196,6 +221,7 @@ export default function Demands() {
     setStatusFilter([])
     setDateFilter('all')
     setExactDateFilter(undefined)
+    setSearchQuery('')
   }
 
   return (
@@ -224,6 +250,21 @@ export default function Demands() {
 
         <div className="flex flex-col xl:flex-row items-start xl:items-end justify-between gap-4 mb-6 bg-white dark:bg-card border-gray-300 dark:border-border p-4 rounded-xl border shadow-md dark:shadow-sm shrink-0">
           <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-end gap-4 sm:gap-6 w-full xl:w-auto relative z-20">
+            <div className="space-y-2 w-full sm:w-auto relative z-20">
+              <Label className="text-xs font-semibold text-gray-700 dark:text-muted-foreground uppercase tracking-wider">
+                Buscar
+              </Label>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Protocolo, título..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full sm:w-[200px] pl-9 h-11 sm:h-10 bg-white dark:bg-background border-gray-300 dark:border-input text-gray-900 dark:text-foreground shadow-sm"
+                />
+              </div>
+            </div>
+
             {role === 'Admin' && (
               <div className="space-y-2 w-full sm:w-auto relative z-20">
                 <Label className="text-xs font-semibold text-gray-700 dark:text-muted-foreground uppercase tracking-wider">

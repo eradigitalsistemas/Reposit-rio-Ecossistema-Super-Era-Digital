@@ -32,6 +32,7 @@ import {
   Send,
   Check,
   X,
+  Copy,
 } from 'lucide-react'
 import { Demand, DemandAttachment, ChecklistItem } from '@/types/demand'
 import useDemandStore from '@/stores/useDemandStore'
@@ -189,12 +190,41 @@ export function DemandDetailsModal({
         <div className="shrink-0 p-4 sm:p-6 border-b border-gray-200 dark:border-border bg-white dark:bg-card z-10 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div className="flex-1">
             <div className="flex flex-wrap items-center gap-2 mb-3">
-              <Badge
-                variant="outline"
-                className="bg-gray-100 dark:bg-muted text-gray-800 dark:text-foreground border-gray-300 font-mono text-xs"
-              >
-                #{currentDemand.id.toUpperCase().slice(0, 8)}
-              </Badge>
+              {currentDemand.protocolo && (
+                <div className="flex items-center">
+                  <Badge
+                    variant="outline"
+                    className="bg-primary/10 text-primary border-primary/20 font-mono text-sm px-2 py-0.5 shadow-sm"
+                  >
+                    {currentDemand.protocolo}
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 ml-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      const url = `${window.location.origin}/demandas?protocolo=${currentDemand.protocolo}`
+                      navigator.clipboard.writeText(url)
+                      toast({
+                        title: 'Link copiado!',
+                        description: 'O link do protocolo foi copiado.',
+                      })
+                    }}
+                    title="Copiar link do protocolo"
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              )}
+              {!currentDemand.protocolo && (
+                <Badge
+                  variant="outline"
+                  className="bg-gray-100 dark:bg-muted text-gray-800 dark:text-foreground border-gray-300 font-mono text-xs"
+                >
+                  #{currentDemand.id.toUpperCase().slice(0, 8)}
+                </Badge>
+              )}
               <Badge
                 variant="outline"
                 className={cn(
