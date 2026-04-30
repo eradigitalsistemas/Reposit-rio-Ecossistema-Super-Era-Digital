@@ -34,7 +34,10 @@ export default function Login() {
           refresh_token: data.session.refresh_token,
         })
         if (sessionError) throw sessionError
-        navigate('/')
+
+        const intendedUrl = sessionStorage.getItem('intended_url') || '/'
+        sessionStorage.removeItem('intended_url')
+        navigate(intendedUrl)
       }
     } catch (error: any) {
       toast({

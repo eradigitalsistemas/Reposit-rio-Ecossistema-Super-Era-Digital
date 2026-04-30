@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
 import { Toaster } from '@/components/ui/toaster'
 import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -65,6 +66,18 @@ if (typeof document !== 'undefined') {
   }
 }
 
+const RouteTracker = () => {
+  const location = useLocation()
+
+  useEffect(() => {
+    if (location.pathname !== '/login' && !location.pathname.startsWith('/portal/login')) {
+      sessionStorage.setItem('intended_url', location.pathname + location.search + location.hash)
+    }
+  }, [location])
+
+  return null
+}
+
 const App = () => (
   <ErrorBoundary>
     <ThemeProvider defaultTheme="dark" storageKey="era-digital-theme" attribute="class">
@@ -76,6 +89,7 @@ const App = () => (
             <ClientProvider>
               <LeadProvider>
                 <DemandProvider>
+                  <RouteTracker />
                   <GlobalNotifications />
                   <Routes>
                     {/* Public Auth Routes */}
