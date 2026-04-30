@@ -472,6 +472,7 @@ export function DemandDetailsModal({
                     const isAttachment = log.acao === 'Novo Anexo' || log.acao === 'Anexo'
                     const isChecklist =
                       log.acao === 'Checklist Atualizado' || log.acao === 'Checklist'
+                    const isConclusion = log.acao === 'Conclusão'
 
                     return (
                       <div key={log.id || index} className="relative pl-7 animate-fade-in">
@@ -484,16 +485,20 @@ export function DemandDetailsModal({
                         <div
                           className={cn(
                             'absolute left-0 top-1.5 w-7 h-7 rounded-full border-[3px] border-gray-50 dark:border-card flex items-center justify-center shadow-sm z-10',
-                            isComment
-                              ? 'bg-blue-100 text-blue-600 border-white'
-                              : isAttachment
-                                ? 'bg-amber-100 text-amber-600 border-white'
-                                : isChecklist
-                                  ? 'bg-green-100 text-green-600 border-white'
-                                  : 'bg-gray-200 text-gray-600 dark:bg-white/20 dark:text-white/70',
+                            isConclusion
+                              ? 'bg-green-100 text-green-600 border-white'
+                              : isComment
+                                ? 'bg-blue-100 text-blue-600 border-white'
+                                : isAttachment
+                                  ? 'bg-amber-100 text-amber-600 border-white'
+                                  : isChecklist
+                                    ? 'bg-green-100 text-green-600 border-white'
+                                    : 'bg-gray-200 text-gray-600 dark:bg-white/20 dark:text-white/70',
                           )}
                         >
-                          {isComment ? (
+                          {isConclusion ? (
+                            <CheckCircle className="w-3.5 h-3.5" />
+                          ) : isComment ? (
                             <MessageSquare className="w-3.5 h-3.5" />
                           ) : isAttachment ? (
                             <Paperclip className="w-3.5 h-3.5" />
@@ -506,7 +511,7 @@ export function DemandDetailsModal({
 
                         {/* Log Content Wrapper */}
                         <div className="flex flex-col gap-1.5 pt-1.5 w-full">
-                          {isComment || isAttachment || isChecklist ? (
+                          {isComment || isAttachment || isChecklist || isConclusion ? (
                             <>
                               <div className="flex items-baseline justify-between gap-2">
                                 <span className="font-bold text-sm text-gray-900 dark:text-white">
@@ -532,7 +537,19 @@ export function DemandDetailsModal({
                                     (!isAttachment ||
                                       log.detalhes !==
                                         `Arquivo(s) anexado(s): ${log.dados_novos?.anexos?.map((a: any) => a.name).join(', ')}`) && (
-                                      <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap break-words leading-relaxed w-full">
+                                      <div
+                                        className={cn(
+                                          'p-4 rounded-xl border shadow-sm text-sm whitespace-pre-wrap break-words leading-relaxed w-full',
+                                          isConclusion
+                                            ? 'bg-green-50 border-green-200 text-green-900 dark:bg-green-900/20 dark:border-green-800 dark:text-green-100'
+                                            : 'bg-gray-50 border-gray-200 text-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100',
+                                        )}
+                                      >
+                                        {isConclusion && (
+                                          <strong className="block mb-1 font-bold">
+                                            Observações Finais:
+                                          </strong>
+                                        )}
                                         {log.detalhes}
                                       </div>
                                     )}

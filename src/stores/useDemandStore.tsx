@@ -705,6 +705,27 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (error) throw error
 
+        const newLogId = crypto.randomUUID()
+
+        await supabase.from('logs_auditoria').insert({
+          id: newLogId,
+          demanda_id: demandId,
+          usuario_id: user?.id,
+          acao: 'Conclusão',
+          detalhes: resposta,
+          dados_novos: newAttachments.length > 0 ? { anexos: newAttachments } : undefined,
+        })
+
+        const newLog: DemandLog = {
+          id: newLogId,
+          acao: 'Conclusão',
+          detalhes: resposta,
+          createdAt: nowIso,
+          usuario_id: user?.id,
+          userName: userName || 'Você',
+          dados_novos: newAttachments.length > 0 ? { anexos: newAttachments } : undefined,
+        }
+
         setDemands((prev) =>
           prev.map((d) =>
             d.id === demandId
@@ -715,6 +736,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
                   completedAt: nowIso,
                   responses: d.responses ? [...d.responses, resposta] : [resposta],
                   attachments: updatedAttachments,
+                  logs: [...(d.logs || []), newLog],
                 }
               : d,
           ),
@@ -730,7 +752,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         toast({ title: 'Erro', description: 'Erro ao concluir demanda.', variant: 'destructive' })
       }
     },
-    [],
+    [user, userName],
   )
 
   const addResponse = useCallback(
