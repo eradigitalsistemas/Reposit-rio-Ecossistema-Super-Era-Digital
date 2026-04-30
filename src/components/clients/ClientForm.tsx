@@ -59,7 +59,6 @@ export function ClientForm({ client }: { client: Client }) {
                 id="company"
                 value={formData.company}
                 onChange={(e) => setFormData((p) => ({ ...p, company: e.target.value }))}
-                required
               />
             </div>
             <div className="space-y-2">
@@ -69,7 +68,6 @@ export function ClientForm({ client }: { client: Client }) {
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))}
-                required
               />
             </div>
             <div className="space-y-2">
