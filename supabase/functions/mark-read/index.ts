@@ -4,8 +4,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
 }
 
 Deno.serve(async (req: Request) => {
@@ -65,7 +64,10 @@ Deno.serve(async (req: Request) => {
       })
     }
 
-    const supabaseAdmin = createClient(supabaseUrl, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '')
+    const supabaseAdmin = createClient(
+      supabaseUrl,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    )
 
     // Busca contato
     const { data: contact } = await supabaseAdmin
@@ -117,10 +119,10 @@ Deno.serve(async (req: Request) => {
         throw new Error(uazapiData?.error || uazapiData?.message || 'UAZAPI returned error')
       }
     } catch (err: any) {
-      return new Response(JSON.stringify({ error: err.message || 'Failed to connect to UAZAPI' }), {
-        status: 503,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return new Response(
+        JSON.stringify({ error: err.message || 'Failed to connect to UAZAPI' }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
     }
 
     // Atualização local
