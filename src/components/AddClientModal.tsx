@@ -63,8 +63,8 @@ export function AddClientModal() {
               <Input id="company" name="company" />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="email">E-mail *</Label>
-              <Input id="email" name="email" type="email" required />
+              <Label htmlFor="email">E-mail</Label>
+              <Input id="email" name="email" type="email" />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="grid gap-2">

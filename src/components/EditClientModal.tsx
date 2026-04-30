@@ -96,7 +96,6 @@ export function EditClientModal({ client, triggerClassName, iconClassName }: Edi
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              required
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
