@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
+import logoUrl from '@/assets/logo-principal-sem-fundo-1a622.png'
 import {
   LayoutDashboard,
   Users,
@@ -129,12 +130,14 @@ export function AppSidebar() {
         <Link
           to="/"
           onClick={handleLinkClick}
-          className="flex items-center gap-2 font-bold text-lg text-sidebar-foreground hover:text-sidebar-foreground/80 transition-colors"
+          className="flex items-center gap-3 font-bold text-lg text-sidebar-foreground hover:text-sidebar-foreground/80 transition-colors"
         >
-          <div className="p-1 bg-sidebar-accent rounded-md ring-1 ring-sidebar-border">
-            <Building2 className="w-5 h-5 text-sidebar-foreground" />
-          </div>
-          <span>Era Digital</span>
+          <img
+            src={logoUrl}
+            alt="Era Digital"
+            className="h-8 w-auto object-contain shrink-0 drop-shadow-sm"
+          />
+          <span className="truncate">Era Digital</span>
         </Link>
       </SidebarHeader>
 
