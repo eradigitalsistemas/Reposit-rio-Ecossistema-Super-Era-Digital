@@ -126,13 +126,13 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="h-16 flex items-center px-6 border-b border-border bg-sidebar shrink-0">
+      <SidebarHeader className="py-4 flex items-center px-6 border-b border-border bg-sidebar shrink-0">
         <Link
           to="/"
           onClick={handleLinkClick}
-          className="flex items-center gap-3 font-bold text-lg text-sidebar-foreground hover:text-sidebar-foreground/80 transition-colors"
+          className="flex items-center gap-3 font-bold text-xl text-sidebar-foreground hover:text-sidebar-foreground/80 transition-colors"
         >
-          <img src={logoUrl} alt="Era Digital Logo" className="w-8 h-8 object-contain shrink-0" />
+          <img src={logoUrl} alt="Era Digital Logo" className="w-16 h-16 object-contain shrink-0" />
           <span className="truncate">Era Digital</span>
         </Link>
       </SidebarHeader>
