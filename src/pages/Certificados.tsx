@@ -12,13 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
@@ -312,18 +306,27 @@ export default function Certificados() {
                 </div>
                 <div className="space-y-2">
                   <Label>Tipo</Label>
-                  <Select
+                  <ToggleGroup
+                    type="single"
                     value={formData.tipo}
-                    onValueChange={(val: 'PF' | 'PJ') => setFormData({ ...formData, tipo: val })}
+                    onValueChange={(val) => {
+                      if (val) setFormData({ ...formData, tipo: val as 'PF' | 'PJ' })
+                    }}
+                    className="justify-start gap-2"
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="PF">Pessoa Física (PF)</SelectItem>
-                      <SelectItem value="PJ">Pessoa Jurídica (PJ)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <ToggleGroupItem
+                      value="PF"
+                      className="flex-1 border data-[state=on]:border-primary data-[state=on]:bg-primary/10"
+                    >
+                      Pessoa Física (PF)
+                    </ToggleGroupItem>
+                    <ToggleGroupItem
+                      value="PJ"
+                      className="flex-1 border data-[state=on]:border-primary data-[state=on]:bg-primary/10"
+                    >
+                      Pessoa Jurídica (PJ)
+                    </ToggleGroupItem>
+                  </ToggleGroup>
                 </div>
                 <div className="pt-4 flex justify-end">
                   <Button type="submit" className="w-full sm:w-auto">
@@ -517,20 +520,27 @@ export default function Certificados() {
             </div>
             <div className="space-y-2">
               <Label>Tipo</Label>
-              <Select
+              <ToggleGroup
+                type="single"
                 value={editFormData.tipo}
-                onValueChange={(val: 'PF' | 'PJ') =>
-                  setEditFormData({ ...editFormData, tipo: val })
-                }
+                onValueChange={(val) => {
+                  if (val) setEditFormData({ ...editFormData, tipo: val as 'PF' | 'PJ' })
+                }}
+                className="justify-start gap-2"
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="PF">Pessoa Física (PF)</SelectItem>
-                  <SelectItem value="PJ">Pessoa Jurídica (PJ)</SelectItem>
-                </SelectContent>
-              </Select>
+                <ToggleGroupItem
+                  value="PF"
+                  className="flex-1 border data-[state=on]:border-primary data-[state=on]:bg-primary/10"
+                >
+                  Pessoa Física (PF)
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="PJ"
+                  className="flex-1 border data-[state=on]:border-primary data-[state=on]:bg-primary/10"
+                >
+                  Pessoa Jurídica (PJ)
+                </ToggleGroupItem>
+              </ToggleGroup>
             </div>
             <div className="pt-4 flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>
