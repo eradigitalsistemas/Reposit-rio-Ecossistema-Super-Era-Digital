@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Search, FileText, GripHorizontal } from 'lucide-react'
+import { Plus, Search, FileText, GripHorizontal, Eye, Edit, Trash2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 import { Button } from '@/components/ui/button'
@@ -59,7 +59,18 @@ export default function Certificados() {
   const [open, setOpen] = useState(false)
   const [draggedId, setDraggedId] = useState<string | null>(null)
 
+  const [editOpen, setEditOpen] = useState(false)
+  const [viewOpen, setViewOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [selectedProtocolo, setSelectedProtocolo] = useState<Protocolo | null>(null)
+
   const [formData, setFormData] = useState({
+    numero: '',
+    cliente: '',
+    tipo: 'PF' as 'PF' | 'PJ',
+  })
+
+  const [editFormData, setEditFormData] = useState({
     numero: '',
     cliente: '',
     tipo: 'PF' as 'PF' | 'PJ',
@@ -126,6 +137,75 @@ export default function Certificados() {
         variant: 'destructive',
       })
     }
+  }
+
+  const handleEdit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedProtocolo) return
+
+    try {
+      const { data, error } = await supabase
+        .from('protocolos_certificados' as any)
+        .update({
+          numero: editFormData.numero,
+          cliente: editFormData.cliente,
+          tipo: editFormData.tipo,
+        })
+        .eq('id', selectedProtocolo.id)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      setProtocolos((prev) => prev.map((p) => (p.id === selectedProtocolo.id ? data : p)))
+      setEditOpen(false)
+      toast({ title: 'Protocolo atualizado com sucesso!' })
+    } catch (err: any) {
+      toast({
+        title: 'Erro ao atualizar',
+        description: err.message,
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!selectedProtocolo) return
+
+    try {
+      const { error } = await supabase
+        .from('protocolos_certificados' as any)
+        .delete()
+        .eq('id', selectedProtocolo.id)
+
+      if (error) throw error
+
+      setProtocolos((prev) => prev.filter((p) => p.id !== selectedProtocolo.id))
+      setDeleteOpen(false)
+      toast({ title: 'Protocolo excluído com sucesso!' })
+    } catch (err: any) {
+      toast({
+        title: 'Erro ao excluir',
+        description: err.message,
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const openView = (p: Protocolo) => {
+    setSelectedProtocolo(p)
+    setViewOpen(true)
+  }
+
+  const openEdit = (p: Protocolo) => {
+    setSelectedProtocolo(p)
+    setEditFormData({ numero: p.numero, cliente: p.cliente, tipo: p.tipo })
+    setEditOpen(true)
+  }
+
+  const openDelete = (p: Protocolo) => {
+    setSelectedProtocolo(p)
+    setDeleteOpen(true)
   }
 
   const handleDragStart = (e: React.DragEvent, id: string) => {
@@ -288,7 +368,7 @@ export default function Certificados() {
                             onDragStart={(e) => handleDragStart(e, p.id)}
                             onDragEnd={handleDragEnd}
                             className={cn(
-                              'bg-card text-card-foreground border border-border p-3 rounded-lg shadow-sm cursor-grab active:cursor-grabbing hover:border-primary/50 transition-all flex flex-col gap-2 group',
+                              'bg-card text-card-foreground border border-border p-3 rounded-lg shadow-sm cursor-grab active:cursor-grabbing hover:border-primary/50 transition-all flex flex-col gap-2 group relative',
                               draggedId === p.id && 'opacity-50 scale-95',
                             )}
                           >
@@ -307,12 +387,47 @@ export default function Certificados() {
                                 {p.tipo}
                               </Badge>
                             </div>
-                            <div className="flex items-center justify-between text-muted-foreground mt-1">
-                              <div className="flex items-center gap-1.5 text-xs bg-muted/50 px-2 py-1 rounded-md">
+                            <div className="flex items-center justify-between mt-1">
+                              <div className="flex items-center gap-1.5 text-xs bg-muted/50 text-muted-foreground px-2 py-1 rounded-md">
                                 <FileText className="w-3.5 h-3.5" />
                                 <span className="font-mono font-medium">{p.numero}</span>
                               </div>
-                              <GripHorizontal className="w-4 h-4 opacity-0 group-hover:opacity-50 transition-opacity" />
+                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    openView(p)
+                                  }}
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    openEdit(p)
+                                  }}
+                                >
+                                  <Edit className="w-3.5 h-3.5" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    openDelete(p)
+                                  }}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </Button>
+                                <GripHorizontal className="w-4 h-4 ml-1 cursor-grab text-muted-foreground" />
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -326,6 +441,113 @@ export default function Certificados() {
           </ScrollArea>
         )}
       </div>
+
+      <Dialog open={viewOpen} onOpenChange={setViewOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Detalhes do Protocolo</DialogTitle>
+          </DialogHeader>
+          {selectedProtocolo && (
+            <div className="space-y-4 pt-4">
+              <div>
+                <Label className="text-muted-foreground">Número do Protocolo</Label>
+                <div className="font-medium mt-1">{selectedProtocolo.numero}</div>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">Cliente</Label>
+                <div className="font-medium mt-1">{selectedProtocolo.cliente}</div>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">Tipo</Label>
+                <div className="font-medium mt-1">{selectedProtocolo.tipo}</div>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">Parceiro Responsável</Label>
+                <div className="font-medium mt-1">{selectedProtocolo.parceiro}</div>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">Data de Criação</Label>
+                <div className="font-medium mt-1">
+                  {new Date(selectedProtocolo.data_criacao).toLocaleString('pt-BR')}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Protocolo</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEdit} className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label>Número do Protocolo</Label>
+              <Input
+                required
+                value={editFormData.numero}
+                onChange={(e) => setEditFormData({ ...editFormData, numero: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Nome do Cliente</Label>
+              <Input
+                required
+                value={editFormData.cliente}
+                onChange={(e) => setEditFormData({ ...editFormData, cliente: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Tipo</Label>
+              <Select
+                value={editFormData.tipo}
+                onValueChange={(val: 'PF' | 'PJ') =>
+                  setEditFormData({ ...editFormData, tipo: val })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PF">Pessoa Física (PF)</SelectItem>
+                  <SelectItem value="PJ">Pessoa Jurídica (PJ)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="pt-4 flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit">Salvar Alterações</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir Protocolo</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <p>
+              Tem certeza que deseja excluir o protocolo{' '}
+              <strong>{selectedProtocolo?.numero}</strong> do cliente{' '}
+              <strong>{selectedProtocolo?.cliente}</strong>?
+            </p>
+            <p className="text-sm text-muted-foreground">Esta ação não pode ser desfeita.</p>
+          </div>
+          <div className="pt-4 flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setDeleteOpen(false)}>
+              Cancelar
+            </Button>
+            <Button type="button" variant="destructive" onClick={handleDelete}>
+              Sim, excluir
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
