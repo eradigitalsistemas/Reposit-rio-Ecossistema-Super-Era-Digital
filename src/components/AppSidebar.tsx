@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import logoUrl from '@/assets/logo-principal-sem-fundo-1a622.png'
+import logoUrl from '@/assets/logo-principal-sem-fundo-f3fe7.png'
 import {
   LayoutDashboard,
   Users,
@@ -132,6 +132,7 @@ export function AppSidebar() {
           onClick={handleLinkClick}
           className="flex items-center gap-3 font-bold text-lg text-sidebar-foreground hover:text-sidebar-foreground/80 transition-colors"
         >
+          <img src={logoUrl} alt="Era Digital Logo" className="w-8 h-8 object-contain shrink-0" />
           <span className="truncate">Era Digital</span>
         </Link>
       </SidebarHeader>
