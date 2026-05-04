@@ -304,15 +304,25 @@ export default function Certificados() {
           <div className="flex items-center gap-2 bg-background border border-input rounded-md px-3 py-1.5 shadow-sm min-w-[180px]">
             <CalendarIcon className="w-4 h-4 text-muted-foreground shrink-0" />
             <select
-              className="h-6 w-full border-0 bg-transparent text-sm font-medium focus:ring-0 cursor-pointer outline-none text-foreground"
+              className="h-6 w-full border-0 bg-transparent text-sm font-medium focus:ring-0 cursor-pointer outline-none text-foreground dark:bg-background"
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value as any)}
             >
-              <option value="todos">Todos os períodos</option>
-              <option value="hoje">Hoje</option>
-              <option value="semana">Esta Semana</option>
-              <option value="mes">Este Mês</option>
-              <option value="personalizado">Personalizado</option>
+              <option value="todos" className="bg-background text-foreground">
+                Todos os períodos
+              </option>
+              <option value="hoje" className="bg-background text-foreground">
+                Hoje
+              </option>
+              <option value="semana" className="bg-background text-foreground">
+                Esta Semana
+              </option>
+              <option value="mes" className="bg-background text-foreground">
+                Este Mês
+              </option>
+              <option value="personalizado" className="bg-background text-foreground">
+                Personalizado
+              </option>
             </select>
           </div>
 
@@ -430,12 +440,12 @@ export default function Certificados() {
                   <div className="space-y-2">
                     <Label>Parceiro Responsável</Label>
                     <select
-                      className="w-full h-10 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer"
+                      className="w-full h-10 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer text-foreground"
                       value={formData.parceiro}
                       onChange={(e) => setFormData({ ...formData, parceiro: e.target.value })}
                     >
                       {finalColumns.map((parc) => (
-                        <option key={parc} value={parc}>
+                        <option key={parc} value={parc} className="bg-background text-foreground">
                           {parc}
                         </option>
                       ))}
@@ -550,12 +560,16 @@ export default function Certificados() {
                                 Atribuído para
                               </Label>
                               <select
-                                className="w-full h-8 rounded-md border border-input bg-background/50 px-2 py-0 text-xs shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer"
+                                className="w-full h-8 rounded-md border border-input bg-background/50 px-2 py-0 text-xs shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer text-foreground"
                                 value={p.parceiro}
                                 onChange={(e) => handleMoveProtocolo(p, e.target.value)}
                               >
                                 {finalColumns.map((parc) => (
-                                  <option key={parc} value={parc}>
+                                  <option
+                                    key={parc}
+                                    value={parc}
+                                    className="bg-background text-foreground"
+                                  >
                                     {parc}
                                   </option>
                                 ))}
@@ -667,12 +681,12 @@ export default function Certificados() {
             <div className="space-y-2">
               <Label>Parceiro Responsável</Label>
               <select
-                className="w-full h-10 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer"
+                className="w-full h-10 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer text-foreground"
                 value={editFormData.parceiro}
                 onChange={(e) => setEditFormData({ ...editFormData, parceiro: e.target.value })}
               >
                 {finalColumns.map((parc) => (
-                  <option key={parc} value={parc}>
+                  <option key={parc} value={parc} className="bg-background text-foreground">
                     {parc}
                   </option>
                 ))}
