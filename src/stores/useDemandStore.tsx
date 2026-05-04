@@ -64,6 +64,7 @@ interface DemandStoreState {
   ) => Promise<void>
   addResponse: (demandId: string, text: string, attachments?: DemandAttachment[]) => Promise<void>
   addAttachments: (demandId: string, attachments: DemandAttachment[]) => Promise<void>
+  reopenDemand: (demandId: string) => Promise<void>
   updateChecklist: (
     demandId: string,
     checklist: ChecklistItem[],
@@ -909,6 +910,66 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
     [user, fetchDemands, demands],
   )
 
+  const reopenDemand = useCallback(
+    async (demandId: string) => {
+      if (!user) return
+      const demand = demands.find((d) => d.id === demandId)
+      if (!demand) return
+
+      const nowIso = new Date().toISOString()
+      const { error } = await supabase
+        .from('demandas')
+        .update({ status: 'Em Andamento', data_atualizacao: nowIso })
+        .eq('id', demandId)
+
+      if (!error) {
+        const newLogId = crypto.randomUUID()
+        await supabase.from('logs_auditoria').insert({
+          id: newLogId,
+          demanda_id: demandId,
+          usuario_id: user.id,
+          acao: 'Reabertura',
+          detalhes: 'Demanda reaberta',
+        })
+
+        const newLog: DemandLog = {
+          id: newLogId,
+          acao: 'Reabertura',
+          detalhes: 'Demanda reaberta',
+          createdAt: nowIso,
+          usuario_id: user.id,
+          userName: userName || 'Você',
+        }
+
+        setDemands((prev) =>
+          prev.map((d) =>
+            d.id === demandId
+              ? {
+                  ...d,
+                  status: 'Em Andamento',
+                  updatedAt: nowIso,
+                  logs: [...(d.logs || []), newLog],
+                }
+              : d,
+          ),
+        )
+
+        toast({
+          title: 'Demanda Reaberta',
+          description: 'A demanda retornou para Em Andamento.',
+        })
+        fetchDemands()
+      } else {
+        toast({
+          title: 'Erro',
+          description: 'Não foi possível reabrir a demanda.',
+          variant: 'destructive',
+        })
+      }
+    },
+    [user, userName, demands, fetchDemands],
+  )
+
   const addAttachments = useCallback(
     async (demandId: string, newAttachments: DemandAttachment[]) => {
       if (!user) return
@@ -986,6 +1047,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       completeDemand,
       addResponse,
       addAttachments,
+      reopenDemand,
       updateChecklist,
       markNotificationsAsRead,
       fetchCollaborators,
@@ -1005,6 +1067,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       completeDemand,
       addResponse,
       addAttachments,
+      reopenDemand,
       updateChecklist,
       markNotificationsAsRead,
       fetchCollaborators,

@@ -33,6 +33,7 @@ import {
   Check,
   X,
   Copy,
+  RotateCcw,
 } from 'lucide-react'
 import { Demand, DemandAttachment, ChecklistItem } from '@/types/demand'
 import useDemandStore from '@/stores/useDemandStore'
@@ -59,6 +60,7 @@ export function DemandDetailsModal({
     acceptDemand,
     addResponse,
     addAttachments,
+    reopenDemand,
     updateChecklist,
     checklistTemplates,
     collaborators,
@@ -283,6 +285,16 @@ export function DemandDetailsModal({
               >
                 <CheckCircle className="w-4 h-4" />
                 Concluir Tarefa
+              </Button>
+            )}
+            {currentDemand.status === 'Concluído' && (
+              <Button
+                onClick={() => reopenDemand(currentDemand.id)}
+                variant="outline"
+                className="gap-2 bg-orange-50 hover:bg-orange-100 text-orange-600 border-orange-200 dark:bg-orange-950/20 dark:hover:bg-orange-900/40 dark:text-orange-500 dark:border-orange-800/50 shadow-sm font-bold"
+              >
+                <RotateCcw className="w-4 h-4" />
+                Reabrir Demanda
               </Button>
             )}
           </div>
@@ -513,6 +525,7 @@ export function DemandDetailsModal({
                     const isChecklist =
                       log.acao === 'Checklist Atualizado' || log.acao === 'Checklist'
                     const isConclusion = log.acao === 'Conclusão'
+                    const isReopen = log.acao === 'Reabertura'
 
                     return (
                       <div key={log.id || index} className="relative pl-7 animate-fade-in">
@@ -527,17 +540,21 @@ export function DemandDetailsModal({
                             'absolute left-0 top-1.5 w-7 h-7 rounded-full border-[3px] border-gray-50 dark:border-card flex items-center justify-center shadow-sm z-10',
                             isConclusion
                               ? 'bg-green-100 text-green-600 border-white'
-                              : isComment
-                                ? 'bg-blue-100 text-blue-600 border-white'
-                                : isAttachment
-                                  ? 'bg-amber-100 text-amber-600 border-white'
-                                  : isChecklist
-                                    ? 'bg-green-100 text-green-600 border-white'
-                                    : 'bg-gray-200 text-gray-600 dark:bg-white/20 dark:text-white/70',
+                              : isReopen
+                                ? 'bg-orange-100 text-orange-600 border-white'
+                                : isComment
+                                  ? 'bg-blue-100 text-blue-600 border-white'
+                                  : isAttachment
+                                    ? 'bg-amber-100 text-amber-600 border-white'
+                                    : isChecklist
+                                      ? 'bg-green-100 text-green-600 border-white'
+                                      : 'bg-gray-200 text-gray-600 dark:bg-white/20 dark:text-white/70',
                           )}
                         >
                           {isConclusion ? (
                             <CheckCircle className="w-3.5 h-3.5" />
+                          ) : isReopen ? (
+                            <RotateCcw className="w-3.5 h-3.5" />
                           ) : isComment ? (
                             <MessageSquare className="w-3.5 h-3.5" />
                           ) : isAttachment ? (
@@ -551,7 +568,7 @@ export function DemandDetailsModal({
 
                         {/* Log Content Wrapper */}
                         <div className="flex flex-col gap-1.5 pt-1.5 w-full">
-                          {isComment || isAttachment || isChecklist || isConclusion ? (
+                          {isComment || isAttachment || isChecklist || isConclusion || isReopen ? (
                             <>
                               <div className="flex items-baseline justify-between gap-2">
                                 <span className="font-bold text-sm text-gray-900 dark:text-white">
@@ -582,12 +599,19 @@ export function DemandDetailsModal({
                                           'p-4 rounded-xl border shadow-sm text-sm whitespace-pre-wrap break-words leading-relaxed w-full',
                                           isConclusion
                                             ? 'bg-green-50 border-green-200 text-green-900 dark:bg-green-900/20 dark:border-green-800 dark:text-green-100'
-                                            : 'bg-gray-50 border-gray-200 text-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100',
+                                            : isReopen
+                                              ? 'bg-orange-50 border-orange-200 text-orange-900 dark:bg-orange-900/20 dark:border-orange-800 dark:text-orange-100'
+                                              : 'bg-gray-50 border-gray-200 text-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100',
                                         )}
                                       >
                                         {isConclusion && (
                                           <strong className="block mb-1 font-bold">
                                             Observações Finais:
+                                          </strong>
+                                        )}
+                                        {isReopen && (
+                                          <strong className="block mb-1 font-bold text-orange-700 dark:text-orange-400">
+                                            Ação:
                                           </strong>
                                         )}
                                         {log.detalhes}

@@ -14,6 +14,7 @@ import {
   CheckCircle,
   Eye,
   Briefcase,
+  RotateCcw,
 } from 'lucide-react'
 import { format, isValid } from 'date-fns'
 import { DemandDetailsModal } from './DemandDetailsModal'
@@ -44,7 +45,7 @@ export function DemandCard({ demand }: DemandCardProps) {
   const [completeOpen, setCompleteOpen] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const { acceptDemand, deleteDemand } = useDemandStore()
+  const { acceptDemand, deleteDemand, reopenDemand } = useDemandStore()
 
   useEffect(() => {
     if (demand.protocolo && searchParams.get('protocolo') === demand.protocolo) {
@@ -221,7 +222,9 @@ export function DemandCard({ demand }: DemandCardProps) {
             )}
           </div>
 
-          {(demand.status === 'Pendente' || demand.status === 'Em Andamento') && (
+          {(demand.status === 'Pendente' ||
+            demand.status === 'Em Andamento' ||
+            demand.status === 'Concluído') && (
             <div className="mt-2 pt-3 border-t border-border flex flex-col sm:flex-row gap-2">
               {demand.status === 'Pendente' && (
                 <Button
@@ -247,6 +250,19 @@ export function DemandCard({ demand }: DemandCardProps) {
                 >
                   <CheckCircle className="w-4 h-4 mr-2" />
                   Concluir
+                </Button>
+              )}
+              {demand.status === 'Concluído' && (
+                <Button
+                  variant="outline"
+                  className="flex-1 h-10 sm:h-9 text-sm sm:text-xs font-bold transition-all hover:bg-orange-50 dark:hover:bg-orange-950/30 text-orange-600 dark:text-orange-500 border-orange-200 dark:border-orange-800/50"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    reopenDemand(demand.id)
+                  }}
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Reabrir
                 </Button>
               )}
             </div>
