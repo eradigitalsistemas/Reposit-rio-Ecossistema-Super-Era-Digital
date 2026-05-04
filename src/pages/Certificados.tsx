@@ -1,5 +1,14 @@
 import { useState, useEffect } from 'react'
-import { Plus, Search, FileText, GripHorizontal, Eye, Edit, Trash2 } from 'lucide-react'
+import {
+  Plus,
+  Search,
+  FileText,
+  Eye,
+  Edit,
+  Trash2,
+  Calendar as CalendarIcon,
+  UserPlus,
+} from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 import { Button } from '@/components/ui/button'
@@ -17,26 +26,6 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
-const PARCEIROS = [
-  'Novos Protocolos',
-  'Alecyo',
-  'Diego',
-  'Edeilson',
-  'Fábio',
-  'Júlio',
-  'J H M Praca',
-  'Nicassia',
-  'Rodrigo Autocontas',
-  'Rodrigo e Lucena',
-  'Ronaldo',
-  'Romulo Praca',
-  'Orlando - Glauciane',
-  'Valdemar - Lyla',
-  'Luciana',
-  'Útil',
-  'Priscila',
-]
-
 type Protocolo = {
   id: string
   numero: string
@@ -46,12 +35,26 @@ type Protocolo = {
   data_criacao: string
 }
 
+type Parceiro = {
+  id: string
+  nome: string
+}
+
 export default function Certificados() {
   const [protocolos, setProtocolos] = useState<Protocolo[]>([])
+  const [parceiros, setParceiros] = useState<Parceiro[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+
   const [open, setOpen] = useState(false)
-  const [draggedId, setDraggedId] = useState<string | null>(null)
+  const [newParceiroOpen, setNewParceiroOpen] = useState(false)
+  const [newParceiroName, setNewParceiroName] = useState('')
+
+  const [dateFilter, setDateFilter] = useState<
+    'todos' | 'hoje' | 'semana' | 'mes' | 'personalizado'
+  >('todos')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
 
   const [editOpen, setEditOpen] = useState(false)
   const [viewOpen, setViewOpen] = useState(false)
@@ -62,38 +65,99 @@ export default function Certificados() {
     numero: '',
     cliente: '',
     tipo: 'PF' as 'PF' | 'PJ',
+    parceiro: 'Novos Protocolos',
   })
 
   const [editFormData, setEditFormData] = useState({
     numero: '',
     cliente: '',
     tipo: 'PF' as 'PF' | 'PJ',
+    parceiro: '',
   })
 
   const { toast } = useToast()
 
   useEffect(() => {
-    fetchProtocolos()
+    fetchParceiros()
   }, [])
+
+  useEffect(() => {
+    fetchProtocolos()
+  }, [dateFilter, dateFrom, dateTo])
+
+  const fetchParceiros = async () => {
+    const { data, error } = await supabase
+      .from('parceiros_certificados' as any)
+      .select('*')
+      .order('nome')
+    if (!error && data) {
+      setParceiros(data)
+    }
+  }
 
   const fetchProtocolos = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase
+      let query = supabase
         .from('protocolos_certificados' as any)
         .select('*')
         .order('data_criacao', { ascending: false })
 
+      if (dateFilter === 'hoje') {
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        query = query.gte('data_criacao', today.toISOString())
+      } else if (dateFilter === 'semana') {
+        const today = new Date()
+        const first = today.getDate() - today.getDay()
+        const firstDay = new Date(today.setDate(first))
+        firstDay.setHours(0, 0, 0, 0)
+        query = query.gte('data_criacao', firstDay.toISOString())
+      } else if (dateFilter === 'mes') {
+        const today = new Date()
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
+        query = query.gte('data_criacao', firstDay.toISOString())
+      } else if (dateFilter === 'personalizado') {
+        if (dateFrom) {
+          const from = new Date(`${dateFrom}T00:00:00`)
+          query = query.gte('data_criacao', from.toISOString())
+        }
+        if (dateTo) {
+          const to = new Date(`${dateTo}T23:59:59.999`)
+          query = query.lte('data_criacao', to.toISOString())
+        }
+      }
+
+      const { data, error } = await query
       if (error) throw error
       setProtocolos(data || [])
     } catch (err: any) {
+      toast({ title: 'Erro ao carregar', description: err.message, variant: 'destructive' })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleAddParceiro = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newParceiroName.trim()) return
+    try {
+      const { data, error } = await supabase
+        .from('parceiros_certificados' as any)
+        .insert({ nome: newParceiroName.trim() })
+        .select()
+        .single()
+      if (error) throw error
+      setParceiros((prev) => [...prev, data].sort((a, b) => a.nome.localeCompare(b.nome)))
+      setNewParceiroName('')
+      setNewParceiroOpen(false)
+      toast({ title: 'Parceiro adicionado com sucesso' })
+    } catch (err: any) {
       toast({
-        title: 'Erro ao carregar',
+        title: 'Erro ao adicionar parceiro',
         description: err.message,
         variant: 'destructive',
       })
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -112,7 +176,7 @@ export default function Certificados() {
             numero: formData.numero,
             cliente: formData.cliente,
             tipo: formData.tipo,
-            parceiro: 'Novos Protocolos',
+            parceiro: formData.parceiro || 'Novos Protocolos',
           },
         ])
         .select()
@@ -122,14 +186,10 @@ export default function Certificados() {
 
       setProtocolos((prev) => [data, ...prev])
       setOpen(false)
-      setFormData({ numero: '', cliente: '', tipo: 'PF' })
+      setFormData({ numero: '', cliente: '', tipo: 'PF', parceiro: 'Novos Protocolos' })
       toast({ title: 'Protocolo criado com sucesso!' })
     } catch (err: any) {
-      toast({
-        title: 'Erro ao criar',
-        description: err.message,
-        variant: 'destructive',
-      })
+      toast({ title: 'Erro ao criar', description: err.message, variant: 'destructive' })
     }
   }
 
@@ -144,6 +204,7 @@ export default function Certificados() {
           numero: editFormData.numero,
           cliente: editFormData.cliente,
           tipo: editFormData.tipo,
+          parceiro: editFormData.parceiro,
         })
         .eq('id', selectedProtocolo.id)
         .select()
@@ -155,11 +216,7 @@ export default function Certificados() {
       setEditOpen(false)
       toast({ title: 'Protocolo atualizado com sucesso!' })
     } catch (err: any) {
-      toast({
-        title: 'Erro ao atualizar',
-        description: err.message,
-        variant: 'destructive',
-      })
+      toast({ title: 'Erro ao atualizar', description: err.message, variant: 'destructive' })
     }
   }
 
@@ -178,11 +235,23 @@ export default function Certificados() {
       setDeleteOpen(false)
       toast({ title: 'Protocolo excluído com sucesso!' })
     } catch (err: any) {
-      toast({
-        title: 'Erro ao excluir',
-        description: err.message,
-        variant: 'destructive',
-      })
+      toast({ title: 'Erro ao excluir', description: err.message, variant: 'destructive' })
+    }
+  }
+
+  const handleMoveProtocolo = async (p: Protocolo, novoParceiro: string) => {
+    setProtocolos((prev) =>
+      prev.map((item) => (item.id === p.id ? { ...item, parceiro: novoParceiro } : item)),
+    )
+    try {
+      const { error } = await supabase
+        .from('protocolos_certificados' as any)
+        .update({ parceiro: novoParceiro })
+        .eq('id', p.id)
+      if (error) throw error
+    } catch (err: any) {
+      toast({ title: 'Erro ao mover', description: err.message, variant: 'destructive' })
+      fetchProtocolos() // revert on error
     }
   }
 
@@ -193,7 +262,7 @@ export default function Certificados() {
 
   const openEdit = (p: Protocolo) => {
     setSelectedProtocolo(p)
-    setEditFormData({ numero: p.numero, cliente: p.cliente, tipo: p.tipo })
+    setEditFormData({ numero: p.numero, cliente: p.cliente, tipo: p.tipo, parceiro: p.parceiro })
     setEditOpen(true)
   }
 
@@ -202,58 +271,26 @@ export default function Certificados() {
     setDeleteOpen(true)
   }
 
-  const handleDragStart = (e: React.DragEvent, id: string) => {
-    e.dataTransfer.setData('protocoloId', id)
-    e.dataTransfer.effectAllowed = 'move'
-    setTimeout(() => setDraggedId(id), 0)
-  }
-
-  const handleDragEnd = () => {
-    setDraggedId(null)
-  }
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.dataTransfer.dropEffect = 'move'
-  }
-
-  const handleDrop = async (e: React.DragEvent, parceiro: string) => {
-    e.preventDefault()
-    const id = e.dataTransfer.getData('protocoloId')
-    if (!id) return
-
-    setDraggedId(null)
-
-    const protocol = protocolos.find((p) => p.id === id)
-    if (!protocol || protocol.parceiro === parceiro) return
-
-    setProtocolos((prev) => prev.map((p) => (p.id === id ? { ...p, parceiro } : p)))
-
-    try {
-      const { error } = await supabase
-        .from('protocolos_certificados' as any)
-        .update({ parceiro })
-        .eq('id', id)
-
-      if (error) throw error
-    } catch (err: any) {
-      toast({
-        title: 'Erro ao mover protocolo',
-        description: err.message,
-        variant: 'destructive',
-      })
-      fetchProtocolos() // revert on error
-    }
-  }
-
   const filteredProtocolos = protocolos.filter((p) => {
     const q = search.toLowerCase()
     return p.numero.toLowerCase().includes(q) || p.cliente.toLowerCase().includes(q)
   })
 
+  const allUniquePartners = Array.from(
+    new Set([
+      'Novos Protocolos',
+      ...parceiros.map((p) => p.nome),
+      ...protocolos.map((p) => p.parceiro),
+    ]),
+  )
+  const finalColumns = [
+    'Novos Protocolos',
+    ...allUniquePartners.filter((n) => n !== 'Novos Protocolos'),
+  ]
+
   return (
     <div className="flex flex-col h-full h-[calc(100vh-4rem)] md:h-screen">
-      <div className="p-4 md:p-6 border-b flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-background shrink-0">
+      <div className="p-4 md:p-6 border-b flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 bg-background shrink-0">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
             Protocolos Certificados
@@ -263,79 +300,156 @@ export default function Certificados() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="relative flex-1 sm:w-64">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-foreground/50 dark:text-muted-foreground" />
+        <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+          <div className="flex items-center gap-2 bg-background border border-input rounded-md px-3 py-1.5 shadow-sm min-w-[180px]">
+            <CalendarIcon className="w-4 h-4 text-muted-foreground shrink-0" />
+            <select
+              className="h-6 w-full border-0 bg-transparent text-sm font-medium focus:ring-0 cursor-pointer outline-none text-foreground"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value as any)}
+            >
+              <option value="todos">Todos os períodos</option>
+              <option value="hoje">Hoje</option>
+              <option value="semana">Esta Semana</option>
+              <option value="mes">Este Mês</option>
+              <option value="personalizado">Personalizado</option>
+            </select>
+          </div>
+
+          {dateFilter === 'personalizado' && (
+            <div className="flex items-center gap-2 bg-background border border-input rounded-md px-2 py-1 shadow-sm">
+              <Input
+                type="date"
+                className="h-7 w-[130px] border-0 px-1 py-0 shadow-none text-sm"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+              />
+              <span className="text-muted-foreground text-sm">até</span>
+              <Input
+                type="date"
+                className="h-7 w-[130px] border-0 px-1 py-0 shadow-none text-sm"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+              />
+            </div>
+          )}
+
+          <div className="relative flex-1 min-w-[200px] xl:w-64">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar por nome ou número..."
-              className="pl-9 font-medium"
+              className="pl-9 h-10 font-medium bg-background"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
 
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Novo
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Novo Protocolo</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleCreate} className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <Label>Número do Protocolo</Label>
-                  <Input
-                    required
-                    value={formData.numero}
-                    onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
-                    placeholder="Ex: 123456789"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Nome do Cliente</Label>
-                  <Input
-                    required
-                    value={formData.cliente}
-                    onChange={(e) => setFormData({ ...formData, cliente: e.target.value })}
-                    placeholder="Ex: Empresa Silva LTDA"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Tipo</Label>
-                  <ToggleGroup
-                    type="single"
-                    value={formData.tipo}
-                    onValueChange={(val) => {
-                      if (val) setFormData({ ...formData, tipo: val as 'PF' | 'PJ' })
-                    }}
-                    className="justify-start gap-2"
-                  >
-                    <ToggleGroupItem
-                      value="PF"
-                      className="flex-1 border data-[state=on]:border-primary data-[state=on]:bg-primary/10"
+          <div className="flex items-center gap-2 shrink-0">
+            <Dialog open={newParceiroOpen} onOpenChange={setNewParceiroOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="h-10 whitespace-nowrap bg-background">
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Novo Parceiro
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Adicionar Novo Parceiro</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleAddParceiro} className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label>Nome do Parceiro</Label>
+                    <Input
+                      required
+                      value={newParceiroName}
+                      onChange={(e) => setNewParceiroName(e.target.value)}
+                      placeholder="Ex: Contabilidade XPTO"
+                    />
+                  </div>
+                  <div className="pt-4 flex justify-end">
+                    <Button type="submit">Adicionar Parceiro</Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button className="h-10 whitespace-nowrap">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Novo Protocolo
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Novo Protocolo</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleCreate} className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label>Número do Protocolo</Label>
+                    <Input
+                      required
+                      value={formData.numero}
+                      onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
+                      placeholder="Ex: 123456789"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Nome do Cliente</Label>
+                    <Input
+                      required
+                      value={formData.cliente}
+                      onChange={(e) => setFormData({ ...formData, cliente: e.target.value })}
+                      placeholder="Ex: Empresa Silva LTDA"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Tipo</Label>
+                    <ToggleGroup
+                      type="single"
+                      value={formData.tipo}
+                      onValueChange={(val) => {
+                        if (val) setFormData({ ...formData, tipo: val as 'PF' | 'PJ' })
+                      }}
+                      className="justify-start gap-2"
                     >
-                      Pessoa Física (PF)
-                    </ToggleGroupItem>
-                    <ToggleGroupItem
-                      value="PJ"
-                      className="flex-1 border data-[state=on]:border-primary data-[state=on]:bg-primary/10"
+                      <ToggleGroupItem
+                        value="PF"
+                        className="flex-1 border border-input bg-background hover:bg-muted data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:border-primary"
+                      >
+                        Pessoa Física (PF)
+                      </ToggleGroupItem>
+                      <ToggleGroupItem
+                        value="PJ"
+                        className="flex-1 border border-input bg-background hover:bg-muted data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:border-primary"
+                      >
+                        Pessoa Jurídica (PJ)
+                      </ToggleGroupItem>
+                    </ToggleGroup>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Parceiro Responsável</Label>
+                    <select
+                      className="w-full h-10 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer"
+                      value={formData.parceiro}
+                      onChange={(e) => setFormData({ ...formData, parceiro: e.target.value })}
                     >
-                      Pessoa Jurídica (PJ)
-                    </ToggleGroupItem>
-                  </ToggleGroup>
-                </div>
-                <div className="pt-4 flex justify-end">
-                  <Button type="submit" className="w-full sm:w-auto">
-                    Criar Protocolo
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+                      {finalColumns.map((parc) => (
+                        <option key={parc} value={parc}>
+                          {parc}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="pt-4 flex justify-end">
+                    <Button type="submit" className="w-full sm:w-auto">
+                      Criar Protocolo
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
       </div>
 
@@ -347,14 +461,12 @@ export default function Certificados() {
         ) : (
           <ScrollArea className="h-full" type="always">
             <div className="flex p-4 md:p-6 gap-4 min-h-full items-start">
-              {PARCEIROS.map((parceiro) => {
+              {finalColumns.map((parceiro) => {
                 const columnItems = filteredProtocolos.filter((p) => p.parceiro === parceiro)
 
                 return (
                   <div
                     key={parceiro}
-                    onDragOver={handleDragOver}
-                    onDrop={(e) => handleDrop(e, parceiro)}
                     className="flex-shrink-0 w-80 bg-muted/30 dark:bg-muted/20 rounded-xl border border-border flex flex-col max-h-[calc(100vh-10rem)] overflow-hidden shadow-sm"
                   >
                     <div className="p-3 border-b border-border bg-muted/50 dark:bg-muted/30 flex items-center justify-between shrink-0">
@@ -372,13 +484,7 @@ export default function Certificados() {
                         {columnItems.map((p) => (
                           <div
                             key={p.id}
-                            draggable
-                            onDragStart={(e) => handleDragStart(e, p.id)}
-                            onDragEnd={handleDragEnd}
-                            className={cn(
-                              'bg-card text-card-foreground border border-border p-3 rounded-lg shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing hover:border-primary/50 transition-all flex flex-col gap-2 group relative',
-                              draggedId === p.id && 'opacity-50 scale-95',
-                            )}
+                            className="bg-card text-card-foreground border border-border p-3 rounded-lg shadow-sm hover:shadow-md hover:border-primary/50 transition-all flex flex-col gap-2 group relative"
                           >
                             <div className="flex items-start justify-between gap-2">
                               <span className="font-semibold text-sm line-clamp-2 leading-snug text-foreground">
@@ -436,8 +542,24 @@ export default function Certificados() {
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
                                 </Button>
-                                <GripHorizontal className="w-4 h-4 ml-1 cursor-grab text-muted-foreground/70 hover:text-foreground" />
                               </div>
+                            </div>
+
+                            <div className="mt-2 pt-2 border-t border-border/50">
+                              <Label className="text-[10px] uppercase text-muted-foreground font-semibold mb-1 block">
+                                Atribuído para
+                              </Label>
+                              <select
+                                className="w-full h-8 rounded-md border border-input bg-background/50 px-2 py-0 text-xs shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer"
+                                value={p.parceiro}
+                                onChange={(e) => handleMoveProtocolo(p, e.target.value)}
+                              >
+                                {finalColumns.map((parc) => (
+                                  <option key={parc} value={parc}>
+                                    {parc}
+                                  </option>
+                                ))}
+                              </select>
                             </div>
                           </div>
                         ))}
@@ -530,17 +652,31 @@ export default function Certificados() {
               >
                 <ToggleGroupItem
                   value="PF"
-                  className="flex-1 border data-[state=on]:border-primary data-[state=on]:bg-primary/10"
+                  className="flex-1 border border-input bg-background hover:bg-muted data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:border-primary"
                 >
                   Pessoa Física (PF)
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="PJ"
-                  className="flex-1 border data-[state=on]:border-primary data-[state=on]:bg-primary/10"
+                  className="flex-1 border border-input bg-background hover:bg-muted data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:border-primary"
                 >
                   Pessoa Jurídica (PJ)
                 </ToggleGroupItem>
               </ToggleGroup>
+            </div>
+            <div className="space-y-2">
+              <Label>Parceiro Responsável</Label>
+              <select
+                className="w-full h-10 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer"
+                value={editFormData.parceiro}
+                onChange={(e) => setEditFormData({ ...editFormData, parceiro: e.target.value })}
+              >
+                {finalColumns.map((parc) => (
+                  <option key={parc} value={parc}>
+                    {parc}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="pt-4 flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>
