@@ -21,6 +21,15 @@ export interface Client {
   email: string
   phone: string
   cnpj: string
+  address?: {
+    cep?: string
+    logradouro?: string
+    numero?: string
+    bairro?: string
+    cidade?: string
+    estado?: string
+  }
+  services?: string[]
   documents: ClientDocument[]
   history: DemandHistoryEvent[]
   createdAt: string

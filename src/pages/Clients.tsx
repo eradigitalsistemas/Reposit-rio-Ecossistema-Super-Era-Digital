@@ -61,6 +61,7 @@ export default function Clients() {
                 <TableHead className="text-muted-foreground">Email</TableHead>
                 <TableHead className="text-muted-foreground">Telefone</TableHead>
                 <TableHead className="text-muted-foreground">CNPJ</TableHead>
+                <TableHead className="text-muted-foreground">Serviços</TableHead>
                 <TableHead className="w-[100px] text-right"></TableHead>
               </TableRow>
             </TableHeader>
@@ -76,6 +77,22 @@ export default function Clients() {
                   <TableCell className="text-foreground/80">{client.email}</TableCell>
                   <TableCell className="text-foreground/80">{client.phone}</TableCell>
                   <TableCell className="text-foreground/80">{client.cnpj}</TableCell>
+                  <TableCell className="text-foreground/80">
+                    {client.services && client.services.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {client.services.map((s) => (
+                          <span
+                            key={s}
+                            className="bg-primary/10 text-primary text-[10px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap"
+                          >
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">-</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
                       <Button
@@ -113,7 +130,7 @@ export default function Clients() {
               ))}
               {clients.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                  <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
                     Nenhum cliente encontrado.
                   </TableCell>
                 </TableRow>
@@ -181,6 +198,18 @@ export default function Clients() {
                   <div className="text-sm text-foreground/80 flex items-center gap-2">
                     <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
                     <span>{client.cnpj}</span>
+                  </div>
+                )}
+                {client.services && client.services.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-3">
+                    {client.services.map((s) => (
+                      <span
+                        key={s}
+                        className="bg-primary/10 text-primary text-[10px] font-medium px-2 py-0.5 rounded-full"
+                      >
+                        {s}
+                      </span>
+                    ))}
                   </div>
                 )}
               </div>

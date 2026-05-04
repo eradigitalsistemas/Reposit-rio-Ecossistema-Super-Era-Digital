@@ -53,6 +53,15 @@ export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
           email: d.email,
           phone: d.telefone || '',
           cnpj: d.cnpj || '',
+          address: {
+            cep: d.endereco_cep || '',
+            logradouro: d.endereco_logradouro || '',
+            numero: d.endereco_numero || '',
+            bairro: d.endereco_bairro || '',
+            cidade: d.endereco_cidade || '',
+            estado: d.endereco_estado || '',
+          },
+          services: d.servicos || [],
           documents: d.documentos || [],
           history: [],
           createdAt: d.data_criacao,
@@ -78,6 +87,13 @@ export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
           email: newClient.email,
           telefone: newClient.phone,
           cnpj: newClient.cnpj,
+          endereco_cep: newClient.address?.cep,
+          endereco_logradouro: newClient.address?.logradouro,
+          endereco_numero: newClient.address?.numero,
+          endereco_bairro: newClient.address?.bairro,
+          endereco_cidade: newClient.address?.cidade,
+          endereco_estado: newClient.address?.estado,
+          servicos: newClient.services || [],
         })
         .select()
         .single()
@@ -96,6 +112,15 @@ export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
             email: data.email,
             phone: data.telefone || '',
             cnpj: data.cnpj || '',
+            address: {
+              cep: data.endereco_cep || '',
+              logradouro: data.endereco_logradouro || '',
+              numero: data.endereco_numero || '',
+              bairro: data.endereco_bairro || '',
+              cidade: data.endereco_cidade || '',
+              estado: data.endereco_estado || '',
+            },
+            services: data.servicos || [],
             documents: [],
             history: [],
             createdAt: data.data_criacao,
@@ -117,6 +142,17 @@ export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
         email: data.email,
         telefone: data.phone,
         cnpj: data.cnpj,
+        ...(data.address
+          ? {
+              endereco_cep: data.address.cep,
+              endereco_logradouro: data.address.logradouro,
+              endereco_numero: data.address.numero,
+              endereco_bairro: data.address.bairro,
+              endereco_cidade: data.address.cidade,
+              endereco_estado: data.address.estado,
+            }
+          : {}),
+        ...(data.services ? { servicos: data.services } : {}),
       })
       .eq('id', id)
 
@@ -286,6 +322,13 @@ export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
             email: c.email,
             telefone: c.phone,
             cnpj: c.cnpj,
+            endereco_cep: c.address?.cep,
+            endereco_logradouro: c.address?.logradouro,
+            endereco_numero: c.address?.numero,
+            endereco_bairro: c.address?.bairro,
+            endereco_cidade: c.address?.cidade,
+            endereco_estado: c.address?.estado,
+            servicos: c.services || [],
           })),
         )
         .select()
@@ -303,6 +346,15 @@ export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
           email: d.email,
           phone: d.telefone || '',
           cnpj: d.cnpj || '',
+          address: {
+            cep: d.endereco_cep || '',
+            logradouro: d.endereco_logradouro || '',
+            numero: d.endereco_numero || '',
+            bairro: d.endereco_bairro || '',
+            cidade: d.endereco_cidade || '',
+            estado: d.endereco_estado || '',
+          },
+          services: d.servicos || [],
           documents: d.documentos || [],
           history: [],
           createdAt: d.data_criacao,
