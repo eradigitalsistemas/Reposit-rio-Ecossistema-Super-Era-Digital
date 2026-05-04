@@ -60,13 +60,13 @@ export function Header() {
         <Breadcrumb className="hidden sm:block shrink-0">
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbPage className="text-lg font-semibold text-foreground">
+              <BreadcrumbPage className="text-lg font-bold text-foreground">
                 {pageTitle}
               </BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-        <div className="sm:hidden font-semibold text-lg text-foreground truncate w-full pl-2">
+        <div className="sm:hidden font-bold text-lg text-foreground truncate w-full pl-2">
           {pageTitle}
         </div>
 
@@ -114,12 +114,12 @@ export function Header() {
               align="end"
               className="w-[90vw] sm:w-80 p-0 border-border mr-2 sm:mr-0 mt-1"
             >
-              <div className="flex items-center justify-between p-4 border-b border-border bg-muted/50">
-                <span className="font-semibold text-sm text-foreground">Notificações</span>
+              <div className="flex items-center justify-between p-4 border-b border-border bg-muted/50 dark:bg-muted/20">
+                <span className="font-bold text-sm text-foreground">Notificações</span>
                 {unreadCount > 0 && (
                   <Badge
                     variant="outline"
-                    className="bg-secondary text-secondary-foreground border-border hover:bg-secondary/80"
+                    className="bg-primary/10 text-primary border-primary/20 font-bold hover:bg-primary/20"
                   >
                     {unreadCount} não lidas
                   </Badge>
@@ -147,19 +147,19 @@ export function Header() {
                         }`}
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-sm font-semibold text-foreground leading-tight">
+                          <span className="text-sm font-bold text-foreground leading-tight">
                             {n.title}
                           </span>
                           {!n.read && (
                             <div className="h-1.5 w-1.5 bg-primary rounded-full shadow-[0_0_5px_hsl(var(--primary))] shrink-0" />
                           )}
                         </div>
-                        <span className="text-sm text-muted-foreground leading-snug">
+                        <span className="text-sm text-foreground/80 dark:text-muted-foreground leading-snug">
                           {n.message}
                         </span>
-                        <span className="text-[10px] text-muted-foreground/70 mt-1 font-medium">
+                        <span className="text-[10px] text-muted-foreground mt-1 font-semibold">
                           {format(new Date(n.createdAt), 'dd/MM/yyyy HH:mm')}
-                        </span>
+                        </span>{' '}
                       </div>
                     ))}
                   </div>
@@ -189,17 +189,24 @@ export function Header() {
                 </div>
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-56 p-2 mt-1 mr-2 sm:mr-0">
-              <div className="flex flex-col space-y-2 p-3 border-b border-border mb-2">
-                <span className="text-sm font-medium text-foreground">{userName}</span>
-                <span className="text-xs text-muted-foreground">{role}</span>
+            <PopoverContent
+              align="end"
+              className="w-56 p-2 mt-1 mr-2 sm:mr-0 border-border shadow-md"
+            >
+              <div className="flex flex-col space-y-1 p-3 border-b border-border mb-2 bg-muted/20 rounded-t-sm">
+                <span className="text-sm font-bold text-foreground">{userName}</span>
+                <span className="text-xs font-medium text-muted-foreground">{role}</span>
               </div>
-              <Button variant="ghost" className="w-full justify-start h-11" onClick={toggleRole}>
-                <Shield className="w-4 h-4 mr-2 text-muted-foreground" /> Alterar Visão
+              <Button
+                variant="ghost"
+                className="w-full justify-start h-11 text-foreground/80 hover:text-foreground font-medium"
+                onClick={toggleRole}
+              >
+                <Shield className="w-4 h-4 mr-2 text-foreground/60" /> Alterar Visão
               </Button>
               <Button
                 variant="ghost"
-                className="w-full justify-start text-foreground hover:bg-accent hover:text-foreground h-11"
+                className="w-full justify-start text-destructive/80 hover:bg-destructive/10 hover:text-destructive h-11 font-medium mt-1"
                 onClick={logout}
               >
                 <LogOut className="w-4 h-4 mr-2" /> Sair

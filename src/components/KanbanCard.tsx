@@ -31,7 +31,7 @@ export function KanbanCard({ lead }: KanbanCardProps) {
             {lead.stage === 'ativo' && (
               <div className="mt-1.5 sm:mt-1.5 h-2 w-2 rounded-full bg-primary shadow-[0_0_5px_rgba(34,197,94,0.8)] shrink-0" />
             )}
-            <h4 className="font-semibold sm:font-medium text-base sm:text-sm text-card-foreground leading-tight pr-24 sm:pr-24">
+            <h4 className="font-bold sm:font-semibold text-base sm:text-sm text-card-foreground leading-tight pr-24 sm:pr-24">
               {lead.name}
             </h4>
           </div>
@@ -45,15 +45,15 @@ export function KanbanCard({ lead }: KanbanCardProps) {
         </div>
 
         {lead.company && (
-          <div className="flex items-center text-sm sm:text-xs text-muted-foreground mt-0.5">
-            <Building2 className="w-4 h-4 sm:w-3 sm:h-3 mr-1.5 sm:mr-1 shrink-0" />
+          <div className="flex items-center text-sm sm:text-xs text-foreground/80 dark:text-muted-foreground mt-0.5 font-medium">
+            <Building2 className="w-4 h-4 sm:w-3 sm:h-3 mr-1.5 sm:mr-1 shrink-0 opacity-70" />
             <span className="truncate">{lead.company}</span>
           </div>
         )}
 
         {lead.address && (
-          <div className="flex items-center text-sm sm:text-xs text-muted-foreground">
-            <MapPin className="w-4 h-4 sm:w-3 sm:h-3 mr-1.5 sm:mr-1 shrink-0" />
+          <div className="flex items-center text-sm sm:text-xs text-foreground/80 dark:text-muted-foreground font-medium">
+            <MapPin className="w-4 h-4 sm:w-3 sm:h-3 mr-1.5 sm:mr-1 shrink-0 opacity-70" />
             <span className="truncate">{lead.address}</span>
           </div>
         )}
@@ -73,18 +73,18 @@ export function KanbanCard({ lead }: KanbanCardProps) {
           {lead.email && (
             <Badge
               variant="outline"
-              className="text-xs sm:text-[10px] px-2 sm:px-1.5 py-0.5 sm:py-0 h-6 sm:h-4 bg-transparent text-muted-foreground border-border group-hover:border-primary/30 transition-colors"
+              className="text-xs sm:text-[10px] px-2 sm:px-1.5 py-0.5 sm:py-0 h-6 sm:h-4 bg-transparent text-foreground/70 dark:text-muted-foreground border-border group-hover:border-primary/30 transition-colors font-medium"
             >
-              <Mail className="w-3.5 h-3.5 sm:w-3 sm:h-3 mr-1" />
+              <Mail className="w-3.5 h-3.5 sm:w-3 sm:h-3 mr-1 opacity-70" />
               Email
             </Badge>
           )}
           {lead.phone && (
             <Badge
               variant="outline"
-              className="text-xs sm:text-[10px] px-2 sm:px-1.5 py-0.5 sm:py-0 h-6 sm:h-4 bg-transparent text-muted-foreground border-border group-hover:border-primary/30 transition-colors"
+              className="text-xs sm:text-[10px] px-2 sm:px-1.5 py-0.5 sm:py-0 h-6 sm:h-4 bg-transparent text-foreground/70 dark:text-muted-foreground border-border group-hover:border-primary/30 transition-colors font-medium"
             >
-              <Phone className="w-3.5 h-3.5 sm:w-3 sm:h-3 mr-1" />
+              <Phone className="w-3.5 h-3.5 sm:w-3 sm:h-3 mr-1 opacity-70" />
               Telefone
             </Badge>
           )}

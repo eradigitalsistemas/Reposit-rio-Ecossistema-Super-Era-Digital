@@ -261,18 +261,20 @@ export default function Certificados() {
     <div className="flex flex-col h-full h-[calc(100vh-4rem)] md:h-screen">
       <div className="p-4 md:p-6 border-b flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-background shrink-0">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Protocolos Certificados</h1>
-          <p className="text-muted-foreground text-sm">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Protocolos Certificados
+          </h1>
+          <p className="text-foreground/70 dark:text-muted-foreground text-sm font-medium">
             Gerencie os protocolos de certificados digitais por parceiro
           </p>
         </div>
 
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <div className="relative flex-1 sm:w-64">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-foreground/50 dark:text-muted-foreground" />
             <Input
               placeholder="Buscar por nome ou número..."
-              className="pl-9"
+              className="pl-9 font-medium"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -334,7 +336,7 @@ export default function Certificados() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden bg-muted/20 relative">
+      <div className="flex-1 overflow-hidden bg-background sm:bg-muted/10 relative">
         {loading ? (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -350,11 +352,14 @@ export default function Certificados() {
                     key={parceiro}
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDrop(e, parceiro)}
-                    className="flex-shrink-0 w-80 bg-muted/50 rounded-xl border border-border/50 flex flex-col max-h-[calc(100vh-10rem)] overflow-hidden"
+                    className="flex-shrink-0 w-80 bg-muted/30 dark:bg-muted/20 rounded-xl border border-border flex flex-col max-h-[calc(100vh-10rem)] overflow-hidden shadow-sm"
                   >
-                    <div className="p-3 border-b border-border/50 bg-muted/80 flex items-center justify-between shrink-0">
-                      <h3 className="font-semibold text-sm">{parceiro}</h3>
-                      <Badge variant="secondary" className="text-xs">
+                    <div className="p-3 border-b border-border bg-muted/50 dark:bg-muted/30 flex items-center justify-between shrink-0">
+                      <h3 className="font-semibold text-sm text-foreground">{parceiro}</h3>
+                      <Badge
+                        variant="secondary"
+                        className="text-xs font-bold bg-background text-foreground shadow-sm border border-border"
+                      >
                         {columnItems.length}
                       </Badge>
                     </div>
@@ -368,35 +373,37 @@ export default function Certificados() {
                             onDragStart={(e) => handleDragStart(e, p.id)}
                             onDragEnd={handleDragEnd}
                             className={cn(
-                              'bg-card text-card-foreground border border-border p-3 rounded-lg shadow-sm cursor-grab active:cursor-grabbing hover:border-primary/50 transition-all flex flex-col gap-2 group relative',
+                              'bg-card text-card-foreground border border-border p-3 rounded-lg shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing hover:border-primary/50 transition-all flex flex-col gap-2 group relative',
                               draggedId === p.id && 'opacity-50 scale-95',
                             )}
                           >
                             <div className="flex items-start justify-between gap-2">
-                              <span className="font-medium text-sm line-clamp-2 leading-snug">
+                              <span className="font-semibold text-sm line-clamp-2 leading-snug text-foreground">
                                 {p.cliente}
                               </span>
                               <Badge
                                 variant={p.tipo === 'PJ' ? 'default' : 'outline'}
                                 className={cn(
-                                  'text-[10px] shrink-0 px-1.5 py-0',
+                                  'text-[10px] shrink-0 px-1.5 py-0 font-bold',
                                   p.tipo === 'PF' &&
-                                    'bg-blue-500/10 text-blue-500 border-blue-500/20',
+                                    'bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-500 border-blue-300 dark:border-blue-500/20',
                                 )}
                               >
                                 {p.tipo}
                               </Badge>
                             </div>
                             <div className="flex items-center justify-between mt-1">
-                              <div className="flex items-center gap-1.5 text-xs bg-muted/50 text-muted-foreground px-2 py-1 rounded-md">
-                                <FileText className="w-3.5 h-3.5" />
-                                <span className="font-mono font-medium">{p.numero}</span>
+                              <div className="flex items-center gap-1.5 text-xs bg-secondary/80 dark:bg-muted/50 text-secondary-foreground dark:text-muted-foreground px-2 py-1 rounded-md border border-border/50">
+                                <FileText className="w-3.5 h-3.5 opacity-70" />
+                                <span className="font-mono font-bold tracking-tight">
+                                  {p.numero}
+                                </span>
                               </div>
                               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-7 w-7"
+                                  className="h-7 w-7 text-foreground/70 hover:text-primary hover:bg-primary/10"
                                   onClick={(e) => {
                                     e.stopPropagation()
                                     openView(p)
@@ -407,7 +414,7 @@ export default function Certificados() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-7 w-7"
+                                  className="h-7 w-7 text-foreground/70 hover:text-primary hover:bg-primary/10"
                                   onClick={(e) => {
                                     e.stopPropagation()
                                     openEdit(p)
@@ -418,7 +425,7 @@ export default function Certificados() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  className="h-7 w-7 text-destructive/70 hover:text-destructive hover:bg-destructive/10"
                                   onClick={(e) => {
                                     e.stopPropagation()
                                     openDelete(p)
@@ -426,7 +433,7 @@ export default function Certificados() {
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
                                 </Button>
-                                <GripHorizontal className="w-4 h-4 ml-1 cursor-grab text-muted-foreground" />
+                                <GripHorizontal className="w-4 h-4 ml-1 cursor-grab text-muted-foreground/70 hover:text-foreground" />
                               </div>
                             </div>
                           </div>
@@ -449,25 +456,35 @@ export default function Certificados() {
           </DialogHeader>
           {selectedProtocolo && (
             <div className="space-y-4 pt-4">
-              <div>
-                <Label className="text-muted-foreground">Número do Protocolo</Label>
-                <div className="font-medium mt-1">{selectedProtocolo.numero}</div>
+              <div className="bg-muted/30 p-3 rounded-md border border-border">
+                <Label className="text-muted-foreground text-xs font-semibold uppercase">
+                  Número do Protocolo
+                </Label>
+                <div className="font-bold text-foreground mt-0.5">{selectedProtocolo.numero}</div>
               </div>
-              <div>
-                <Label className="text-muted-foreground">Cliente</Label>
-                <div className="font-medium mt-1">{selectedProtocolo.cliente}</div>
+              <div className="bg-muted/30 p-3 rounded-md border border-border">
+                <Label className="text-muted-foreground text-xs font-semibold uppercase">
+                  Cliente
+                </Label>
+                <div className="font-bold text-foreground mt-0.5">{selectedProtocolo.cliente}</div>
               </div>
-              <div>
-                <Label className="text-muted-foreground">Tipo</Label>
-                <div className="font-medium mt-1">{selectedProtocolo.tipo}</div>
+              <div className="bg-muted/30 p-3 rounded-md border border-border">
+                <Label className="text-muted-foreground text-xs font-semibold uppercase">
+                  Tipo
+                </Label>
+                <div className="font-bold text-foreground mt-0.5">{selectedProtocolo.tipo}</div>
               </div>
-              <div>
-                <Label className="text-muted-foreground">Parceiro Responsável</Label>
-                <div className="font-medium mt-1">{selectedProtocolo.parceiro}</div>
+              <div className="bg-muted/30 p-3 rounded-md border border-border">
+                <Label className="text-muted-foreground text-xs font-semibold uppercase">
+                  Parceiro Responsável
+                </Label>
+                <div className="font-bold text-foreground mt-0.5">{selectedProtocolo.parceiro}</div>
               </div>
-              <div>
-                <Label className="text-muted-foreground">Data de Criação</Label>
-                <div className="font-medium mt-1">
+              <div className="bg-muted/30 p-3 rounded-md border border-border">
+                <Label className="text-muted-foreground text-xs font-semibold uppercase">
+                  Data de Criação
+                </Label>
+                <div className="font-bold text-foreground mt-0.5">
                   {new Date(selectedProtocolo.data_criacao).toLocaleString('pt-BR')}
                 </div>
               </div>
@@ -530,13 +547,15 @@ export default function Certificados() {
           <DialogHeader>
             <DialogTitle>Excluir Protocolo</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 pt-4">
+          <div className="space-y-4 pt-4 text-foreground">
             <p>
               Tem certeza que deseja excluir o protocolo{' '}
-              <strong>{selectedProtocolo?.numero}</strong> do cliente{' '}
-              <strong>{selectedProtocolo?.cliente}</strong>?
+              <strong className="text-primary">{selectedProtocolo?.numero}</strong> do cliente{' '}
+              <strong className="text-primary">{selectedProtocolo?.cliente}</strong>?
             </p>
-            <p className="text-sm text-muted-foreground">Esta ação não pode ser desfeita.</p>
+            <p className="text-sm text-muted-foreground font-medium bg-muted/50 p-2 rounded-md border border-border">
+              Esta ação não pode ser desfeita.
+            </p>
           </div>
           <div className="pt-4 flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setDeleteOpen(false)}>

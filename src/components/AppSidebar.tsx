@@ -107,10 +107,10 @@ export function AppSidebar() {
               <Link
                 to={item.url}
                 onClick={handleLinkClick}
-                className="flex items-center gap-3 text-sidebar-foreground/80 hover:text-sidebar-foreground"
+                className="flex items-center gap-3 text-sidebar-foreground/70 hover:text-sidebar-foreground font-medium"
               >
-                <item.icon className="w-5 h-5" />
-                <span className="text-base md:text-sm font-medium">{item.title}</span>
+                <item.icon className="w-5 h-5 opacity-80" />
+                <span className="text-base md:text-sm font-semibold">{item.title}</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -140,7 +140,7 @@ export function AppSidebar() {
 
       <SidebarContent className="flex-1 overflow-y-auto bg-sidebar">
         <SidebarGroup>
-          <div className="px-4 py-2 mt-2 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider">
+          <div className="px-4 py-2 mt-2 text-xs font-bold text-sidebar-foreground/60 uppercase tracking-wider">
             Principal
           </div>
           <SidebarGroupContent>{renderMenu(MAIN_MENU)}</SidebarGroupContent>
@@ -148,15 +148,15 @@ export function AppSidebar() {
 
         {hrItemsVisible && (
           <SidebarGroup>
-            <div className="px-4 py-2 mt-4 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider">
+            <div className="px-4 py-2 mt-4 text-xs font-bold text-sidebar-foreground/60 uppercase tracking-wider">
               Recursos Humanos
-            </div>
+            </div>{' '}
             <SidebarGroupContent>{renderMenu(HR_MENU)}</SidebarGroupContent>
           </SidebarGroup>
         )}
 
         <SidebarGroup>
-          <div className="px-4 py-2 mt-4 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider">
+          <div className="px-4 py-2 mt-4 text-xs font-bold text-sidebar-foreground/60 uppercase tracking-wider">
             Sistema
           </div>
           <SidebarGroupContent>{renderMenu(SYS_MENU)}</SidebarGroupContent>
@@ -174,10 +174,10 @@ export function AppSidebar() {
               <Link
                 to="/portal/login"
                 onClick={handleLinkClick}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 w-full justify-center font-bold"
               >
-                <ExternalLink className="w-5 h-5 md:w-4 md:h-4" />
-                <span className="text-base md:text-sm font-medium">Portal do Cliente</span>
+                <ExternalLink className="w-5 h-5 md:w-4 md:h-4 opacity-80" />
+                <span className="text-base md:text-sm">Portal do Cliente</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

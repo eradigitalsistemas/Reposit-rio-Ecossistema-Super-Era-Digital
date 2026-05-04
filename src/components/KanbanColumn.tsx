@@ -42,10 +42,12 @@ export function KanbanColumn({ stage, leads }: KanbanColumnProps) {
           stage.color,
         )}
       >
-        <span className="tracking-wide uppercase text-xs">{stage.title}</span>
+        <span className="tracking-wide uppercase text-xs text-white drop-shadow-sm">
+          {stage.title}
+        </span>
         <Badge
           variant="secondary"
-          className="bg-black/10 dark:bg-black/20 text-foreground hover:bg-black/20 dark:hover:bg-black/30 px-2 h-5 text-xs border-0 transition-colors"
+          className="bg-white/20 text-white hover:bg-white/30 px-2 h-5 text-xs border-0 transition-colors font-bold shadow-sm"
         >
           {leads.length}
         </Badge>
@@ -63,7 +65,7 @@ export function KanbanColumn({ stage, leads }: KanbanColumnProps) {
       >
         {leads.length === 0 ? (
           <div className="h-full flex items-center justify-center min-h-[100px]">
-            <span className="text-sm text-muted-foreground text-center px-4 border border-dashed border-border rounded-md p-4 w-full">
+            <span className="text-sm font-medium text-foreground/60 dark:text-muted-foreground text-center px-4 border border-dashed border-border/80 rounded-md p-4 w-full bg-muted/20">
               Arraste leads para cá
             </span>
           </div>
