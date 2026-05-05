@@ -8,6 +8,8 @@ import {
   Trash2,
   Calendar as CalendarIcon,
   UserPlus,
+  ArrowLeft,
+  Folder,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
@@ -22,7 +24,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
@@ -45,6 +46,8 @@ export default function Certificados() {
   const [parceiros, setParceiros] = useState<Parceiro[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+
+  const [selectedPartner, setSelectedPartner] = useState<string | null>(null)
 
   const [open, setOpen] = useState(false)
   const [newParceiroOpen, setNewParceiroOpen] = useState(false)
@@ -282,14 +285,10 @@ export default function Certificados() {
       ...parceiros.map((p) => p.nome),
       ...protocolos.map((p) => p.parceiro),
     ]),
-  )
-  const finalColumns = [
-    'Novos Protocolos',
-    ...allUniquePartners.filter((n) => n !== 'Novos Protocolos'),
-  ]
+  ).sort((a, b) => a.localeCompare(b))
 
   return (
-    <div className="flex flex-col h-full h-[calc(100vh-4rem)] md:h-screen">
+    <div className="flex flex-col h-[calc(100vh-4rem)] md:h-screen">
       <div className="p-4 md:p-6 border-b flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 bg-background shrink-0">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
@@ -444,7 +443,7 @@ export default function Certificados() {
                       value={formData.parceiro}
                       onChange={(e) => setFormData({ ...formData, parceiro: e.target.value })}
                     >
-                      {finalColumns.map((parc) => (
+                      {allUniquePartners.map((parc) => (
                         <option key={parc} value={parc} className="bg-background text-foreground">
                           {parc}
                         </option>
@@ -463,128 +462,150 @@ export default function Certificados() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden bg-background sm:bg-muted/10 relative">
+      <div className="flex-1 overflow-y-auto bg-background sm:bg-muted/10 relative">
         {loading ? (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
-        ) : (
-          <ScrollArea className="h-full" type="always">
-            <div className="flex p-4 md:p-6 gap-4 min-h-full items-start">
-              {finalColumns.map((parceiro) => {
+        ) : !selectedPartner ? (
+          <div className="p-4 md:p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {allUniquePartners.map((parceiro) => {
                 const columnItems = filteredProtocolos.filter((p) => p.parceiro === parceiro)
 
                 return (
                   <div
                     key={parceiro}
-                    className="flex-shrink-0 w-80 bg-muted/30 dark:bg-muted/20 rounded-xl border border-border flex flex-col max-h-[calc(100vh-10rem)] overflow-hidden shadow-sm"
+                    onClick={() => setSelectedPartner(parceiro)}
+                    className="bg-card text-card-foreground border border-border p-4 rounded-xl shadow-sm hover:shadow-md hover:border-primary/50 cursor-pointer transition-all flex flex-col gap-3 group relative"
                   >
-                    <div className="p-3 border-b border-border bg-muted/50 dark:bg-muted/30 flex items-center justify-between shrink-0">
-                      <h3 className="font-semibold text-sm text-foreground">{parceiro}</h3>
-                      <Badge
-                        variant="secondary"
-                        className="text-xs font-bold bg-background text-foreground shadow-sm border border-border"
-                      >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-primary/10 rounded-lg text-primary shrink-0">
+                          <Folder className="w-5 h-5" />
+                        </div>
+                        <h3 className="font-semibold text-sm line-clamp-2">{parceiro}</h3>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/50">
+                      <span className="text-xs text-muted-foreground font-medium">Protocolos</span>
+                      <Badge variant="secondary" className="font-bold">
                         {columnItems.length}
                       </Badge>
                     </div>
-
-                    <ScrollArea className="flex-1 p-3">
-                      <div className="flex flex-col gap-3 min-h-[50px]">
-                        {columnItems.map((p) => (
-                          <div
-                            key={p.id}
-                            className="bg-card text-card-foreground border border-border p-3 rounded-lg shadow-sm hover:shadow-md hover:border-primary/50 transition-all flex flex-col gap-2 group relative"
-                          >
-                            <div className="flex items-start justify-between gap-2">
-                              <span className="font-semibold text-sm line-clamp-2 leading-snug text-foreground">
-                                {p.cliente}
-                              </span>
-                              <Badge
-                                variant={p.tipo === 'PJ' ? 'default' : 'outline'}
-                                className={cn(
-                                  'text-[10px] shrink-0 px-1.5 py-0 font-bold',
-                                  p.tipo === 'PF' &&
-                                    'bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-500 border-blue-300 dark:border-blue-500/20',
-                                )}
-                              >
-                                {p.tipo}
-                              </Badge>
-                            </div>
-                            <div className="flex items-center justify-between mt-1">
-                              <div className="flex items-center gap-1.5 text-xs bg-secondary/80 dark:bg-muted/50 text-secondary-foreground dark:text-muted-foreground px-2 py-1 rounded-md border border-border/50">
-                                <FileText className="w-3.5 h-3.5 opacity-70" />
-                                <span className="font-mono font-bold tracking-tight">
-                                  {p.numero}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 text-foreground/70 hover:text-primary hover:bg-primary/10"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    openView(p)
-                                  }}
-                                >
-                                  <Eye className="w-3.5 h-3.5" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 text-foreground/70 hover:text-primary hover:bg-primary/10"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    openEdit(p)
-                                  }}
-                                >
-                                  <Edit className="w-3.5 h-3.5" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 text-destructive/70 hover:text-destructive hover:bg-destructive/10"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    openDelete(p)
-                                  }}
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </Button>
-                              </div>
-                            </div>
-
-                            <div className="mt-2 pt-2 border-t border-border/50">
-                              <Label className="text-[10px] uppercase text-muted-foreground font-semibold mb-1 block">
-                                Atribuído para
-                              </Label>
-                              <select
-                                className="w-full h-8 rounded-md border border-input bg-background/50 px-2 py-0 text-xs shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer text-foreground"
-                                value={p.parceiro}
-                                onChange={(e) => handleMoveProtocolo(p, e.target.value)}
-                              >
-                                {finalColumns.map((parc) => (
-                                  <option
-                                    key={parc}
-                                    value={parc}
-                                    className="bg-background text-foreground"
-                                  >
-                                    {parc}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
                   </div>
                 )
               })}
             </div>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
+          </div>
+        ) : (
+          <div className="p-4 md:p-6 flex flex-col gap-6">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedPartner(null)}
+                className="w-fit"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Voltar
+              </Button>
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <Folder className="w-6 h-6 text-primary" />
+                {selectedPartner}
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {filteredProtocolos
+                .filter((p) => p.parceiro === selectedPartner)
+                .map((p) => (
+                  <div
+                    key={p.id}
+                    className="bg-card text-card-foreground border border-border p-3 rounded-lg shadow-sm hover:shadow-md hover:border-primary/50 transition-all flex flex-col gap-2 group relative"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="font-semibold text-sm line-clamp-2 leading-snug text-foreground">
+                        {p.cliente}
+                      </span>
+                      <Badge
+                        variant={p.tipo === 'PJ' ? 'default' : 'outline'}
+                        className={cn(
+                          'text-[10px] shrink-0 px-1.5 py-0 font-bold',
+                          p.tipo === 'PF' &&
+                            'bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-500 border-blue-300 dark:border-blue-500/20',
+                        )}
+                      >
+                        {p.tipo}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between mt-1">
+                      <div className="flex items-center gap-1.5 text-xs bg-secondary/80 dark:bg-muted/50 text-secondary-foreground dark:text-muted-foreground px-2 py-1 rounded-md border border-border/50">
+                        <FileText className="w-3.5 h-3.5 opacity-70" />
+                        <span className="font-mono font-bold tracking-tight">{p.numero}</span>
+                      </div>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-foreground/70 hover:text-primary hover:bg-primary/10"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            openView(p)
+                          }}
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-foreground/70 hover:text-primary hover:bg-primary/10"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            openEdit(p)
+                          }}
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-destructive/70 hover:text-destructive hover:bg-destructive/10"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            openDelete(p)
+                          }}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="mt-2 pt-2 border-t border-border/50">
+                      <Label className="text-[10px] uppercase text-muted-foreground font-semibold mb-1 block">
+                        Mover para
+                      </Label>
+                      <select
+                        className="w-full h-8 rounded-md border border-input bg-background/50 px-2 py-0 text-xs shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer text-foreground"
+                        value={p.parceiro}
+                        onChange={(e) => handleMoveProtocolo(p, e.target.value)}
+                      >
+                        {allUniquePartners.map((parc) => (
+                          <option key={parc} value={parc} className="bg-background text-foreground">
+                            {parc}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                ))}
+              {filteredProtocolos.filter((p) => p.parceiro === selectedPartner).length === 0 && (
+                <div className="col-span-full py-8 text-center text-muted-foreground">
+                  Nenhum protocolo encontrado.
+                </div>
+              )}
+            </div>
+          </div>
         )}
       </div>
 
@@ -685,7 +706,7 @@ export default function Certificados() {
                 value={editFormData.parceiro}
                 onChange={(e) => setEditFormData({ ...editFormData, parceiro: e.target.value })}
               >
-                {finalColumns.map((parc) => (
+                {allUniquePartners.map((parc) => (
                   <option key={parc} value={parc} className="bg-background text-foreground">
                     {parc}
                   </option>
