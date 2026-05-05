@@ -9,6 +9,7 @@ import { VacationReport } from '@/components/reports/hr/VacationReport'
 import { ComplianceReport } from '@/components/reports/hr/ComplianceReport'
 import { OnboardingReport } from '@/components/reports/hr/OnboardingReport'
 import { CrmReport } from '@/components/reports/crm/CrmReport'
+import { CertificatesReport } from '@/components/reports/certificates/CertificatesReport'
 
 export default function Reports() {
   const { role } = useAuthStore()
@@ -38,6 +39,7 @@ export default function Reports() {
           <TabsTrigger value="compliance">Conformidade</TabsTrigger>
           <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
           <TabsTrigger value="crm">CRM Comercial</TabsTrigger>
+          <TabsTrigger value="certificates">Certificados</TabsTrigger>
         </TabsList>
         <TabsContent value="executive">
           <ExecutiveDashboard onNavigate={setActiveTab} />
@@ -59,6 +61,9 @@ export default function Reports() {
         </TabsContent>
         <TabsContent value="crm">
           <CrmReport />
+        </TabsContent>
+        <TabsContent value="certificates">
+          <CertificatesReport />
         </TabsContent>
       </Tabs>
     </div>

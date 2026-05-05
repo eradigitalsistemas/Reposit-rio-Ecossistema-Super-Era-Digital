@@ -31,7 +31,7 @@ type Protocolo = {
   id: string
   numero: string
   cliente: string
-  tipo: 'PF' | 'PJ'
+  tipo: 'PF' | 'PJ' | 'SafeID - 4 meses' | 'SafeID - 3 anos'
   parceiro: string
   data_criacao: string
 }
@@ -67,14 +67,14 @@ export default function Certificados() {
   const [formData, setFormData] = useState({
     numero: '',
     cliente: '',
-    tipo: 'PF' as 'PF' | 'PJ',
+    tipo: 'PF' as 'PF' | 'PJ' | 'SafeID - 4 meses' | 'SafeID - 3 anos',
     parceiro: 'Novos Protocolos',
   })
 
   const [editFormData, setEditFormData] = useState({
     numero: '',
     cliente: '',
-    tipo: 'PF' as 'PF' | 'PJ',
+    tipo: 'PF' as 'PF' | 'PJ' | 'SafeID - 4 meses' | 'SafeID - 3 anos',
     parceiro: '',
   })
 
@@ -414,27 +414,24 @@ export default function Certificados() {
                   </div>
                   <div className="space-y-2">
                     <Label>Tipo</Label>
-                    <ToggleGroup
-                      type="single"
+                    <select
+                      className="w-full h-10 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer text-foreground"
                       value={formData.tipo}
-                      onValueChange={(val) => {
-                        if (val) setFormData({ ...formData, tipo: val as 'PF' | 'PJ' })
-                      }}
-                      className="justify-start gap-2"
+                      onChange={(e) => setFormData({ ...formData, tipo: e.target.value as any })}
                     >
-                      <ToggleGroupItem
-                        value="PF"
-                        className="flex-1 border border-input bg-background hover:bg-muted data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:border-primary"
-                      >
+                      <option value="PF" className="bg-background text-foreground">
                         Pessoa Física (PF)
-                      </ToggleGroupItem>
-                      <ToggleGroupItem
-                        value="PJ"
-                        className="flex-1 border border-input bg-background hover:bg-muted data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:border-primary"
-                      >
+                      </option>
+                      <option value="PJ" className="bg-background text-foreground">
                         Pessoa Jurídica (PJ)
-                      </ToggleGroupItem>
-                    </ToggleGroup>
+                      </option>
+                      <option value="SafeID - 4 meses" className="bg-background text-foreground">
+                        SafeID - 4 meses
+                      </option>
+                      <option value="SafeID - 3 anos" className="bg-background text-foreground">
+                        SafeID - 3 anos
+                      </option>
+                    </select>
                   </div>
                   <div className="space-y-2">
                     <Label>Parceiro Responsável</Label>
@@ -534,49 +531,55 @@ export default function Certificados() {
                           'text-[10px] shrink-0 px-1.5 py-0 font-bold',
                           p.tipo === 'PF' &&
                             'bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-500 border-blue-300 dark:border-blue-500/20',
+                          p.tipo === 'SafeID - 4 meses' &&
+                            'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-500 border-emerald-300 dark:border-emerald-500/20',
+                          p.tipo === 'SafeID - 3 anos' &&
+                            'bg-purple-100 dark:bg-purple-500/10 text-purple-700 dark:text-purple-500 border-purple-300 dark:border-purple-500/20',
                         )}
                       >
                         {p.tipo}
                       </Badge>
                     </div>
-                    <div className="flex items-center justify-between mt-1">
-                      <div className="flex items-center gap-1.5 text-xs bg-secondary/80 dark:bg-muted/50 text-secondary-foreground dark:text-muted-foreground px-2 py-1 rounded-md border border-border/50">
-                        <FileText className="w-3.5 h-3.5 opacity-70" />
-                        <span className="font-mono font-bold tracking-tight">{p.numero}</span>
+                    <div className="flex flex-wrap items-center justify-between mt-1 gap-2">
+                      <div className="flex items-center gap-1.5 text-xs bg-secondary/80 dark:bg-muted/50 text-secondary-foreground dark:text-muted-foreground px-2 py-1 rounded-md border border-border/50 max-w-full overflow-hidden">
+                        <FileText className="w-3.5 h-3.5 opacity-70 shrink-0" />
+                        <span className="font-mono font-bold tracking-tight truncate">
+                          {p.numero}
+                        </span>
                       </div>
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                      <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0 ml-auto bg-card rounded-md">
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="icon"
-                          className="h-7 w-7 text-foreground/70 hover:text-primary hover:bg-primary/10"
+                          className="h-8 w-8 text-foreground/70 hover:text-primary hover:bg-primary/10"
                           onClick={(e) => {
                             e.stopPropagation()
                             openView(p)
                           }}
                         >
-                          <Eye className="w-3.5 h-3.5" />
+                          <Eye className="w-4 h-4" />
                         </Button>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="icon"
-                          className="h-7 w-7 text-foreground/70 hover:text-primary hover:bg-primary/10"
+                          className="h-8 w-8 text-foreground/70 hover:text-primary hover:bg-primary/10"
                           onClick={(e) => {
                             e.stopPropagation()
                             openEdit(p)
                           }}
                         >
-                          <Edit className="w-3.5 h-3.5" />
+                          <Edit className="w-4 h-4" />
                         </Button>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="icon"
-                          className="h-7 w-7 text-destructive/70 hover:text-destructive hover:bg-destructive/10"
+                          className="h-8 w-8 text-destructive/70 hover:text-destructive hover:bg-destructive/10"
                           onClick={(e) => {
                             e.stopPropagation()
                             openDelete(p)
                           }}
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
                     </div>
@@ -677,27 +680,24 @@ export default function Certificados() {
             </div>
             <div className="space-y-2">
               <Label>Tipo</Label>
-              <ToggleGroup
-                type="single"
+              <select
+                className="w-full h-10 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer text-foreground"
                 value={editFormData.tipo}
-                onValueChange={(val) => {
-                  if (val) setEditFormData({ ...editFormData, tipo: val as 'PF' | 'PJ' })
-                }}
-                className="justify-start gap-2"
+                onChange={(e) => setEditFormData({ ...editFormData, tipo: e.target.value as any })}
               >
-                <ToggleGroupItem
-                  value="PF"
-                  className="flex-1 border border-input bg-background hover:bg-muted data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:border-primary"
-                >
+                <option value="PF" className="bg-background text-foreground">
                   Pessoa Física (PF)
-                </ToggleGroupItem>
-                <ToggleGroupItem
-                  value="PJ"
-                  className="flex-1 border border-input bg-background hover:bg-muted data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:border-primary"
-                >
+                </option>
+                <option value="PJ" className="bg-background text-foreground">
                   Pessoa Jurídica (PJ)
-                </ToggleGroupItem>
-              </ToggleGroup>
+                </option>
+                <option value="SafeID - 4 meses" className="bg-background text-foreground">
+                  SafeID - 4 meses
+                </option>
+                <option value="SafeID - 3 anos" className="bg-background text-foreground">
+                  SafeID - 3 anos
+                </option>
+              </select>
             </div>
             <div className="space-y-2">
               <Label>Parceiro Responsável</Label>
