@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Search, Users, User } from 'lucide-react'
+import { Search, Users, User, Clock, Check, CheckCheck, AlertCircle } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -68,10 +68,15 @@ export function ConversationsSidebar({
                   {contact.last_message_at ? formatTime(contact.last_message_at) : ''}
                 </span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-[14px] text-muted-foreground truncate">
-                  {contact.last_message_text || 'Mensagem...'}
-                </span>
+              <div className="flex justify-between items-center mt-0.5">
+                <div className="flex items-center gap-1 min-w-0 flex-1 mr-2">
+                  {contact.last_message_from_me && (
+                    <MessageStatusIcon status={contact.last_message_status || 'sent'} />
+                  )}
+                  <span className="text-[14px] text-muted-foreground truncate">
+                    {contact.last_message_text || 'Mensagem...'}
+                  </span>
+                </div>
                 {contact.unread_count && contact.unread_count > 0 ? (
                   <span className="bg-[#25D366] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-5 text-center shrink-0">
                     {contact.unread_count}
@@ -84,6 +89,20 @@ export function ConversationsSidebar({
       </ScrollArea>
     </div>
   )
+}
+
+function MessageStatusIcon({ status }: { status: string | null }) {
+  if (status === 'pending')
+    return <Clock className="h-[14px] w-[14px] text-muted-foreground shrink-0" />
+  if (status === 'sent')
+    return <Check className="h-[14px] w-[14px] text-muted-foreground shrink-0" />
+  if (status === 'delivered')
+    return <CheckCheck className="h-[14px] w-[14px] text-muted-foreground shrink-0" />
+  if (status === 'read' || status === 'played')
+    return <CheckCheck className="h-[14px] w-[14px] text-[#53bdeb] shrink-0" />
+  if (status === 'failed')
+    return <AlertCircle className="h-[14px] w-[14px] text-red-500 shrink-0" />
+  return <Check className="h-[14px] w-[14px] text-muted-foreground opacity-50 shrink-0" />
 }
 
 function formatTime(dateStr: string) {

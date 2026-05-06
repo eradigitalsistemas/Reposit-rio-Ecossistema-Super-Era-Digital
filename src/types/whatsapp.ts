@@ -8,6 +8,8 @@ export type WhatsAppContact = {
   is_group: boolean | null
   last_message_at: string | null
   last_message_text: string | null
+  last_message_from_me?: boolean | null
+  last_message_status?: string | null
   unread_count: number | null
 }
 

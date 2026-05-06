@@ -68,9 +68,10 @@ export default async function handler(req: Request): Promise<Response> {
         status: 'received',
         is_read: false,
         uazapi_message_id: data?.id || data?.key?.id || null,
-        timestamp: data?.timestamp || data?.messageTimestamp
-          ? new Date((data.timestamp || data.messageTimestamp) * 1000).toISOString()
-          : null,
+        timestamp:
+          data?.timestamp || data?.messageTimestamp
+            ? new Date((data.timestamp || data.messageTimestamp) * 1000).toISOString()
+            : null,
         delivered_at: null,
         read_at: null,
         updated_at: new Date().toISOString(),
