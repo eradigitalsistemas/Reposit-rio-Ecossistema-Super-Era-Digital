@@ -27,7 +27,6 @@
     "get-chat-history": 7,
     "uazapi-sync-messages": 8,
     "receive-webhook": 20,
-    "send-message": 8,
     "mark-read": 4,
     "process-media": 5
   }
