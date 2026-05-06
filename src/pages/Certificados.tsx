@@ -276,7 +276,12 @@ export default function Certificados() {
 
   const filteredProtocolos = protocolos.filter((p) => {
     const q = search.toLowerCase()
-    return p.numero.toLowerCase().includes(q) || p.cliente.toLowerCase().includes(q)
+    return (
+      p.numero.toLowerCase().includes(q) ||
+      p.cliente.toLowerCase().includes(q) ||
+      p.parceiro.toLowerCase().includes(q) ||
+      p.tipo.toLowerCase().includes(q)
+    )
   })
 
   const allUniquePartners = Array.from(
@@ -464,11 +469,11 @@ export default function Certificados() {
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
-        ) : !selectedPartner ? (
+        ) : !selectedPartner && !search.trim() ? (
           <div className="p-4 md:p-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {allUniquePartners.map((parceiro) => {
-                const columnItems = filteredProtocolos.filter((p) => p.parceiro === parceiro)
+                const columnItems = protocolos.filter((p) => p.parceiro === parceiro)
 
                 return (
                   <div
@@ -498,29 +503,44 @@ export default function Certificados() {
         ) : (
           <div className="p-4 md:p-6 flex flex-col gap-6">
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setSelectedPartner(null)}
-                className="w-fit"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Voltar
-              </Button>
-              <h2 className="text-xl font-bold flex items-center gap-2">
-                <Folder className="w-6 h-6 text-primary" />
-                {selectedPartner}
-              </h2>
+              {selectedPartner ? (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedPartner(null)}
+                    className="w-fit"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Voltar
+                  </Button>
+                  <h2 className="text-xl font-bold flex items-center gap-2">
+                    <Folder className="w-6 h-6 text-primary" />
+                    {selectedPartner}
+                  </h2>
+                </>
+              ) : (
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                  <Search className="w-6 h-6 text-primary" />
+                  Resultados da Busca
+                </h2>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {filteredProtocolos
-                .filter((p) => p.parceiro === selectedPartner)
+                .filter((p) => !selectedPartner || p.parceiro === selectedPartner)
                 .map((p) => (
                   <div
                     key={p.id}
                     className="bg-card text-card-foreground border border-border p-3 rounded-lg shadow-sm hover:shadow-md hover:border-primary/50 transition-all flex flex-col gap-2 group relative"
                   >
+                    {!selectedPartner && (
+                      <div className="text-[10px] uppercase text-muted-foreground font-semibold flex items-center gap-1 mb-1">
+                        <Folder className="w-3 h-3 shrink-0" />
+                        <span className="truncate">{p.parceiro}</span>
+                      </div>
+                    )}
                     <div className="flex items-start justify-between gap-2">
                       <span className="font-semibold text-sm line-clamp-2 leading-snug text-foreground">
                         {p.cliente}
@@ -602,9 +622,10 @@ export default function Certificados() {
                     </div>
                   </div>
                 ))}
-              {filteredProtocolos.filter((p) => p.parceiro === selectedPartner).length === 0 && (
+              {filteredProtocolos.filter((p) => !selectedPartner || p.parceiro === selectedPartner)
+                .length === 0 && (
                 <div className="col-span-full py-8 text-center text-muted-foreground">
-                  Nenhum protocolo encontrado.
+                  Nenhum resultado encontrado.
                 </div>
               )}
             </div>
