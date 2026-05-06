@@ -173,7 +173,35 @@ export default function Demands() {
           matchDate(l.createdAt, exactDateFilter, dateFilter),
         )
 
-        if (!matchesCreated && !matchesCompleted && !matchesUpdated && !matchesLogs) {
+        const isActive = d.status === 'Pendente' || d.status === 'Em Andamento'
+        let matchesActive = false
+
+        if (isActive) {
+          try {
+            const createdDate = d.createdAt ? parseISO(d.createdAt) : new Date()
+            if (isValid(createdDate)) {
+              if (exactDateFilter) {
+                const exactEnd = new Date(exactDateFilter)
+                exactEnd.setHours(23, 59, 59, 999)
+                if (createdDate <= exactEnd) {
+                  matchesActive = true
+                }
+              } else {
+                matchesActive = true
+              }
+            }
+          } catch (e) {
+            // ignore
+          }
+        }
+
+        if (
+          !matchesCreated &&
+          !matchesCompleted &&
+          !matchesUpdated &&
+          !matchesLogs &&
+          !matchesActive
+        ) {
           return false
         }
       }
