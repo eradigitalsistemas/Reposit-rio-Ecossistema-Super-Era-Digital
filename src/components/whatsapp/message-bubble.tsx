@@ -87,7 +87,8 @@ export function MessageBubble({
             isMe ? 'text-[#00000073] dark:text-[#ffffff99]' : 'text-muted-foreground',
           )}
         >
-          {new Date(message.timestamp!).toLocaleTimeString([], {
+          {new Date(message.timestamp!).toLocaleTimeString('pt-BR', {
+            timeZone: 'America/Sao_Paulo',
             hour: '2-digit',
             minute: '2-digit',
           })}

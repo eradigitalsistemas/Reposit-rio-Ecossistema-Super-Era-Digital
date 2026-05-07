@@ -9,14 +9,21 @@ import { toast } from '@/hooks/use-toast'
 import { MessageBubble } from './message-bubble'
 import { WhatsAppContact } from '@/types/whatsapp'
 
-function formatDate(dateStr: string) {
+function getBRTDate(dateStr: string) {
   const d = new Date(dateStr)
-  const now = new Date()
+  if (isNaN(d.getTime())) return new Date()
+  const brtString = d.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' })
+  return new Date(brtString)
+}
+
+function formatDate(dateStr: string) {
+  const d = getBRTDate(dateStr)
+  const now = getBRTDate(new Date().toISOString())
   if (d.toDateString() === now.toDateString()) return 'Hoje'
   const yesterday = new Date(now)
   yesterday.setDate(yesterday.getDate() - 1)
   if (d.toDateString() === yesterday.toDateString()) return 'Ontem'
-  return d.toLocaleDateString()
+  return d.toLocaleDateString('pt-BR')
 }
 
 export function MessagesPanel({
@@ -91,9 +98,9 @@ export function MessagesPanel({
         <ScrollArea className="h-full px-4 py-4 sm:px-8">
           <div className="flex flex-col gap-1 pb-4 max-w-4xl mx-auto z-10 relative">
             {messages.map((msg, i) => {
-              const currentDay = new Date(msg.timestamp!).toLocaleDateString()
+              const currentDay = getBRTDate(msg.timestamp!).toLocaleDateString('pt-BR')
               const prevDay =
-                i > 0 ? new Date(messages[i - 1].timestamp!).toLocaleDateString() : null
+                i > 0 ? getBRTDate(messages[i - 1].timestamp!).toLocaleDateString('pt-BR') : null
               const showDateSeparator = currentDay !== prevDay
 
               const isConsecutive =

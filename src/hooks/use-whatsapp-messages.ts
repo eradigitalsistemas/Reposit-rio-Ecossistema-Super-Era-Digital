@@ -18,11 +18,13 @@ export function useWhatsappMessages(contactId: string | null) {
       .range(offset, offset + 49)
 
     if (data) {
-      setMessages((prev) =>
-        offset === 0
-          ? (data.reverse() as WhatsAppMessage[])
-          : [...(data.reverse() as WhatsAppMessage[]), ...prev],
-      )
+      setMessages((prev) => {
+        const fetched = data.reverse() as WhatsAppMessage[]
+        const combined = offset === 0 ? fetched : [...fetched, ...prev]
+        return combined.sort(
+          (a, b) => new Date(a.timestamp!).getTime() - new Date(b.timestamp!).getTime(),
+        )
+      })
       setHasMore(data.length === 50)
     }
     setLoading(false)
@@ -47,7 +49,12 @@ export function useWhatsappMessages(contactId: string | null) {
           filter: `contact_id=eq.${contactId}`,
         },
         (payload) => {
-          setMessages((prev) => [...prev, payload.new as WhatsAppMessage])
+          setMessages((prev) => {
+            const newMessages = [...prev, payload.new as WhatsAppMessage]
+            return newMessages.sort(
+              (a, b) => new Date(a.timestamp!).getTime() - new Date(b.timestamp!).getTime(),
+            )
+          })
           supabase.rpc('fn_mark_chat_read', { p_contact_id: contactId })
         },
       )
