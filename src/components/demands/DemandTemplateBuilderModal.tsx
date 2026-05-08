@@ -21,6 +21,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import useDemandStore from '@/stores/useDemandStore'
+import useAuthStore from '@/stores/useAuthStore'
 import { toast } from '@/hooks/use-toast'
 import { DemandPriority } from '@/types/demand'
 
@@ -121,7 +122,7 @@ export function DemandTemplateBuilderModal() {
       prioridade,
       checklist_id: checklistId === 'none' ? null : checklistId,
       responsavel_id: responsavelId === 'none' ? null : responsavelId,
-      tipo_demanda: 'Geral', // Default
+      tipo_demanda: 'Geral' as any, // Default
     }
 
     if (mode === 'create') {
