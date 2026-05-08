@@ -87,20 +87,57 @@ export function AddDemandModal() {
     fetchChecklistTemplates,
   } = useDemandStore()
 
+  const prevOpenRef = useRef(false)
+  const STORAGE_KEY = 'add_demand_form_state'
+
   useEffect(() => {
     if (open) {
+      const justOpened = !prevOpenRef.current
+      if (justOpened) {
+        let restored = false
+        const saved = sessionStorage.getItem(STORAGE_KEY)
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved)
+            if (parsed && Object.keys(parsed).length > 0) {
+              setTitle(parsed.title || '')
+              setDescription(parsed.description || '')
+              setPriority(parsed.priority || 'Pode Ficar para Amanhã')
+              setStatus(parsed.status || 'Pendente')
+              setAssigneeId(parsed.assigneeId || 'none')
+              setChecklist(parsed.checklist || [])
+              setSelectedTemplate(parsed.selectedTemplate || 'none')
+              setSelectedDemandTemplate(parsed.selectedDemandTemplate || 'none')
+              setSelectedClient(parsed.selectedClient || 'none')
+              setSchedEnabled(parsed.schedEnabled || false)
+              setSchedType(parsed.schedType || 'Tarefa')
+              setSchedDate(parsed.schedDate || '')
+              setSchedTitle(parsed.schedTitle || '')
+              setSchedDesc(parsed.schedDesc || '')
+              restored = true
+            }
+          } catch (e) {
+            // ignore JSON parse error
+          }
+        }
+
+        if (!restored) {
+          setSchedEnabled(false)
+          setSelectedClient('none')
+          setSelectedDemandTemplate('none')
+          setTitle('')
+          setDescription('')
+          setPriority('Pode Ficar para Amanhã')
+          setStatus('Pendente')
+          setAssigneeId('none')
+          setChecklist([])
+          setSelectedTemplate('none')
+          setFiles([])
+        }
+      }
+
       fetchCollaborators()
       fetchChecklistTemplates()
-      setSchedEnabled(false)
-      setSelectedClient('none')
-      setSelectedDemandTemplate('none')
-      setTitle('')
-      setDescription('')
-      setPriority('Pode Ficar para Amanhã')
-      setStatus('Pendente')
-      setAssigneeId('none')
-      setChecklist([])
-      setSelectedTemplate('none')
 
       supabase
         .from('clientes_externos')
@@ -110,7 +147,61 @@ export function AddDemandModal() {
           if (data) setClientsList(data)
         })
     }
+    prevOpenRef.current = open
   }, [open, fetchCollaborators, fetchChecklistTemplates])
+
+  useEffect(() => {
+    if (open) {
+      const stateToSave = {
+        title,
+        description,
+        priority,
+        status,
+        assigneeId,
+        checklist,
+        selectedTemplate,
+        selectedDemandTemplate,
+        selectedClient,
+        schedEnabled,
+        schedType,
+        schedDate,
+        schedTitle,
+        schedDesc,
+      }
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave))
+    }
+  }, [
+    open,
+    title,
+    description,
+    priority,
+    status,
+    assigneeId,
+    checklist,
+    selectedTemplate,
+    selectedDemandTemplate,
+    selectedClient,
+    schedEnabled,
+    schedType,
+    schedDate,
+    schedTitle,
+    schedDesc,
+  ])
+
+  const clearFormState = () => {
+    sessionStorage.removeItem(STORAGE_KEY)
+    setSchedEnabled(false)
+    setSelectedClient('none')
+    setSelectedDemandTemplate('none')
+    setTitle('')
+    setDescription('')
+    setPriority('Pode Ficar para Amanhã')
+    setStatus('Pendente')
+    setAssigneeId('none')
+    setChecklist([])
+    setSelectedTemplate('none')
+    setFiles([])
+  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) setFiles((prev) => [...prev, ...Array.from(e.target.files!)])
@@ -218,12 +309,9 @@ export function AddDemandModal() {
         } else {
           toast({ title: 'Demanda Criada', description: 'Sua demanda foi cadastrada com sucesso.' })
         }
+        clearFormState()
+        setOpen(false)
       }
-
-      setFiles([])
-      setSelectedTemplate('none')
-      setChecklist([])
-      setOpen(false)
     } catch (error) {
       toast({
         title: 'Erro',
@@ -623,7 +711,10 @@ export function AddDemandModal() {
               <Button
                 type="button"
                 variant="ghost"
-                onClick={() => setOpen(false)}
+                onClick={() => {
+                  clearFormState()
+                  setOpen(false)
+                }}
                 className="w-full sm:w-auto"
                 disabled={loading}
               >
