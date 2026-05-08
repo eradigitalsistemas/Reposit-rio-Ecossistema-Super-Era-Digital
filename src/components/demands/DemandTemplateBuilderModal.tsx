@@ -32,36 +32,41 @@ export function DemandTemplateBuilderModal() {
   const [loading, setLoading] = useState(false)
 
   const [currentId, setCurrentId] = useState<string | null>(null)
-  const [nome, setNome] = useState('')
   const [titulo, setTitulo] = useState('')
   const [descricao, setDescricao] = useState('')
   const [prioridade, setPrioridade] = useState<DemandPriority>('Pode Ficar para Amanhã')
   const [checklistId, setChecklistId] = useState<string>('none')
+  const [responsavelId, setResponsavelId] = useState<string>('none')
 
   const {
     demandTemplates,
     checklistTemplates,
+    collaborators,
     addDemandTemplate,
     editDemandTemplate,
     deleteDemandTemplate,
     fetchDemandTemplates,
     fetchChecklistTemplates,
+    fetchCollaborators,
   } = useDemandStore()
+
+  const { user } = useAuthStore()
 
   useEffect(() => {
     if (open) {
       fetchDemandTemplates()
       fetchChecklistTemplates()
+      fetchCollaborators()
       setMode('list')
     }
-  }, [open, fetchDemandTemplates, fetchChecklistTemplates])
+  }, [open, fetchDemandTemplates, fetchChecklistTemplates, fetchCollaborators])
 
   const resetForm = () => {
-    setNome('')
     setTitulo('')
     setDescricao('')
     setPrioridade('Pode Ficar para Amanhã')
     setChecklistId('none')
+    setResponsavelId(user?.id || 'none')
     setCurrentId(null)
   }
 
@@ -72,21 +77,21 @@ export function DemandTemplateBuilderModal() {
 
   const handleEdit = (template: any) => {
     setCurrentId(template.id)
-    setNome(template.nome)
     setTitulo(template.titulo)
     setDescricao(template.descricao || '')
     setPrioridade(template.prioridade || 'Pode Ficar para Amanhã')
     setChecklistId(template.checklist_id || 'none')
+    setResponsavelId(template.responsavel_id || 'none')
     setMode('edit')
   }
 
   const handleView = (template: any) => {
     setCurrentId(template.id)
-    setNome(template.nome)
     setTitulo(template.titulo)
     setDescricao(template.descricao || '')
     setPrioridade(template.prioridade || 'Pode Ficar para Amanhã')
     setChecklistId(template.checklist_id || 'none')
+    setResponsavelId(template.responsavel_id || 'none')
     setMode('view')
   }
 
@@ -98,7 +103,7 @@ export function DemandTemplateBuilderModal() {
   }
 
   const handleSave = async () => {
-    if (!nome.trim() || !titulo.trim()) {
+    if (!titulo.trim()) {
       toast({
         title: 'Aviso',
         description: 'Preencha os campos obrigatórios.',
@@ -110,11 +115,12 @@ export function DemandTemplateBuilderModal() {
     setLoading(true)
 
     const payload = {
-      nome,
+      nome: titulo, // Título como nome para manter compatibilidade com DB
       titulo,
       descricao: descricao || null,
       prioridade,
       checklist_id: checklistId === 'none' ? null : checklistId,
+      responsavel_id: responsavelId === 'none' ? null : responsavelId,
       tipo_demanda: 'Geral', // Default
     }
 
@@ -193,7 +199,7 @@ export function DemandTemplateBuilderModal() {
                       className="flex items-center justify-between p-3 border border-gray-200 dark:border-white/10 rounded-md bg-white dark:bg-card shadow-sm"
                     >
                       <span className="font-medium text-sm text-black dark:text-white truncate pr-2">
-                        {template.nome}
+                        {template.titulo}
                       </span>
                       <div className="flex items-center gap-1 shrink-0">
                         <Button
@@ -232,20 +238,6 @@ export function DemandTemplateBuilderModal() {
           {(mode === 'create' || mode === 'edit') && (
             <div className="space-y-4">
               <div className="grid gap-2">
-                <Label htmlFor="nome" className="text-black dark:text-white font-medium">
-                  Nome do Modelo *
-                </Label>
-                <Input
-                  id="nome"
-                  value={nome}
-                  onChange={(e) => setNome(e.target.value)}
-                  placeholder="Ex: Integração Cliente VIP"
-                  className="bg-white border-gray-400 text-black dark:bg-black dark:border-white/10 dark:text-white h-11 sm:h-10"
-                  disabled={loading}
-                />
-              </div>
-
-              <div className="grid gap-2">
                 <Label htmlFor="titulo" className="text-black dark:text-white font-medium">
                   Título da Demanda *
                 </Label>
@@ -260,6 +252,23 @@ export function DemandTemplateBuilderModal() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label className="text-foreground font-medium">Responsável Padrão</Label>
+                  <Select value={responsavelId} onValueChange={setResponsavelId} disabled={loading}>
+                    <SelectTrigger className="bg-background text-foreground border-input">
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Não Atribuído</SelectItem>
+                      {collaborators.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="grid gap-2">
                   <Label htmlFor="prioridade" className="text-foreground font-medium">
                     Urgência
@@ -317,15 +326,19 @@ export function DemandTemplateBuilderModal() {
             <div className="space-y-4">
               <div className="grid gap-2">
                 <Label className="text-muted-foreground text-xs uppercase tracking-wider">
-                  Nome do Modelo
+                  Título da Demanda
                 </Label>
-                <div className="font-medium text-base text-black dark:text-white">{nome}</div>
+                <div className="font-medium text-base text-black dark:text-white">{titulo}</div>
               </div>
               <div className="grid gap-2">
                 <Label className="text-muted-foreground text-xs uppercase tracking-wider">
-                  Título da Demanda
+                  Responsável
                 </Label>
-                <div className="text-sm text-black dark:text-white">{titulo}</div>
+                <div className="text-sm text-black dark:text-white">
+                  {responsavelId !== 'none'
+                    ? collaborators.find((c) => c.id === responsavelId)?.nome || 'Não encontrado'
+                    : 'Não Atribuído'}
+                </div>
               </div>
               <div className="grid gap-2">
                 <Label className="text-muted-foreground text-xs uppercase tracking-wider">

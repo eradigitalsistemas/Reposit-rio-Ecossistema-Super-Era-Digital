@@ -76,5 +76,6 @@ export interface DemandTemplate {
   tipo_demanda?: DemandCategory | null
   checklist_id?: string | null
   usuario_id?: string | null
+  responsavel_id?: string | null
   data_criacao: string
 }

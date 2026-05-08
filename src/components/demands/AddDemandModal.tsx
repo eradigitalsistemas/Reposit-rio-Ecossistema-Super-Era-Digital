@@ -59,6 +59,7 @@ export function AddDemandModal() {
   const [description, setDescription] = useState('')
   const [priority, setPriority] = useState<string>('Pode Ficar para Amanhã')
   const [status, setStatus] = useState<string>('Pendente')
+  const [assigneeId, setAssigneeId] = useState<string>('none')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [schedEnabled, setSchedEnabled] = useState(false)
@@ -96,6 +97,7 @@ export function AddDemandModal() {
       setDescription('')
       setPriority('Pode Ficar para Amanhã')
       setStatus('Pendente')
+      setAssigneeId('none')
       setChecklist([])
       setSelectedTemplate('none')
 
@@ -140,6 +142,11 @@ export function AddDemandModal() {
         setTitle(template.titulo)
         setDescription(template.descricao || '')
         setPriority(template.prioridade || 'Pode Ficar para Amanhã')
+        if (template.responsavel_id) {
+          setAssigneeId(template.responsavel_id)
+        } else {
+          setAssigneeId('none')
+        }
         if (template.checklist_id) {
           handleTemplateChange(template.checklist_id)
         } else {
@@ -150,6 +157,7 @@ export function AddDemandModal() {
       setTitle('')
       setDescription('')
       setPriority('Pode Ficar para Amanhã')
+      setAssigneeId('none')
       handleTemplateChange('none')
     }
   }
@@ -158,7 +166,7 @@ export function AddDemandModal() {
     e.preventDefault()
     setLoading(true)
     const formData = new FormData(e.currentTarget)
-    const assigneeIdStr = formData.get('assigneeId') as string
+    const assigneeIdStr = assigneeId
     const demandTitle = title
 
     const dueDateStr = formData.get('dueDate') as string
@@ -270,7 +278,7 @@ export function AddDemandModal() {
                       <SelectItem value="none">Não usar modelo</SelectItem>
                       {demandTemplates.map((t) => (
                         <SelectItem key={t.id} value={t.id}>
-                          {t.nome}
+                          {t.titulo}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -403,7 +411,12 @@ export function AddDemandModal() {
                   <Label htmlFor="assigneeId" className="text-foreground font-medium">
                     Responsável
                   </Label>
-                  <Select name="assigneeId" defaultValue="none" disabled={loading}>
+                  <Select
+                    name="assigneeId"
+                    value={assigneeId}
+                    onValueChange={setAssigneeId}
+                    disabled={loading}
+                  >
                     <SelectTrigger className="bg-background text-foreground border-input">
                       <SelectValue placeholder="Selecione..." />
                     </SelectTrigger>
