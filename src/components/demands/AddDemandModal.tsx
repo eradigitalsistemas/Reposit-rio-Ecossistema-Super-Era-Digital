@@ -91,7 +91,6 @@ export function AddDemandModal() {
     if (open) {
       fetchCollaborators()
       fetchChecklistTemplates()
-      fetchDemandTemplates()
       setSchedEnabled(false)
       setSelectedClient('none')
       setSelectedDemandTemplate('none')

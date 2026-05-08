@@ -425,8 +425,106 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
       const templatesChannel = supabase
         .channel('demand-templates-changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'demand_templates' }, () => {
-          if (isSubscribed) fetchDemandTemplates()
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'demand_templates' },
+          (payload) => {
+            if (!isSubscribed) return
+            if (payload.eventType === 'INSERT') {
+              setDemandTemplates((prev) => {
+                if (prev.find((t) => t.id === payload.new.id)) return prev
+                return [payload.new as DemandTemplate, ...prev]
+              })
+            } else if (payload.eventType === 'UPDATE') {
+              setDemandTemplates((prev) =>
+                prev.map((t) => (t.id === payload.new.id ? { ...t, ...payload.new } : t)),
+              )
+            } else if (payload.eventType === 'DELETE') {
+              setDemandTemplates((prev) => prev.filter((t) => t.id !== payload.old.id))
+            }
+          },
+        )
+        .subscribe()
+
+      const demandsChannel = supabase
+        .channel('demandas-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'demandas' }, (payload) => {
+          if (!isSubscribed) return
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            supabase
+              .from('demandas')
+              .select(
+                '*, responsavel:usuarios!demandas_responsavel_id_fkey(nome), cliente:clientes_externos(id, nome), logs_auditoria(id, acao, detalhes, usuario_id, dados_novos, data_criacao, usuario:usuarios(nome))',
+              )
+              .eq('id', payload.new.id)
+              .single()
+              .then(({ data: d }) => {
+                if (d) {
+                  const sortedLogs = Array.isArray(d.logs_auditoria)
+                    ? [...d.logs_auditoria].sort((a: any, b: any) => {
+                        const timeA = a.data_criacao ? new Date(a.data_criacao).getTime() : 0
+                        const timeB = b.data_criacao ? new Date(b.data_criacao).getTime() : 0
+                        return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA)
+                      })
+                    : []
+
+                  const mappedLogs: DemandLog[] = sortedLogs.map((l: any) => ({
+                    id: l.id || crypto.randomUUID(),
+                    acao: l.acao,
+                    detalhes: l.detalhes,
+                    createdAt: l.data_criacao,
+                    usuario_id: l.usuario_id,
+                    userName: l.usuario?.nome || 'Sistema',
+                    dados_novos: l.dados_novos,
+                  }))
+
+                  const latestPriorityChange = sortedLogs.find(
+                    (l: any) => l.acao === 'Alteração de Prioridade',
+                  )
+                  const systemEscalated =
+                    latestPriorityChange &&
+                    latestPriorityChange.usuario_id === null &&
+                    latestPriorityChange.dados_novos?.prioridade === 'Urgente' &&
+                    d.prioridade === 'Urgente'
+
+                  const parsedDemand: Demand = {
+                    id: d.id,
+                    protocolo: d.protocolo,
+                    title: d.titulo || 'Sem título',
+                    description: d.descricao || '',
+                    priority: (d.prioridade as DemandPriority) || 'Pode Ficar para Amanhã',
+                    status: (d.status as DemandStatus) || 'Pendente',
+                    dueDate: d.data_vencimento || null,
+                    assignee: (d as any).responsavel?.nome || 'Sem responsável',
+                    assigneeId: d.responsavel_id || null,
+                    creatorId: d.usuario_id || null,
+                    clientId: d.cliente_id || null,
+                    clientName: (d as any).cliente?.nome || null,
+                    category: d.tipo_demanda as any,
+                    responses: d.resposta ? [d.resposta] : [],
+                    logs: mappedLogs,
+                    attachments: d.anexos || [],
+                    checklist: d.checklist || [],
+                    createdAt: d.data_criacao || new Date().toISOString(),
+                    updatedAt: d.data_atualizacao || d.data_criacao || new Date().toISOString(),
+                    completedAt: d.data_conclusao || null,
+                    systemEscalated: !!systemEscalated,
+                  }
+
+                  setDemands((prev) => {
+                    const exists = prev.find((existing) => existing.id === parsedDemand.id)
+                    if (exists) {
+                      return prev.map((existing) =>
+                        existing.id === parsedDemand.id ? parsedDemand : existing,
+                      )
+                    }
+                    return [parsedDemand, ...prev]
+                  })
+                }
+              })
+          } else if (payload.eventType === 'DELETE') {
+            setDemands((prev) => prev.filter((d) => d.id !== payload.old.id))
+          }
         })
         .subscribe()
 
@@ -475,6 +573,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         supabase.removeChannel(usersChannel)
         supabase.removeChannel(notifChannel)
         supabase.removeChannel(templatesChannel)
+        supabase.removeChannel(demandsChannel)
       }
     }
 
@@ -695,11 +794,37 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           updateData.checklist = updates.checklist
         }
 
+        // Optimistic update
+        setDemands((prev) =>
+          prev.map((d) => {
+            if (d.id === demandId) {
+              return {
+                ...d,
+                title: updates.title !== undefined ? updates.title : d.title,
+                description:
+                  updates.description !== undefined ? updates.description : d.description,
+                priority: updates.priority !== undefined ? updates.priority : d.priority,
+                dueDate: updates.dueDate !== undefined ? updates.dueDate : d.dueDate,
+                attachments:
+                  updates.attachments !== undefined ? updates.attachments : d.attachments,
+                clientId: updates.clientId !== undefined ? updates.clientId : d.clientId,
+                assigneeId:
+                  updateData.responsavel_id !== undefined
+                    ? updateData.responsavel_id
+                    : d.assigneeId,
+                status: updateData.status !== undefined ? updateData.status : d.status,
+                checklist: updateData.checklist !== undefined ? updateData.checklist : d.checklist,
+                updatedAt: updateData.data_atualizacao,
+              }
+            }
+            return d
+          }),
+        )
+
         const { error } = await supabase.from('demandas').update(updateData).eq('id', demandId)
         if (error) throw error
 
         toast({ title: 'Demanda Atualizada', description: 'As alterações foram salvas.' })
-        fetchDemands()
       } catch (e) {
         toast({
           title: 'Erro',
@@ -771,7 +896,6 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           className:
             'bg-zinc-950 border-green-500/50 text-white shadow-[0_0_15px_rgba(34,197,94,0.2)]',
         })
-        fetchDemands()
       }
     },
     [user, userName, fetchDemands, demands],
@@ -956,7 +1080,6 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           className:
             'bg-zinc-950 border-green-500/50 text-white shadow-[0_0_15px_rgba(34,197,94,0.2)]',
         })
-        fetchDemands()
       } catch (err: any) {
         toast({
           title: 'Erro de Inserção',
@@ -999,7 +1122,6 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           detalhes: actionText,
         })
         if (logErr) console.error('Error inserting checklist log:', logErr)
-        fetchDemands()
       }
     },
     [user, fetchDemands, demands],
@@ -1053,7 +1175,6 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           title: 'Demanda Reaberta',
           description: 'A demanda retornou para Em Andamento.',
         })
-        fetchDemands()
       } else {
         toast({
           title: 'Erro',
@@ -1119,8 +1240,6 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         if (logErr) {
           console.error('Error inserting attachment log (ignored):', logErr)
         }
-
-        fetchDemands()
       } catch (e) {
         toast({ title: 'Erro', description: 'Erro ao salvar anexos.', variant: 'destructive' })
       }

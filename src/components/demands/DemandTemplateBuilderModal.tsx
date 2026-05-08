@@ -68,12 +68,11 @@ export function DemandTemplateBuilderModal() {
 
   useEffect(() => {
     if (open) {
-      fetchDemandTemplates()
       fetchChecklistTemplates()
       fetchCollaborators()
       setMode('list')
     }
-  }, [open, fetchDemandTemplates, fetchChecklistTemplates, fetchCollaborators])
+  }, [open, fetchChecklistTemplates, fetchCollaborators])
 
   const resetForm = () => {
     setTitulo('')
