@@ -423,6 +423,13 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         })
         .subscribe()
 
+      const templatesChannel = supabase
+        .channel('demand-templates-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'demand_templates' }, () => {
+          if (isSubscribed) fetchDemandTemplates()
+        })
+        .subscribe()
+
       const notifChannel = supabase
         .channel('notificacoes-changes')
         .on(
@@ -467,6 +474,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         isSubscribed = false
         supabase.removeChannel(usersChannel)
         supabase.removeChannel(notifChannel)
+        supabase.removeChannel(templatesChannel)
       }
     }
 

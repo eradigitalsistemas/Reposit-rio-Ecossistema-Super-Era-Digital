@@ -15,7 +15,9 @@ import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
@@ -276,11 +278,26 @@ export function AddDemandModal() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">Não usar modelo</SelectItem>
-                      {demandTemplates.map((t) => (
-                        <SelectItem key={t.id} value={t.id}>
-                          {t.titulo}
-                        </SelectItem>
-                      ))}
+                      {Array.from(new Set(demandTemplates.map((t) => t.departamento || 'Geral')))
+                        .sort()
+                        .map((dep) => {
+                          const depsTemplates = demandTemplates.filter(
+                            (t) => (t.departamento || 'Geral') === dep,
+                          )
+                          if (depsTemplates.length === 0) return null
+                          return (
+                            <SelectGroup key={dep}>
+                              <SelectLabel className="font-bold text-primary bg-muted/50 mt-1">
+                                {dep}
+                              </SelectLabel>
+                              {depsTemplates.map((t) => (
+                                <SelectItem key={t.id} value={t.id} className="pl-6">
+                                  {t.titulo}
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
+                          )
+                        })}
                     </SelectContent>
                   </Select>
                 </div>

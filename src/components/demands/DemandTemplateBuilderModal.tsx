@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Plus, Pencil, Trash2, Eye, ChevronLeft, Repeat } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -20,11 +20,25 @@ import {
   DialogFooter,
   DialogDescription,
 } from '@/components/ui/dialog'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import useDemandStore from '@/stores/useDemandStore'
 import { toast } from '@/hooks/use-toast'
 import { DemandPriority } from '@/types/demand'
 
 type Mode = 'list' | 'create' | 'edit' | 'view'
+
+const DEPARTMENTS = [
+  'Geral',
+  'Comercial',
+  'Departamento Pessoal',
+  'Fiscal',
+  'Suporte de Sistema',
+  'Certificados Digitais',
+  'Marketing',
+  'Contabilidade',
+  'Outros',
+]
 
 export function DemandTemplateBuilderModal() {
   const [open, setOpen] = useState(false)
@@ -37,6 +51,8 @@ export function DemandTemplateBuilderModal() {
   const [prioridade, setPrioridade] = useState<DemandPriority>('Pode Ficar para Amanhã')
   const [checklistId, setChecklistId] = useState<string>('none')
   const [responsavelId, setResponsavelId] = useState<string>('none')
+  const [departamento, setDepartamento] = useState<string>('Geral')
+  const [activeTab, setActiveTab] = useState<string>('Todos')
 
   const {
     demandTemplates,
@@ -65,6 +81,7 @@ export function DemandTemplateBuilderModal() {
     setPrioridade('Pode Ficar para Amanhã')
     setChecklistId('none')
     setResponsavelId('none')
+    setDepartamento(activeTab === 'Todos' ? 'Geral' : activeTab)
     setCurrentId(null)
   }
 
@@ -80,6 +97,7 @@ export function DemandTemplateBuilderModal() {
     setPrioridade(template.prioridade || 'Pode Ficar para Amanhã')
     setChecklistId(template.checklist_id || 'none')
     setResponsavelId(template.responsavel_id || 'none')
+    setDepartamento(template.departamento || 'Geral')
     setMode('edit')
   }
 
@@ -90,6 +108,7 @@ export function DemandTemplateBuilderModal() {
     setPrioridade(template.prioridade || 'Pode Ficar para Amanhã')
     setChecklistId(template.checklist_id || 'none')
     setResponsavelId(template.responsavel_id || 'none')
+    setDepartamento(template.departamento || 'Geral')
     setMode('view')
   }
 
@@ -119,6 +138,7 @@ export function DemandTemplateBuilderModal() {
       prioridade,
       checklist_id: checklistId === 'none' ? null : checklistId,
       responsavel_id: responsavelId === 'none' ? null : responsavelId,
+      departamento: departamento || 'Geral',
       tipo_demanda: 'Geral' as any, // Default
     }
 
@@ -132,6 +152,11 @@ export function DemandTemplateBuilderModal() {
     setMode('list')
   }
 
+  const filteredTemplates = useMemo(() => {
+    if (activeTab === 'Todos') return demandTemplates
+    return demandTemplates.filter((t) => (t.departamento || 'Geral') === activeTab)
+  }, [demandTemplates, activeTab])
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -144,7 +169,7 @@ export function DemandTemplateBuilderModal() {
         </Button>
       </DialogTrigger>
       <DialogContent
-        className="w-[95vw] sm:max-w-[550px] max-h-[90vh] flex flex-col"
+        className="w-[95vw] sm:max-w-[600px] max-h-[90vh] flex flex-col"
         onInteractOutside={(e) => e.preventDefault()}
       >
         <DialogHeader className="shrink-0">
@@ -167,7 +192,7 @@ export function DemandTemplateBuilderModal() {
             </DialogTitle>
           </div>
           <DialogDescription>
-            {mode === 'list' && 'Gerencie modelos de demandas para criação rápida.'}
+            {mode === 'list' && 'Gerencie modelos de demandas organizados por departamento.'}
             {mode === 'create' && 'Crie um modelo de demanda reutilizável.'}
             {mode === 'edit' && 'Altere os campos do seu modelo de demanda.'}
             {mode === 'view' && 'Detalhes do modelo.'}
@@ -185,51 +210,75 @@ export function DemandTemplateBuilderModal() {
                 <Plus className="w-4 h-4" /> Novo Modelo
               </Button>
 
-              <div className="space-y-2 mt-4">
-                {demandTemplates.length === 0 ? (
-                  <p className="text-center text-muted-foreground text-sm py-8">
-                    Nenhum modelo cadastrado.
-                  </p>
-                ) : (
-                  demandTemplates.map((template) => (
-                    <div
-                      key={template.id}
-                      className="flex items-center justify-between p-3 border border-gray-200 dark:border-white/10 rounded-md bg-white dark:bg-card shadow-sm"
-                    >
-                      <span className="font-medium text-sm text-black dark:text-white truncate pr-2">
-                        {template.titulo}
-                      </span>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-500/10"
-                          onClick={() => handleView(template)}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-500/10"
-                          onClick={() => handleEdit(template)}
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
-                          onClick={() => handleDelete(template.id)}
-                          disabled={loading}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+              <Tabs
+                defaultValue="Todos"
+                value={activeTab}
+                onValueChange={setActiveTab}
+                className="w-full mt-4"
+              >
+                <ScrollArea className="w-full pb-2">
+                  <TabsList className="inline-flex h-10 items-center justify-start rounded-md bg-muted p-1 text-muted-foreground w-max">
+                    <TabsTrigger value="Todos">Todos</TabsTrigger>
+                    {DEPARTMENTS.map((dep) => (
+                      <TabsTrigger key={dep} value={dep}>
+                        {dep}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                  <ScrollBar orientation="horizontal" />
+                </ScrollArea>
+
+                <div className="space-y-2 mt-4">
+                  {filteredTemplates.length === 0 ? (
+                    <p className="text-center text-muted-foreground text-sm py-8">
+                      Nenhum modelo cadastrado nesta categoria.
+                    </p>
+                  ) : (
+                    filteredTemplates.map((template) => (
+                      <div
+                        key={template.id}
+                        className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border border-gray-200 dark:border-white/10 rounded-md bg-white dark:bg-card shadow-sm gap-2"
+                      >
+                        <div className="flex flex-col overflow-hidden pr-2">
+                          <span className="font-medium text-sm text-black dark:text-white truncate">
+                            {template.titulo}
+                          </span>
+                          <span className="text-xs text-muted-foreground truncate">
+                            Pasta: {template.departamento || 'Geral'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0 self-end sm:self-auto">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-500/10"
+                            onClick={() => handleView(template)}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-500/10"
+                            onClick={() => handleEdit(template)}
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
+                            onClick={() => handleDelete(template.id)}
+                            disabled={loading}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  ))
-                )}
-              </div>
+                    ))
+                  )}
+                </div>
+              </Tabs>
             </div>
           )}
 
@@ -250,6 +299,22 @@ export function DemandTemplateBuilderModal() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label className="text-foreground font-medium">Pasta / Departamento</Label>
+                  <Select value={departamento} onValueChange={setDepartamento} disabled={loading}>
+                    <SelectTrigger className="bg-background text-foreground border-input">
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DEPARTMENTS.map((dep) => (
+                        <SelectItem key={dep} value={dep}>
+                          {dep}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="grid gap-2">
                   <Label className="text-foreground font-medium">Responsável Padrão</Label>
                   <Select value={responsavelId} onValueChange={setResponsavelId} disabled={loading}>
@@ -328,30 +393,41 @@ export function DemandTemplateBuilderModal() {
                 </Label>
                 <div className="font-medium text-base text-black dark:text-white">{titulo}</div>
               </div>
-              <div className="grid gap-2">
-                <Label className="text-muted-foreground text-xs uppercase tracking-wider">
-                  Responsável
-                </Label>
-                <div className="text-sm text-black dark:text-white">
-                  {responsavelId !== 'none'
-                    ? collaborators.find((c) => c.id === responsavelId)?.nome || 'Não encontrado'
-                    : 'Não Atribuído'}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label className="text-muted-foreground text-xs uppercase tracking-wider">
+                    Pasta / Departamento
+                  </Label>
+                  <div className="text-sm text-black dark:text-white">
+                    {departamento || 'Geral'}
+                  </div>
                 </div>
-              </div>
-              <div className="grid gap-2">
-                <Label className="text-muted-foreground text-xs uppercase tracking-wider">
-                  Urgência
-                </Label>
-                <div className="text-sm text-black dark:text-white">{prioridade}</div>
-              </div>
-              <div className="grid gap-2">
-                <Label className="text-muted-foreground text-xs uppercase tracking-wider">
-                  Checklist Associado
-                </Label>
-                <div className="text-sm text-black dark:text-white">
-                  {checklistId !== 'none'
-                    ? checklistTemplates.find((t) => t.id === checklistId)?.nome || 'Não encontrado'
-                    : 'Nenhum'}
+                <div className="grid gap-2">
+                  <Label className="text-muted-foreground text-xs uppercase tracking-wider">
+                    Responsável
+                  </Label>
+                  <div className="text-sm text-black dark:text-white">
+                    {responsavelId !== 'none'
+                      ? collaborators.find((c) => c.id === responsavelId)?.nome || 'Não encontrado'
+                      : 'Não Atribuído'}
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label className="text-muted-foreground text-xs uppercase tracking-wider">
+                    Urgência
+                  </Label>
+                  <div className="text-sm text-black dark:text-white">{prioridade}</div>
+                </div>
+                <div className="grid gap-2">
+                  <Label className="text-muted-foreground text-xs uppercase tracking-wider">
+                    Checklist Associado
+                  </Label>
+                  <div className="text-sm text-black dark:text-white">
+                    {checklistId !== 'none'
+                      ? checklistTemplates.find((t) => t.id === checklistId)?.nome ||
+                        'Não encontrado'
+                      : 'Nenhum'}
+                  </div>
                 </div>
               </div>
               <div className="grid gap-2">
