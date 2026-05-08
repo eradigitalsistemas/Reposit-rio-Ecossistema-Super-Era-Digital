@@ -65,7 +65,7 @@ export function MessagesPanel({
     try {
       const { error } = await supabase.functions.invoke('send-message', {
         body: {
-          instance_id: contact.instance_id || 'da5f1f9f-7d94-4b41-b1e5-b09e3148f983',
+          instance_id: contact.instance_id || '07a2137e-124d-4161-9942-a901d3123bc2',
           phone: contact.phone_number,
           message: input.trim(),
           user_id: user?.id,
