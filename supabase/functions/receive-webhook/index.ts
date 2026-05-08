@@ -7,7 +7,7 @@
 //   Failed     -> status='failed'
 //   FileDownloaded e outros -> ignorados para status (apenas log)
 
-const VERSION = 'v27-status-tracking-2026-05-07'
+const VERSION = 'v28-status-tracking-2026-05-08'
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 const UAZAPI_TOKEN = Deno.env.get('UAZAPI_TOKEN') ?? ''
@@ -198,9 +198,9 @@ async function processStatusUpdate(payload) {
     patch.delivered_at = tsIso
   }
 
-  // PostgREST usa filtro in.(id1,id2,...) — precisa quote em strings
-  const idsCsv = messageIds.map((id) => `"${id}"`).join(',')
-  const path = `/whatsapp_messages?uazapi_message_id=in.(${encodeURIComponent(idsCsv)})`
+  const idsCsv = messageIds.join(',')
+  // Busca pelos IDs em message_id e uazapi_message_id para cobrir todas as origens de disparo
+  const path = `/whatsapp_messages?or=(message_id.in.(${encodeURIComponent(idsCsv)}),uazapi_message_id.in.(${encodeURIComponent(idsCsv)}))`
 
   const upd = await rest('PATCH', path, patch, {
     Prefer: 'return=representation',

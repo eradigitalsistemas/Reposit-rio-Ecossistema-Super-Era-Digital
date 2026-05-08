@@ -26,7 +26,7 @@
     "vacation-requests": 30,
     "get-chat-history": 8,
     "uazapi-sync-messages": 9,
-    "receive-webhook": 28,
+    "receive-webhook": 29,
     "send-message": 14,
     "mark-read": 5,
     "process-media": 6,
