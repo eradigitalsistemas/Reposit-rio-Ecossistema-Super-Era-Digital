@@ -1278,6 +1278,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       collaborators,
       notifications,
       checklistTemplates,
+      demandTemplates,
       addDemand,
       editDemand,
       updateStatus,

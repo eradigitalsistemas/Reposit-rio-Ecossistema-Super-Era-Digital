@@ -70,9 +70,10 @@ export function DemandTemplateBuilderModal() {
     if (open) {
       fetchChecklistTemplates()
       fetchCollaborators()
+      fetchDemandTemplates()
       setMode('list')
     }
-  }, [open, fetchChecklistTemplates, fetchCollaborators])
+  }, [open, fetchChecklistTemplates, fetchCollaborators, fetchDemandTemplates])
 
   const resetForm = () => {
     setTitulo('')
