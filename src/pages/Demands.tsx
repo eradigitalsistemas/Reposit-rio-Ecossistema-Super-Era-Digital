@@ -3,6 +3,7 @@ import { isToday, isThisWeek, isThisMonth, parseISO, format, isValid } from 'dat
 import { DemandColumn } from '@/components/demands/DemandColumn'
 import { AddDemandModal } from '@/components/demands/AddDemandModal'
 import { ChecklistBuilderModal } from '@/components/demands/ChecklistBuilderModal'
+import { DemandTemplateBuilderModal } from '@/components/demands/DemandTemplateBuilderModal'
 import useDemandStore from '@/stores/useDemandStore'
 import useAuthStore from '@/stores/useAuthStore'
 import { Label } from '@/components/ui/label'
@@ -279,6 +280,7 @@ export default function Demands() {
           <div className="w-full sm:w-auto flex flex-col sm:flex-row items-center gap-2">
             {role === 'Admin' && (
               <>
+                <DemandTemplateBuilderModal />
                 <ChecklistBuilderModal />
                 <AddDemandModal />
               </>

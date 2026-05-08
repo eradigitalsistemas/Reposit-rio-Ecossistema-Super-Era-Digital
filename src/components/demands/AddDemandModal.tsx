@@ -52,7 +52,13 @@ export function AddDemandModal() {
   const [loading, setLoading] = useState(false)
   const [files, setFiles] = useState<File[]>([])
   const [selectedTemplate, setSelectedTemplate] = useState<string>('none')
+  const [selectedDemandTemplate, setSelectedDemandTemplate] = useState<string>('none')
   const [checklist, setChecklist] = useState<ChecklistItem[]>([])
+
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [priority, setPriority] = useState<string>('Pode Ficar para Amanhã')
+  const [status, setStatus] = useState<string>('Pendente')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [schedEnabled, setSchedEnabled] = useState(false)
@@ -69,6 +75,8 @@ export function AddDemandModal() {
   const { toast } = useToast()
 
   const {
+    demandTemplates,
+    fetchDemandTemplates,
     addDemand,
     collaborators,
     fetchCollaborators,
@@ -80,8 +88,16 @@ export function AddDemandModal() {
     if (open) {
       fetchCollaborators()
       fetchChecklistTemplates()
+      fetchDemandTemplates()
       setSchedEnabled(false)
       setSelectedClient('none')
+      setSelectedDemandTemplate('none')
+      setTitle('')
+      setDescription('')
+      setPriority('Pode Ficar para Amanhã')
+      setStatus('Pendente')
+      setChecklist([])
+      setSelectedTemplate('none')
 
       supabase
         .from('clientes_externos')
@@ -116,12 +132,34 @@ export function AddDemandModal() {
     }
   }
 
+  const handleDemandTemplateChange = (val: string) => {
+    setSelectedDemandTemplate(val)
+    if (val !== 'none') {
+      const template = demandTemplates.find((t) => t.id === val)
+      if (template) {
+        setTitle(template.titulo)
+        setDescription(template.descricao || '')
+        setPriority(template.prioridade || 'Pode Ficar para Amanhã')
+        if (template.checklist_id) {
+          handleTemplateChange(template.checklist_id)
+        } else {
+          handleTemplateChange('none')
+        }
+      }
+    } else {
+      setTitle('')
+      setDescription('')
+      setPriority('Pode Ficar para Amanhã')
+      handleTemplateChange('none')
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setLoading(true)
     const formData = new FormData(e.currentTarget)
     const assigneeIdStr = formData.get('assigneeId') as string
-    const demandTitle = formData.get('title') as string
+    const demandTitle = title
 
     const dueDateStr = formData.get('dueDate') as string
     const finalDueDate = dueDateStr ? new Date(dueDateStr + 'T12:00:00').toISOString() : null
@@ -151,9 +189,9 @@ export function AddDemandModal() {
 
       const newDemand = await addDemand({
         title: demandTitle,
-        description: formData.get('description') as string,
-        priority: formData.get('priority') as DemandPriority,
-        status: formData.get('status') as DemandStatus,
+        description: description,
+        priority: priority as DemandPriority,
+        status: status as DemandStatus,
         dueDate: finalDueDate,
         assigneeId: assigneeIdStr === 'none' ? null : assigneeIdStr,
         clientId: selectedClient === 'none' ? null : selectedClient,
@@ -215,6 +253,31 @@ export function AddDemandModal() {
           </div>
           <ScrollArea className="flex-1 p-6">
             <div className="grid gap-4">
+              {demandTemplates.length > 0 && (
+                <div className="grid gap-2 mb-2 p-3 bg-muted/30 border border-border rounded-md">
+                  <Label className="text-foreground font-medium text-primary">
+                    Carregar Demanda Recorrente
+                  </Label>
+                  <Select
+                    value={selectedDemandTemplate}
+                    onValueChange={handleDemandTemplateChange}
+                    disabled={loading}
+                  >
+                    <SelectTrigger className="bg-background text-foreground border-input">
+                      <SelectValue placeholder="Selecione um modelo pronto..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Não usar modelo</SelectItem>
+                      {demandTemplates.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               <div className="grid gap-2">
                 <Label htmlFor="title" className="text-foreground font-medium">
                   Título *
@@ -222,6 +285,8 @@ export function AddDemandModal() {
                 <Input
                   id="title"
                   name="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
                   required
                   disabled={loading}
                   className="bg-background text-foreground border-input"
@@ -300,7 +365,12 @@ export function AddDemandModal() {
                   <Label htmlFor="priority" className="text-foreground font-medium">
                     Urgência
                   </Label>
-                  <Select name="priority" defaultValue="Pode Ficar para Amanhã" disabled={loading}>
+                  <Select
+                    name="priority"
+                    value={priority}
+                    onValueChange={setPriority}
+                    disabled={loading}
+                  >
                     <SelectTrigger className="bg-background text-foreground border-input">
                       <SelectValue />
                     </SelectTrigger>
@@ -315,7 +385,7 @@ export function AddDemandModal() {
                   <Label htmlFor="status" className="text-foreground font-medium">
                     Status Inicial
                   </Label>
-                  <Select name="status" defaultValue="Pendente" disabled={loading}>
+                  <Select name="status" value={status} onValueChange={setStatus} disabled={loading}>
                     <SelectTrigger className="bg-background text-foreground border-input">
                       <SelectValue />
                     </SelectTrigger>
@@ -449,6 +519,8 @@ export function AddDemandModal() {
                 <Textarea
                   id="description"
                   name="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                   className="min-h-[80px] bg-background text-foreground border-input"
                   disabled={loading}
                 />

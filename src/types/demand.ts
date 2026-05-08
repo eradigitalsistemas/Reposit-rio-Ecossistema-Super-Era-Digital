@@ -66,3 +66,15 @@ export interface ChecklistTemplate {
   usuario_id: string
   data_criacao: string
 }
+
+export interface DemandTemplate {
+  id: string
+  nome: string
+  titulo: string
+  descricao?: string | null
+  prioridade?: DemandPriority | null
+  tipo_demanda?: DemandCategory | null
+  checklist_id?: string | null
+  usuario_id?: string | null
+  data_criacao: string
+}

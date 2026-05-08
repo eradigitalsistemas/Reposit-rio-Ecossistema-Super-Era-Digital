@@ -22,7 +22,7 @@ import { supabase } from '@/lib/supabase/client'
 import useAuthStore from './useAuthStore'
 import { useNavigate } from 'react-router-dom'
 
-import { ChecklistTemplate } from '@/types/demand'
+import { ChecklistTemplate, DemandTemplate } from '@/types/demand'
 
 interface Collaborator {
   id: string
@@ -34,6 +34,7 @@ interface DemandStoreState {
   collaborators: Collaborator[]
   notifications: DemandNotification[]
   checklistTemplates: ChecklistTemplate[]
+  demandTemplates: DemandTemplate[]
   addDemand: (
     demand: Omit<Demand, 'id' | 'createdAt' | 'updatedAt' | 'responses' | 'logs'> & {
       assigneeId?: string | null
@@ -74,6 +75,12 @@ interface DemandStoreState {
   fetchCollaborators: () => Promise<void>
   fetchChecklistTemplates: () => Promise<void>
   addChecklistTemplate: (nome: string, itens: string[]) => Promise<void>
+  fetchDemandTemplates: () => Promise<void>
+  addDemandTemplate: (
+    template: Omit<DemandTemplate, 'id' | 'data_criacao' | 'usuario_id'>,
+  ) => Promise<void>
+  editDemandTemplate: (id: string, template: Partial<DemandTemplate>) => Promise<void>
+  deleteDemandTemplate: (id: string) => Promise<void>
 }
 
 const DemandContext = createContext<DemandStoreState | null>(null)
@@ -83,6 +90,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   const [collaborators, setCollaborators] = useState<Collaborator[]>([])
   const [notifications, setNotifications] = useState<DemandNotification[]>([])
   const [checklistTemplates, setChecklistTemplates] = useState<ChecklistTemplate[]>([])
+  const [demandTemplates, setDemandTemplates] = useState<DemandTemplate[]>([])
   const { user, role, userName } = useAuthStore()
   const navigate = useNavigate()
 
@@ -241,6 +249,83 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [user])
 
+  const fetchDemandTemplates = useCallback(async () => {
+    if (!user) return
+    try {
+      const { data, error } = await supabase
+        .from('demand_templates')
+        .select('*')
+        .order('data_criacao', { ascending: false })
+
+      if (!error && data) {
+        setDemandTemplates(data)
+      }
+    } catch (e) {
+      // Silently handle
+    }
+  }, [user])
+
+  const addDemandTemplate = useCallback(
+    async (template: Omit<DemandTemplate, 'id' | 'data_criacao' | 'usuario_id'>) => {
+      if (!user) return
+      try {
+        const { data, error } = await supabase
+          .from('demand_templates')
+          .insert({
+            ...template,
+            usuario_id: user.id,
+          })
+          .select()
+          .single()
+        if (error) throw error
+        if (data) {
+          setDemandTemplates((prev) => [data, ...prev])
+          toast({ title: 'Sucesso', description: 'Modelo criado com sucesso.' })
+        }
+      } catch (e) {
+        toast({ title: 'Erro', description: 'Erro ao criar modelo.', variant: 'destructive' })
+      }
+    },
+    [user],
+  )
+
+  const editDemandTemplate = useCallback(
+    async (id: string, template: Partial<DemandTemplate>) => {
+      if (!user) return
+      try {
+        const { data, error } = await supabase
+          .from('demand_templates')
+          .update(template)
+          .eq('id', id)
+          .select()
+          .single()
+        if (error) throw error
+        if (data) {
+          setDemandTemplates((prev) => prev.map((t) => (t.id === id ? data : t)))
+          toast({ title: 'Sucesso', description: 'Modelo atualizado.' })
+        }
+      } catch (e) {
+        toast({ title: 'Erro', description: 'Erro ao atualizar modelo.', variant: 'destructive' })
+      }
+    },
+    [user],
+  )
+
+  const deleteDemandTemplate = useCallback(
+    async (id: string) => {
+      if (!user) return
+      try {
+        const { error } = await supabase.from('demand_templates').delete().eq('id', id)
+        if (error) throw error
+        setDemandTemplates((prev) => prev.filter((t) => t.id !== id))
+        toast({ title: 'Sucesso', description: 'Modelo excluído.' })
+      } catch (e) {
+        toast({ title: 'Erro', description: 'Erro ao excluir modelo.', variant: 'destructive' })
+      }
+    },
+    [user],
+  )
+
   const addChecklistTemplate = useCallback(
     async (nome: string, itens: string[]) => {
       if (!user) return
@@ -329,6 +414,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       fetchCollaborators()
       fetchNotifications()
       fetchChecklistTemplates()
+      fetchDemandTemplates()
 
       const usersChannel = supabase
         .channel('usuarios-colab-changes')
@@ -394,6 +480,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
     fetchCollaborators,
     fetchNotifications,
     fetchChecklistTemplates,
+    fetchDemandTemplates,
     navigate,
   ])
 
@@ -1039,6 +1126,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       collaborators,
       notifications,
       checklistTemplates,
+      demandTemplates,
       addDemand,
       editDemand,
       updateStatus,
@@ -1053,6 +1141,10 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       fetchCollaborators,
       fetchChecklistTemplates,
       addChecklistTemplate,
+      fetchDemandTemplates,
+      addDemandTemplate,
+      editDemandTemplate,
+      deleteDemandTemplate,
     }),
     [
       demands,
@@ -1073,6 +1165,10 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       fetchCollaborators,
       fetchChecklistTemplates,
       addChecklistTemplate,
+      fetchDemandTemplates,
+      addDemandTemplate,
+      editDemandTemplate,
+      deleteDemandTemplate,
     ],
   )
 
