@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase/client'
 import { toast } from '@/hooks/use-toast'
 import { MessageBubble } from './message-bubble'
 import { WhatsAppContact } from '@/types/whatsapp'
+import { useCoreAuth } from '@/hooks/use-auth'
 
 function getBRTDate(dateStr: string) {
   const d = new Date(dateStr)
@@ -34,6 +35,7 @@ export function MessagesPanel({
   onBack: () => void
 }) {
   const { messages } = useWhatsappMessages(contact?.id || null)
+  const { user } = useCoreAuth()
   const scrollRef = useRef<HTMLDivElement>(null)
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
@@ -66,6 +68,7 @@ export function MessagesPanel({
           instance_id: contact.instance_id || 'da5f1f9f-7d94-4b41-b1e5-b09e3148f983',
           phone: contact.phone_number,
           message: input.trim(),
+          user_id: user?.id,
         },
       })
       if (error) throw error
