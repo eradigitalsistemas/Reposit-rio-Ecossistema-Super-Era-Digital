@@ -35,6 +35,6 @@
     "uazapi-sync-messages-trace": 1,
     "uazapi-webhook": 1,
     "whatsapp-integration": 1,
-    "send-media": 4
+    "send-media": 5
   }
 }

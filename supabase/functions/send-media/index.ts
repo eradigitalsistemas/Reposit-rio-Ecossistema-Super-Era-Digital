@@ -37,7 +37,10 @@ Deno.serve(async (req: Request) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     let userId: string | null = null
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser(token)
     let payload: any
 
     if (user && !authError) {
@@ -62,7 +65,7 @@ Deno.serve(async (req: Request) => {
     const formData = await req.formData()
     const instance_id = formData.get('instance_id') as string
     const phone = formData.get('phone') as string
-    const message = formData.get('message') as string || ''
+    const message = (formData.get('message') as string) || ''
     const bodyUserId = formData.get('user_id') as string
     const file = formData.get('file') as File
 
@@ -80,33 +83,49 @@ Deno.serve(async (req: Request) => {
 
     const { error: uploadError } = await supabase.storage.from('anexos').upload(fileName, file, {
       contentType: file.type,
-      upsert: false
+      upsert: false,
     })
 
     if (uploadError) {
-      return createJsonResponse({ success: false, error: 'Failed to upload media', details: uploadError.message }, 500)
+      return createJsonResponse(
+        { success: false, error: 'Failed to upload media', details: uploadError.message },
+        500,
+      )
     }
 
     const { data: publicUrlData } = supabase.storage.from('anexos').getPublicUrl(fileName)
     const mediaUrl = publicUrlData.publicUrl
 
-    const { data: instance } = await supabase.from('whatsapp_instances').select('*').eq('instance_id', instance_id).single()
+    const { data: instance } = await supabase
+      .from('whatsapp_instances')
+      .select('*')
+      .eq('instance_id', instance_id)
+      .single()
     if (!instance) return createJsonResponse({ success: false, error: 'Instance not found' }, 404)
 
     const cleanedPhone = phone.replace(/[^0-9]/g, '')
     const remoteJid = `${cleanedPhone}@s.whatsapp.net`
 
-    const { data: existingContact } = await supabase.from('whatsapp_contacts').select('id').eq('remote_jid', remoteJid).eq('instance_id', instance.instance_id).maybeSingle()
+    const { data: existingContact } = await supabase
+      .from('whatsapp_contacts')
+      .select('id')
+      .eq('remote_jid', remoteJid)
+      .eq('instance_id', instance.instance_id)
+      .maybeSingle()
     let contactId = existingContact?.id
 
     if (!contactId) {
-      const { data: newContact } = await supabase.from('whatsapp_contacts').insert({
-        user_id: userId,
-        instance_id: instance.instance_id,
-        remote_jid: remoteJid,
-        phone_number: cleanedPhone,
-        is_group: false,
-      }).select('id').single()
+      const { data: newContact } = await supabase
+        .from('whatsapp_contacts')
+        .insert({
+          user_id: userId,
+          instance_id: instance.instance_id,
+          remote_jid: remoteJid,
+          phone_number: cleanedPhone,
+          is_group: false,
+        })
+        .select('id')
+        .single()
       if (newContact) contactId = newContact.id
     }
 
@@ -119,25 +138,32 @@ Deno.serve(async (req: Request) => {
     const correlationId = crypto.randomUUID()
     const timestamp = new Date().toISOString()
 
-    const { data: inserted } = await supabase.from('whatsapp_messages').insert({
-      message_id: correlationId,
-      correlation_id: correlationId,
-      instance_id: instance.instance_id,
-      contact_id: contactId,
-      user_id: userId,
-      from_me: true,
-      type: mediatype,
-      text: message || null,
-      media_url: mediaUrl,
-      media_type: mimeType,
-      status: 'pending',
-      timestamp,
-    }).select('id').single()
+    const { data: inserted } = await supabase
+      .from('whatsapp_messages')
+      .insert({
+        message_id: correlationId,
+        correlation_id: correlationId,
+        instance_id: instance.instance_id,
+        contact_id: contactId,
+        user_id: userId,
+        from_me: true,
+        type: mediatype,
+        text: message || null,
+        media_url: mediaUrl,
+        media_type: mimeType,
+        status: 'pending',
+        timestamp,
+      })
+      .select('id')
+      .single()
 
-    let baseUrl = (instance.config as any)?.base_url || Deno.env.get('UAZAPI_URL') || 'https://eradigital.uazapi.com'
+    let baseUrl =
+      (instance.config as any)?.base_url ||
+      Deno.env.get('UAZAPI_URL') ||
+      'https://eradigital.uazapi.com'
     if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1)
 
-    const uazapiUrl = `${baseUrl}/message/sendMedia`
+    const uazapiUrl = `${baseUrl}/send/media`
 
     let uazapiResponse: Response
     try {
@@ -145,27 +171,33 @@ Deno.serve(async (req: Request) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'token': instance.instance_id,
+          token: instance.instance_id,
         },
         body: JSON.stringify({
           number: cleanedPhone,
-          media: mediaUrl,
-          mediatype: mediatype,
+          url: mediaUrl,
+          type: mediatype,
           fileName: file.name,
-          caption: message || undefined
+          caption: message || undefined,
         }),
       })
     } catch (err: any) {
       if (inserted) {
-        await supabase.from('whatsapp_messages').update({ status: 'failed', error_message: err.message }).eq('id', inserted.id)
+        await supabase
+          .from('whatsapp_messages')
+          .update({ status: 'failed', error_message: err.message })
+          .eq('id', inserted.id)
       }
-      return createJsonResponse({ success: false, error: 'uazapi error', details: err.message }, 502)
+      return createJsonResponse(
+        { success: false, error: 'uazapi error', details: err.message },
+        502,
+      )
     }
 
     const uazapiStatus = uazapiResponse.status
     const ok = uazapiResponse.ok
     let uazapiData: any = {}
-    
+
     try {
       uazapiData = await uazapiResponse.json()
     } catch (e) {
@@ -173,21 +205,41 @@ Deno.serve(async (req: Request) => {
     }
 
     if (!ok) {
-      const errorMsg = uazapiData?.error || uazapiData?.message || uazapiData?.details || `HTTP ${uazapiStatus}`
+      const errorMsg =
+        uazapiData?.error || uazapiData?.message || uazapiData?.details || `HTTP ${uazapiStatus}`
       if (inserted) {
-        await supabase.from('whatsapp_messages').update({ status: 'failed', error_message: errorMsg }).eq('id', inserted.id)
+        await supabase
+          .from('whatsapp_messages')
+          .update({ status: 'failed', error_message: errorMsg })
+          .eq('id', inserted.id)
       }
       return createJsonResponse({ success: false, error: 'uazapi error', details: errorMsg }, 502)
     }
 
-    let uazapiMessageId = uazapiData?.id || uazapiData?.messageid || uazapiData?.key?.id || correlationId
+    let uazapiMessageId =
+      uazapiData?.id || uazapiData?.messageid || uazapiData?.key?.id || correlationId
     if (inserted) {
-      await supabase.from('whatsapp_messages').update({ status: 'sent', uazapi_message_id: uazapiMessageId }).eq('id', inserted.id)
-      return createJsonResponse({ success: true, message_id: inserted.id, uazapi_message_id: uazapiMessageId, status: 'sent', data: uazapiData }, 200)
+      await supabase
+        .from('whatsapp_messages')
+        .update({ status: 'sent', uazapi_message_id: uazapiMessageId })
+        .eq('id', inserted.id)
+      return createJsonResponse(
+        {
+          success: true,
+          message_id: inserted.id,
+          uazapi_message_id: uazapiMessageId,
+          status: 'sent',
+          data: uazapiData,
+        },
+        200,
+      )
     }
-    
+
     return createJsonResponse({ success: true, status: 'sent', data: uazapiData }, 200)
   } catch (err: any) {
-    return createJsonResponse({ success: false, error: 'Internal server error', details: err.message }, 500)
+    return createJsonResponse(
+      { success: false, error: 'Internal server error', details: err.message },
+      500,
+    )
   }
 })
