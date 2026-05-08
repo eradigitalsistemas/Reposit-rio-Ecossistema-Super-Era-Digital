@@ -21,7 +21,6 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import useDemandStore from '@/stores/useDemandStore'
-import useAuthStore from '@/stores/useAuthStore'
 import { toast } from '@/hooks/use-toast'
 import { DemandPriority } from '@/types/demand'
 
@@ -51,8 +50,6 @@ export function DemandTemplateBuilderModal() {
     fetchCollaborators,
   } = useDemandStore()
 
-  const { user } = useAuthStore()
-
   useEffect(() => {
     if (open) {
       fetchDemandTemplates()
@@ -67,7 +64,7 @@ export function DemandTemplateBuilderModal() {
     setDescricao('')
     setPrioridade('Pode Ficar para Amanhã')
     setChecklistId('none')
-    setResponsavelId(user?.id || 'none')
+    setResponsavelId('none')
     setCurrentId(null)
   }
 
