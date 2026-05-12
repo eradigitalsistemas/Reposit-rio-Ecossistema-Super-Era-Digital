@@ -167,30 +167,24 @@ function mapStatusUpdate(updateType) {
   return null // outros (FileDownloaded, etc.) — ignora
 }
 
-async function processStatusUpdate(payload) {
-  const evt = payload?.event ?? {}
-  const updateType = evt?.Type ?? payload?.state ?? payload?.type ?? null
-  const newStatus = mapStatusUpdate(updateType)
-  if (!newStatus) {
-    // não é status que rastreamos — apenas log
-    return
-  }
-  const messageIds = Array.isArray(evt?.MessageIDs) ? evt.MessageIDs : []
-  if (messageIds.length === 0) {
-    console.error('[receive-webhook] messages_update sem MessageIDs', { updateType })
-    return
-  }
-  const tsIso = parseTimestamp(evt?.Timestamp ?? payload?.timestamp)
+function mapEvolutionStatus(statusNum) {
+  if (statusNum === 2) return 'delivered'
+  if (statusNum === 3) return 'read'
+  if (statusNum === 4) return 'played'
+  if (statusNum === 5) return 'failed'
+  return null
+}
+
+async function updateMessageStatus(messageIds, newStatus, tsIso) {
+  if (!messageIds || messageIds.length === 0) return
   const nowIso = new Date().toISOString()
 
-  // monta patch baseado no tipo de status
   const patch = { status: newStatus, updated_at: nowIso }
   if (newStatus === 'delivered') {
     patch.delivered_at = tsIso
   } else if (newStatus === 'read') {
     patch.read_at = tsIso
     patch.is_read = true
-    // se nunca foi marcado como entregue, marca também (read implica delivered)
     patch.delivered_at = tsIso
   } else if (newStatus === 'played') {
     patch.read_at = tsIso
@@ -199,26 +193,54 @@ async function processStatusUpdate(payload) {
   }
 
   const idsCsv = messageIds.join(',')
-  // Busca pelos IDs em message_id e uazapi_message_id para cobrir todas as origens de disparo
   const path = `/whatsapp_messages?or=(message_id.in.(${encodeURIComponent(idsCsv)}),uazapi_message_id.in.(${encodeURIComponent(idsCsv)}))`
 
-  const upd = await rest('PATCH', path, patch, {
-    Prefer: 'return=representation',
-  })
+  const upd = await rest('PATCH', path, patch, { Prefer: 'return=representation' })
   if (!upd.ok) {
     console.error('[receive-webhook] PATCH status failed', {
-      updateType,
       newStatus,
       messageIds,
       error: safeErr(upd.error),
     })
+  }
+}
+
+async function processStatusUpdate(payload) {
+  // Handle Evolution API `messages.update` array format
+  if (
+    (payload?.event === 'messages.update' || payload?.event === 'messages_update') &&
+    Array.isArray(payload.data)
+  ) {
+    for (const item of payload.data) {
+      const messageId = item?.key?.id
+      const statusNum = item?.update?.status
+      if (messageId && statusNum) {
+        const newStatus = mapEvolutionStatus(statusNum)
+        if (newStatus) {
+          await updateMessageStatus(
+            [messageId],
+            newStatus,
+            parseTimestamp(payload.date_time ?? payload.timestamp),
+          )
+        }
+      }
+    }
     return
   }
-  const affected = Array.isArray(upd.data) ? upd.data.length : 0
-  if (affected === 0) {
-    // mensagem ainda não foi inserida (race condition rara) — não é erro crítico
-    console.warn('[receive-webhook] status update sem matches', { updateType, messageIds })
+
+  const evt = payload?.event ?? {}
+  const updateType = evt?.Type ?? payload?.state ?? payload?.type ?? null
+  const newStatus = mapStatusUpdate(updateType)
+  if (!newStatus) {
+    return
   }
+  const messageIds = Array.isArray(evt?.MessageIDs) ? evt.MessageIDs : []
+  if (messageIds.length === 0) {
+    return
+  }
+  const tsIso = parseTimestamp(evt?.Timestamp ?? payload?.timestamp)
+
+  await updateMessageStatus(messageIds, newStatus, tsIso)
 }
 
 async function processMessage(payload, eventId) {
@@ -389,13 +411,13 @@ Deno.serve(async (req) => {
     console.error('[receive-webhook] insert event exception', safeErr(err))
   }
 
-  if (eventType === 'messages') {
+  if (eventType === 'messages' || eventType === 'messages.upsert') {
     try {
       await processMessage(payload, eventId ?? 'no-event-id')
     } catch (err) {
       console.error('[receive-webhook] processMessage exception', safeErr(err))
     }
-  } else if (eventType === 'messages_update') {
+  } else if (eventType === 'messages_update' || eventType === 'messages.update') {
     try {
       await processStatusUpdate(payload)
     } catch (err) {
