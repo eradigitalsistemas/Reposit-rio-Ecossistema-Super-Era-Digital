@@ -1,7 +1,6 @@
 import { create } from 'zustand'
 import { supabase } from '@/lib/supabase/client'
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns'
-import useAuthStore from './useAuthStore'
 
 export interface EventoAgenda {
   id: string
@@ -89,9 +88,6 @@ export const useAgendaStore = create<AgendaState>((set) => ({
 
   salvarEvento: async (evento, currentUserId) => {
     try {
-      const user = useAuthStore.getState().user
-      const criadorNome = user?.user_metadata?.full_name || user?.email || 'Usuário'
-
       const payload = {
         titulo: evento.titulo,
         descricao: evento.descricao || '',
@@ -103,7 +99,7 @@ export const useAgendaStore = create<AgendaState>((set) => ({
         cliente_id: evento.cliente_id || null,
         lead_id: evento.lead_id || null,
         demanda_id: evento.demanda_id || null,
-        criado_por: evento.id ? evento.criado_por : criadorNome,
+        criado_por: evento.criado_por || 'Usuário',
       }
 
       let res
