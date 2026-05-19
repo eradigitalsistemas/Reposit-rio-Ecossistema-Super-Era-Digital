@@ -23,7 +23,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
@@ -52,6 +51,11 @@ export default function Certificados() {
   const [open, setOpen] = useState(false)
   const [newParceiroOpen, setNewParceiroOpen] = useState(false)
   const [newParceiroName, setNewParceiroName] = useState('')
+
+  const [editParceiroOpen, setEditParceiroOpen] = useState(false)
+  const [deleteParceiroOpen, setDeleteParceiroOpen] = useState(false)
+  const [selectedParceiroObj, setSelectedParceiroObj] = useState<Parceiro | null>(null)
+  const [editParceiroName, setEditParceiroName] = useState('')
 
   const [dateFilter, setDateFilter] = useState<
     'todos' | 'hoje' | 'semana' | 'mes' | 'personalizado'
@@ -158,6 +162,105 @@ export default function Certificados() {
     } catch (err: any) {
       toast({
         title: 'Erro ao adicionar parceiro',
+        description: err.message,
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const handleEditParceiro = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedParceiroObj || !editParceiroName.trim()) return
+
+    const oldName = selectedParceiroObj.nome
+    const newName = editParceiroName.trim()
+
+    if (oldName === newName) {
+      setEditParceiroOpen(false)
+      return
+    }
+
+    try {
+      const exists = parceiros.some(
+        (p) => p.nome.toLowerCase() === newName.toLowerCase() && p.id !== selectedParceiroObj.id,
+      )
+      if (exists) {
+        toast({ title: 'Já existe um parceiro com este nome', variant: 'destructive' })
+        return
+      }
+
+      const { error: parceiroError } = await supabase
+        .from('parceiros_certificados' as any)
+        .update({ nome: newName })
+        .eq('id', selectedParceiroObj.id)
+
+      if (parceiroError) throw parceiroError
+
+      const { error: protocolosError } = await supabase
+        .from('protocolos_certificados' as any)
+        .update({ parceiro: newName })
+        .eq('parceiro', oldName)
+
+      if (protocolosError) throw protocolosError
+
+      setParceiros((prev) =>
+        prev
+          .map((p) => (p.id === selectedParceiroObj.id ? { ...p, nome: newName } : p))
+          .sort((a, b) => a.nome.localeCompare(b.nome)),
+      )
+      setProtocolos((prev) =>
+        prev.map((p) => (p.parceiro === oldName ? { ...p, parceiro: newName } : p)),
+      )
+
+      if (selectedPartner === oldName) {
+        setSelectedPartner(newName)
+      }
+
+      setEditParceiroOpen(false)
+      toast({ title: 'Parceiro atualizado com sucesso' })
+    } catch (err: any) {
+      toast({
+        title: 'Erro ao atualizar parceiro',
+        description: err.message,
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const handleDeleteParceiro = async () => {
+    if (!selectedParceiroObj) return
+
+    const oldName = selectedParceiroObj.nome
+
+    try {
+      const { error: parceiroError } = await supabase
+        .from('parceiros_certificados' as any)
+        .delete()
+        .eq('id', selectedParceiroObj.id)
+
+      if (parceiroError) throw parceiroError
+
+      const { error: protocolosError } = await supabase
+        .from('protocolos_certificados' as any)
+        .update({ parceiro: 'Novos Protocolos' })
+        .eq('parceiro', oldName)
+
+      if (protocolosError) throw protocolosError
+
+      setParceiros((prev) => prev.filter((p) => p.id !== selectedParceiroObj.id))
+      setProtocolos((prev) =>
+        prev.map((p) => (p.parceiro === oldName ? { ...p, parceiro: 'Novos Protocolos' } : p)),
+      )
+
+      if (selectedPartner === oldName) {
+        setSelectedPartner(null)
+      }
+
+      setDeleteParceiroOpen(false)
+      toast({ title: 'Parceiro excluído com sucesso' })
+    } catch (err: any) {
+      toast({
+        title: 'Erro ao excluir parceiro',
         description: err.message,
         variant: 'destructive',
       })
@@ -472,13 +575,15 @@ export default function Certificados() {
         ) : !selectedPartner && !search.trim() ? (
           <div className="p-4 md:p-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {allUniquePartners.map((parceiro) => {
-                const columnItems = protocolos.filter((p) => p.parceiro === parceiro)
+              {allUniquePartners.map((parceiroName) => {
+                const columnItems = protocolos.filter((p) => p.parceiro === parceiroName)
+                const parceiroObj = parceiros.find((p) => p.nome === parceiroName)
+                const isDefault = parceiroName === 'Novos Protocolos'
 
                 return (
                   <div
-                    key={parceiro}
-                    onClick={() => setSelectedPartner(parceiro)}
+                    key={parceiroName}
+                    onClick={() => setSelectedPartner(parceiroName)}
                     className="bg-card text-card-foreground border border-border p-4 rounded-xl shadow-sm hover:shadow-md hover:border-primary/50 cursor-pointer transition-all flex flex-col gap-3 group relative"
                   >
                     <div className="flex items-start justify-between gap-2">
@@ -486,8 +591,40 @@ export default function Certificados() {
                         <div className="p-2 bg-primary/10 rounded-lg text-primary shrink-0">
                           <Folder className="w-5 h-5" />
                         </div>
-                        <h3 className="font-semibold text-sm line-clamp-2">{parceiro}</h3>
+                        <h3 className="font-semibold text-sm line-clamp-2">{parceiroName}</h3>
                       </div>
+                      {!isDefault && parceiroObj && (
+                        <div
+                          className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-primary"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setSelectedParceiroObj(parceiroObj)
+                              setEditParceiroName(parceiroObj.nome)
+                              setEditParceiroOpen(true)
+                            }}
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setSelectedParceiroObj(parceiroObj)
+                              setDeleteParceiroOpen(true)
+                            }}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/50">
                       <span className="text-xs text-muted-foreground font-medium">Protocolos</span>
@@ -632,6 +769,57 @@ export default function Certificados() {
           </div>
         )}
       </div>
+
+      <Dialog open={editParceiroOpen} onOpenChange={setEditParceiroOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Parceiro</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEditParceiro} className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label>Nome do Parceiro</Label>
+              <Input
+                required
+                value={editParceiroName}
+                onChange={(e) => setEditParceiroName(e.target.value)}
+                placeholder="Ex: Contabilidade XPTO"
+              />
+            </div>
+            <div className="pt-4 flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setEditParceiroOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit">Salvar</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteParceiroOpen} onOpenChange={setDeleteParceiroOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir Parceiro</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4 text-foreground">
+            <p>
+              Tem certeza que deseja excluir o parceiro{' '}
+              <strong className="text-primary">{selectedParceiroObj?.nome}</strong>?
+            </p>
+            <p className="text-sm text-muted-foreground font-medium bg-muted/50 p-2 rounded-md border border-border">
+              Todos os protocolos associados a este parceiro serão movidos para "Novos Protocolos".
+              Esta ação não pode ser desfeita.
+            </p>
+          </div>
+          <div className="pt-4 flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setDeleteParceiroOpen(false)}>
+              Cancelar
+            </Button>
+            <Button type="button" variant="destructive" onClick={handleDeleteParceiro}>
+              Sim, excluir
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={viewOpen} onOpenChange={setViewOpen}>
         <DialogContent>
