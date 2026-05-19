@@ -396,7 +396,7 @@ export default function Certificados() {
   ).sort((a, b) => a.localeCompare(b))
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] md:h-screen">
+    <div className="flex flex-col">
       <div className="p-4 md:p-6 border-b flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 bg-background shrink-0">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
@@ -567,7 +567,7 @@ export default function Certificados() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto bg-background sm:bg-muted/10 relative">
+      <div className="flex-1 bg-background sm:bg-muted/10 relative min-h-[500px]">
         {loading ? (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -587,11 +587,11 @@ export default function Certificados() {
                     className="bg-card text-card-foreground border border-border p-4 rounded-xl shadow-sm hover:shadow-md hover:border-primary/50 cursor-pointer transition-all flex flex-col gap-3 group relative"
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-start gap-3">
                         <div className="p-2 bg-primary/10 rounded-lg text-primary shrink-0">
                           <Folder className="w-5 h-5" />
                         </div>
-                        <h3 className="font-semibold text-sm line-clamp-2">{parceiroName}</h3>
+                        <h3 className="font-semibold text-sm break-words pt-1">{parceiroName}</h3>
                       </div>
                       {!isDefault && parceiroObj && (
                         <div
@@ -679,7 +679,7 @@ export default function Certificados() {
                       </div>
                     )}
                     <div className="flex items-start justify-between gap-2">
-                      <span className="font-semibold text-sm line-clamp-2 leading-snug text-foreground">
+                      <span className="font-semibold text-sm leading-snug text-foreground break-words flex-1 pr-2">
                         {p.cliente}
                       </span>
                       <Badge
