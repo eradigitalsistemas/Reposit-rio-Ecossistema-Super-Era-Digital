@@ -1,6 +1,18 @@
 export type DemandPriority = 'Urgente' | 'Durante o Dia' | 'Pode Ficar para Amanhã'
 export type DemandStatus = 'Pendente' | 'Em Andamento' | 'Concluído'
-export type DemandCategory = 'Serviço' | 'Dúvida' | 'Reclamação' | 'Outro'
+export type DemandCategory =
+  | 'Serviço'
+  | 'Dúvida'
+  | 'Reclamação'
+  | 'Outro'
+  | 'Implantação e Pós-Venda'
+export type WorkflowTipo = 'geral' | 'implantacao_pos_venda'
+export type PosVendaFase =
+  | 'treinamento'
+  | 'pos_venda_5d'
+  | 'pos_venda_20d'
+  | 'pos_venda_35d'
+  | 'finalizado'
 
 export interface DemandLog {
   id: string
@@ -46,12 +58,13 @@ export interface Demand {
   checklist?: ChecklistItem[]
   createdAt: string
   updatedAt?: string
-  acceptedAt?: string | null
   completedAt?: string | null
   systemEscalated?: boolean
-  timePendingMs?: number
-  timeInProgressMs?: number
-  lastStatusChangeAt?: string
+  workflowTipo?: WorkflowTipo
+  posVendaFase?: PosVendaFase | null
+  posVendaAlvo?: PosVendaFase | null
+  dataProximaAcao?: string | null
+  dataConclusaoTreinamento?: string | null
 }
 
 export interface DemandNotification {

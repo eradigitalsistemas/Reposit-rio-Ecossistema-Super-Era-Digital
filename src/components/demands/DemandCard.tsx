@@ -1,7 +1,6 @@
 import { Demand } from '@/types/demand'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { DemandTimer } from './DemandTimer'
 import { useSearchParams } from 'react-router-dom'
 import {
   Calendar,
@@ -76,6 +75,23 @@ export function DemandCard({ demand }: DemandCardProps) {
 
   const handleDelete = () => {
     deleteDemand(demand.id)
+  }
+
+  const formatPhaseName = (phase: string) => {
+    switch (phase) {
+      case 'treinamento':
+        return 'Treinamento'
+      case 'pos_venda_5d':
+        return 'Pós-Venda 5d'
+      case 'pos_venda_20d':
+        return 'Pós-Venda 20d'
+      case 'pos_venda_35d':
+        return 'Pós-Venda 35d'
+      case 'finalizado':
+        return 'Ativo (Finalizado)'
+      default:
+        return phase
+    }
   }
 
   return (
@@ -177,7 +193,7 @@ export function DemandCard({ demand }: DemandCardProps) {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 mt-1">
+          <div className="flex flex-wrap gap-2 mt-1">
             <Badge
               variant="outline"
               className={`text-xs sm:text-[10px] px-2 sm:px-1.5 py-0.5 h-auto font-medium border ${getPriorityColor(
@@ -192,7 +208,6 @@ export function DemandCard({ demand }: DemandCardProps) {
               )}
               {demand.priority}
             </Badge>
-            <DemandTimer demand={demand} />
           </div>
 
           <div className="flex flex-col gap-1.5 mt-2">
@@ -201,6 +216,19 @@ export function DemandCard({ demand }: DemandCardProps) {
                 <Briefcase className="w-4 h-4 sm:w-3 sm:h-3 mr-1.5 sm:mr-1 shrink-0" />
                 <span className="truncate">{demand.clientName}</span>
               </div>
+            )}
+
+            {demand.workflowTipo === 'implantacao_pos_venda' && demand.posVendaFase && (
+              <Badge
+                variant="outline"
+                className="text-[10px] px-1.5 py-0.5 mb-1 w-fit font-bold border bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300"
+              >
+                {demand.posVendaAlvo ? 'Retreinamento' : formatPhaseName(demand.posVendaFase)}
+                {demand.posVendaAlvo && ` 🎯 ${formatPhaseName(demand.posVendaAlvo)}`}
+                {demand.dataProximaAcao &&
+                  demand.posVendaFase !== 'finalizado' &&
+                  ` - Próx: ${format(new Date(demand.dataProximaAcao), 'dd/MM')}`}
+              </Badge>
             )}
 
             <div className="flex items-center justify-between text-sm sm:text-xs text-muted-foreground w-full">

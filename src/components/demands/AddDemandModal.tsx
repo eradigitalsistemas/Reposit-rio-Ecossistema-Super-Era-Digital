@@ -61,6 +61,7 @@ export function AddDemandModal() {
   const [description, setDescription] = useState('')
   const [priority, setPriority] = useState<string>('Pode Ficar para Amanhã')
   const [status, setStatus] = useState<string>('Pendente')
+  const [category, setCategory] = useState<string>('Serviço')
   const [assigneeId, setAssigneeId] = useState<string>('none')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -105,6 +106,7 @@ export function AddDemandModal() {
               setPriority(parsed.priority || 'Pode Ficar para Amanhã')
               setStatus(parsed.status || 'Pendente')
               setAssigneeId(parsed.assigneeId || 'none')
+              setCategory(parsed.category || 'Serviço')
               setChecklist(parsed.checklist || [])
               setSelectedTemplate(parsed.selectedTemplate || 'none')
               setSelectedDemandTemplate(parsed.selectedDemandTemplate || 'none')
@@ -130,6 +132,7 @@ export function AddDemandModal() {
           setPriority('Pode Ficar para Amanhã')
           setStatus('Pendente')
           setAssigneeId('none')
+          setCategory('Serviço')
           setChecklist([])
           setSelectedTemplate('none')
           setFiles([])
@@ -158,6 +161,7 @@ export function AddDemandModal() {
         priority,
         status,
         assigneeId,
+        category,
         checklist,
         selectedTemplate,
         selectedDemandTemplate,
@@ -198,6 +202,7 @@ export function AddDemandModal() {
     setPriority('Pode Ficar para Amanhã')
     setStatus('Pendente')
     setAssigneeId('none')
+    setCategory('Serviço')
     setChecklist([])
     setSelectedTemplate('none')
     setFiles([])
@@ -250,10 +255,10 @@ export function AddDemandModal() {
       setDescription('')
       setPriority('Pode Ficar para Amanhã')
       setAssigneeId('none')
+      setCategory('Serviço')
       handleTemplateChange('none')
     }
   }
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setLoading(true)
@@ -295,6 +300,7 @@ export function AddDemandModal() {
         dueDate: finalDueDate,
         assigneeId: assigneeIdStr === 'none' ? null : assigneeIdStr,
         clientId: selectedClient === 'none' ? null : selectedClient,
+        category: category as any,
         attachments,
         checklist,
         eventDetails,
@@ -510,7 +516,31 @@ export function AddDemandModal() {
                 </div>
               </div>
 
+              <div className="grid gap-2">
+                <Label htmlFor="category" className="text-foreground font-medium">
+                  Tipo de Demanda
+                </Label>
+                <Select
+                  name="category"
+                  value={category}
+                  onValueChange={setCategory}
+                  disabled={loading}
+                >
+                  <SelectTrigger className="bg-background text-foreground border-input">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Serviço">Serviço</SelectItem>
+                    <SelectItem value="Dúvida">Dúvida</SelectItem>
+                    <SelectItem value="Reclamação">Reclamação</SelectItem>
+                    <SelectItem value="Outro">Outro</SelectItem>
+                    <SelectItem value="Implantação e Pós-Venda">Implantação e Pós-Venda</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {' '}
                 <div className="grid gap-2">
                   <Label htmlFor="assigneeId" className="text-foreground font-medium">
                     Responsável

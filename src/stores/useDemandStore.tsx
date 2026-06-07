@@ -81,6 +81,8 @@ interface DemandStoreState {
   ) => Promise<void>
   editDemandTemplate: (id: string, template: Partial<DemandTemplate>) => Promise<void>
   deleteDemandTemplate: (id: string) => Promise<void>
+  advancePostSalesWorkflow: (demandId: string) => Promise<void>
+  failPostSalesWorkflow: (demandId: string, reason: string) => Promise<void>
 }
 
 const DemandContext = createContext<DemandStoreState | null>(null)
@@ -214,13 +216,13 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             checklist: d.checklist || [],
             createdAt: d.data_criacao || new Date().toISOString(),
             updatedAt: d.data_atualizacao || d.data_criacao || new Date().toISOString(),
-            acceptedAt: d.data_aceite || null,
             completedAt: d.data_conclusao || null,
             systemEscalated: !!systemEscalated,
-            timePendingMs: Number(d.time_pending_ms || 0),
-            timeInProgressMs: Number(d.time_in_progress_ms || 0),
-            lastStatusChangeAt:
-              d.last_status_change_at || d.data_criacao || new Date().toISOString(),
+            workflowTipo: d.workflow_tipo || 'geral',
+            posVendaFase: d.pos_venda_fase || null,
+            posVendaAlvo: d.pos_venda_alvo || null,
+            dataProximaAcao: d.data_proxima_acao || null,
+            dataConclusaoTreinamento: d.data_conclusao_treinamento || null,
           }
         })
         setDemands(parsedDemands)
@@ -512,15 +514,14 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
                     checklist: d.checklist || [],
                     createdAt: d.data_criacao || new Date().toISOString(),
                     updatedAt: d.data_atualizacao || d.data_criacao || new Date().toISOString(),
-                    acceptedAt: d.data_aceite || null,
                     completedAt: d.data_conclusao || null,
                     systemEscalated: !!systemEscalated,
-                    timePendingMs: Number(d.time_pending_ms || 0),
-                    timeInProgressMs: Number(d.time_in_progress_ms || 0),
-                    lastStatusChangeAt:
-                      d.last_status_change_at || d.data_criacao || new Date().toISOString(),
+                    workflowTipo: d.workflow_tipo || 'geral',
+                    posVendaFase: d.pos_venda_fase || null,
+                    posVendaAlvo: d.pos_venda_alvo || null,
+                    dataProximaAcao: d.data_proxima_acao || null,
+                    dataConclusaoTreinamento: d.data_conclusao_treinamento || null,
                   }
-
                   setDemands((prev) => {
                     const exists = prev.find((existing) => existing.id === parsedDemand.id)
                     if (exists) {
@@ -699,6 +700,17 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         if (d) {
+          const isImplantacao = newDemand.category === 'Implantação e Pós-Venda'
+          if (isImplantacao) {
+            await supabase
+              .from('demandas')
+              .update({
+                workflow_tipo: 'implantacao_pos_venda',
+                pos_venda_fase: 'treinamento',
+              })
+              .eq('id', d.id)
+          }
+
           let finalChecklist = newDemand.checklist || []
           if (d.responsavel_id && finalChecklist.length > 0) {
             finalChecklist = await syncChecklistAgenda(
@@ -735,8 +747,12 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             checklist: finalChecklist,
             createdAt: d.data_criacao || new Date().toISOString(),
             updatedAt: d.data_atualizacao || d.data_criacao || new Date().toISOString(),
-            acceptedAt: d.data_aceite || null,
             systemEscalated: false,
+            workflowTipo: isImplantacao ? 'implantacao_pos_venda' : d.workflow_tipo || 'geral',
+            posVendaFase: isImplantacao ? 'treinamento' : d.pos_venda_fase || null,
+            posVendaAlvo: d.pos_venda_alvo || null,
+            dataProximaAcao: d.data_proxima_acao || null,
+            dataConclusaoTreinamento: d.data_conclusao_treinamento || null,
           }
           setDemands((prev) => [createdDemand, ...prev])
           return createdDemand
@@ -784,9 +800,6 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (updates.status !== undefined && !statusChangedToPending) {
           updateData.status = updates.status
-          if (updates.status === 'Em Andamento' && !currentDemand?.acceptedAt) {
-            updateData.data_aceite = new Date().toISOString()
-          }
         }
 
         let finalChecklist = updates.checklist || currentDemand?.checklist || []
@@ -829,8 +842,6 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
                 status: updateData.status !== undefined ? updateData.status : d.status,
                 checklist: updateData.checklist !== undefined ? updateData.checklist : d.checklist,
                 updatedAt: updateData.data_atualizacao,
-                acceptedAt:
-                  updateData.data_aceite !== undefined ? updateData.data_aceite : d.acceptedAt,
               }
             }
             return d
@@ -854,48 +865,11 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
   const updateStatus = useCallback(async (demandId: string, status: DemandStatus) => {
     const updatedAt = new Date().toISOString()
-    const updateData: any = { status, data_atualizacao: updatedAt }
-
-    setDemands((prev) =>
-      prev.map((d) => {
-        if (d.id === demandId) {
-          const elapsed =
-            new Date(updatedAt).getTime() - new Date(d.lastStatusChangeAt || d.createdAt).getTime()
-          const timePendingMs =
-            d.status === 'Pendente'
-              ? (d.timePendingMs || 0) + Math.max(0, elapsed)
-              : d.timePendingMs
-          const timeInProgressMs =
-            d.status === 'Em Andamento'
-              ? (d.timeInProgressMs || 0) + Math.max(0, elapsed)
-              : d.timeInProgressMs
-
-          if (status === 'Em Andamento' && !d.acceptedAt) {
-            updateData.data_aceite = updatedAt
-            return {
-              ...d,
-              status,
-              updatedAt,
-              acceptedAt: updatedAt,
-              lastStatusChangeAt: updatedAt,
-              timePendingMs,
-              timeInProgressMs,
-            }
-          }
-          return {
-            ...d,
-            status,
-            updatedAt,
-            lastStatusChangeAt: updatedAt,
-            timePendingMs,
-            timeInProgressMs,
-          }
-        }
-        return d
-      }),
-    )
-
-    await supabase.from('demandas').update(updateData).eq('id', demandId)
+    setDemands((prev) => prev.map((d) => (d.id === demandId ? { ...d, status, updatedAt } : d)))
+    await supabase
+      .from('demandas')
+      .update({ status, data_atualizacao: updatedAt })
+      .eq('id', demandId)
   }, [])
 
   const deleteDemand = useCallback(async (demandId: string) => {
@@ -916,30 +890,19 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       const newAssigneeId = demand.assigneeId || user.id
       const newAssigneeName = demand.assigneeId ? demand.assignee : userName || 'Você'
       const updatedAt = new Date().toISOString()
-      const acceptedAt = demand.acceptedAt || updatedAt
 
       setDemands((prev) =>
-        prev.map((d) => {
-          if (d.id === demandId) {
-            const elapsed =
-              new Date(updatedAt).getTime() -
-              new Date(d.lastStatusChangeAt || d.createdAt).getTime()
-            return {
-              ...d,
-              status: 'Em Andamento',
-              assigneeId: newAssigneeId,
-              assignee: newAssigneeName,
-              updatedAt,
-              acceptedAt,
-              lastStatusChangeAt: updatedAt,
-              timePendingMs:
-                d.status === 'Pendente'
-                  ? (d.timePendingMs || 0) + Math.max(0, elapsed)
-                  : d.timePendingMs,
-            }
-          }
-          return d
-        }),
+        prev.map((d) =>
+          d.id === demandId
+            ? {
+                ...d,
+                status: 'Em Andamento',
+                assigneeId: newAssigneeId,
+                assignee: newAssigneeName,
+                updatedAt,
+              }
+            : d,
+        ),
       )
       const { error } = await supabase
         .from('demandas')
@@ -947,7 +910,6 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           status: 'Em Andamento',
           responsavel_id: newAssigneeId,
           data_atualizacao: updatedAt,
-          data_aceite: acceptedAt,
         })
         .eq('id', demandId)
 
@@ -1021,31 +983,19 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         setDemands((prev) =>
-          prev.map((d) => {
-            if (d.id === demandId) {
-              const elapsed =
-                new Date(nowIso).getTime() - new Date(d.lastStatusChangeAt || d.createdAt).getTime()
-              return {
-                ...d,
-                status: 'Concluído',
-                updatedAt: nowIso,
-                completedAt: nowIso,
-                lastStatusChangeAt: nowIso,
-                timeInProgressMs:
-                  d.status === 'Em Andamento'
-                    ? (d.timeInProgressMs || 0) + Math.max(0, elapsed)
-                    : d.timeInProgressMs,
-                timePendingMs:
-                  d.status === 'Pendente'
-                    ? (d.timePendingMs || 0) + Math.max(0, elapsed)
-                    : d.timePendingMs,
-                responses: d.responses ? [...d.responses, resposta] : [resposta],
-                attachments: updatedAttachments,
-                logs: [...(d.logs || []), newLog],
-              }
-            }
-            return d
-          }),
+          prev.map((d) =>
+            d.id === demandId
+              ? {
+                  ...d,
+                  status: 'Concluído',
+                  updatedAt: nowIso,
+                  completedAt: nowIso,
+                  responses: d.responses ? [...d.responses, resposta] : [resposta],
+                  attachments: updatedAttachments,
+                  logs: [...(d.logs || []), newLog],
+                }
+              : d,
+          ),
         )
 
         toast({
@@ -1236,28 +1186,16 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         setDemands((prev) =>
-          prev.map((d) => {
-            if (d.id === demandId) {
-              const elapsed =
-                new Date(nowIso).getTime() - new Date(d.lastStatusChangeAt || d.createdAt).getTime()
-              return {
-                ...d,
-                status: 'Em Andamento',
-                updatedAt: nowIso,
-                lastStatusChangeAt: nowIso,
-                timePendingMs:
-                  d.status === 'Pendente'
-                    ? (d.timePendingMs || 0) + Math.max(0, elapsed)
-                    : d.timePendingMs,
-                timeInProgressMs:
-                  d.status === 'Em Andamento'
-                    ? (d.timeInProgressMs || 0) + Math.max(0, elapsed)
-                    : d.timeInProgressMs,
-                logs: [...(d.logs || []), newLog],
-              }
-            }
-            return d
-          }),
+          prev.map((d) =>
+            d.id === demandId
+              ? {
+                  ...d,
+                  status: 'Em Andamento',
+                  updatedAt: nowIso,
+                  logs: [...(d.logs || []), newLog],
+                }
+              : d,
+          ),
         )
 
         toast({
@@ -1336,6 +1274,178 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
     [user, userName, fetchDemands],
   )
 
+  const advancePostSalesWorkflow = useCallback(
+    async (demandId: string) => {
+      if (!user) return
+      const demand = demands.find((d) => d.id === demandId)
+      if (!demand) return
+
+      let newFase = demand.posVendaFase
+      let nextDate: Date | null = null
+      let newStatus = demand.status
+      let assigneeId = demand.assigneeId
+      let dataConclusao = demand.dataConclusaoTreinamento
+      let posVendaAlvo = demand.posVendaAlvo
+
+      if (demand.posVendaFase === 'treinamento') {
+        if (demand.posVendaAlvo) {
+          newFase = demand.posVendaAlvo
+          if (newFase === 'finalizado') {
+            newStatus = 'Concluído'
+            nextDate = null
+          } else {
+            nextDate = new Date()
+            nextDate.setDate(nextDate.getDate() + 15)
+            assigneeId = demand.creatorId
+          }
+          posVendaAlvo = null
+        } else {
+          newFase = 'pos_venda_5d'
+          nextDate = new Date()
+          nextDate.setDate(nextDate.getDate() + 5)
+          assigneeId = demand.creatorId
+          dataConclusao = new Date().toISOString()
+        }
+      } else if (demand.posVendaFase === 'pos_venda_5d') {
+        newFase = 'pos_venda_20d'
+        nextDate = new Date()
+        nextDate.setDate(nextDate.getDate() + 15)
+      } else if (demand.posVendaFase === 'pos_venda_20d') {
+        newFase = 'pos_venda_35d'
+        nextDate = new Date()
+        nextDate.setDate(nextDate.getDate() + 15)
+      } else if (demand.posVendaFase === 'pos_venda_35d') {
+        newFase = 'finalizado'
+        newStatus = 'Concluído'
+        nextDate = null
+      }
+
+      const updates: any = {
+        pos_venda_fase: newFase,
+        pos_venda_alvo: posVendaAlvo,
+        data_proxima_acao: nextDate ? nextDate.toISOString() : null,
+        status: newStatus,
+        responsavel_id: assigneeId,
+        data_conclusao_treinamento: dataConclusao,
+        data_atualizacao: new Date().toISOString(),
+      }
+
+      if (newStatus === 'Concluído') {
+        updates.data_conclusao = new Date().toISOString()
+      }
+
+      setDemands((prev) =>
+        prev.map((d) =>
+          d.id === demandId
+            ? {
+                ...d,
+                posVendaFase: newFase as any,
+                posVendaAlvo: posVendaAlvo as any,
+                dataProximaAcao: updates.data_proxima_acao,
+                status: newStatus as any,
+                assigneeId: assigneeId,
+                dataConclusaoTreinamento: dataConclusao,
+                updatedAt: updates.data_atualizacao,
+                completedAt: newStatus === 'Concluído' ? updates.data_atualizacao : d.completedAt,
+              }
+            : d,
+        ),
+      )
+
+      const { error } = await supabase.from('demandas').update(updates).eq('id', demandId)
+      if (error) {
+        toast({ title: 'Erro', description: 'Falha ao avançar fase.', variant: 'destructive' })
+        return
+      }
+
+      if (nextDate && assigneeId) {
+        const eventStart = nextDate.toISOString()
+        const eventEnd = new Date(nextDate.getTime() + 60 * 60 * 1000).toISOString()
+        const dias = newFase === 'pos_venda_5d' ? '5' : newFase === 'pos_venda_20d' ? '20' : '35'
+
+        await supabase.from('agenda_eventos').insert({
+          titulo: `Pós-Venda (${dias} dias): ${demand.clientName || demand.title}`,
+          descricao: `Acompanhamento de pós-venda para a demanda: ${demand.title}`,
+          data_inicio: eventStart,
+          data_fim: eventEnd,
+          usuario_id: assigneeId,
+          demanda_id: demandId,
+          cliente_id: demand.clientId,
+          tipo: 'Pós-Venda',
+        })
+      }
+
+      await supabase.from('logs_auditoria').insert({
+        demanda_id: demandId,
+        usuario_id: user.id,
+        acao: 'Avanço Pós-Venda',
+        detalhes: `Avançou de ${demand.posVendaFase} para ${newFase}.`,
+      })
+
+      toast({ title: 'Fase Avançada', description: `Demanda movida para ${newFase}` })
+    },
+    [demands, user],
+  )
+
+  const failPostSalesWorkflow = useCallback(
+    async (demandId: string, reason: string) => {
+      if (!user) return
+      const demand = demands.find((d) => d.id === demandId)
+      if (!demand) return
+
+      let nextAlvo = 'pos_venda_20d'
+      if (demand.posVendaFase === 'pos_venda_20d') nextAlvo = 'pos_venda_35d'
+      if (demand.posVendaFase === 'pos_venda_35d') nextAlvo = 'finalizado'
+
+      const updates = {
+        pos_venda_fase: 'treinamento',
+        pos_venda_alvo: nextAlvo,
+        data_proxima_acao: null,
+        responsavel_id: null,
+        status: 'Pendente',
+        data_atualizacao: new Date().toISOString(),
+      }
+
+      setDemands((prev) =>
+        prev.map((d) =>
+          d.id === demandId
+            ? {
+                ...d,
+                posVendaFase: 'treinamento',
+                posVendaAlvo: nextAlvo as any,
+                dataProximaAcao: null,
+                assigneeId: null,
+                status: 'Pendente',
+                updatedAt: updates.data_atualizacao,
+              }
+            : d,
+        ),
+      )
+
+      await supabase.from('demandas').update(updates).eq('id', demandId)
+
+      await supabase
+        .from('agenda_eventos')
+        .delete()
+        .eq('demanda_id', demandId)
+        .eq('tipo', 'Pós-Venda')
+
+      await supabase.from('logs_auditoria').insert({
+        demanda_id: demandId,
+        usuario_id: user.id,
+        acao: 'Falha Pós-Venda',
+        detalhes: `Retornado para Treinamento com alvo em ${nextAlvo}. Motivo: ${reason}`,
+      })
+
+      toast({
+        title: 'Retornado',
+        description: `A demanda retornou para Treinamento. Próximo alvo: ${nextAlvo}.`,
+        variant: 'destructive',
+      })
+    },
+    [demands, user],
+  )
+
   const value = useMemo(
     () => ({
       demands,
@@ -1361,6 +1471,8 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       addDemandTemplate,
       editDemandTemplate,
       deleteDemandTemplate,
+      advancePostSalesWorkflow,
+      failPostSalesWorkflow,
     }),
     [
       demands,
@@ -1386,6 +1498,8 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       addDemandTemplate,
       editDemandTemplate,
       deleteDemandTemplate,
+      advancePostSalesWorkflow,
+      failPostSalesWorkflow,
     ],
   )
 

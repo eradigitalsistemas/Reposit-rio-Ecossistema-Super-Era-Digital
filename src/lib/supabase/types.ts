@@ -479,13 +479,16 @@ export type Database = {
           data_aceite: string | null
           data_atualizacao: string | null
           data_conclusao: string | null
+          data_conclusao_treinamento: string | null
           data_criacao: string | null
+          data_proxima_acao: string | null
           data_resposta: string | null
           data_vencimento: string | null
           descricao: string | null
           detalhes_adicionais: string | null
           id: string
           last_status_change_at: string | null
+          pos_venda_fase: string | null
           prazo: string | null
           prioridade: string | null
           protocolo: string
@@ -497,6 +500,7 @@ export type Database = {
           tipo_demanda: string
           titulo: string | null
           usuario_id: string | null
+          workflow_tipo: string | null
         }
         Insert: {
           anexos?: Json | null
@@ -505,13 +509,16 @@ export type Database = {
           data_aceite?: string | null
           data_atualizacao?: string | null
           data_conclusao?: string | null
+          data_conclusao_treinamento?: string | null
           data_criacao?: string | null
+          data_proxima_acao?: string | null
           data_resposta?: string | null
           data_vencimento?: string | null
           descricao?: string | null
           detalhes_adicionais?: string | null
           id?: string
           last_status_change_at?: string | null
+          pos_venda_fase?: string | null
           prazo?: string | null
           prioridade?: string | null
           protocolo: string
@@ -523,6 +530,7 @@ export type Database = {
           tipo_demanda: string
           titulo?: string | null
           usuario_id?: string | null
+          workflow_tipo?: string | null
         }
         Update: {
           anexos?: Json | null
@@ -531,13 +539,16 @@ export type Database = {
           data_aceite?: string | null
           data_atualizacao?: string | null
           data_conclusao?: string | null
+          data_conclusao_treinamento?: string | null
           data_criacao?: string | null
+          data_proxima_acao?: string | null
           data_resposta?: string | null
           data_vencimento?: string | null
           descricao?: string | null
           detalhes_adicionais?: string | null
           id?: string
           last_status_change_at?: string | null
+          pos_venda_fase?: string | null
           prazo?: string | null
           prioridade?: string | null
           protocolo?: string
@@ -549,6 +560,7 @@ export type Database = {
           tipo_demanda?: string
           titulo?: string | null
           usuario_id?: string | null
+          workflow_tipo?: string | null
         }
         Relationships: [
           {
@@ -1956,6 +1968,10 @@ export const Constants = {
 //   time_pending_ms: bigint (nullable, default: 0)
 //   time_in_progress_ms: bigint (nullable, default: 0)
 //   last_status_change_at: timestamp with time zone (nullable)
+//   workflow_tipo: text (nullable, default: 'geral'::text)
+//   pos_venda_fase: text (nullable)
+//   data_proxima_acao: timestamp with time zone (nullable)
+//   data_conclusao_treinamento: timestamp with time zone (nullable)
 // Table: departments
 //   id: uuid (not null, default: gen_random_uuid())
 //   name: text (not null)
@@ -2833,19 +2849,19 @@ export const Constants = {
 //   DECLARE
 //     elapsed_ms BIGINT;
 //   BEGIN
-//     -- Only calculate if last_status_change_at is not null
-//     IF OLD.last_status_change_at IS NOT NULL THEN
-//       elapsed_ms := EXTRACT(EPOCH FROM (NOW() - OLD.last_status_change_at)) * 1000;
-//     ELSE
-//       elapsed_ms := EXTRACT(EPOCH FROM (NOW() - COALESCE(OLD.data_criacao, NOW()))) * 1000;
-//     END IF;
-//
-//     IF elapsed_ms < 0 THEN
-//       elapsed_ms := 0;
-//     END IF;
-//
 //     -- If status changed, accumulate time to the OLD status
 //     IF OLD.status IS DISTINCT FROM NEW.status THEN
+//
+//       IF OLD.last_status_change_at IS NOT NULL THEN
+//         elapsed_ms := EXTRACT(EPOCH FROM (NOW() - OLD.last_status_change_at)) * 1000;
+//       ELSE
+//         elapsed_ms := EXTRACT(EPOCH FROM (NOW() - COALESCE(OLD.data_criacao, NOW()))) * 1000;
+//       END IF;
+//
+//       IF elapsed_ms < 0 THEN
+//         elapsed_ms := 0;
+//       END IF;
+//
 //       IF OLD.status = 'Pendente' THEN
 //         NEW.time_pending_ms := COALESCE(OLD.time_pending_ms, 0) + elapsed_ms;
 //       ELSIF OLD.status = 'Em Andamento' THEN

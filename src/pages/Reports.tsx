@@ -10,7 +10,6 @@ import { ComplianceReport } from '@/components/reports/hr/ComplianceReport'
 import { OnboardingReport } from '@/components/reports/hr/OnboardingReport'
 import { CrmReport } from '@/components/reports/crm/CrmReport'
 import { CertificatesReport } from '@/components/reports/certificates/CertificatesReport'
-import { DemandProductivityReport } from '@/components/reports/demands/DemandProductivityReport'
 
 export default function Reports() {
   const { role } = useAuthStore()
@@ -41,7 +40,6 @@ export default function Reports() {
           <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
           <TabsTrigger value="crm">CRM Comercial</TabsTrigger>
           <TabsTrigger value="certificates">Certificados</TabsTrigger>
-          <TabsTrigger value="demand-productivity">Desempenho Demandas</TabsTrigger>
         </TabsList>
         <TabsContent value="executive">
           <ExecutiveDashboard onNavigate={setActiveTab} />
@@ -66,9 +64,6 @@ export default function Reports() {
         </TabsContent>
         <TabsContent value="certificates">
           <CertificatesReport />
-        </TabsContent>
-        <TabsContent value="demand-productivity">
-          <DemandProductivityReport />
         </TabsContent>
       </Tabs>
     </div>
