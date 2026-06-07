@@ -1,6 +1,7 @@
 import { Demand } from '@/types/demand'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { DemandTimer } from './DemandTimer'
 import { useSearchParams } from 'react-router-dom'
 import {
   Calendar,
@@ -176,7 +177,7 @@ export function DemandCard({ demand }: DemandCardProps) {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2 mt-1">
+          <div className="flex flex-wrap items-center gap-2 mt-1">
             <Badge
               variant="outline"
               className={`text-xs sm:text-[10px] px-2 sm:px-1.5 py-0.5 h-auto font-medium border ${getPriorityColor(
@@ -191,6 +192,7 @@ export function DemandCard({ demand }: DemandCardProps) {
               )}
               {demand.priority}
             </Badge>
+            <DemandTimer demand={demand} />
           </div>
 
           <div className="flex flex-col gap-1.5 mt-2">

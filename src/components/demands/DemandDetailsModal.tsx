@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { format } from 'date-fns'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -36,7 +36,91 @@ import {
   RotateCcw,
 } from 'lucide-react'
 import { Demand, DemandAttachment, ChecklistItem } from '@/types/demand'
+import { DemandTimer } from './DemandTimer'
 import useDemandStore from '@/stores/useDemandStore'
+
+function TimeBreakdown({ demand }: { demand: Demand }) {
+  const [now, setNow] = useState(Date.now())
+
+  useEffect(() => {
+    if (!demand || demand.status === 'Concluído') return
+    const interval = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(interval)
+  }, [demand?.status])
+
+  if (!demand) return null
+
+  const safeGetTime = (dateStr?: string) => {
+    if (!dateStr) return null
+    const time = new Date(dateStr).getTime()
+    return isNaN(time) ? null : time
+  }
+
+  const createdAt = safeGetTime(demand.createdAt) || now
+  const completedAt =
+    safeGetTime((demand as any).data_conclusao) ||
+    safeGetTime((demand as any).completedAt) ||
+    safeGetTime(demand.lastStatusChangeAt) ||
+    now
+
+  let totalTime = 0
+  if (demand.status === 'Concluído') {
+    totalTime = Math.max(0, completedAt - createdAt)
+  } else {
+    totalTime = Math.max(0, now - createdAt)
+  }
+
+  const lastChange = safeGetTime(demand.lastStatusChangeAt) || createdAt
+  const currentPhaseElapsed = Math.max(0, now - lastChange)
+
+  const timePending =
+    (demand.timePendingMs || 0) + (demand.status === 'Pendente' ? currentPhaseElapsed : 0)
+  const timeInProgress =
+    (demand.timeInProgressMs || 0) + (demand.status === 'Em Andamento' ? currentPhaseElapsed : 0)
+
+  const formatTime = (ms: number) => {
+    if (isNaN(ms) || ms < 0) return '00:00:00'
+    const totalSeconds = Math.max(0, Math.floor(ms / 1000))
+    const days = Math.floor(totalSeconds / 86400)
+    const hours = Math.floor((totalSeconds % 86400) / 3600)
+    const minutes = Math.floor((totalSeconds % 3600) / 60)
+    const seconds = totalSeconds % 60
+
+    const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+    return days > 0 ? `${days}d ${timeStr}` : timeStr
+  }
+
+  return (
+    <div className="flex flex-col sm:flex-row gap-4 p-4 bg-gray-50 dark:bg-[rgba(255,255,255,0.02)] rounded-xl border border-gray-200 dark:border-white/10 shadow-sm mt-4">
+      <div className="flex-1 space-y-1">
+        <span className="text-xs font-semibold text-gray-500 dark:text-white/50 uppercase tracking-wider">
+          Tempo em Espera (Pendente)
+        </span>
+        <div className="font-medium text-sm text-amber-600 dark:text-amber-500 tabular-nums">
+          {formatTime(timePending)}
+        </div>
+      </div>
+      <div className="w-px bg-gray-200 dark:bg-white/10 hidden sm:block"></div>
+      <div className="flex-1 space-y-1">
+        <span className="text-xs font-semibold text-gray-500 dark:text-white/50 uppercase tracking-wider">
+          Tempo em Execução (Em Andamento)
+        </span>
+        <div className="font-medium text-sm text-blue-600 dark:text-blue-500 tabular-nums">
+          {formatTime(timeInProgress)}
+        </div>
+      </div>
+      <div className="w-px bg-gray-200 dark:bg-white/10 hidden sm:block"></div>
+      <div className="flex-1 space-y-1">
+        <span className="text-xs font-semibold text-gray-500 dark:text-white/50 uppercase tracking-wider">
+          Tempo Total
+        </span>
+        <div className="font-medium text-sm text-gray-900 dark:text-white tabular-nums">
+          {formatTime(totalTime)}
+        </div>
+      </div>
+    </div>
+  )
+}
 import useAuthStore from '@/stores/useAuthStore'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from '@/hooks/use-toast'
@@ -306,7 +390,7 @@ export function DemandDetailsModal({
           <div className="flex-1 overflow-y-auto lg:border-r border-gray-200 dark:border-border bg-white dark:bg-card">
             <div className="p-4 sm:p-6 space-y-6">
               {/* Properties Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 p-4 bg-gray-50 dark:bg-[rgba(255,255,255,0.02)] rounded-xl border border-gray-200 dark:border-white/10 shadow-sm">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 p-4 bg-gray-50 dark:bg-[rgba(255,255,255,0.02)] rounded-xl border border-gray-200 dark:border-white/10 shadow-sm">
                 <div className="space-y-1">
                   <span className="text-xs font-semibold text-gray-500 dark:text-white/50 uppercase tracking-wider">
                     Criado por
@@ -371,7 +455,18 @@ export function DemandDetailsModal({
                       : 'Sem prazo'}
                   </div>
                 </div>
+                <div className="space-y-1 col-span-2 sm:col-span-1">
+                  <span className="text-xs font-semibold text-gray-500 dark:text-white/50 uppercase tracking-wider">
+                    Cronômetro
+                  </span>
+                  <div className="flex items-center mt-1">
+                    <DemandTimer demand={currentDemand} />
+                  </div>
+                </div>
               </div>
+
+              {/* Time Breakdown Section */}
+              <TimeBreakdown demand={currentDemand} />
 
               {/* Description Container */}
               <div className="space-y-3">

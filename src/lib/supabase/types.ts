@@ -476,6 +476,7 @@ export type Database = {
           anexos: Json | null
           checklist: Json | null
           cliente_id: string | null
+          data_aceite: string | null
           data_atualizacao: string | null
           data_conclusao: string | null
           data_criacao: string | null
@@ -484,12 +485,15 @@ export type Database = {
           descricao: string | null
           detalhes_adicionais: string | null
           id: string
+          last_status_change_at: string | null
           prazo: string | null
           prioridade: string | null
           protocolo: string
           responsavel_id: string | null
           resposta: string | null
           status: string | null
+          time_in_progress_ms: number | null
+          time_pending_ms: number | null
           tipo_demanda: string
           titulo: string | null
           usuario_id: string | null
@@ -498,6 +502,7 @@ export type Database = {
           anexos?: Json | null
           checklist?: Json | null
           cliente_id?: string | null
+          data_aceite?: string | null
           data_atualizacao?: string | null
           data_conclusao?: string | null
           data_criacao?: string | null
@@ -506,12 +511,15 @@ export type Database = {
           descricao?: string | null
           detalhes_adicionais?: string | null
           id?: string
+          last_status_change_at?: string | null
           prazo?: string | null
           prioridade?: string | null
           protocolo: string
           responsavel_id?: string | null
           resposta?: string | null
           status?: string | null
+          time_in_progress_ms?: number | null
+          time_pending_ms?: number | null
           tipo_demanda: string
           titulo?: string | null
           usuario_id?: string | null
@@ -520,6 +528,7 @@ export type Database = {
           anexos?: Json | null
           checklist?: Json | null
           cliente_id?: string | null
+          data_aceite?: string | null
           data_atualizacao?: string | null
           data_conclusao?: string | null
           data_criacao?: string | null
@@ -528,12 +537,15 @@ export type Database = {
           descricao?: string | null
           detalhes_adicionais?: string | null
           id?: string
+          last_status_change_at?: string | null
           prazo?: string | null
           prioridade?: string | null
           protocolo?: string
           responsavel_id?: string | null
           resposta?: string | null
           status?: string | null
+          time_in_progress_ms?: number | null
+          time_pending_ms?: number | null
           tipo_demanda?: string
           titulo?: string | null
           usuario_id?: string | null
@@ -1940,6 +1952,10 @@ export const Constants = {
 //   data_conclusao: timestamp with time zone (nullable)
 //   usuario_id: uuid (nullable)
 //   protocolo: character varying (not null)
+//   data_aceite: timestamp with time zone (nullable)
+//   time_pending_ms: bigint (nullable, default: 0)
+//   time_in_progress_ms: bigint (nullable, default: 0)
+//   last_status_change_at: timestamp with time zone (nullable)
 // Table: departments
 //   id: uuid (not null, default: gen_random_uuid())
 //   name: text (not null)
@@ -2744,6 +2760,34 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION set_demand_accepted_at()
+//   CREATE OR REPLACE FUNCTION public.set_demand_accepted_at()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   BEGIN
+//     IF NEW.status = 'Em Andamento' AND NEW.data_aceite IS NULL THEN
+//       NEW.data_aceite = NOW();
+//     END IF;
+//     RETURN NEW;
+//   END;
+//   $function$
+//
+// FUNCTION set_demand_completed_at()
+//   CREATE OR REPLACE FUNCTION public.set_demand_completed_at()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   BEGIN
+//     IF NEW.status = 'Concluído' AND (OLD.status IS DISTINCT FROM 'Concluído') THEN
+//       NEW.data_conclusao = NOW();
+//     ELSIF NEW.status != 'Concluído' THEN
+//       NEW.data_conclusao = NULL;
+//     END IF;
+//     RETURN NEW;
+//   END;
+//   $function$
+//
 // FUNCTION set_demand_protocol()
 //   CREATE OR REPLACE FUNCTION public.set_demand_protocol()
 //    RETURNS trigger
@@ -2781,6 +2825,39 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION update_demand_phase_time()
+//   CREATE OR REPLACE FUNCTION public.update_demand_phase_time()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   DECLARE
+//     elapsed_ms BIGINT;
+//   BEGIN
+//     -- Only calculate if last_status_change_at is not null
+//     IF OLD.last_status_change_at IS NOT NULL THEN
+//       elapsed_ms := EXTRACT(EPOCH FROM (NOW() - OLD.last_status_change_at)) * 1000;
+//     ELSE
+//       elapsed_ms := EXTRACT(EPOCH FROM (NOW() - COALESCE(OLD.data_criacao, NOW()))) * 1000;
+//     END IF;
+//
+//     IF elapsed_ms < 0 THEN
+//       elapsed_ms := 0;
+//     END IF;
+//
+//     -- If status changed, accumulate time to the OLD status
+//     IF OLD.status IS DISTINCT FROM NEW.status THEN
+//       IF OLD.status = 'Pendente' THEN
+//         NEW.time_pending_ms := COALESCE(OLD.time_pending_ms, 0) + elapsed_ms;
+//       ELSIF OLD.status = 'Em Andamento' THEN
+//         NEW.time_in_progress_ms := COALESCE(OLD.time_in_progress_ms, 0) + elapsed_ms;
+//       END IF;
+//       NEW.last_status_change_at := NOW();
+//     END IF;
+//
+//     RETURN NEW;
+//   END;
+//   $function$
+//
 // FUNCTION update_demanda_atualizacao_on_log()
 //   CREATE OR REPLACE FUNCTION public.update_demanda_atualizacao_on_log()
 //    RETURNS trigger
@@ -2801,6 +2878,9 @@ export const Constants = {
 // --- TRIGGERS ---
 // Table: demandas
 //   set_public_demandas_data_atualizacao: CREATE TRIGGER set_public_demandas_data_atualizacao BEFORE UPDATE ON public.demandas FOR EACH ROW EXECUTE FUNCTION set_data_atualizacao_timestamp()
+//   trg_demand_phase_time: CREATE TRIGGER trg_demand_phase_time BEFORE UPDATE ON public.demandas FOR EACH ROW EXECUTE FUNCTION update_demand_phase_time()
+//   trg_set_demand_accepted_at: CREATE TRIGGER trg_set_demand_accepted_at BEFORE INSERT OR UPDATE ON public.demandas FOR EACH ROW EXECUTE FUNCTION set_demand_accepted_at()
+//   trg_set_demand_completed_at: CREATE TRIGGER trg_set_demand_completed_at BEFORE UPDATE ON public.demandas FOR EACH ROW EXECUTE FUNCTION set_demand_completed_at()
 //   trg_set_demand_protocol: CREATE TRIGGER trg_set_demand_protocol BEFORE INSERT ON public.demandas FOR EACH ROW EXECUTE FUNCTION set_demand_protocol()
 // Table: emails_sent
 //   set_public_emails_sent_updated_at: CREATE TRIGGER set_public_emails_sent_updated_at BEFORE UPDATE ON public.emails_sent FOR EACH ROW EXECUTE FUNCTION set_updated_at_timestamp()

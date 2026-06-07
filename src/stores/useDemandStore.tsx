@@ -214,8 +214,13 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             checklist: d.checklist || [],
             createdAt: d.data_criacao || new Date().toISOString(),
             updatedAt: d.data_atualizacao || d.data_criacao || new Date().toISOString(),
+            acceptedAt: d.data_aceite || null,
             completedAt: d.data_conclusao || null,
             systemEscalated: !!systemEscalated,
+            timePendingMs: Number(d.time_pending_ms || 0),
+            timeInProgressMs: Number(d.time_in_progress_ms || 0),
+            lastStatusChangeAt:
+              d.last_status_change_at || d.data_criacao || new Date().toISOString(),
           }
         })
         setDemands(parsedDemands)
@@ -507,8 +512,13 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
                     checklist: d.checklist || [],
                     createdAt: d.data_criacao || new Date().toISOString(),
                     updatedAt: d.data_atualizacao || d.data_criacao || new Date().toISOString(),
+                    acceptedAt: d.data_aceite || null,
                     completedAt: d.data_conclusao || null,
                     systemEscalated: !!systemEscalated,
+                    timePendingMs: Number(d.time_pending_ms || 0),
+                    timeInProgressMs: Number(d.time_in_progress_ms || 0),
+                    lastStatusChangeAt:
+                      d.last_status_change_at || d.data_criacao || new Date().toISOString(),
                   }
 
                   setDemands((prev) => {
@@ -725,6 +735,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             checklist: finalChecklist,
             createdAt: d.data_criacao || new Date().toISOString(),
             updatedAt: d.data_atualizacao || d.data_criacao || new Date().toISOString(),
+            acceptedAt: d.data_aceite || null,
             systemEscalated: false,
           }
           setDemands((prev) => [createdDemand, ...prev])
@@ -773,6 +784,9 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (updates.status !== undefined && !statusChangedToPending) {
           updateData.status = updates.status
+          if (updates.status === 'Em Andamento' && !currentDemand?.acceptedAt) {
+            updateData.data_aceite = new Date().toISOString()
+          }
         }
 
         let finalChecklist = updates.checklist || currentDemand?.checklist || []
@@ -815,6 +829,8 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
                 status: updateData.status !== undefined ? updateData.status : d.status,
                 checklist: updateData.checklist !== undefined ? updateData.checklist : d.checklist,
                 updatedAt: updateData.data_atualizacao,
+                acceptedAt:
+                  updateData.data_aceite !== undefined ? updateData.data_aceite : d.acceptedAt,
               }
             }
             return d
@@ -838,11 +854,48 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
   const updateStatus = useCallback(async (demandId: string, status: DemandStatus) => {
     const updatedAt = new Date().toISOString()
-    setDemands((prev) => prev.map((d) => (d.id === demandId ? { ...d, status, updatedAt } : d)))
-    await supabase
-      .from('demandas')
-      .update({ status, data_atualizacao: updatedAt })
-      .eq('id', demandId)
+    const updateData: any = { status, data_atualizacao: updatedAt }
+
+    setDemands((prev) =>
+      prev.map((d) => {
+        if (d.id === demandId) {
+          const elapsed =
+            new Date(updatedAt).getTime() - new Date(d.lastStatusChangeAt || d.createdAt).getTime()
+          const timePendingMs =
+            d.status === 'Pendente'
+              ? (d.timePendingMs || 0) + Math.max(0, elapsed)
+              : d.timePendingMs
+          const timeInProgressMs =
+            d.status === 'Em Andamento'
+              ? (d.timeInProgressMs || 0) + Math.max(0, elapsed)
+              : d.timeInProgressMs
+
+          if (status === 'Em Andamento' && !d.acceptedAt) {
+            updateData.data_aceite = updatedAt
+            return {
+              ...d,
+              status,
+              updatedAt,
+              acceptedAt: updatedAt,
+              lastStatusChangeAt: updatedAt,
+              timePendingMs,
+              timeInProgressMs,
+            }
+          }
+          return {
+            ...d,
+            status,
+            updatedAt,
+            lastStatusChangeAt: updatedAt,
+            timePendingMs,
+            timeInProgressMs,
+          }
+        }
+        return d
+      }),
+    )
+
+    await supabase.from('demandas').update(updateData).eq('id', demandId)
   }, [])
 
   const deleteDemand = useCallback(async (demandId: string) => {
@@ -863,19 +916,30 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       const newAssigneeId = demand.assigneeId || user.id
       const newAssigneeName = demand.assigneeId ? demand.assignee : userName || 'Você'
       const updatedAt = new Date().toISOString()
+      const acceptedAt = demand.acceptedAt || updatedAt
 
       setDemands((prev) =>
-        prev.map((d) =>
-          d.id === demandId
-            ? {
-                ...d,
-                status: 'Em Andamento',
-                assigneeId: newAssigneeId,
-                assignee: newAssigneeName,
-                updatedAt,
-              }
-            : d,
-        ),
+        prev.map((d) => {
+          if (d.id === demandId) {
+            const elapsed =
+              new Date(updatedAt).getTime() -
+              new Date(d.lastStatusChangeAt || d.createdAt).getTime()
+            return {
+              ...d,
+              status: 'Em Andamento',
+              assigneeId: newAssigneeId,
+              assignee: newAssigneeName,
+              updatedAt,
+              acceptedAt,
+              lastStatusChangeAt: updatedAt,
+              timePendingMs:
+                d.status === 'Pendente'
+                  ? (d.timePendingMs || 0) + Math.max(0, elapsed)
+                  : d.timePendingMs,
+            }
+          }
+          return d
+        }),
       )
       const { error } = await supabase
         .from('demandas')
@@ -883,6 +947,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           status: 'Em Andamento',
           responsavel_id: newAssigneeId,
           data_atualizacao: updatedAt,
+          data_aceite: acceptedAt,
         })
         .eq('id', demandId)
 
@@ -956,19 +1021,31 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         setDemands((prev) =>
-          prev.map((d) =>
-            d.id === demandId
-              ? {
-                  ...d,
-                  status: 'Concluído',
-                  updatedAt: nowIso,
-                  completedAt: nowIso,
-                  responses: d.responses ? [...d.responses, resposta] : [resposta],
-                  attachments: updatedAttachments,
-                  logs: [...(d.logs || []), newLog],
-                }
-              : d,
-          ),
+          prev.map((d) => {
+            if (d.id === demandId) {
+              const elapsed =
+                new Date(nowIso).getTime() - new Date(d.lastStatusChangeAt || d.createdAt).getTime()
+              return {
+                ...d,
+                status: 'Concluído',
+                updatedAt: nowIso,
+                completedAt: nowIso,
+                lastStatusChangeAt: nowIso,
+                timeInProgressMs:
+                  d.status === 'Em Andamento'
+                    ? (d.timeInProgressMs || 0) + Math.max(0, elapsed)
+                    : d.timeInProgressMs,
+                timePendingMs:
+                  d.status === 'Pendente'
+                    ? (d.timePendingMs || 0) + Math.max(0, elapsed)
+                    : d.timePendingMs,
+                responses: d.responses ? [...d.responses, resposta] : [resposta],
+                attachments: updatedAttachments,
+                logs: [...(d.logs || []), newLog],
+              }
+            }
+            return d
+          }),
         )
 
         toast({
@@ -1159,16 +1236,28 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         setDemands((prev) =>
-          prev.map((d) =>
-            d.id === demandId
-              ? {
-                  ...d,
-                  status: 'Em Andamento',
-                  updatedAt: nowIso,
-                  logs: [...(d.logs || []), newLog],
-                }
-              : d,
-          ),
+          prev.map((d) => {
+            if (d.id === demandId) {
+              const elapsed =
+                new Date(nowIso).getTime() - new Date(d.lastStatusChangeAt || d.createdAt).getTime()
+              return {
+                ...d,
+                status: 'Em Andamento',
+                updatedAt: nowIso,
+                lastStatusChangeAt: nowIso,
+                timePendingMs:
+                  d.status === 'Pendente'
+                    ? (d.timePendingMs || 0) + Math.max(0, elapsed)
+                    : d.timePendingMs,
+                timeInProgressMs:
+                  d.status === 'Em Andamento'
+                    ? (d.timeInProgressMs || 0) + Math.max(0, elapsed)
+                    : d.timeInProgressMs,
+                logs: [...(d.logs || []), newLog],
+              }
+            }
+            return d
+          }),
         )
 
         toast({
