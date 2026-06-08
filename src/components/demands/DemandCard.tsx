@@ -133,7 +133,20 @@ export function DemandCard({ demand }: DemandCardProps) {
       <Card
         id={`demand-card-${demand.id}`}
         onClick={handleCardClick}
-        className="cursor-pointer transition-all duration-200 group bg-white dark:bg-card border-gray-300 dark:border-border shadow-md dark:shadow-sm hover:shadow-lg dark:hover:shadow-md hover:border-primary/50 dark:hover:shadow-[0_0_15px_rgba(34,197,94,0.1)] overflow-hidden"
+        draggable
+        onDragStart={(e) => {
+          e.dataTransfer.setData('text/plain', demand.id)
+          e.dataTransfer.effectAllowed = 'move'
+          setTimeout(() => {
+            const el = document.getElementById(`demand-card-${demand.id}`)
+            if (el) el.style.opacity = '0.5'
+          }, 0)
+        }}
+        onDragEnd={(e) => {
+          const el = document.getElementById(`demand-card-${demand.id}`)
+          if (el) el.style.opacity = '1'
+        }}
+        className="cursor-grab active:cursor-grabbing transition-all duration-200 group bg-white dark:bg-card border-gray-300 dark:border-border shadow-md dark:shadow-sm hover:shadow-lg dark:hover:shadow-md hover:border-primary/50 dark:hover:shadow-[0_0_15px_rgba(34,197,94,0.1)] overflow-hidden"
       >
         <CardContent className="p-4 flex flex-col gap-3 relative">
           {demand.systemEscalated && (

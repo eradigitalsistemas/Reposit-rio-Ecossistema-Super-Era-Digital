@@ -48,7 +48,7 @@ import { cn } from '@/lib/utils'
 import { useSearchParams } from 'react-router-dom'
 
 export default function Demands() {
-  const { demands, collaborators } = useDemandStore()
+  const { demands, collaborators, updateStatus } = useDemandStore()
   const { role, user } = useAuthStore()
 
   const [collaboratorFilter, setCollaboratorFilter] = useState<string>('all')
@@ -524,6 +524,12 @@ export default function Demands() {
                 title={colName}
                 demands={(filteredDemands || []).filter((d) => d?.status === colName)}
                 highlightId={highlightId}
+                onDropDemand={(demandId, newStatus) => {
+                  const demand = demands.find((d) => d.id === demandId)
+                  if (demand && demand.status !== newStatus) {
+                    updateStatus(demandId, newStatus as DemandStatus)
+                  }
+                }}
               />
             ))}
           </div>

@@ -8,9 +8,31 @@ interface DemandColumnProps {
   highlightId?: string | null
 }
 
+import useDemandStore from '@/stores/useDemandStore'
+
 export function DemandColumn({ title, demands, highlightId }: DemandColumnProps) {
+  const { updateStatus } = useDemandStore()
+
   return (
-    <div className="flex flex-col shrink-0 min-w-[85vw] sm:min-w-[320px] max-w-[400px] bg-gray-50/80 dark:bg-[rgba(255,255,255,0.02)] rounded-xl border border-gray-300 dark:border-white/10 h-fit snap-center shadow-sm dark:shadow-subtle overflow-hidden">
+    <div
+      className="flex flex-col shrink-0 min-w-[85vw] sm:min-w-[320px] max-w-[400px] bg-gray-50/80 dark:bg-[rgba(255,255,255,0.02)] rounded-xl border border-gray-300 dark:border-white/10 h-fit snap-center shadow-sm dark:shadow-subtle overflow-hidden transition-colors data-[drag-over=true]:bg-primary/5 data-[drag-over=true]:border-primary/50"
+      onDragOver={(e) => {
+        e.preventDefault()
+        e.dataTransfer.dropEffect = 'move'
+        e.currentTarget.setAttribute('data-drag-over', 'true')
+      }}
+      onDragLeave={(e) => {
+        e.currentTarget.removeAttribute('data-drag-over')
+      }}
+      onDrop={(e) => {
+        e.preventDefault()
+        e.currentTarget.removeAttribute('data-drag-over')
+        const demandId = e.dataTransfer.getData('text/plain')
+        if (demandId) {
+          updateStatus(demandId, title as any)
+        }
+      }}
+    >
       <div className="p-4 border-b border-gray-300 dark:border-white/10 shrink-0 flex items-center justify-between bg-gray-100/50 dark:bg-black/20 z-10 sticky top-0 backdrop-blur-md">
         <h3 className="font-semibold text-gray-900 dark:text-white text-lg sm:text-base tracking-tight">
           {title}

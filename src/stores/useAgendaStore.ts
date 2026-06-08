@@ -30,11 +30,83 @@ interface AgendaState {
   ) => Promise<void>
   salvarEvento: (evento: Partial<EventoAgenda>, currentUserId: string) => Promise<{ error: any }>
   deletarEvento: (id: string) => Promise<{ error: any }>
+  setupRealtime: (currentUserId: string, isAdmin: boolean) => void
+  cleanupRealtime: () => void
 }
 
-export const useAgendaStore = create<AgendaState>((set) => ({
+let agendaChannel: any = null
+
+export const useAgendaStore = create<AgendaState>((set, get) => ({
   eventos: [],
   loading: false,
+
+  setupRealtime: (currentUserId, isAdmin) => {
+    if (agendaChannel) return
+
+    let isReconnecting = false
+    agendaChannel = supabase
+      .channel('agenda_eventos_changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'agenda_eventos' },
+        async (payload) => {
+          if (!isAdmin) {
+            const userId = (payload.new as any)?.usuario_id || (payload.old as any)?.usuario_id
+            if (userId !== currentUserId) return
+          }
+
+          if (payload.eventType === 'DELETE') {
+            set((state) => ({ eventos: state.eventos.filter((e) => e.id !== payload.old.id) }))
+          } else {
+            const e = payload.new as any
+            const newEvento: EventoAgenda = {
+              id: e.id,
+              usuario_id: e.usuario_id,
+              titulo: e.titulo,
+              descricao: e.descricao,
+              data_inicio: e.data_inicio,
+              data_fim: e.data_fim,
+              tipo: e.tipo,
+              privado: e.privado,
+              cliente_id: e.cliente_id,
+              lead_id: e.lead_id,
+              demanda_id: e.demanda_id,
+              criado_por: e.criado_por,
+            }
+
+            const startOfToday = new Date()
+            startOfToday.setHours(0, 0, 0, 0)
+            if (new Date(newEvento.data_inicio) < startOfToday) return
+
+            set((state) => {
+              const exists = state.eventos.find((ev) => ev.id === newEvento.id)
+              if (exists) {
+                return {
+                  eventos: state.eventos.map((ev) => (ev.id === newEvento.id ? newEvento : ev)),
+                }
+              }
+              return { eventos: [...state.eventos, newEvento] }
+            })
+          }
+        },
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          if (isReconnecting) {
+            const now = new Date()
+            get().fetchEventos(now, isAdmin, currentUserId)
+          }
+          isReconnecting = true
+        }
+      })
+  },
+
+  cleanupRealtime: () => {
+    if (agendaChannel) {
+      supabase.removeChannel(agendaChannel)
+      agendaChannel = null
+    }
+  },
 
   fetchEventos: async (mes, isAdmin, currentUserId, filtroUsuario) => {
     set({ loading: true })
@@ -127,6 +199,38 @@ export const useAgendaStore = create<AgendaState>((set) => ({
       return { error: null }
     } catch (error) {
       return { error }
+    }
+  },
+
+  subscribeToEvents: (isAdmin, currentUserId, filtroUsuario, currentDate) => {
+    get().unsubscribeFromEvents()
+    let wasDisconnected = false
+
+    agendaChannel = supabase
+      .channel('agenda-eventos-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'agenda_eventos' },
+        (payload) => {
+          get().fetchEventos(currentDate, isAdmin, currentUserId, filtroUsuario)
+        },
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          if (wasDisconnected) {
+            get().fetchEventos(currentDate, isAdmin, currentUserId, filtroUsuario)
+            wasDisconnected = false
+          }
+        } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          wasDisconnected = true
+        }
+      })
+  },
+
+  unsubscribeFromEvents: () => {
+    if (agendaChannel) {
+      supabase.removeChannel(agendaChannel)
+      agendaChannel = null
     }
   },
 }))

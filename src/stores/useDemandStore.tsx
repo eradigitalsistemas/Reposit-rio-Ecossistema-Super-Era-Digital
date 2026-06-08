@@ -15,14 +15,14 @@ import {
   DemandLog,
   DemandAttachment,
   ChecklistItem,
+  ChecklistTemplate,
+  DemandTemplate,
 } from '@/types/demand'
 import { toast } from '@/hooks/use-toast'
 import { ToastAction } from '@/components/ui/toast'
 import { supabase } from '@/lib/supabase/client'
 import useAuthStore from './useAuthStore'
 import { useNavigate } from 'react-router-dom'
-
-import { ChecklistTemplate, DemandTemplate } from '@/types/demand'
 
 interface Collaborator {
   id: string
@@ -87,16 +87,42 @@ interface DemandStoreState {
 
 const DemandContext = createContext<DemandStoreState | null>(null)
 
+export function playNotificationSound() {
+  try {
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext
+    if (!AudioContext) return
+    const ctx = new AudioContext()
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(800, ctx.currentTime)
+    osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.1)
+    gain.gain.setValueAtTime(0.1, ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1)
+    osc.start(ctx.currentTime)
+    osc.stop(ctx.currentTime + 0.1)
+  } catch (e) {
+    console.error('Audio error', e)
+  }
+}
+
 export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   const [demands, setDemands] = useState<Demand[]>([])
   const [collaborators, setCollaborators] = useState<Collaborator[]>([])
   const [notifications, setNotifications] = useState<DemandNotification[]>([])
   const [checklistTemplates, setChecklistTemplates] = useState<ChecklistTemplate[]>([])
   const [demandTemplates, setDemandTemplates] = useState<DemandTemplate[]>([])
+
   const { user, role, userName } = useAuthStore()
   const navigate = useNavigate()
-
   const hasFetched = useRef(false)
+  const collaboratorsRef = useRef(collaborators)
+
+  useEffect(() => {
+    collaboratorsRef.current = collaborators
+  }, [collaborators])
 
   const syncChecklistAgenda = async (
     demandId: string,
@@ -149,6 +175,90 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
     return updatedChecklist
   }
 
+  const parseDemandRow = useCallback((d: any): Demand => {
+    const sortedLogs = Array.isArray(d.logs_auditoria)
+      ? [...d.logs_auditoria].sort((a: any, b: any) => {
+          const timeA = a.data_criacao ? new Date(a.data_criacao).getTime() : 0
+          const timeB = b.data_criacao ? new Date(b.data_criacao).getTime() : 0
+          return timeB - timeA
+        })
+      : []
+
+    const mappedLogs: DemandLog[] = sortedLogs.map((l: any) => ({
+      id: l.id || crypto.randomUUID(),
+      acao: l.acao,
+      detalhes: l.detalhes,
+      createdAt: l.data_criacao,
+      usuario_id: l.usuario_id,
+      userName: l.usuario?.nome || 'Sistema',
+      dados_novos: l.dados_novos,
+    }))
+
+    const latestPriorityChange = sortedLogs.find((l: any) => l.acao === 'Alteração de Prioridade')
+    const systemEscalated =
+      latestPriorityChange &&
+      latestPriorityChange.usuario_id === null &&
+      latestPriorityChange.dados_novos?.prioridade === 'Urgente' &&
+      d.prioridade === 'Urgente'
+
+    return {
+      id: d.id,
+      protocolo: d.protocolo,
+      title: d.titulo || 'Sem título',
+      description: d.descricao || '',
+      priority: (d.prioridade as DemandPriority) || 'Pode Ficar para Amanhã',
+      status: (d.status as DemandStatus) || 'Pendente',
+      dueDate: d.data_vencimento || null,
+      assignee:
+        (d as any).responsavel?.nome ||
+        collaboratorsRef.current.find((c) => c.id === d.responsavel_id)?.nome ||
+        'Sem responsável',
+      assigneeId: d.responsavel_id || null,
+      creatorId: d.usuario_id || null,
+      clientId: d.cliente_id || null,
+      clientName: (d as any).cliente?.nome || null,
+      category: d.tipo_demanda as any,
+      responses: d.resposta ? [d.resposta] : [],
+      logs: mappedLogs,
+      attachments: d.anexos || [],
+      checklist: d.checklist || [],
+      createdAt: d.data_criacao || new Date().toISOString(),
+      updatedAt: d.data_atualizacao || d.data_criacao || new Date().toISOString(),
+      completedAt: d.data_conclusao || null,
+      systemEscalated: !!systemEscalated,
+      workflowTipo: d.workflow_tipo || 'geral',
+      posVendaFase: d.pos_venda_fase || null,
+      posVendaAlvo: d.pos_venda_alvo || null,
+      dataProximaAcao: d.data_proxima_acao || null,
+      dataConclusaoTreinamento: d.data_conclusao_treinamento || null,
+      timePendingMs: d.time_pending_ms || 0,
+      timeInProgressMs: d.time_in_progress_ms || 0,
+      lastStatusChangeAt: d.last_status_change_at || d.data_criacao || new Date().toISOString(),
+    } as Demand
+  }, [])
+
+  const fetchSingleDemand = useCallback(
+    async (id: string) => {
+      const { data: d, error } = await supabase
+        .from('demandas')
+        .select(
+          '*, responsavel:usuarios!demandas_responsavel_id_fkey(nome), cliente:clientes_externos(id, nome), logs_auditoria(id, acao, detalhes, usuario_id, dados_novos, data_criacao, usuario:usuarios(nome))',
+        )
+        .eq('id', id)
+        .single()
+
+      if (d && !error) {
+        const parsed = parseDemandRow(d)
+        setDemands((prev) => {
+          const exists = prev.some((x) => x.id === parsed.id)
+          if (exists) return prev.map((x) => (x.id === parsed.id ? parsed : x))
+          return [parsed, ...prev]
+        })
+      }
+    },
+    [parseDemandRow],
+  )
+
   const fetchDemands = useCallback(async () => {
     if (!user) return
     try {
@@ -168,69 +278,12 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       if (error) return
 
       if (data) {
-        const parsedDemands = data.map((d: any) => {
-          const sortedLogs = Array.isArray(d.logs_auditoria)
-            ? [...d.logs_auditoria].sort((a: any, b: any) => {
-                const timeA = a.data_criacao ? new Date(a.data_criacao).getTime() : 0
-                const timeB = b.data_criacao ? new Date(b.data_criacao).getTime() : 0
-                return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA)
-              })
-            : []
-
-          const mappedLogs: DemandLog[] = sortedLogs.map((l: any) => ({
-            id: l.id || crypto.randomUUID(),
-            acao: l.acao,
-            detalhes: l.detalhes,
-            createdAt: l.data_criacao,
-            usuario_id: l.usuario_id,
-            userName: l.usuario?.nome || 'Sistema',
-            dados_novos: l.dados_novos,
-          }))
-
-          const latestPriorityChange = sortedLogs.find(
-            (l: any) => l.acao === 'Alteração de Prioridade',
-          )
-          const systemEscalated =
-            latestPriorityChange &&
-            latestPriorityChange.usuario_id === null &&
-            latestPriorityChange.dados_novos?.prioridade === 'Urgente' &&
-            d.prioridade === 'Urgente'
-
-          return {
-            id: d.id,
-            protocolo: d.protocolo,
-            title: d.titulo || 'Sem título',
-            description: d.descricao || '',
-            priority: (d.prioridade as DemandPriority) || 'Pode Ficar para Amanhã',
-            status: (d.status as DemandStatus) || 'Pendente',
-            dueDate: d.data_vencimento || null,
-            assignee: (d as any).responsavel?.nome || 'Sem responsável',
-            assigneeId: d.responsavel_id || null,
-            creatorId: d.usuario_id || null,
-            clientId: d.cliente_id || null,
-            clientName: (d as any).cliente?.nome || null,
-            category: d.tipo_demanda as any,
-            responses: d.resposta ? [d.resposta] : [],
-            logs: mappedLogs,
-            attachments: d.anexos || [],
-            checklist: d.checklist || [],
-            createdAt: d.data_criacao || new Date().toISOString(),
-            updatedAt: d.data_atualizacao || d.data_criacao || new Date().toISOString(),
-            completedAt: d.data_conclusao || null,
-            systemEscalated: !!systemEscalated,
-            workflowTipo: d.workflow_tipo || 'geral',
-            posVendaFase: d.pos_venda_fase || null,
-            posVendaAlvo: d.pos_venda_alvo || null,
-            dataProximaAcao: d.data_proxima_acao || null,
-            dataConclusaoTreinamento: d.data_conclusao_treinamento || null,
-          }
-        })
-        setDemands(parsedDemands)
+        setDemands(data.map(parseDemandRow))
       }
     } catch (e) {
       // Silently handle
     }
-  }, [user, role])
+  }, [user, role, parseDemandRow])
 
   const fetchChecklistTemplates = useCallback(async () => {
     if (!user) return
@@ -423,13 +476,20 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       fetchChecklistTemplates()
       fetchDemandTemplates()
 
+      let usersConnected = false
       const usersChannel = supabase
         .channel('usuarios-colab-changes')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'usuarios' }, () => {
           if (isSubscribed) fetchCollaborators()
         })
-        .subscribe()
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            if (usersConnected) fetchCollaborators()
+            usersConnected = true
+          }
+        })
 
+      let templatesConnected = false
       const templatesChannel = supabase
         .channel('demand-templates-changes')
         .on(
@@ -451,94 +511,60 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             }
           },
         )
-        .subscribe()
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            if (templatesConnected) fetchDemandTemplates()
+            templatesConnected = true
+          }
+        })
+
+      let demandsConnected = false
+      let demandsWasDisconnected = false
 
       const demandsChannel = supabase
         .channel('demandas-changes')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'demandas' }, (payload) => {
           if (!isSubscribed) return
-          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-            supabase
-              .from('demandas')
-              .select(
-                '*, responsavel:usuarios!demandas_responsavel_id_fkey(nome), cliente:clientes_externos(id, nome), logs_auditoria(id, acao, detalhes, usuario_id, dados_novos, data_criacao, usuario:usuarios(nome))',
-              )
-              .eq('id', payload.new.id)
-              .single()
-              .then(({ data: d }) => {
-                if (d) {
-                  const sortedLogs = Array.isArray(d.logs_auditoria)
-                    ? [...d.logs_auditoria].sort((a: any, b: any) => {
-                        const timeA = a.data_criacao ? new Date(a.data_criacao).getTime() : 0
-                        const timeB = b.data_criacao ? new Date(b.data_criacao).getTime() : 0
-                        return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA)
-                      })
-                    : []
-
-                  const mappedLogs: DemandLog[] = sortedLogs.map((l: any) => ({
-                    id: l.id || crypto.randomUUID(),
-                    acao: l.acao,
-                    detalhes: l.detalhes,
-                    createdAt: l.data_criacao,
-                    usuario_id: l.usuario_id,
-                    userName: l.usuario?.nome || 'Sistema',
-                    dados_novos: l.dados_novos,
-                  }))
-
-                  const latestPriorityChange = sortedLogs.find(
-                    (l: any) => l.acao === 'Alteração de Prioridade',
-                  )
-                  const systemEscalated =
-                    latestPriorityChange &&
-                    latestPriorityChange.usuario_id === null &&
-                    latestPriorityChange.dados_novos?.prioridade === 'Urgente' &&
-                    d.prioridade === 'Urgente'
-
-                  const parsedDemand: Demand = {
-                    id: d.id,
-                    protocolo: d.protocolo,
-                    title: d.titulo || 'Sem título',
-                    description: d.descricao || '',
-                    priority: (d.prioridade as DemandPriority) || 'Pode Ficar para Amanhã',
-                    status: (d.status as DemandStatus) || 'Pendente',
-                    dueDate: d.data_vencimento || null,
-                    assignee: (d as any).responsavel?.nome || 'Sem responsável',
-                    assigneeId: d.responsavel_id || null,
-                    creatorId: d.usuario_id || null,
-                    clientId: d.cliente_id || null,
-                    clientName: (d as any).cliente?.nome || null,
-                    category: d.tipo_demanda as any,
-                    responses: d.resposta ? [d.resposta] : [],
-                    logs: mappedLogs,
-                    attachments: d.anexos || [],
-                    checklist: d.checklist || [],
-                    createdAt: d.data_criacao || new Date().toISOString(),
-                    updatedAt: d.data_atualizacao || d.data_criacao || new Date().toISOString(),
-                    completedAt: d.data_conclusao || null,
-                    systemEscalated: !!systemEscalated,
-                    workflowTipo: d.workflow_tipo || 'geral',
-                    posVendaFase: d.pos_venda_fase || null,
-                    posVendaAlvo: d.pos_venda_alvo || null,
-                    dataProximaAcao: d.data_proxima_acao || null,
-                    dataConclusaoTreinamento: d.data_conclusao_treinamento || null,
-                  }
-                  setDemands((prev) => {
-                    const exists = prev.find((existing) => existing.id === parsedDemand.id)
-                    if (exists) {
-                      return prev.map((existing) =>
-                        existing.id === parsedDemand.id ? parsedDemand : existing,
-                      )
-                    }
-                    return [parsedDemand, ...prev]
-                  })
-                }
-              })
-          } else if (payload.eventType === 'DELETE') {
+          if (payload.eventType === 'DELETE') {
             setDemands((prev) => prev.filter((d) => d.id !== payload.old.id))
+          } else {
+            const d = payload.new as any
+
+            // Fast optimistic update for UI fluidity
+            setDemands((prev) => {
+              const existing = prev.find((x) => x.id === d.id)
+              if (existing && payload.eventType === 'UPDATE') {
+                return prev.map((x) =>
+                  x.id === d.id
+                    ? {
+                        ...x,
+                        status: d.status ?? x.status,
+                        priority: d.prioridade ?? x.priority,
+                        title: d.titulo ?? x.title,
+                        assigneeId: d.responsavel_id ?? x.assigneeId,
+                        timePendingMs: d.time_pending_ms ?? x.timePendingMs,
+                        timeInProgressMs: d.time_in_progress_ms ?? x.timeInProgressMs,
+                        lastStatusChangeAt: d.last_status_change_at ?? x.lastStatusChangeAt,
+                        updatedAt: d.data_atualizacao ?? x.updatedAt,
+                      }
+                    : x,
+                )
+              }
+              return prev
+            })
+
+            // Full fetch to resolve relationships and complex arrays
+            fetchSingleDemand(d.id)
           }
         })
-        .subscribe()
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            if (demandsConnected) fetchDemands()
+            demandsConnected = true
+          }
+        })
 
+      let notifConnected = false
       const notifChannel = supabase
         .channel('notificacoes-changes')
         .on(
@@ -563,6 +589,9 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
               },
               ...prev,
             ])
+
+            playNotificationSound()
+
             toast({
               title: newNotif.titulo,
               description: newNotif.mensagem,
@@ -577,7 +606,12 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             })
           },
         )
-        .subscribe()
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            if (notifConnected) fetchNotifications()
+            notifConnected = true
+          }
+        })
 
       return () => {
         isSubscribed = false
@@ -599,6 +633,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
     fetchNotifications,
     fetchChecklistTemplates,
     fetchDemandTemplates,
+    fetchSingleDemand,
     navigate,
   ])
 
@@ -728,34 +763,8 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             }
           }
 
-          const createdDemand: Demand = {
-            id: d.id,
-            title: d.titulo,
-            description: d.descricao || '',
-            priority: d.prioridade as DemandPriority,
-            status: d.status as DemandStatus,
-            dueDate: d.data_vencimento,
-            assignee: (d as any).responsavel?.nome || 'Sem responsável',
-            assigneeId: d.responsavel_id,
-            creatorId: d.usuario_id || null,
-            clientId: d.cliente_id,
-            clientName: (d as any).cliente?.nome || null,
-            category: d.tipo_demanda as any,
-            responses: [],
-            logs: [],
-            attachments: d.anexos || [],
-            checklist: finalChecklist,
-            createdAt: d.data_criacao || new Date().toISOString(),
-            updatedAt: d.data_atualizacao || d.data_criacao || new Date().toISOString(),
-            systemEscalated: false,
-            workflowTipo: isImplantacao ? 'implantacao_pos_venda' : d.workflow_tipo || 'geral',
-            posVendaFase: isImplantacao ? 'treinamento' : d.pos_venda_fase || null,
-            posVendaAlvo: d.pos_venda_alvo || null,
-            dataProximaAcao: d.data_proxima_acao || null,
-            dataConclusaoTreinamento: d.data_conclusao_treinamento || null,
-          }
-          setDemands((prev) => [createdDemand, ...prev])
-          return createdDemand
+          fetchSingleDemand(d.id)
+          return d as Demand
         }
       } catch (e) {
         toast({
@@ -766,7 +775,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         return undefined
       }
     },
-    [user],
+    [user, fetchSingleDemand],
   )
 
   const editDemand = useCallback(
@@ -853,6 +862,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
         toast({ title: 'Demanda Atualizada', description: 'As alterações foram salvas.' })
       } catch (e) {
+        fetchSingleDemand(demandId)
         toast({
           title: 'Erro',
           description: 'Não foi possível atualizar a demanda.',
@@ -860,17 +870,30 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         })
       }
     },
-    [fetchDemands, demands],
+    [fetchSingleDemand, demands],
   )
 
-  const updateStatus = useCallback(async (demandId: string, status: DemandStatus) => {
-    const updatedAt = new Date().toISOString()
-    setDemands((prev) => prev.map((d) => (d.id === demandId ? { ...d, status, updatedAt } : d)))
-    await supabase
-      .from('demandas')
-      .update({ status, data_atualizacao: updatedAt })
-      .eq('id', demandId)
-  }, [])
+  const updateStatus = useCallback(
+    async (demandId: string, status: DemandStatus) => {
+      const updatedAt = new Date().toISOString()
+      setDemands((prev) =>
+        prev.map((d) =>
+          d.id === demandId ? { ...d, status, updatedAt, lastStatusChangeAt: updatedAt } : d,
+        ),
+      )
+
+      const { error } = await supabase
+        .from('demandas')
+        .update({ status, data_atualizacao: updatedAt })
+        .eq('id', demandId)
+
+      if (error) {
+        toast({ title: 'Erro', description: 'Falha ao atualizar status', variant: 'destructive' })
+        fetchSingleDemand(demandId)
+      }
+    },
+    [fetchSingleDemand],
+  )
 
   const deleteDemand = useCallback(async (demandId: string) => {
     const { error } = await supabase.from('demandas').delete().eq('id', demandId)
@@ -900,6 +923,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
                 assigneeId: newAssigneeId,
                 assignee: newAssigneeName,
                 updatedAt,
+                lastStatusChangeAt: updatedAt,
               }
             : d,
         ),
@@ -923,9 +947,12 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           className:
             'bg-zinc-950 border-green-500/50 text-white shadow-[0_0_15px_rgba(34,197,94,0.2)]',
         })
+      } else {
+        toast({ title: 'Erro', description: 'Falha ao aceitar', variant: 'destructive' })
+        fetchSingleDemand(demandId)
       }
     },
-    [user, userName, fetchDemands, demands],
+    [user, userName, demands, fetchSingleDemand],
   )
 
   const completeDemand = useCallback(
@@ -958,7 +985,6 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         if (error) throw error
 
         const newLogId = crypto.randomUUID()
-
         const { error: logErr } = await supabase.from('logs_auditoria').insert({
           id: newLogId,
           demanda_id: demandId,
@@ -990,6 +1016,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
                   status: 'Concluído',
                   updatedAt: nowIso,
                   completedAt: nowIso,
+                  lastStatusChangeAt: nowIso,
                   responses: d.responses ? [...d.responses, resposta] : [resposta],
                   attachments: updatedAttachments,
                   logs: [...(d.logs || []), newLog],
@@ -1006,6 +1033,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         })
       } catch (e: any) {
         console.error('Erro ao concluir demanda:', e)
+        fetchSingleDemand(demandId)
         toast({
           title: 'Erro',
           description: e.message || 'Erro ao concluir demanda.',
@@ -1014,15 +1042,12 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         throw e
       }
     },
-    [user, userName],
+    [user, userName, fetchSingleDemand],
   )
 
   const addResponse = useCallback(
     async (demandId: string, text: string, attachments?: DemandAttachment[]) => {
-      if (!user || !demandId) {
-        console.error('Erro Arquitetural: user_id ou demanda_id inválido/nulo.')
-        return
-      }
+      if (!user || !demandId) return
 
       const newLogId = crypto.randomUUID()
       const hasAttachments = attachments && attachments.length > 0
@@ -1044,10 +1069,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             .eq('id', demandId)
             .single()
 
-          if (fetchErr && fetchErr.code !== 'PGRST116') {
-            console.error('Erro ao buscar anexos da demanda:', fetchErr)
-            throw fetchErr
-          }
+          if (fetchErr && fetchErr.code !== 'PGRST116') throw fetchErr
 
           const existingAnexos = Array.isArray(data?.anexos) ? data.anexos : []
           finalAttachments = [...existingAnexos, ...attachments]
@@ -1056,16 +1078,12 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             .update({ anexos: finalAttachments, data_atualizacao: nowIso })
             .eq('id', demandId)
 
-          if (updateErr) {
-            console.error('Erro ao atualizar anexos na demanda:', updateErr)
-            throw updateErr
-          }
+          if (updateErr) throw updateErr
         } else {
-          // Apenas atualiza a data de atualização
           await supabase.from('demandas').update({ data_atualizacao: nowIso }).eq('id', demandId)
         }
 
-        const { error } = await supabase.from('logs_auditoria').insert({
+        await supabase.from('logs_auditoria').insert({
           id: newLogId,
           demanda_id: demandId,
           usuario_id: user.id,
@@ -1073,10 +1091,6 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           detalhes: detalhesText,
           dados_novos: hasAttachments ? { anexos: attachments } : null,
         })
-
-        if (error) {
-          console.error('Erro real do Supabase ao inserir log_auditoria (ignorado):', error)
-        }
 
         const newLog: DemandLog = {
           id: newLogId,
@@ -1108,14 +1122,15 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             'bg-zinc-950 border-green-500/50 text-white shadow-[0_0_15px_rgba(34,197,94,0.2)]',
         })
       } catch (err: any) {
+        fetchSingleDemand(demandId)
         toast({
-          title: 'Erro de Inserção',
+          title: 'Erro',
           description: err.message || 'Falha ao registrar observação.',
           variant: 'destructive',
         })
       }
     },
-    [user, userName, fetchDemands],
+    [user, userName, fetchSingleDemand],
   )
 
   const updateChecklist = useCallback(
@@ -1136,10 +1151,16 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       setDemands((prev) =>
         prev.map((d) => (d.id === demandId ? { ...d, checklist, updatedAt } : d)),
       )
-      await supabase
+
+      const { error } = await supabase
         .from('demandas')
         .update({ checklist, data_atualizacao: updatedAt })
         .eq('id', demandId)
+
+      if (error) {
+        fetchSingleDemand(demandId)
+        return
+      }
 
       if (actionText) {
         const { error: logErr } = await supabase.from('logs_auditoria').insert({
@@ -1151,7 +1172,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         if (logErr) console.error('Error inserting checklist log:', logErr)
       }
     },
-    [user, fetchDemands, demands],
+    [user, demands, fetchSingleDemand],
   )
 
   const reopenDemand = useCallback(
@@ -1161,6 +1182,21 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       if (!demand) return
 
       const nowIso = new Date().toISOString()
+
+      setDemands((prev) =>
+        prev.map((d) => {
+          if (d.id === demandId) {
+            return {
+              ...d,
+              status: 'Em Andamento',
+              updatedAt: nowIso,
+              lastStatusChangeAt: nowIso,
+              logs: [...(d.logs || []), newLog],
+            } as Demand
+          }
+          return d
+        }),
+      )
       const { error } = await supabase
         .from('demandas')
         .update({ status: 'Em Andamento', data_atualizacao: nowIso })
@@ -1190,8 +1226,6 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             d.id === demandId
               ? {
                   ...d,
-                  status: 'Em Andamento',
-                  updatedAt: nowIso,
                   logs: [...(d.logs || []), newLog],
                 }
               : d,
@@ -1203,6 +1237,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           description: 'A demanda retornou para Em Andamento.',
         })
       } else {
+        fetchSingleDemand(demandId)
         toast({
           title: 'Erro',
           description: 'Não foi possível reabrir a demanda.',
@@ -1210,7 +1245,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         })
       }
     },
-    [user, userName, demands, fetchDemands],
+    [user, userName, demands, fetchSingleDemand],
   )
 
   const addAttachments = useCallback(
@@ -1268,10 +1303,11 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           console.error('Error inserting attachment log (ignored):', logErr)
         }
       } catch (e) {
+        fetchSingleDemand(demandId)
         toast({ title: 'Erro', description: 'Erro ao salvar anexos.', variant: 'destructive' })
       }
     },
-    [user, userName, fetchDemands],
+    [user, userName, fetchSingleDemand],
   )
 
   const advancePostSalesWorkflow = useCallback(
@@ -1354,6 +1390,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
       const { error } = await supabase.from('demandas').update(updates).eq('id', demandId)
       if (error) {
+        fetchSingleDemand(demandId)
         toast({ title: 'Erro', description: 'Falha ao avançar fase.', variant: 'destructive' })
         return
       }
@@ -1384,7 +1421,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
       toast({ title: 'Fase Avançada', description: `Demanda movida para ${newFase}` })
     },
-    [demands, user],
+    [demands, user, fetchSingleDemand],
   )
 
   const failPostSalesWorkflow = useCallback(
@@ -1401,8 +1438,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         pos_venda_fase: 'treinamento',
         pos_venda_alvo: nextAlvo,
         data_proxima_acao: null,
-        responsavel_id: null,
-        status: 'Pendente',
+        status: 'Em Andamento',
         data_atualizacao: new Date().toISOString(),
       }
 
@@ -1414,15 +1450,20 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
                 posVendaFase: 'treinamento',
                 posVendaAlvo: nextAlvo as any,
                 dataProximaAcao: null,
-                assigneeId: null,
-                status: 'Pendente',
+                status: 'Em Andamento',
                 updatedAt: updates.data_atualizacao,
               }
             : d,
         ),
       )
 
-      await supabase.from('demandas').update(updates).eq('id', demandId)
+      const { error } = await supabase.from('demandas').update(updates).eq('id', demandId)
+
+      if (error) {
+        fetchSingleDemand(demandId)
+        toast({ title: 'Erro', description: 'Falha ao retornar a demanda', variant: 'destructive' })
+        return
+      }
 
       await supabase
         .from('agenda_eventos')
@@ -1443,7 +1484,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         variant: 'destructive',
       })
     },
-    [demands, user],
+    [demands, user, fetchSingleDemand],
   )
 
   const value = useMemo(

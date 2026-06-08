@@ -41,11 +41,35 @@ export default function Agenda() {
     }
   }, [isAdmin])
 
+  const { subscribeToEvents, unsubscribeFromEvents } = useAgendaStore()
+
   useEffect(() => {
     if (user) {
       fetchEventos(currentDate, isAdmin, user.id, filtroUsuario)
+      subscribeToEvents(isAdmin, user.id, filtroUsuario, currentDate)
     }
-  }, [currentDate, user, isAdmin, filtroUsuario, fetchEventos])
+    return () => {
+      unsubscribeFromEvents()
+    }
+  }, [
+    currentDate,
+    user,
+    isAdmin,
+    filtroUsuario,
+    fetchEventos,
+    subscribeToEvents,
+    unsubscribeFromEvents,
+  ])
+
+  useEffect(() => {
+    if (user) {
+      const { setupRealtime, cleanupRealtime } = useAgendaStore.getState()
+      setupRealtime(user.id, isAdmin)
+      return () => {
+        cleanupRealtime()
+      }
+    }
+  }, [user, isAdmin])
 
   const handlePrevMonth = () => setCurrentDate((prev) => subMonths(prev, 1))
   const handleNextMonth = () => setCurrentDate((prev) => addMonths(prev, 1))
