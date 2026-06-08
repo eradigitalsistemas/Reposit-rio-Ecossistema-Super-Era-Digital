@@ -132,8 +132,7 @@ export function AppSidebar() {
           onClick={handleLinkClick}
           className="flex items-center gap-3 font-bold text-xl text-sidebar-foreground hover:text-sidebar-foreground/80 transition-colors"
         >
-          <img src={logoUrl} alt="Era Digital Logo" className="w-16 h-16 object-contain shrink-0" />
-          <span className="truncate">Era Digital</span>
+          <img src={logoUrl} alt="Era Digital Logo" className="w-32 h-32 object-contain shrink-0" />
         </Link>
       </SidebarHeader>
 
