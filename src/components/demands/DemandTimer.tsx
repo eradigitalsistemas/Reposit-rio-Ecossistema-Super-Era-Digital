@@ -14,123 +14,94 @@ export function DemandTimer({ demand, className }: DemandTimerProps) {
 
   useEffect(() => {
     if (!demand || demand.status === 'Concluído') return
-    const interval = setInterval(() => setNow(Date.now()), 1000)
+    const interval = setInterval(() => setNow(Date.now()), 60000)
     return () => clearInterval(interval)
   }, [demand?.status])
 
   if (!demand) return null
 
-  const safeGetTime = (dateStr?: string) => {
+  const safeGetTime = (dateStr?: string | null) => {
     if (!dateStr) return null
     const time = new Date(dateStr).getTime()
     return isNaN(time) ? null : time
   }
 
   const createdAt = safeGetTime(demand.createdAt) || now
+  const lastChange = safeGetTime(demand.lastStatusChangeAt) || createdAt
   const completedAt =
+    safeGetTime(demand.completedAt) ||
     safeGetTime((demand as any).data_conclusao) ||
-    safeGetTime((demand as any).completedAt) ||
     safeGetTime(demand.lastStatusChangeAt) ||
     now
 
-  let totalTime = 0
-  if (demand.status === 'Concluído') {
-    totalTime = Math.max(0, completedAt - createdAt)
-  } else {
-    totalTime = Math.max(0, now - createdAt)
-  }
-
-  const lastChange = safeGetTime(demand.lastStatusChangeAt) || createdAt
-  const currentPhaseElapsed = Math.max(0, now - lastChange)
+  const currentPhaseElapsed = demand.status === 'Concluído' ? 0 : Math.max(0, now - lastChange)
 
   const timePending =
     (demand.timePendingMs || 0) + (demand.status === 'Pendente' ? currentPhaseElapsed : 0)
   const timeInProgress =
     (demand.timeInProgressMs || 0) + (demand.status === 'Em Andamento' ? currentPhaseElapsed : 0)
 
-  const formatTime = (ms: number) => {
-    if (isNaN(ms) || ms < 0) return '00:00:00'
-    const totalSeconds = Math.max(0, Math.floor(ms / 1000))
-    const days = Math.floor(totalSeconds / 86400)
-    const hours = Math.floor((totalSeconds % 86400) / 3600)
-    const minutes = Math.floor((totalSeconds % 3600) / 60)
-    const seconds = totalSeconds % 60
-
-    const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
-    return days > 0 ? `${days}d ${timeStr}` : timeStr
+  let displayedTimeMs = 0
+  if (demand.status === 'Pendente') {
+    displayedTimeMs = timePending
+  } else if (demand.status === 'Em Andamento') {
+    displayedTimeMs = timeInProgress
+  } else if (demand.status === 'Concluído') {
+    displayedTimeMs = Math.max(0, completedAt - createdAt)
   }
 
-  if (demand.status === 'Concluído') {
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div
-            className={cn(
-              'flex items-center gap-1.5 text-[10px] font-medium text-green-600 dark:text-green-500 bg-green-50 dark:bg-green-500/10 px-1.5 py-0.5 rounded-md w-fit border border-green-200/50',
-              className,
-            )}
-          >
-            <CheckCircle className="w-3 h-3" />
-            <span>{formatTime(totalTime)}</span>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>
-            <strong>Tempo Total:</strong> {formatTime(totalTime)}
-          </p>
-          <p className="text-muted-foreground mt-1 text-xs">Pendente: {formatTime(timePending)}</p>
-          <p className="text-muted-foreground text-xs">
-            Em Andamento: {formatTime(timeInProgress)}
-          </p>
-        </TooltipContent>
-      </Tooltip>
-    )
+  const formatTime = (ms: number) => {
+    if (isNaN(ms) || ms < 0) return '0m'
+    const totalMinutes = Math.floor(ms / 60000)
+
+    const days = Math.floor(totalMinutes / 1440)
+    const hours = Math.floor((totalMinutes % 1440) / 60)
+    const minutes = totalMinutes % 60
+
+    if (days > 0) return `${days}d ${hours}h ${minutes}m`
+    if (hours > 0) return `${hours}h ${minutes}m`
+    return `${minutes}m`
   }
 
   const isPending = demand.status === 'Pendente'
-  const Icon = isPending ? Pause : Play
+  const Icon = demand.status === 'Concluído' ? CheckCircle : isPending ? Pause : Play
 
-  const totalHours = totalTime / (1000 * 60 * 60)
-  let isDelayed = false
-  let isNearDeadline = false
-
-  if (demand.dueDate) {
-    const dueTime = safeGetTime(demand.dueDate)
-    if (dueTime) {
-      isDelayed = now > dueTime
-      isNearDeadline = !isDelayed && dueTime - now < 1000 * 60 * 60 * 24
-    }
+  let colorClass = ''
+  if (demand.status === 'Concluído') {
+    colorClass =
+      'text-green-600 dark:text-green-500 bg-green-50 dark:bg-green-500/10 border-green-200/50'
+  } else if (isPending) {
+    colorClass =
+      'text-amber-600 dark:text-amber-500 bg-amber-50 dark:bg-amber-500/10 border-amber-200/50'
   } else {
-    if (totalHours >= 48) isDelayed = true
-    else if (totalHours >= 24) isNearDeadline = true
+    colorClass =
+      'text-blue-600 dark:text-blue-500 bg-blue-50 dark:bg-blue-500/10 border-blue-200/50'
   }
-
-  const colorClass = isDelayed
-    ? 'text-red-600 dark:text-red-500 bg-red-50 dark:bg-red-500/10 border-red-200/50'
-    : isNearDeadline
-      ? 'text-yellow-600 dark:text-yellow-500 bg-yellow-50 dark:bg-yellow-500/10 border-yellow-200/50'
-      : isPending
-        ? 'text-amber-600 dark:text-amber-500 bg-amber-50 dark:bg-amber-500/10 border-amber-200/50'
-        : 'text-blue-600 dark:text-blue-500 bg-blue-50 dark:bg-blue-500/10 border-blue-200/50'
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <div
           className={cn(
-            'flex items-center gap-1.5 text-[10px] font-medium tabular-nums px-1.5 py-0.5 rounded-md w-fit border transition-colors',
+            'flex items-center gap-1.5 text-[10px] font-medium px-1.5 py-0.5 rounded-md w-fit border transition-colors',
             colorClass,
             className,
           )}
         >
           <Icon className="w-3 h-3" />
-          <span>{formatTime(totalTime)}</span>
+          <span>{formatTime(displayedTimeMs)}</span>
         </div>
       </TooltipTrigger>
       <TooltipContent>
-        <p>
-          <strong>Total acumulado:</strong> {formatTime(totalTime)}
-        </p>
+        {demand.status === 'Concluído' ? (
+          <p>
+            <strong>Lead Time Total:</strong> {formatTime(displayedTimeMs)}
+          </p>
+        ) : (
+          <p>
+            <strong>Tempo em {demand.status}:</strong> {formatTime(displayedTimeMs)}
+          </p>
+        )}
         <p className="text-muted-foreground mt-1 text-xs">Pendente: {formatTime(timePending)}</p>
         <p className="text-muted-foreground text-xs">Em Andamento: {formatTime(timeInProgress)}</p>
       </TooltipContent>

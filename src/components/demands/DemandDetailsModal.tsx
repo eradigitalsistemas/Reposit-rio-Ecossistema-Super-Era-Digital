@@ -37,6 +37,7 @@ import {
 } from 'lucide-react'
 import { Demand, DemandAttachment, ChecklistItem } from '@/types/demand'
 import useDemandStore from '@/stores/useDemandStore'
+import { DemandMetrics } from './DemandMetrics'
 import useAuthStore from '@/stores/useAuthStore'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from '@/hooks/use-toast'
@@ -535,6 +536,8 @@ export function DemandDetailsModal({
                   </div>
                 </div>
               </div>
+
+              <DemandMetrics demand={currentDemand} />
 
               {/* Description Container */}
               <div className="space-y-3">

@@ -20,6 +20,7 @@ import { format, isValid } from 'date-fns'
 import { DemandDetailsModal } from './DemandDetailsModal'
 import { EditDemandModal } from './EditDemandModal'
 import { CompleteDemandModal } from './CompleteDemandModal'
+import { DemandTimer } from './DemandTimer'
 import { useState, useEffect } from 'react'
 import useDemandStore from '@/stores/useDemandStore'
 import { Button } from '@/components/ui/button'
@@ -208,6 +209,7 @@ export function DemandCard({ demand }: DemandCardProps) {
               )}
               {demand.priority}
             </Badge>
+            <DemandTimer demand={demand} />
           </div>
 
           <div className="flex flex-col gap-1.5 mt-2">

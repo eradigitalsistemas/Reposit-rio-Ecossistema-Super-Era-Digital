@@ -65,6 +65,9 @@ export interface Demand {
   posVendaAlvo?: PosVendaFase | null
   dataProximaAcao?: string | null
   dataConclusaoTreinamento?: string | null
+  timePendingMs?: number | null
+  timeInProgressMs?: number | null
+  lastStatusChangeAt?: string | null
 }
 
 export interface DemandNotification {
