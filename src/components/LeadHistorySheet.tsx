@@ -1,5 +1,15 @@
 import { useState, useEffect } from 'react'
-import { Eye, Clock, User, Phone, Mail, MessageSquare, Building2, MapPin } from 'lucide-react'
+import {
+  Eye,
+  Clock,
+  User,
+  Phone,
+  Mail,
+  MessageSquare,
+  Building2,
+  MapPin,
+  FileText,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -59,7 +69,7 @@ export function LeadHistorySheet({ lead }: LeadHistorySheetProps) {
       const items: HistoryItem[] = (historyData || []).map((item) => ({
         id: item.id,
         type: 'interaction',
-        date: item.data_criacao,
+        date: item.data_criacao || new Date().toISOString(),
         title: 'Interação registrada',
         contact: item.contato_nome,
         method: item.forma_contato,
@@ -69,7 +79,7 @@ export function LeadHistorySheet({ lead }: LeadHistorySheetProps) {
       items.push({
         id: `creation-${lead.id}`,
         type: 'creation',
-        date: leadData.data_criacao,
+        date: leadData.data_criacao || new Date().toISOString(),
         title: 'Lead criado',
         details: leadData.observacoes || 'Lead adicionado ao sistema.',
       })
@@ -173,6 +183,7 @@ export function LeadHistorySheet({ lead }: LeadHistorySheetProps) {
             <DetailItem label="E-mail" icon={Mail} value={lead.email} />
             <DetailItem label="Empresa" icon={Building2} value={lead.company} />
             <DetailItem label="Endereço" icon={MapPin} value={lead.address} />
+            {lead.notes && <DetailItem label="Observações" icon={FileText} value={lead.notes} />}
           </div>
         </div>
 

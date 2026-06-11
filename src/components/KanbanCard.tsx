@@ -25,22 +25,15 @@ export function KanbanCard({ lead }: KanbanCardProps) {
       onDragStart={handleDragStart}
       className="cursor-grab active:cursor-grabbing hover:border-primary/50 transition-all duration-200 bg-card border-border shadow-sm hover:shadow-md dark:hover:shadow-[0_0_10px_rgba(34,197,94,0.1)] relative group touch-manipulation"
     >
-      <CardContent className="p-4 sm:p-3 flex flex-col gap-2.5 sm:gap-2">
+      <CardContent className="p-4 sm:p-3 pb-2 sm:pb-2 flex flex-col gap-2.5 sm:gap-2">
         <div className="flex justify-between items-start gap-2">
-          <div className="flex items-start gap-2">
+          <div className="flex items-start gap-2 min-w-0">
             {lead.stage === 'ativo' && (
               <div className="mt-1.5 sm:mt-1.5 h-2 w-2 rounded-full bg-primary shadow-[0_0_5px_rgba(34,197,94,0.8)] shrink-0" />
             )}
-            <h4 className="font-bold sm:font-semibold text-base sm:text-sm text-card-foreground leading-tight pr-24 sm:pr-24">
+            <h4 className="font-bold sm:font-semibold text-base sm:text-sm text-card-foreground leading-tight break-words">
               {lead.name}
             </h4>
-          </div>
-          {/* Always visible icons with muted styling, highlighting on hover */}
-          <div className="flex items-center gap-0.5 absolute right-2 top-2 sm:right-1.5 sm:top-1.5 bg-background/90 backdrop-blur-sm rounded-md px-1 z-10 border border-border shadow-sm">
-            <WhatsAppChatSheet lead={lead} />
-            <LeadHistorySheet lead={lead} />
-            <EditLeadModal lead={lead} />
-            <DeleteLeadAlert lead={lead} />
           </div>
         </div>
 
@@ -89,9 +82,18 @@ export function KanbanCard({ lead }: KanbanCardProps) {
             </Badge>
           )}
         </div>
-
-        <NewInteractionModal lead={lead} />
       </CardContent>
+      <div className="px-3 pb-3 pt-1 flex items-center justify-between gap-2 border-t border-transparent">
+        <div className="flex-1">
+          <NewInteractionModal lead={lead} />
+        </div>
+        <div className="flex items-center gap-0.5 shrink-0 bg-muted/30 rounded-md p-0.5 border border-border/50">
+          <WhatsAppChatSheet lead={lead} />
+          <LeadHistorySheet lead={lead} />
+          <EditLeadModal lead={lead} />
+          <DeleteLeadAlert lead={lead} />
+        </div>
+      </div>
     </Card>
   )
 }

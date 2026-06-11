@@ -116,14 +116,14 @@ export function NewInteractionModal({ lead }: NewInteractionModalProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
-          variant="default"
+          variant="secondary"
           size="sm"
-          className="w-full mt-2 sm:mt-3 h-8 text-xs gap-1.5 font-bold text-primary-foreground"
+          className="w-full h-8 text-xs gap-1.5 font-semibold"
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => e.stopPropagation()}
         >
           <MessageSquarePlus className="w-3.5 h-3.5" />
-          Nova Interação
+          Interação
         </Button>
       </DialogTrigger>
       <DialogContent
