@@ -99,18 +99,7 @@ export function WhatsAppChatSheet({ lead }: WhatsAppChatSheetProps) {
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-500 dark:hover:bg-blue-900/20"
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <MessageCircle className="h-4 w-4" />
-          <span className="sr-only">WhatsApp Mirror</span>
-        </Button>
-      </SheetTrigger>
+      <SheetTrigger asChild></SheetTrigger>
       <SheetContent
         className="w-[95vw] sm:max-w-md flex flex-col gap-0 p-0"
         onPointerDown={(e) => e.stopPropagation()}
