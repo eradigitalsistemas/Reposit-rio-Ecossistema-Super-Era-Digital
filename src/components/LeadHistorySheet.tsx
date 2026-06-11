@@ -45,26 +45,39 @@ export function LeadHistorySheet({ lead }: LeadHistorySheetProps) {
   const [open, setOpen] = useState(false)
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [loading, setLoading] = useState(false)
+  const [fetchError, setFetchError] = useState<string | null>(null)
+  const [observacoes, setObservacoes] = useState(lead.notes || '')
 
   useEffect(() => {
-    if (open) fetchHistory()
+    if (open) {
+      setFetchError(null)
+      fetchHistory()
+    }
   }, [open, lead.id])
 
   const fetchHistory = async () => {
     setLoading(true)
+    setFetchError(null)
     try {
       const { data: leadData, error: leadError } = await supabase
         .from('leads')
         .select('observacoes, data_criacao')
         .eq('id', lead.id)
         .single()
-      if (leadError) throw leadError
+
+      if (leadError) throw new Error('Não foi possível carregar os dados do lead.')
+
+      if (leadData?.observacoes) {
+        setObservacoes(leadData.observacoes)
+      }
 
       const { data: historyData, error: historyError } = await supabase
         .from('historico_leads')
-        .select('*')
+        .select('id, data_criacao, contato_nome, forma_contato, detalhes')
         .eq('lead_id', lead.id)
-      if (historyError) throw historyError
+        .order('data_criacao', { ascending: true })
+
+      if (historyError) throw new Error('Não foi possível carregar as interações.')
 
       const items: HistoryItem[] = (historyData || []).map((item) => ({
         id: item.id,
@@ -84,12 +97,13 @@ export function LeadHistorySheet({ lead }: LeadHistorySheetProps) {
         details: leadData.observacoes || 'Lead adicionado ao sistema.',
       })
 
-      items.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) // Descending order for timeline
       setHistory(items)
-    } catch (error) {
+    } catch (error: any) {
+      setFetchError(error.message || 'Erro inesperado ao carregar o histórico.')
       toast({
-        title: 'Erro',
-        description: 'Não foi possível carregar o histórico.',
+        title: 'Erro no histórico',
+        description: error.message || 'Falha ao buscar as interações do banco de dados.',
         variant: 'destructive',
       })
     } finally {
@@ -158,7 +172,7 @@ export function LeadHistorySheet({ lead }: LeadHistorySheetProps) {
         onPointerDown={(e) => e.stopPropagation()}
       >
         {/* Left Panel: Dossier Details */}
-        <div className="w-full md:w-[350px] bg-muted/20 border-b md:border-b-0 md:border-r border-border p-6 overflow-y-auto shrink-0 flex flex-col">
+        <div className="w-full md:w-[350px] bg-muted/10 border-b md:border-b-0 md:border-r border-border p-6 overflow-y-auto shrink-0 flex flex-col">
           <SheetHeader className="mb-6 text-left">
             <SheetTitle className="text-2xl font-bold text-foreground tracking-tight leading-tight">
               {lead.name}
@@ -171,19 +185,32 @@ export function LeadHistorySheet({ lead }: LeadHistorySheetProps) {
               <Badge
                 variant="default"
                 className={cn(
-                  lead.interestStatus === 'Não Interessado' ? 'bg-red-600' : 'bg-green-600',
+                  lead.interestStatus === 'Não Interessado'
+                    ? 'bg-red-600 text-white'
+                    : 'bg-green-600 text-white',
                 )}
               >
                 {lead.interestStatus}
               </Badge>
             </div>
           </SheetHeader>
-          <div className="space-y-3 flex-1">
-            <DetailItem label="Telefone" icon={Phone} value={lead.phone} />
-            <DetailItem label="E-mail" icon={Mail} value={lead.email} />
-            <DetailItem label="Empresa" icon={Building2} value={lead.company} />
-            <DetailItem label="Endereço" icon={MapPin} value={lead.address} />
-            {lead.notes && <DetailItem label="Observações" icon={FileText} value={lead.notes} />}
+          <div className="space-y-4 flex-1">
+            {observacoes && (
+              <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-4">
+                <Label className="text-xs text-primary font-bold flex items-center gap-1.5 mb-2">
+                  <FileText className="w-4 h-4" /> Observações (Lembretes)
+                </Label>
+                <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                  {observacoes}
+                </p>
+              </div>
+            )}
+            <div className="space-y-3">
+              <DetailItem label="Telefone" icon={Phone} value={lead.phone} />
+              <DetailItem label="E-mail" icon={Mail} value={lead.email} />
+              <DetailItem label="Empresa" icon={Building2} value={lead.company} />
+              <DetailItem label="Endereço" icon={MapPin} value={lead.address} />
+            </div>
           </div>
         </div>
 
@@ -191,15 +218,30 @@ export function LeadHistorySheet({ lead }: LeadHistorySheetProps) {
         <div className="flex-1 flex flex-col overflow-hidden bg-background">
           <div className="p-6 pb-4 border-b border-border bg-muted/5">
             <h3 className="font-semibold text-foreground flex items-center gap-2">
-              <Clock className="w-4 h-4 text-primary" /> Linha do Tempo e Interações
+              <Clock className="w-4 h-4 text-primary" /> Histórico de Interações
             </h3>
           </div>
           <ScrollArea className="flex-1 p-6">
             {loading ? (
               <div className="flex justify-center items-center py-12">
                 <span className="text-sm text-muted-foreground animate-pulse">
-                  Carregando histórico...
+                  Carregando histórico com segurança...
                 </span>
+              </div>
+            ) : fetchError ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-full mb-3">
+                  <Clock className="w-8 h-8" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-1">Erro de Carregamento</h3>
+                <p className="text-sm text-muted-foreground max-w-sm">{fetchError}</p>
+                <Button variant="outline" className="mt-4" onClick={fetchHistory}>
+                  Tentar Novamente
+                </Button>
+              </div>
+            ) : history.length === 0 ? (
+              <div className="flex justify-center items-center py-12">
+                <span className="text-sm text-muted-foreground">Nenhuma interação registrada.</span>
               </div>
             ) : (
               <div className="relative border-l border-border ml-3 space-y-8 pb-8">

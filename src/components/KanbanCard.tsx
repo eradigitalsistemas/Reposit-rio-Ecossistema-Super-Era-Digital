@@ -26,12 +26,12 @@ export function KanbanCard({ lead }: KanbanCardProps) {
       className="cursor-grab active:cursor-grabbing hover:border-primary/50 transition-all duration-200 bg-card border-border shadow-sm hover:shadow-md dark:hover:shadow-[0_0_10px_rgba(34,197,94,0.1)] relative group touch-manipulation"
     >
       <CardContent className="p-4 sm:p-3 pb-2 sm:pb-2 flex flex-col gap-2.5 sm:gap-2">
-        <div className="flex justify-between items-start gap-2">
-          <div className="flex items-start gap-2 min-w-0">
+        <div className="flex justify-between items-start gap-2 w-full">
+          <div className="flex items-start gap-2 w-full">
             {lead.stage === 'ativo' && (
               <div className="mt-1.5 sm:mt-1.5 h-2 w-2 rounded-full bg-primary shadow-[0_0_5px_rgba(34,197,94,0.8)] shrink-0" />
             )}
-            <h4 className="font-bold sm:font-semibold text-base sm:text-sm text-card-foreground leading-tight break-words">
+            <h4 className="font-bold sm:font-semibold text-base sm:text-sm text-card-foreground leading-snug break-words w-full pr-1">
               {lead.name}
             </h4>
           </div>
@@ -51,7 +51,7 @@ export function KanbanCard({ lead }: KanbanCardProps) {
           </div>
         )}
 
-        <div className="flex flex-wrap gap-2 mt-1 sm:mt-1">
+        <div className="flex flex-wrap gap-2 mt-2 sm:mt-1.5">
           <Badge
             variant="default"
             className={cn(
@@ -83,11 +83,11 @@ export function KanbanCard({ lead }: KanbanCardProps) {
           )}
         </div>
       </CardContent>
-      <div className="px-3 pb-3 pt-1 flex items-center justify-between gap-2 border-t border-transparent">
+      <div className="px-3 py-2 flex items-center justify-between gap-2 border-t border-border/50 bg-muted/10 rounded-b-xl">
         <div className="flex-1">
           <NewInteractionModal lead={lead} />
         </div>
-        <div className="flex items-center gap-0.5 shrink-0 bg-muted/30 rounded-md p-0.5 border border-border/50">
+        <div className="flex items-center gap-1 shrink-0 bg-background rounded-md p-1 border border-border shadow-sm">
           <WhatsAppChatSheet lead={lead} />
           <LeadHistorySheet lead={lead} />
           <EditLeadModal lead={lead} />

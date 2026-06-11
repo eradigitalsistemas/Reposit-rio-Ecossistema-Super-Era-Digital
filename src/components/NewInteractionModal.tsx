@@ -53,7 +53,14 @@ export function NewInteractionModal({ lead }: NewInteractionModalProps) {
     e.preventDefault()
     e.stopPropagation()
 
-    if (!user) return
+    if (!user?.id) {
+      toast({
+        title: 'Erro de Autenticação',
+        description: 'Usuário não autenticado. Faça login novamente.',
+        variant: 'destructive',
+      })
+      return
+    }
     setIsSubmitting(true)
 
     const formData = new FormData(e.currentTarget)
