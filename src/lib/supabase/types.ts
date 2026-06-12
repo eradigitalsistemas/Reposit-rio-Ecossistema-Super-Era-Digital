@@ -2461,9 +2461,10 @@ export const Constants = {
 //   Policy "auth_read_experiences" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
 // Table: historico_leads
-//   Policy "allow_all_historico_leads" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: true
+//   Policy "historico_leads_insert" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: true
+//   Policy "historico_leads_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
 // Table: leads
 //   Policy "Allow public insert to leads" (INSERT, PERMISSIVE) roles={public}
 //     WITH CHECK: true
