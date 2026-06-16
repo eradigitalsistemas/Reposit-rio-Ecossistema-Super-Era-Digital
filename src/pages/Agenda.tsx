@@ -99,12 +99,12 @@ export default function Agenda() {
   }
 
   return (
-    <div className="flex-1 w-full bg-background min-h-full flex flex-col p-4 sm:p-6 lg:p-8">
+    <div className="flex-1 w-full bg-transparent min-h-full flex flex-col p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto w-full flex flex-col space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground flex items-center gap-3">
-              <CalendarIcon className="w-8 h-8 text-primary" />
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground flex items-center gap-3 drop-shadow-sm">
+              <CalendarIcon className="w-8 h-8 text-primary drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
               Agenda
             </h1>
             <p className="text-muted-foreground mt-2 text-base">
@@ -115,10 +115,10 @@ export default function Agenda() {
           <div className="flex items-center gap-3">
             {isAdmin && (
               <Select value={filtroUsuario} onValueChange={setFiltroUsuario}>
-                <SelectTrigger className="w-[180px] bg-white text-black border-gray-300 dark:bg-black dark:text-white dark:border-gray-700">
+                <SelectTrigger className="w-[180px] bg-card/60 backdrop-blur-md text-foreground border-border/50 shadow-sm transition-all hover:border-primary/40">
                   <SelectValue placeholder="Filtrar por Usuário" />
                 </SelectTrigger>
-                <SelectContent className="bg-white text-black border-gray-300 dark:bg-black dark:text-white dark:border-gray-700">
+                <SelectContent className="bg-card/80 backdrop-blur-xl text-foreground border-border/50">
                   <SelectItem value="todos">Todos os Usuários</SelectItem>
                   {usuarios.map((u) => (
                     <SelectItem key={u.id} value={u.id}>
@@ -134,7 +134,7 @@ export default function Agenda() {
           </div>
         </div>
 
-        <div className="flex items-center justify-between bg-card p-2 rounded-lg border border-border shadow-sm">
+        <div className="flex items-center justify-between bg-card/60 backdrop-blur-md p-2 rounded-lg border border-border/50 shadow-sm">
           <div className="flex items-center gap-2">
             <Button variant="outline" size="icon" onClick={handlePrevMonth}>
               <ChevronLeft className="w-5 h-5" />

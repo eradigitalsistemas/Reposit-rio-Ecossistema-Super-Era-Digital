@@ -57,57 +57,57 @@
 
   .dark {
     /* Deep green dark background */
-    --background: 142 50% 5%;
+    --background: 142 60% 4%;
     --foreground: 0 0% 100%;
 
     /* Dark green cards/panels */
-    --card: 142 40% 8%;
+    --card: 142 50% 7%;
     --card-foreground: 0 0% 100%;
 
-    --popover: 142 40% 8%;
+    --popover: 142 50% 7%;
     --popover-foreground: 0 0% 100%;
 
     /* Vibrant green primary */
-    --primary: 142 71% 45%;
+    --primary: 142 70% 40%;
     --primary-foreground: 0 0% 100%;
 
     /* Darker green for secondary items */
-    --secondary: 142 30% 12%;
+    --secondary: 142 40% 12%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 142 30% 12%;
-    --muted-foreground: 142 10% 70%;
+    --muted: 142 40% 12%;
+    --muted-foreground: 142 20% 70%;
 
-    /* Blue for specific accents/details */
-    --accent: 214 100% 50%;
+    /* Blue for specific accents/details (Neon Blue) */
+    --accent: 214 100% 60%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 40.6%;
     --destructive-foreground: 0 0% 100%;
 
     /* Light green tint for borders */
-    --border: 142 30% 15%;
-    --input: 142 30% 15%;
-    --ring: 142 71% 45%;
+    --border: 142 40% 18%;
+    --input: 142 40% 18%;
+    --ring: 142 70% 40%;
 
     /* Glassmorphism sidebar */
-    --sidebar-background: 142 45% 4% / 0.6;
+    --sidebar-background: 142 60% 4% / 0.6;
     --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 142 71% 45%;
+    --sidebar-primary: 142 70% 40%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 142 35% 10%;
+    --sidebar-accent: 142 50% 10%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 142 30% 15%;
-    --sidebar-ring: 142 71% 45%;
+    --sidebar-border: 142 40% 18%;
+    --sidebar-ring: 142 70% 40%;
 
     --warning: 48 96% 53%;
     --warning-foreground: 0 0% 9%;
 
-    --chart-1: 142 71% 45%;
-    --chart-2: 142 71% 35%;
-    --chart-3: 142 71% 25%;
-    --chart-4: 142 71% 15%;
-    --chart-5: 142 71% 5%;
+    --chart-1: 142 70% 40%;
+    --chart-2: 142 70% 30%;
+    --chart-3: 142 70% 20%;
+    --chart-4: 142 70% 10%;
+    --chart-5: 142 70% 5%;
   }
 
   * {
@@ -156,10 +156,12 @@
 
   button.bg-primary:not(:disabled):hover {
     box-shadow: 0 0 15px hsl(var(--primary) / 0.4);
+    transform: translateY(-1px);
   }
 
   .dark button.bg-primary:not(:disabled):hover {
     box-shadow: 0 0 20px hsl(var(--primary) / 0.6);
+    transform: translateY(-1px);
   }
 }
 
