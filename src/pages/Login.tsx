@@ -52,13 +52,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-black flex flex-col">
-      <header className="p-6 flex items-center">
-        <img
-          src={logoImg}
-          alt="Era Digital"
-          className="h-12 w-auto object-contain brightness-0 invert"
-        />
-      </header>
+      <header className="p-6 flex items-center"></header>
 
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-md space-y-8">
