@@ -60,7 +60,7 @@ export default function Login() {
             <img
               src={logoImg}
               alt="Era Digital"
-              className="h-24 w-auto object-contain mb-6 brightness-0 invert"
+              className="h-48 w-auto object-contain mb-6 brightness-0 invert"
             />
             <h2 className="text-2xl font-bold tracking-tight text-white">Acesso ao Sistema</h2>
             <p className="text-sm text-gray-400 mt-2">Entre com suas credenciais para continuar</p>
