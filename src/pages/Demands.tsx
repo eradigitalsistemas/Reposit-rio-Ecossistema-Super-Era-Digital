@@ -264,14 +264,20 @@ export default function Demands() {
   }
 
   return (
-    <div className="flex flex-col flex-1 w-full bg-background min-h-full">
-      <div className="flex flex-col flex-1 p-4 sm:p-6">
+    <div className="flex flex-col flex-1 w-full min-h-full relative bg-gradient-to-br from-green-950 via-teal-900 to-emerald-950">
+      {/* Decorative background blobs */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-emerald-600/20 blur-[120px]" />
+        <div className="absolute top-[60%] -right-[10%] w-[40%] h-[60%] rounded-full bg-teal-600/20 blur-[120px]" />
+      </div>
+
+      <div className="flex flex-col flex-1 p-4 sm:p-6 relative z-10">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 shrink-0 gap-4">
           <div>
-            <h1 className="text-2xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-foreground">
+            <h1 className="text-2xl sm:text-2xl font-bold tracking-tight text-white drop-shadow-sm">
               Gestão de Demandas
             </h1>
-            <p className="text-gray-600 dark:text-muted-foreground text-sm mt-1">
+            <p className="text-emerald-100/80 text-sm mt-1">
               {role === 'Admin'
                 ? 'Acompanhe as tarefas e atribuições de toda a equipe'
                 : 'Acompanhe suas tarefas e atribuições no Kanban'}
@@ -288,47 +294,58 @@ export default function Demands() {
           </div>
         </div>
 
-        <div className="flex flex-col xl:flex-row items-start xl:items-end justify-between gap-4 mb-6 bg-white dark:bg-card border-gray-300 dark:border-border p-4 rounded-xl border shadow-md dark:shadow-sm shrink-0">
+        <div className="flex flex-col xl:flex-row items-start xl:items-end justify-between gap-4 mb-6 bg-white/10 dark:bg-black/20 backdrop-blur-md border border-white/20 p-4 rounded-xl shadow-lg shrink-0">
           <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-end gap-4 sm:gap-6 w-full xl:w-auto relative z-20">
             <div className="space-y-2 w-full sm:w-auto relative z-20">
-              <Label className="text-xs font-semibold text-gray-700 dark:text-muted-foreground uppercase tracking-wider">
+              <Label className="text-xs font-semibold text-white/80 uppercase tracking-wider">
                 Buscar
               </Label>
               <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-white/50" />
                 <Input
                   placeholder="Protocolo, título..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full sm:w-[200px] pl-9 h-11 sm:h-10 bg-white dark:bg-background border-gray-300 dark:border-input text-gray-900 dark:text-foreground shadow-sm"
+                  className="w-full sm:w-[200px] pl-9 h-11 sm:h-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 shadow-sm focus-visible:ring-emerald-500/50"
                 />
               </div>
             </div>
 
             {role === 'Admin' && (
               <div className="space-y-2 w-full sm:w-auto relative z-20">
-                <Label className="text-xs font-semibold text-gray-700 dark:text-muted-foreground uppercase tracking-wider">
+                <Label className="text-xs font-semibold text-white/80 uppercase tracking-wider">
                   Responsável
                 </Label>
                 <Select value={collaboratorFilter} onValueChange={setCollaboratorFilter}>
-                  <SelectTrigger className="w-full sm:w-[180px] h-11 sm:h-10 bg-white dark:bg-background border-gray-300 dark:border-input text-gray-900 dark:text-foreground shadow-sm">
+                  <SelectTrigger className="w-full sm:w-[180px] h-11 sm:h-10 bg-white/10 border-white/20 text-white shadow-sm focus:ring-emerald-500/50">
                     <SelectValue placeholder="Todos" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
+                  <SelectContent className="bg-emerald-950/95 backdrop-blur-xl border-emerald-800/50 text-white">
+                    <SelectItem value="all" className="focus:bg-emerald-800/50 focus:text-white">
+                      Todos
+                    </SelectItem>
                     {(collaborators || []).map((c) => (
-                      <SelectItem key={c.id} value={c.id || Math.random().toString()}>
+                      <SelectItem
+                        key={c.id}
+                        value={c.id || Math.random().toString()}
+                        className="focus:bg-emerald-800/50 focus:text-white"
+                      >
                         {c.nome || 'Sem Nome'}
                       </SelectItem>
                     ))}
-                    <SelectItem value="unassigned">Não Atribuído</SelectItem>
+                    <SelectItem
+                      value="unassigned"
+                      className="focus:bg-emerald-800/50 focus:text-white"
+                    >
+                      Não Atribuído
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             )}
 
             <div className="space-y-2 w-full sm:w-auto relative z-20">
-              <Label className="text-xs font-semibold text-gray-700 dark:text-muted-foreground uppercase tracking-wider">
+              <Label className="text-xs font-semibold text-white/80 uppercase tracking-wider">
                 Cliente
               </Label>
               <Popover open={clientFilterOpen} onOpenChange={setClientFilterOpen}>
@@ -337,7 +354,7 @@ export default function Demands() {
                     variant="outline"
                     role="combobox"
                     aria-expanded={clientFilterOpen}
-                    className="w-full sm:w-[220px] justify-between h-11 sm:h-10 bg-white dark:bg-background border-gray-300 dark:border-input text-gray-900 dark:text-foreground shadow-sm"
+                    className="w-full sm:w-[220px] justify-between h-11 sm:h-10 bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white shadow-sm focus-visible:ring-emerald-500/50"
                   >
                     {clientFilter === 'all'
                       ? 'Todos os clientes'
@@ -345,15 +362,24 @@ export default function Demands() {
                     <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[220px] p-0" align="start">
-                  <Command>
-                    <CommandInput placeholder="Buscar cliente..." />
+                <PopoverContent
+                  className="w-[220px] p-0 border-emerald-800/50 bg-emerald-950/95 backdrop-blur-xl text-white"
+                  align="start"
+                >
+                  <Command className="bg-transparent text-white">
+                    <CommandInput
+                      placeholder="Buscar cliente..."
+                      className="text-white placeholder:text-white/50"
+                    />
                     <CommandList>
-                      <CommandEmpty>Nenhum cliente encontrado.</CommandEmpty>
+                      <CommandEmpty className="py-6 text-center text-sm text-white/50">
+                        Nenhum cliente encontrado.
+                      </CommandEmpty>
                       <CommandGroup>
                         <CommandItem
                           key="all"
                           value="todos os clientes"
+                          className="data-[selected=true]:bg-emerald-800/50 data-[selected=true]:text-white text-white"
                           onSelect={() => {
                             setClientFilter('all')
                             setClientFilterOpen(false)
@@ -371,6 +397,7 @@ export default function Demands() {
                           <CommandItem
                             key={client.id}
                             value={client.nome}
+                            className="data-[selected=true]:bg-emerald-800/50 data-[selected=true]:text-white text-white"
                             onSelect={() => {
                               setClientFilter(client.id)
                               setClientFilterOpen(false)
@@ -393,7 +420,7 @@ export default function Demands() {
             </div>
 
             <div className="space-y-2 w-full sm:w-auto relative z-20 pointer-events-auto">
-              <Label className="text-xs font-semibold text-gray-700 dark:text-muted-foreground uppercase tracking-wider">
+              <Label className="text-xs font-semibold text-white/80 uppercase tracking-wider">
                 Período
               </Label>
               <Select
@@ -401,20 +428,28 @@ export default function Demands() {
                 onValueChange={setDateFilter}
                 disabled={exactDateFilter !== undefined}
               >
-                <SelectTrigger className="w-full sm:w-[160px] h-11 sm:h-10 bg-white dark:bg-background border-gray-300 dark:border-input text-gray-900 dark:text-foreground shadow-sm disabled:opacity-50">
+                <SelectTrigger className="w-full sm:w-[160px] h-11 sm:h-10 bg-white/10 border-white/20 text-white shadow-sm disabled:opacity-50 focus:ring-emerald-500/50">
                   <SelectValue placeholder="Qualquer data" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Qualquer data</SelectItem>
-                  <SelectItem value="today">Hoje</SelectItem>
-                  <SelectItem value="week">Esta semana</SelectItem>
-                  <SelectItem value="month">Este mês</SelectItem>
+                <SelectContent className="bg-emerald-950/95 backdrop-blur-xl border-emerald-800/50 text-white">
+                  <SelectItem value="all" className="focus:bg-emerald-800/50 focus:text-white">
+                    Qualquer data
+                  </SelectItem>
+                  <SelectItem value="today" className="focus:bg-emerald-800/50 focus:text-white">
+                    Hoje
+                  </SelectItem>
+                  <SelectItem value="week" className="focus:bg-emerald-800/50 focus:text-white">
+                    Esta semana
+                  </SelectItem>
+                  <SelectItem value="month" className="focus:bg-emerald-800/50 focus:text-white">
+                    Este mês
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2 w-full sm:w-auto relative z-20 pointer-events-auto">
-              <Label className="text-xs font-semibold text-gray-700 dark:text-muted-foreground uppercase tracking-wider">
+              <Label className="text-xs font-semibold text-white/80 uppercase tracking-wider">
                 Data Específica
               </Label>
               <Popover>
@@ -422,29 +457,33 @@ export default function Demands() {
                   <Button
                     variant="outline"
                     className={cn(
-                      'w-full sm:w-[160px] h-11 sm:h-10 justify-start text-left font-normal bg-white dark:bg-background border-gray-300 dark:border-input text-gray-900 dark:text-foreground shadow-sm',
-                      !exactDateFilter && 'text-muted-foreground',
+                      'w-full sm:w-[160px] h-11 sm:h-10 justify-start text-left font-normal bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white shadow-sm focus-visible:ring-emerald-500/50',
+                      !exactDateFilter && 'text-white/50',
                     )}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    <CalendarIcon className="mr-2 h-4 w-4 opacity-70" />
                     {exactDateFilter && isValid(exactDateFilter)
                       ? format(exactDateFilter, 'dd/MM/yyyy')
                       : 'Selecionar data'}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent
+                  className="w-auto p-0 border-emerald-800/50 bg-emerald-950/95 backdrop-blur-xl text-white"
+                  align="start"
+                >
                   <Calendar
                     mode="single"
                     selected={exactDateFilter}
                     onSelect={setExactDateFilter}
                     initialFocus
+                    className="text-white"
                   />
                 </PopoverContent>
               </Popover>
             </div>
 
             <div className="space-y-2 w-full sm:w-auto">
-              <Label className="text-xs font-semibold text-gray-700 dark:text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+              <Label className="text-xs font-semibold text-white/80 uppercase tracking-wider flex items-center gap-1">
                 <Columns className="w-3 h-3" />
                 Colunas Visíveis
               </Label>
@@ -453,23 +492,23 @@ export default function Demands() {
                 variant="outline"
                 value={statusFilter}
                 onValueChange={(val) => setStatusFilter(val || [])}
-                className="bg-gray-100 dark:bg-muted/50 rounded-md min-h-[40px] p-1 border border-gray-300 dark:border-border justify-start flex-wrap sm:flex-nowrap w-full shadow-sm"
+                className="bg-black/20 rounded-md min-h-[40px] p-1 border border-white/10 justify-start flex-wrap sm:flex-nowrap w-full shadow-inner"
               >
                 <ToggleGroupItem
                   value="Pendente"
-                  className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none text-gray-600 dark:text-muted-foreground data-[state=on]:bg-white dark:data-[state=on]:bg-background data-[state=on]:text-gray-900 dark:data-[state=on]:text-foreground data-[state=on]:shadow border-transparent data-[state=on]:border-gray-200 dark:data-[state=on]:border-transparent"
+                  className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none text-white/70 hover:text-white data-[state=on]:bg-white/20 data-[state=on]:text-white data-[state=on]:shadow-sm border-transparent"
                 >
                   Pendente
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="Em Andamento"
-                  className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none text-gray-600 dark:text-muted-foreground data-[state=on]:bg-white dark:data-[state=on]:bg-background data-[state=on]:text-gray-900 dark:data-[state=on]:text-foreground data-[state=on]:shadow border-transparent data-[state=on]:border-gray-200 dark:data-[state=on]:border-transparent"
+                  className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none text-white/70 hover:text-white data-[state=on]:bg-white/20 data-[state=on]:text-white data-[state=on]:shadow-sm border-transparent"
                 >
                   Em Andamento
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="Concluído"
-                  className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none text-gray-600 dark:text-muted-foreground data-[state=on]:bg-white dark:data-[state=on]:bg-background data-[state=on]:text-gray-900 dark:data-[state=on]:text-foreground data-[state=on]:shadow border-transparent data-[state=on]:border-gray-200 dark:data-[state=on]:border-transparent"
+                  className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none text-white/70 hover:text-white data-[state=on]:bg-white/20 data-[state=on]:text-white data-[state=on]:shadow-sm border-transparent"
                 >
                   Concluído
                 </ToggleGroupItem>
@@ -481,7 +520,7 @@ export default function Demands() {
                 variant="ghost"
                 size="sm"
                 onClick={clearFilters}
-                className="h-11 sm:h-10 text-muted-foreground hover:text-foreground w-full sm:w-auto mb-[1px]"
+                className="h-11 sm:h-10 text-white/70 hover:text-white hover:bg-white/10 w-full sm:w-auto mb-[1px]"
               >
                 <FilterX className="w-4 h-4 mr-2" />
                 Limpar
@@ -493,22 +532,25 @@ export default function Demands() {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                className="gap-2 w-full xl:w-auto bg-white dark:bg-background border-gray-300 dark:border-input text-gray-900 dark:text-foreground hover:bg-gray-50 dark:hover:bg-accent shadow-sm"
+                className="gap-2 w-full xl:w-auto bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white shadow-sm transition-all focus-visible:ring-emerald-500/50"
               >
                 <Download className="w-4 h-4" />
                 Exportar Relatório
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[90vw] max-w-[220px] sm:w-56">
+            <DropdownMenuContent
+              align="end"
+              className="w-[90vw] max-w-[220px] sm:w-56 bg-emerald-950/95 backdrop-blur-xl border-emerald-800/50 text-white"
+            >
               <DropdownMenuItem
                 onClick={() => exportToCSV(filteredDemands || [], `demandas_${Date.now()}.csv`)}
-                className="min-h-[44px]"
+                className="min-h-[44px] focus:bg-emerald-800/50 focus:text-white"
               >
                 Exportar como CSV
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => exportToPDF(filteredDemands || [])}
-                className="min-h-[44px]"
+                className="min-h-[44px] focus:bg-emerald-800/50 focus:text-white"
               >
                 Exportar como PDF
               </DropdownMenuItem>
