@@ -13,7 +13,7 @@ export default function Layout() {
   if (loading) {
     return (
       <div className="min-h-[100dvh] flex items-center justify-center bg-background w-full">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary drop-shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
       </div>
     )
   }
@@ -33,8 +33,8 @@ export default function Layout() {
       <div className="fixed inset-0 pointer-events-none z-[-1]">
         <div className="absolute inset-0 bg-background"></div>
         <div className="absolute inset-0 bg-grid-pattern opacity-10 mix-blend-overlay"></div>
-        <div className="absolute top-0 right-0 w-[800px] h-[600px] bg-primary/5 rounded-full blur-[120px] mix-blend-screen pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 w-[600px] h-[500px] bg-[#0070f3]/5 rounded-full blur-[120px] mix-blend-screen pointer-events-none"></div>
+        <div className="absolute top-0 right-0 w-[800px] h-[600px] bg-primary/10 rounded-full blur-[120px] mix-blend-screen pointer-events-none dark:bg-primary/20"></div>
+        <div className="absolute bottom-0 left-0 w-[600px] h-[500px] bg-blue-500/5 rounded-full blur-[120px] mix-blend-screen pointer-events-none dark:bg-blue-500/10"></div>
       </div>
       <AppSidebar />
       <SidebarInset className="flex flex-col min-h-[100dvh] bg-transparent w-full max-w-[100vw] overflow-hidden">

@@ -14,10 +14,10 @@ export default function Index() {
       <div className="min-h-[calc(100vh-theme(spacing.16))] flex flex-col p-6 lg:p-12 animate-in fade-in duration-700 bg-slate-50 dark:bg-[#0f172a]">
         <div className="max-w-7xl mx-auto w-full space-y-12">
           <div className="space-y-4 max-w-3xl">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-extrabold tracking-tight text-slate-900 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-cyan-400 dark:to-emerald-400 drop-shadow-sm">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-extrabold tracking-tight text-slate-900 dark:text-white drop-shadow-sm">
               Central de Comando
             </h1>
-            <p className="text-lg md:text-xl text-slate-600 dark:text-slate-300 font-sans-custom">
+            <p className="text-lg md:text-xl text-slate-600 dark:text-white/80 font-sans-custom">
               Acesse rapidamente os principais módulos do sistema. Navegue de forma inteligente e
               eficiente através do nosso painel de controle.
             </p>
@@ -88,18 +88,18 @@ function AccessCard({
       to={to}
       className={cn(
         'group relative flex flex-col justify-between overflow-hidden rounded-3xl p-8',
-        'border border-slate-200/60 dark:border-slate-700/50',
-        'bg-white/60 dark:bg-slate-800/40 backdrop-blur-xl',
+        'border border-slate-200/60 dark:border-primary/30',
+        'bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl',
         'transition-all duration-500 ease-out',
-        'hover:-translate-y-1.5 hover:scale-[1.02] hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_20px_40px_-15px_rgba(34,211,238,0.15)]',
-        'hover:border-cyan-500/50 dark:hover:border-cyan-400/50',
+        'hover:-translate-y-1.5 hover:scale-[1.02] hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_20px_40px_-15px_rgba(34,197,94,0.2)]',
+        'hover:border-primary/50 dark:hover:border-primary/60',
         'animate-in fade-in slide-in-from-bottom-8',
       )}
       style={{ animationDelay: delay, animationFillMode: 'both' }}
     >
       <div
         className={cn(
-          'absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-emerald-500/5 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100',
+          'absolute inset-0 bg-gradient-to-br from-primary/10 via-primary/5 to-blue-500/5 opacity-0 transition-opacity duration-500 group-hover:opacity-100',
         )}
       />
 
@@ -107,26 +107,26 @@ function AccessCard({
         <div
           className={cn(
             'p-4 w-fit rounded-2xl shadow-sm transition-transform duration-500 group-hover:scale-110',
-            'bg-slate-100 dark:bg-slate-900/50 text-cyan-600 dark:text-cyan-400',
-            'border border-slate-200/50 dark:border-slate-700/50',
+            'bg-primary/10 dark:bg-primary/20 text-primary dark:text-white',
+            'border border-primary/20 dark:border-primary/30',
           )}
         >
-          <Icon className="w-8 h-8" />
+          <Icon className="w-8 h-8 drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
         </div>
 
         <div className="space-y-3">
-          <h3 className="font-heading text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
+          <h3 className="font-heading text-2xl font-bold tracking-tight text-slate-900 dark:text-white group-hover:text-primary dark:group-hover:text-white transition-colors">
             {title}
           </h3>
-          <p className="font-sans-custom text-slate-600 dark:text-slate-300 leading-relaxed text-sm md:text-base">
+          <p className="font-sans-custom text-slate-600 dark:text-white/80 leading-relaxed text-sm md:text-base">
             {description}
           </p>
         </div>
       </div>
 
-      <div className="relative z-10 pt-8 mt-auto flex items-center text-sm font-semibold tracking-wide text-slate-500 dark:text-slate-400 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
+      <div className="relative z-10 pt-8 mt-auto flex items-center text-sm font-semibold tracking-wide text-slate-500 dark:text-white/70 group-hover:text-primary dark:group-hover:text-white transition-colors">
         <span>Acessar Módulo</span>
-        <ChevronRight className="w-4 h-4 ml-1 opacity-50 transition-all duration-500 group-hover:opacity-100 group-hover:translate-x-2" />
+        <ChevronRight className="w-4 h-4 ml-1 opacity-50 transition-all duration-500 group-hover:opacity-100 group-hover:translate-x-2 text-blue-500/70 dark:text-blue-400/70 group-hover:text-primary dark:group-hover:text-white" />
       </div>
     </Link>
   )

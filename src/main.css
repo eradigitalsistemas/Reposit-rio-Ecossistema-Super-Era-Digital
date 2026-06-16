@@ -56,40 +56,40 @@
   .dark {
     /* Midnight slate instead of pure black */
     --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
+    --foreground: 0 0% 100%;
 
-    --card: 222 47% 14%;
-    --card-foreground: 210 40% 98%;
+    --card: 142 10% 12%; /* Slightly green-tinted dark background */
+    --card-foreground: 0 0% 100%; /* Pure white text for high contrast */
 
-    --popover: 222 47% 14%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 142 10% 12%;
+    --popover-foreground: 0 0% 100%;
 
     --primary: 142 71% 45%; /* Green Accent */
-    --primary-foreground: 222 47% 11%;
+    --primary-foreground: 0 0% 100%; /* Pure white text inside primary elements */
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 142 20% 15%; /* Green tinted secondary */
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 142 15% 15%;
+    --muted-foreground: 142 10% 70%;
 
-    --accent: 214 100% 50%; /* Tech Blue */
-    --accent-foreground: 210 40% 98%;
+    --accent: 142 71% 25%; /* Changed tech blue accent to dark green accent where possible */
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 40.6%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
+    --border: 142 30% 20%; /* Green tinted borders */
+    --input: 142 30% 20%;
     --ring: 142 71% 45%;
 
-    --sidebar-background: 222 47% 11% / 0.6;
-    --sidebar-foreground: 210 40% 98%;
+    --sidebar-background: 142 20% 8% / 0.7; /* Glassmorphism green tinted background */
+    --sidebar-foreground: 0 0% 100%; /* White text */
     --sidebar-primary: 142 71% 45%;
-    --sidebar-primary-foreground: 222 47% 11%;
-    --sidebar-accent: 217.2 32.6% 17.5%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 142 30% 15%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 142 40% 20%;
     --sidebar-ring: 142 71% 45%;
 
     --warning: 48 96% 53%;
