@@ -1,3 +1,4 @@
+/* Tailwind config for the frontend react app. This is where the app theme should be defined: https://v2.tailwindcss.com/docs/configuration. */
 import type { Config } from 'tailwindcss'
 import animatePlugin from 'tailwindcss-animate'
 import typographyPlugin from '@tailwindcss/typography'
@@ -80,6 +81,10 @@ export default {
           4: 'hsl(var(--chart-4))',
           5: 'hsl(var(--chart-5))',
         },
+        warning: {
+          DEFAULT: 'hsl(var(--warning))',
+          foreground: 'hsl(var(--warning-foreground))',
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -91,8 +96,8 @@ export default {
         height: 'height',
       },
       boxShadow: {
-        subtle: '0 4px 24px rgba(0, 0, 0, 0.4)',
-        elevation: '0 10px 40px rgba(0, 0, 0, 0.8)',
+        subtle: '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03)',
+        elevation: '0 4px 20px rgba(0, 0, 0, 0.05)',
       },
       transitionTimingFunction: {
         apple: 'cubic-bezier(0.42, 0, 0.58, 1)',

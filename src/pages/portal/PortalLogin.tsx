@@ -61,9 +61,14 @@ export default function PortalLogin() {
 
           <form
             onSubmit={handleLogin}
-            className="space-y-6 bg-zinc-900/50 p-8 rounded-xl border border-zinc-800"
+            className="space-y-6 bg-zinc-900/40 backdrop-blur-xl p-8 rounded-2xl border border-zinc-800/50 shadow-[0_0_40px_rgba(0,0,0,0.5)] relative overflow-hidden"
           >
-            <div className="space-y-4">
+            {loading && (
+              <div className="absolute top-0 left-0 w-full h-1 bg-zinc-800">
+                <div className="h-full bg-primary w-full animate-loading-bar origin-left"></div>
+              </div>
+            )}
+            <div className="space-y-4 relative z-10">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-white">
                   Email
@@ -104,13 +109,13 @@ export default function PortalLogin() {
 
             <Button
               type="submit"
-              className="w-full bg-green-600 hover:bg-green-700 text-white border-0"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground border-0 shadow-[0_0_15px_rgba(34,197,94,0.3)] hover:shadow-[0_0_25px_rgba(34,197,94,0.5)] transition-all duration-300"
               disabled={loading}
             >
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Entrando...
+                  Autenticando...
                 </>
               ) : (
                 'Acessar Portal'
@@ -119,6 +124,9 @@ export default function PortalLogin() {
           </form>
         </div>
       </div>
+
+      {/* Background grid for login */}
+      <div className="fixed inset-0 pointer-events-none bg-grid-pattern z-[-1] opacity-30 mix-blend-overlay"></div>
     </div>
   )
 }

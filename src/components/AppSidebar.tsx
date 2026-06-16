@@ -17,6 +17,7 @@ import {
   UserCog,
   MessageCircle,
 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import {
   Sidebar,
   SidebarContent,
@@ -93,29 +94,43 @@ export function AppSidebar() {
     if (visibleItems.length === 0) return null
 
     return (
-      <SidebarMenu>
-        {visibleItems.map((item) => (
-          <SidebarMenuItem key={item.title}>
-            <SidebarMenuButton
-              asChild
-              isActive={
-                location.pathname.startsWith(item.url) &&
-                item.url !== '#' &&
-                (item.url === '/' ? location.pathname === '/' : true)
-              }
-              className="transition-all duration-200 h-12 md:h-10 px-4 md:px-2"
-            >
-              <Link
-                to={item.url}
-                onClick={handleLinkClick}
-                className="flex items-center gap-3 text-sidebar-foreground/70 hover:text-sidebar-foreground font-medium"
+      <SidebarMenu className="space-y-1">
+        {visibleItems.map((item) => {
+          const isActive =
+            location.pathname.startsWith(item.url) &&
+            item.url !== '#' &&
+            (item.url === '/' ? location.pathname === '/' : true)
+          return (
+            <SidebarMenuItem key={item.title}>
+              <SidebarMenuButton
+                asChild
+                isActive={isActive}
+                className={cn(
+                  'transition-all duration-300 h-12 md:h-10 px-4 md:px-3 rounded-xl group relative overflow-hidden',
+                  isActive
+                    ? 'bg-primary/10 text-primary shadow-[inset_3px_0_0_hsl(var(--primary))] before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/10 before:to-transparent before:opacity-100'
+                    : 'hover:bg-sidebar-accent/50 text-sidebar-foreground/70 hover:text-sidebar-foreground',
+                )}
               >
-                <item.icon className="w-5 h-5 opacity-80" />
-                <span className="text-base md:text-sm font-semibold">{item.title}</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        ))}
+                <Link
+                  to={item.url}
+                  onClick={handleLinkClick}
+                  className="flex items-center gap-3 font-medium relative z-10"
+                >
+                  <item.icon
+                    className={cn(
+                      'w-5 h-5 transition-all duration-300',
+                      isActive
+                        ? 'opacity-100 drop-shadow-[0_0_8px_rgba(34,197,94,0.6)]'
+                        : 'opacity-80 group-hover:scale-110',
+                    )}
+                  />
+                  <span className="text-base md:text-sm font-semibold">{item.title}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )
+        })}
       </SidebarMenu>
     )
   }
@@ -125,8 +140,8 @@ export function AppSidebar() {
       .length > 0
 
   return (
-    <Sidebar>
-      <SidebarHeader className="py-4 flex items-center px-6 border-b border-border bg-sidebar shrink-0">
+    <Sidebar className="backdrop-blur-xl bg-sidebar border-r border-border/50 shadow-[4px_0_24px_rgba(0,0,0,0.05)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.2)]">
+      <SidebarHeader className="py-4 flex items-center px-6 border-b border-border/50 bg-transparent shrink-0">
         <Link
           to="/"
           onClick={handleLinkClick}
@@ -136,9 +151,9 @@ export function AppSidebar() {
         </Link>
       </SidebarHeader>
 
-      <SidebarContent className="flex-1 overflow-y-auto bg-sidebar">
+      <SidebarContent className="flex-1 overflow-y-auto bg-transparent hide-scrollbar">
         <SidebarGroup>
-          <div className="px-4 py-2 mt-2 text-xs font-bold text-sidebar-foreground/60 uppercase tracking-wider">
+          <div className="px-4 py-2 mt-2 text-xs font-bold text-sidebar-foreground/50 uppercase tracking-widest">
             Principal
           </div>
           <SidebarGroupContent>{renderMenu(MAIN_MENU)}</SidebarGroupContent>
@@ -146,22 +161,22 @@ export function AppSidebar() {
 
         {hrItemsVisible && (
           <SidebarGroup>
-            <div className="px-4 py-2 mt-4 text-xs font-bold text-sidebar-foreground/60 uppercase tracking-wider">
+            <div className="px-4 py-2 mt-4 text-xs font-bold text-sidebar-foreground/50 uppercase tracking-widest">
               Recursos Humanos
-            </div>{' '}
+            </div>
             <SidebarGroupContent>{renderMenu(HR_MENU)}</SidebarGroupContent>
           </SidebarGroup>
         )}
 
         <SidebarGroup>
-          <div className="px-4 py-2 mt-4 text-xs font-bold text-sidebar-foreground/60 uppercase tracking-wider">
+          <div className="px-4 py-2 mt-4 text-xs font-bold text-sidebar-foreground/50 uppercase tracking-widest">
             Sistema
           </div>
           <SidebarGroupContent>{renderMenu(SYS_MENU)}</SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-border shrink-0 mt-auto pb-8 md:pb-4 bg-sidebar">
+      <SidebarFooter className="p-4 border-t border-border/50 shrink-0 mt-auto pb-8 md:pb-4 bg-transparent">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton

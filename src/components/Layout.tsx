@@ -30,8 +30,9 @@ export default function Layout() {
 
   return (
     <SidebarProvider>
+      <div className="fixed inset-0 pointer-events-none bg-grid-pattern z-[-1] opacity-50 mix-blend-overlay"></div>
       <AppSidebar />
-      <SidebarInset className="flex flex-col min-h-[100dvh] bg-background w-full max-w-[100vw]">
+      <SidebarInset className="flex flex-col min-h-[100dvh] bg-transparent w-full max-w-[100vw]">
         <Header />
         <main className="flex-1 overflow-y-auto overflow-x-hidden relative w-full flex flex-col">
           <ErrorBoundary>
