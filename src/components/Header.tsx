@@ -54,19 +54,19 @@ export function Header() {
   const unreadCount = notifications.filter((n) => !n.read).length
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-2 sm:gap-4 border-b border-border bg-background/80 backdrop-blur-md px-4 sm:px-6">
+    <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-2 sm:gap-4 border-none bg-background/60 backdrop-blur-xl px-4 sm:px-6 shadow-[0_4px_30px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_30px_rgba(0,0,0,0.2)]">
       <SidebarTrigger className="-ml-2 md:hidden text-foreground" />
       <div className="flex-1 flex items-center justify-between gap-2">
         <Breadcrumb className="hidden sm:block shrink-0">
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbPage className="text-lg font-bold text-foreground">
+              <BreadcrumbPage className="text-xl md:text-2xl font-display font-bold bg-gradient-to-r from-primary to-[#0070f3] bg-clip-text text-transparent drop-shadow-sm">
                 {pageTitle}
               </BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-        <div className="sm:hidden font-bold text-lg text-foreground truncate w-full pl-2">
+        <div className="sm:hidden font-display font-bold text-xl truncate w-full pl-2 bg-gradient-to-r from-primary to-[#0070f3] bg-clip-text text-transparent">
           {pageTitle}
         </div>
 

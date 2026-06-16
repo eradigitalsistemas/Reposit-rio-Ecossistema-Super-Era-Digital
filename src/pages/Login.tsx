@@ -51,33 +51,44 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-black flex flex-col">
-      <header className="p-6 flex items-center"></header>
+    <div className="min-h-screen bg-[#0f172a] flex flex-col relative overflow-hidden">
+      {/* Premium Tech Dashboard Background */}
+      <div className="absolute inset-0 pointer-events-none z-0">
+        <div className="absolute top-[-10%] right-[-5%] w-[800px] h-[800px] bg-primary/10 rounded-full blur-[150px] mix-blend-screen"></div>
+        <div className="absolute bottom-[-10%] left-[-5%] w-[800px] h-[800px] bg-[#0070f3]/10 rounded-full blur-[150px] mix-blend-screen"></div>
+        <div className="absolute inset-0 bg-grid-pattern opacity-10 mix-blend-overlay"></div>
+      </div>
 
-      <div className="flex-1 flex items-center justify-center p-4">
+      <header className="p-6 flex items-center relative z-10"></header>
+
+      <div className="flex-1 flex items-center justify-center p-4 relative z-10">
         <div className="w-full max-w-md space-y-8">
           <div className="flex flex-col items-center justify-center text-center">
             <img
               src={logoImg}
               alt="Era Digital"
-              className="h-48 w-auto object-contain mb-6 brightness-0 invert"
+              className="h-48 w-auto object-contain mb-6 brightness-0 invert drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]"
             />
-            <h2 className="text-2xl font-bold tracking-tight text-white">Acesso ao Sistema</h2>
-            <p className="text-sm text-gray-400 mt-2">Entre com suas credenciais para continuar</p>
+            <h2 className="text-3xl font-display font-bold tracking-tight text-white drop-shadow-md">
+              Acesso ao Sistema
+            </h2>
+            <p className="text-sm text-slate-400 mt-2 font-medium">
+              Entre com suas credenciais para continuar
+            </p>
           </div>
 
           <form
             onSubmit={handleLogin}
-            className="space-y-6 bg-zinc-900/40 backdrop-blur-xl p-8 rounded-2xl border border-zinc-800/50 shadow-[0_0_40px_rgba(0,0,0,0.5)] relative overflow-hidden"
+            className="space-y-6 bg-slate-900/50 backdrop-blur-2xl p-8 rounded-3xl border border-slate-800/80 shadow-[0_8px_40px_rgba(0,0,0,0.4)] relative overflow-hidden"
           >
             {loading && (
-              <div className="absolute top-0 left-0 w-full h-1 bg-zinc-800">
-                <div className="h-full bg-primary w-full animate-loading-bar origin-left"></div>
+              <div className="absolute top-0 left-0 w-full h-1 bg-slate-800/50">
+                <div className="h-full bg-gradient-to-r from-primary to-[#0070f3] w-full animate-loading-bar origin-left"></div>
               </div>
             )}
             <div className="space-y-4 relative z-10">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-white">
+                <Label htmlFor="email" className="text-slate-200 font-medium ml-1">
                   Email
                 </Label>
                 <Input
@@ -87,11 +98,11 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="bg-black border-zinc-700 text-white placeholder:text-zinc-500 focus:bg-black focus-visible:bg-black focus:border-primary focus:ring-1 focus:ring-primary"
+                  className="bg-slate-950/50 border-slate-800 text-white placeholder:text-slate-500 focus:bg-slate-900 focus-visible:bg-slate-900 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 h-12 rounded-xl transition-all"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-white">
+                <Label htmlFor="password" className="text-slate-200 font-medium ml-1">
                   Senha
                 </Label>
                 <div className="relative">
@@ -101,12 +112,12 @@ export default function Login() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="bg-black border-zinc-700 text-white pr-10 focus:bg-black focus-visible:bg-black focus:border-primary focus:ring-1 focus:ring-primary"
+                    className="bg-slate-950/50 border-slate-800 text-white pr-10 focus:bg-slate-900 focus-visible:bg-slate-900 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 h-12 rounded-xl transition-all"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors z-10"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors z-10"
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
@@ -116,12 +127,12 @@ export default function Login() {
 
             <Button
               type="submit"
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground border-0 shadow-[0_0_15px_rgba(34,197,94,0.3)] hover:shadow-[0_0_25px_rgba(34,197,94,0.5)] transition-all duration-300"
+              className="w-full bg-gradient-to-r from-primary to-[#0070f3] hover:from-primary/90 hover:to-[#0070f3]/90 text-white font-bold h-12 rounded-xl border-0 shadow-[0_0_20px_rgba(34,197,94,0.2)] hover:shadow-[0_0_30px_rgba(34,197,94,0.4)] transition-all duration-300 text-base"
               disabled={loading}
             >
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Autenticando...
                 </>
               ) : (
@@ -131,9 +142,6 @@ export default function Login() {
           </form>
         </div>
       </div>
-
-      {/* Background grid for login */}
-      <div className="fixed inset-0 pointer-events-none bg-grid-pattern z-[-1] opacity-30 mix-blend-overlay"></div>
     </div>
   )
 }

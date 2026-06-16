@@ -1,31 +1,29 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
-    --foreground: 0 0% 9%;
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 9%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 9%;
+    --popover-foreground: 222 47% 11%;
 
     --primary: 142 71% 45%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 0 0% 9%;
+    --secondary: 210 40% 92%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 210 40% 96.1%;
+    --muted: 210 40% 92%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 210 50% 90%;
-    --accent-foreground: 210 100% 30%;
+    --accent: 214 100% 50%; /* Tech Blue */
+    --accent-foreground: 210 40% 98%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
@@ -36,12 +34,12 @@
 
     --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 100% / 0.8;
-    --sidebar-foreground: 0 0% 10%;
+    --sidebar-background: 0 0% 100% / 0.6;
+    --sidebar-foreground: 222 47% 11%;
     --sidebar-primary: 142 71% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 50% 90%;
-    --sidebar-accent-foreground: 210 100% 30%;
+    --sidebar-accent: 210 40% 92%;
+    --sidebar-accent-foreground: 222 47% 11%;
     --sidebar-border: 214.3 31.8% 90%;
     --sidebar-ring: 142 71% 45%;
 
@@ -56,42 +54,42 @@
   }
 
   .dark {
-    /* Pure Black Background with High Contrast text */
-    --background: 0 0% 0%;
-    --foreground: 0 0% 100%;
+    /* Midnight slate instead of pure black */
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
 
-    --card: 0 0% 4%;
-    --card-foreground: 0 0% 100%;
+    --card: 222 47% 14%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 0 0% 4%;
-    --popover-foreground: 0 0% 100%;
+    --popover: 222 47% 14%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 142 71% 45%; /* Emerald/Green Accent */
-    --primary-foreground: 0 0% 0%; /* Pure black for high legibility */
+    --primary: 142 71% 45%; /* Green Accent */
+    --primary-foreground: 222 47% 11%;
 
-    --secondary: 0 0% 10%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 0 0% 10%;
-    --muted-foreground: 0 0% 70%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 210 50% 15%;
-    --accent-foreground: 210 100% 80%;
+    --accent: 214 100% 50%; /* Tech Blue */
+    --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 0% 20%; /* Neutral dark gray instead of red */
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 0 0% 15%;
-    --input: 0 0% 15%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
     --ring: 142 71% 45%;
 
-    --sidebar-background: 0 0% 2% / 0.7;
-    --sidebar-foreground: 0 0% 100%;
+    --sidebar-background: 222 47% 11% / 0.6;
+    --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 142 71% 45%;
-    --sidebar-primary-foreground: 0 0% 0%;
-    --sidebar-accent: 210 50% 15%;
-    --sidebar-accent-foreground: 210 100% 80%;
-    --sidebar-border: 0 0% 15%;
+    --sidebar-primary-foreground: 222 47% 11%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
     --sidebar-ring: 142 71% 45%;
 
     --warning: 48 96% 53%;
@@ -144,7 +142,7 @@
 
   /* Global contrast override for Light Mode to prevent unreadable text */
   :root:not(.dark) .bg-white {
-    color: #111827 !important; /* Tailwind text-gray-900 */
+    color: #0f172a !important; /* Tech slate-900 */
   }
 
   /* Tech Dashboard Global Styles */

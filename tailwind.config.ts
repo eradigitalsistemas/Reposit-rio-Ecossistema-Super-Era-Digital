@@ -27,8 +27,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter var', 'SF Pro Display', 'system-ui', 'sans-serif'],
-        display: ['SF Pro Display', 'Inter var', 'system-ui', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+        display: ['"Space Grotesk"', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: 'hsl(var(--border))',
@@ -80,10 +80,6 @@ export default {
           3: 'hsl(var(--chart-3))',
           4: 'hsl(var(--chart-4))',
           5: 'hsl(var(--chart-5))',
-        },
-        warning: {
-          DEFAULT: 'hsl(var(--warning))',
-          foreground: 'hsl(var(--warning-foreground))',
         },
       },
       borderRadius: {

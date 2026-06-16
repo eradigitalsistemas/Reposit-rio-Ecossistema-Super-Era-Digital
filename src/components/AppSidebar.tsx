@@ -94,7 +94,7 @@ export function AppSidebar() {
     if (visibleItems.length === 0) return null
 
     return (
-      <SidebarMenu className="space-y-1">
+      <SidebarMenu className="space-y-1.5 px-2">
         {visibleItems.map((item) => {
           const isActive =
             location.pathname.startsWith(item.url) &&
@@ -106,10 +106,10 @@ export function AppSidebar() {
                 asChild
                 isActive={isActive}
                 className={cn(
-                  'transition-all duration-300 h-12 md:h-10 px-4 md:px-3 rounded-xl group relative overflow-hidden',
+                  'transition-all duration-300 h-11 md:h-10 px-4 md:px-3 rounded-xl group relative overflow-hidden border border-transparent',
                   isActive
-                    ? 'bg-primary/10 text-primary shadow-[inset_3px_0_0_hsl(var(--primary))] before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/10 before:to-transparent before:opacity-100'
-                    : 'hover:bg-sidebar-accent/50 text-sidebar-foreground/70 hover:text-sidebar-foreground',
+                    ? 'bg-primary/10 text-primary border-primary/20 shadow-[0_0_15px_rgba(34,197,94,0.1)] before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/5 before:to-transparent before:opacity-100'
+                    : 'hover:bg-sidebar-accent/50 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:border-border/50',
                 )}
               >
                 <Link
@@ -140,8 +140,8 @@ export function AppSidebar() {
       .length > 0
 
   return (
-    <Sidebar className="backdrop-blur-xl bg-sidebar border-r border-border/50 shadow-[4px_0_24px_rgba(0,0,0,0.05)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.2)]">
-      <SidebarHeader className="py-4 flex items-center px-6 border-b border-border/50 bg-transparent shrink-0">
+    <Sidebar className="backdrop-blur-2xl bg-sidebar/60 border-r-0 shadow-[4px_0_30px_rgba(0,0,0,0.05)] dark:shadow-[4px_0_30px_rgba(0,0,0,0.2)] m-0 md:m-4 md:h-[calc(100vh-2rem)] md:rounded-2xl overflow-hidden">
+      <SidebarHeader className="py-6 flex items-center px-6 border-b-0 bg-transparent shrink-0">
         <Link
           to="/"
           onClick={handleLinkClick}
@@ -151,9 +151,9 @@ export function AppSidebar() {
         </Link>
       </SidebarHeader>
 
-      <SidebarContent className="flex-1 overflow-y-auto bg-transparent hide-scrollbar">
+      <SidebarContent className="flex-1 overflow-y-auto bg-transparent hide-scrollbar px-2">
         <SidebarGroup>
-          <div className="px-4 py-2 mt-2 text-xs font-bold text-sidebar-foreground/50 uppercase tracking-widest">
+          <div className="px-4 py-2 mt-2 text-[10px] font-display font-bold text-sidebar-foreground/40 uppercase tracking-widest">
             Principal
           </div>
           <SidebarGroupContent>{renderMenu(MAIN_MENU)}</SidebarGroupContent>
@@ -161,7 +161,7 @@ export function AppSidebar() {
 
         {hrItemsVisible && (
           <SidebarGroup>
-            <div className="px-4 py-2 mt-4 text-xs font-bold text-sidebar-foreground/50 uppercase tracking-widest">
+            <div className="px-4 py-2 mt-4 text-[10px] font-display font-bold text-sidebar-foreground/40 uppercase tracking-widest">
               Recursos Humanos
             </div>
             <SidebarGroupContent>{renderMenu(HR_MENU)}</SidebarGroupContent>
@@ -169,20 +169,20 @@ export function AppSidebar() {
         )}
 
         <SidebarGroup>
-          <div className="px-4 py-2 mt-4 text-xs font-bold text-sidebar-foreground/50 uppercase tracking-widest">
+          <div className="px-4 py-2 mt-4 text-[10px] font-display font-bold text-sidebar-foreground/40 uppercase tracking-widest">
             Sistema
           </div>
           <SidebarGroupContent>{renderMenu(SYS_MENU)}</SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-border/50 shrink-0 mt-auto pb-8 md:pb-4 bg-transparent">
-        <SidebarMenu>
+      <SidebarFooter className="p-4 border-t-0 shrink-0 mt-auto pb-8 md:pb-4 bg-transparent relative z-10 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-border before:to-transparent">
+        <SidebarMenu className="px-2">
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
               variant="outline"
-              className="w-full justify-center text-sidebar-foreground border-sidebar-border hover:bg-sidebar-accent transition-colors h-12 md:h-10"
+              className="w-full justify-center text-sidebar-foreground border-border/50 hover:bg-sidebar-accent/50 hover:border-border transition-all h-12 md:h-10 rounded-xl"
             >
               <Link
                 to="/portal/login"

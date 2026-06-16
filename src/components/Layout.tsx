@@ -30,9 +30,14 @@ export default function Layout() {
 
   return (
     <SidebarProvider>
-      <div className="fixed inset-0 pointer-events-none bg-grid-pattern z-[-1] opacity-50 mix-blend-overlay"></div>
+      <div className="fixed inset-0 pointer-events-none z-[-1]">
+        <div className="absolute inset-0 bg-background"></div>
+        <div className="absolute inset-0 bg-grid-pattern opacity-10 mix-blend-overlay"></div>
+        <div className="absolute top-0 right-0 w-[800px] h-[600px] bg-primary/5 rounded-full blur-[120px] mix-blend-screen pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 w-[600px] h-[500px] bg-[#0070f3]/5 rounded-full blur-[120px] mix-blend-screen pointer-events-none"></div>
+      </div>
       <AppSidebar />
-      <SidebarInset className="flex flex-col min-h-[100dvh] bg-transparent w-full max-w-[100vw]">
+      <SidebarInset className="flex flex-col min-h-[100dvh] bg-transparent w-full max-w-[100vw] overflow-hidden">
         <Header />
         <main className="flex-1 overflow-y-auto overflow-x-hidden relative w-full flex flex-col">
           <ErrorBoundary>
