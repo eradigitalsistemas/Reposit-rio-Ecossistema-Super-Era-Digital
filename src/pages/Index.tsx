@@ -5,19 +5,13 @@ import { cn } from '@/lib/utils'
 export default function Index() {
   return (
     <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700;800&display=swap');
-        .font-heading { font-family: 'Space Grotesk', sans-serif; }
-        .font-sans-custom { font-family: 'Plus Jakarta Sans', sans-serif; }
-      `}</style>
-
-      <div className="min-h-[calc(100vh-theme(spacing.16))] flex flex-col p-6 lg:p-12 animate-in fade-in duration-700 bg-slate-50 dark:bg-[#0f172a]">
+      <div className="min-h-[calc(100vh-theme(spacing.16))] flex flex-col p-6 lg:p-12 animate-in fade-in duration-700">
         <div className="max-w-7xl mx-auto w-full space-y-12">
           <div className="space-y-4 max-w-3xl">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-extrabold tracking-tight text-slate-900 dark:text-white drop-shadow-sm">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-extrabold tracking-tight text-slate-900 dark:text-white drop-shadow-sm">
               Central de Comando
             </h1>
-            <p className="text-lg md:text-xl text-slate-600 dark:text-white/80 font-sans-custom">
+            <p className="text-lg md:text-xl text-slate-600 dark:text-white/80">
               Acesse rapidamente os principais módulos do sistema. Navegue de forma inteligente e
               eficiente através do nosso painel de controle.
             </p>
@@ -89,7 +83,7 @@ function AccessCard({
       className={cn(
         'group relative flex flex-col justify-between overflow-hidden rounded-3xl p-8',
         'border border-slate-200/60 dark:border-primary/30',
-        'bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl',
+        'bg-white/60 dark:bg-card/60 backdrop-blur-xl',
         'transition-all duration-500 ease-out',
         'hover:-translate-y-1.5 hover:scale-[1.02] hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_20px_40px_-15px_rgba(34,197,94,0.2)]',
         'hover:border-primary/50 dark:hover:border-primary/60',
@@ -99,7 +93,7 @@ function AccessCard({
     >
       <div
         className={cn(
-          'absolute inset-0 bg-gradient-to-br from-primary/10 via-primary/5 to-blue-500/5 opacity-0 transition-opacity duration-500 group-hover:opacity-100',
+          'absolute inset-0 bg-gradient-to-br from-primary/10 via-primary/5 to-accent/5 opacity-0 transition-opacity duration-500 group-hover:opacity-100',
         )}
       />
 
@@ -115,10 +109,10 @@ function AccessCard({
         </div>
 
         <div className="space-y-3">
-          <h3 className="font-heading text-2xl font-bold tracking-tight text-slate-900 dark:text-white group-hover:text-primary dark:group-hover:text-white transition-colors">
+          <h3 className="font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-white group-hover:text-primary dark:group-hover:text-white transition-colors">
             {title}
           </h3>
-          <p className="font-sans-custom text-slate-600 dark:text-white/80 leading-relaxed text-sm md:text-base">
+          <p className="text-slate-600 dark:text-white/80 leading-relaxed text-sm md:text-base">
             {description}
           </p>
         </div>
@@ -126,7 +120,7 @@ function AccessCard({
 
       <div className="relative z-10 pt-8 mt-auto flex items-center text-sm font-semibold tracking-wide text-slate-500 dark:text-white/70 group-hover:text-primary dark:group-hover:text-white transition-colors">
         <span>Acessar Módulo</span>
-        <ChevronRight className="w-4 h-4 ml-1 opacity-50 transition-all duration-500 group-hover:opacity-100 group-hover:translate-x-2 text-blue-500/70 dark:text-blue-400/70 group-hover:text-primary dark:group-hover:text-white" />
+        <ChevronRight className="w-4 h-4 ml-1 opacity-50 transition-all duration-500 group-hover:opacity-100 group-hover:translate-x-2 text-accent/70 dark:text-accent/70 group-hover:text-primary dark:group-hover:text-white" />
       </div>
     </Link>
   )

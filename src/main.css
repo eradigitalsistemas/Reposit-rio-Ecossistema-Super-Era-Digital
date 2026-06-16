@@ -1,46 +1,48 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
+    --background: 142 20% 98%;
+    --foreground: 142 40% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 142 40% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 142 40% 10%;
 
     --primary: 142 71% 45%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 92%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 142 20% 92%;
+    --secondary-foreground: 142 40% 10%;
 
-    --muted: 210 40% 92%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 142 20% 92%;
+    --muted-foreground: 142 16% 40%;
 
-    --accent: 214 100% 50%; /* Tech Blue */
-    --accent-foreground: 210 40% 98%;
+    --accent: 214 100% 50%; /* Blue accent */
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 90%;
-    --input: 214.3 31.8% 90%;
+    --border: 142 20% 90%;
+    --input: 142 20% 90%;
     --ring: 142 71% 45%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 100% / 0.6;
-    --sidebar-foreground: 222 47% 11%;
+    --sidebar-background: 0 0% 100% / 0.7;
+    --sidebar-foreground: 142 40% 10%;
     --sidebar-primary: 142 71% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 40% 92%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 214.3 31.8% 90%;
+    --sidebar-accent: 142 20% 92%;
+    --sidebar-accent-foreground: 142 40% 10%;
+    --sidebar-border: 142 20% 90%;
     --sidebar-ring: 142 71% 45%;
 
     --warning: 48 96% 53%;
@@ -54,42 +56,48 @@
   }
 
   .dark {
-    /* Midnight slate instead of pure black */
-    --background: 222 47% 11%;
+    /* Deep green dark background */
+    --background: 142 50% 5%;
     --foreground: 0 0% 100%;
 
-    --card: 142 10% 12%; /* Slightly green-tinted dark background */
-    --card-foreground: 0 0% 100%; /* Pure white text for high contrast */
+    /* Dark green cards/panels */
+    --card: 142 40% 8%;
+    --card-foreground: 0 0% 100%;
 
-    --popover: 142 10% 12%;
+    --popover: 142 40% 8%;
     --popover-foreground: 0 0% 100%;
 
-    --primary: 142 71% 45%; /* Green Accent */
-    --primary-foreground: 0 0% 100%; /* Pure white text inside primary elements */
+    /* Vibrant green primary */
+    --primary: 142 71% 45%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 142 20% 15%; /* Green tinted secondary */
+    /* Darker green for secondary items */
+    --secondary: 142 30% 12%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 142 15% 15%;
+    --muted: 142 30% 12%;
     --muted-foreground: 142 10% 70%;
 
-    --accent: 142 71% 25%; /* Changed tech blue accent to dark green accent where possible */
+    /* Blue for specific accents/details */
+    --accent: 214 100% 50%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 40.6%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 142 30% 20%; /* Green tinted borders */
-    --input: 142 30% 20%;
+    /* Light green tint for borders */
+    --border: 142 30% 15%;
+    --input: 142 30% 15%;
     --ring: 142 71% 45%;
 
-    --sidebar-background: 142 20% 8% / 0.7; /* Glassmorphism green tinted background */
-    --sidebar-foreground: 0 0% 100%; /* White text */
+    /* Glassmorphism sidebar */
+    --sidebar-background: 142 45% 4% / 0.6;
+    --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 142 71% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 142 30% 15%;
+    --sidebar-accent: 142 35% 10%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 142 40% 20%;
+    --sidebar-border: 142 30% 15%;
     --sidebar-ring: 142 71% 45%;
 
     --warning: 48 96% 53%;
@@ -112,21 +120,19 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground antialiased selection:bg-primary/30 selection:text-white;
   }
 
-  /* NEVER REMOVE THIS */
   section[aria-label='Notifications alt+T'] {
     padding: 0 !important;
     margin: 0 !important;
   }
 
-  /* WebKit Autofill overrides for Dark Mode */
   .dark input:-webkit-autofill,
   .dark input:-webkit-autofill:hover,
   .dark input:-webkit-autofill:focus,
   .dark input:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 30px #000000 inset !important;
+    -webkit-box-shadow: 0 0 0 30px #031408 inset !important;
     -webkit-text-fill-color: #ffffff !important;
     caret-color: #ffffff !important;
   }
@@ -140,12 +146,10 @@
     caret-color: #000000 !important;
   }
 
-  /* Global contrast override for Light Mode to prevent unreadable text */
   :root:not(.dark) .bg-white {
-    color: #0f172a !important; /* Tech slate-900 */
+    color: #0f172a !important;
   }
 
-  /* Tech Dashboard Global Styles */
   button {
     @apply transition-all duration-300;
   }
@@ -230,7 +234,6 @@
     scrollbar-width: none;
   }
 
-  /* Kanban Custom Scrollbar */
   .kanban-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--foreground) / 0.1) transparent;
@@ -253,11 +256,10 @@
   .bg-grid-pattern {
     background-size: 40px 40px;
     background-image:
-      linear-gradient(to right, hsl(var(--foreground) / 0.05) 1px, transparent 1px),
-      linear-gradient(to bottom, hsl(var(--foreground) / 0.05) 1px, transparent 1px);
+      linear-gradient(to right, hsl(var(--foreground) / 0.1) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--foreground) / 0.1) 1px, transparent 1px);
   }
 
-  /* Automatic Staggering for Main Content Children */
   main > div > * {
     animation: fade-in-up 0.6s cubic-bezier(0.42, 0, 0.58, 1) both;
   }

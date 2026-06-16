@@ -30,14 +30,13 @@ export default function Layout() {
 
   return (
     <SidebarProvider>
-      <div className="fixed inset-0 pointer-events-none z-[-1]">
-        <div className="absolute inset-0 bg-background"></div>
-        <div className="absolute inset-0 bg-grid-pattern opacity-10 mix-blend-overlay"></div>
-        <div className="absolute top-0 right-0 w-[800px] h-[600px] bg-primary/10 rounded-full blur-[120px] mix-blend-screen pointer-events-none dark:bg-primary/20"></div>
-        <div className="absolute bottom-0 left-0 w-[600px] h-[500px] bg-blue-500/5 rounded-full blur-[120px] mix-blend-screen pointer-events-none dark:bg-blue-500/10"></div>
+      <div className="fixed inset-0 pointer-events-none z-[-1] bg-gradient-to-br from-background to-background/95">
+        <div className="absolute inset-0 bg-grid-pattern opacity-[0.03] dark:opacity-[0.05] mix-blend-screen"></div>
+        <div className="absolute top-[-10%] right-[-10%] w-[50vw] h-[500px] bg-accent/15 rounded-full blur-[120px] mix-blend-screen pointer-events-none"></div>
+        <div className="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[600px] bg-primary/15 rounded-full blur-[120px] mix-blend-screen pointer-events-none"></div>
       </div>
       <AppSidebar />
-      <SidebarInset className="flex flex-col min-h-[100dvh] bg-transparent w-full max-w-[100vw] overflow-hidden">
+      <SidebarInset className="flex flex-col min-h-[100dvh] bg-transparent w-full overflow-hidden">
         <Header />
         <main className="flex-1 overflow-y-auto overflow-x-hidden relative w-full flex flex-col">
           <ErrorBoundary>

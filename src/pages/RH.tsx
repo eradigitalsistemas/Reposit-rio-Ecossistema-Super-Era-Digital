@@ -90,7 +90,7 @@ export default function RH() {
         <Card className="bg-card">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Users className="w-4 h-4 text-blue-500" /> Colaboradores Ativos
+              <Users className="w-4 h-4 text-accent" /> Colaboradores Ativos
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -105,7 +105,7 @@ export default function RH() {
         <Card className="bg-card">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <UserPlus className="w-4 h-4 text-emerald-500" /> Em Experiência
+              <UserPlus className="w-4 h-4 text-primary" /> Em Experiência
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -120,7 +120,7 @@ export default function RH() {
         <Card className="bg-card">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <CalendarRange className="w-4 h-4 text-orange-500" /> Férias Pendentes
+              <CalendarRange className="w-4 h-4 text-orange-400" /> Férias Pendentes
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -135,7 +135,7 @@ export default function RH() {
         <Card className="bg-card">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Clock className="w-4 h-4 text-indigo-500" /> Pontos Hoje
+              <Clock className="w-4 h-4 text-accent" /> Pontos Hoje
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -153,8 +153,8 @@ export default function RH() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card className="hover:border-primary/50 transition-colors group flex flex-col">
             <CardHeader>
-              <div className="p-3 bg-blue-500/10 rounded-lg w-fit mb-3 group-hover:scale-105 transition-transform">
-                <Users className="w-6 h-6 text-blue-500" />
+              <div className="p-3 bg-accent/10 rounded-lg w-fit mb-3 group-hover:scale-105 transition-transform">
+                <Users className="w-6 h-6 text-accent" />
               </div>
               <CardTitle>Colaboradores</CardTitle>
               <CardDescription>
@@ -172,8 +172,8 @@ export default function RH() {
 
           <Card className="hover:border-primary/50 transition-colors group flex flex-col">
             <CardHeader>
-              <div className="p-3 bg-purple-500/10 rounded-lg w-fit mb-3 group-hover:scale-105 transition-transform">
-                <Briefcase className="w-6 h-6 text-purple-500" />
+              <div className="p-3 bg-primary/10 rounded-lg w-fit mb-3 group-hover:scale-105 transition-transform">
+                <Briefcase className="w-6 h-6 text-primary" />
               </div>
               <CardTitle>Banco de Talentos</CardTitle>
               <CardDescription>
@@ -191,8 +191,8 @@ export default function RH() {
 
           <Card className="hover:border-primary/50 transition-colors group flex flex-col">
             <CardHeader>
-              <div className="p-3 bg-emerald-500/10 rounded-lg w-fit mb-3 group-hover:scale-105 transition-transform">
-                <UserPlus className="w-6 h-6 text-emerald-500" />
+              <div className="p-3 bg-primary/20 rounded-lg w-fit mb-3 group-hover:scale-105 transition-transform">
+                <UserPlus className="w-6 h-6 text-primary" />
               </div>
               <CardTitle>Admissão & Onboarding</CardTitle>
               <CardDescription>
@@ -211,7 +211,7 @@ export default function RH() {
           <Card className="hover:border-primary/50 transition-colors group flex flex-col">
             <CardHeader>
               <div className="p-3 bg-orange-500/10 rounded-lg w-fit mb-3 group-hover:scale-105 transition-transform">
-                <BarChart3 className="w-6 h-6 text-orange-500" />
+                <BarChart3 className="w-6 h-6 text-orange-400" />
               </div>
               <CardTitle>Relatórios Executivos</CardTitle>
               <CardDescription>

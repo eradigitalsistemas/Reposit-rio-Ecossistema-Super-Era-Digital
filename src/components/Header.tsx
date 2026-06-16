@@ -54,7 +54,7 @@ export function Header() {
   const unreadCount = notifications.filter((n) => !n.read).length
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-2 sm:gap-4 border-b border-border/30 bg-background/60 backdrop-blur-xl px-4 sm:px-6 shadow-[0_4px_30px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_30px_rgba(34,197,94,0.05)]">
+    <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-2 sm:gap-4 border-b border-border/50 bg-background/60 backdrop-blur-xl px-4 sm:px-6 shadow-sm">
       <SidebarTrigger className="-ml-2 md:hidden text-foreground" />
       <div className="flex-1 flex items-center justify-between gap-2">
         <Breadcrumb className="hidden sm:block shrink-0">
@@ -104,8 +104,8 @@ export function Header() {
                 <Bell className="h-5 w-5" />
                 {unreadCount > 0 && (
                   <span className="absolute top-2 right-2 flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
                   </span>
                 )}
               </Button>
@@ -121,7 +121,7 @@ export function Header() {
                 {unreadCount > 0 && (
                   <Badge
                     variant="outline"
-                    className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 font-bold hover:bg-blue-500/20"
+                    className="bg-accent/10 text-accent-foreground dark:text-accent border-accent/20 font-bold hover:bg-accent/20"
                   >
                     {unreadCount} não lidas
                   </Badge>
@@ -153,7 +153,7 @@ export function Header() {
                             {n.title}
                           </span>
                           {!n.read && (
-                            <div className="h-1.5 w-1.5 bg-blue-500 rounded-full shadow-[0_0_5px_rgba(59,130,246,0.5)] shrink-0" />
+                            <div className="h-1.5 w-1.5 bg-accent rounded-full shadow-[0_0_5px_rgba(var(--accent),0.5)] shrink-0" />
                           )}
                         </div>
                         <span className="text-sm text-foreground/80 dark:text-white/70 leading-snug">

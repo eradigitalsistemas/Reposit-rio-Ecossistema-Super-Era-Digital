@@ -125,7 +125,9 @@ export function AppSidebar() {
                         : 'opacity-80 group-hover:scale-110',
                     )}
                   />
-                  <span className="text-base md:text-sm font-semibold">{item.title}</span>
+                  <span className="text-base md:text-sm font-display font-semibold">
+                    {item.title}
+                  </span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -140,8 +142,8 @@ export function AppSidebar() {
       .length > 0
 
   return (
-    <Sidebar className="backdrop-blur-2xl bg-sidebar/60 border-r border-border/30 dark:border-primary/20 shadow-[4px_0_30px_rgba(0,0,0,0.05)] dark:shadow-[4px_0_30px_rgba(34,197,94,0.1)] m-0 md:m-4 md:h-[calc(100vh-2rem)] md:rounded-2xl overflow-hidden">
-      <SidebarHeader className="py-6 flex items-center px-6 border-b-0 bg-transparent shrink-0">
+    <Sidebar className="backdrop-blur-xl bg-sidebar/60 border-r border-border/50 shadow-md">
+      <SidebarHeader className="py-6 flex items-center px-6 border-b border-border/30 bg-transparent shrink-0">
         <Link
           to="/"
           onClick={handleLinkClick}
@@ -193,7 +195,7 @@ export function AppSidebar() {
                 onClick={handleLinkClick}
                 className="flex items-center gap-2 w-full justify-center font-bold"
               >
-                <ExternalLink className="w-5 h-5 md:w-4 md:h-4 opacity-80 text-blue-500/70" />
+                <ExternalLink className="w-5 h-5 md:w-4 md:h-4 opacity-80 text-accent" />
                 <span className="text-base md:text-sm">Portal do Cliente</span>
               </Link>
             </SidebarMenuButton>
