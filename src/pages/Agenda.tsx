@@ -75,28 +75,28 @@ export default function Agenda() {
   const handleNextMonth = () => setCurrentDate((prev) => addMonths(prev, 1))
   const handleToday = () => setCurrentDate(new Date())
 
-  const handleDayClick = (date: Date) => {
+  const handleDayClick = useCallback((date: Date) => {
     setSelectedDate(date)
     setEventoToEdit(null)
     setDialogOpen(true)
-  }
+  }, [])
 
-  const handleEventClick = (evento: EventoAgenda, e: React.MouseEvent) => {
+  const handleEventClick = useCallback((evento: EventoAgenda, e: React.MouseEvent) => {
     e.stopPropagation()
     setEventoToEdit(evento)
     setSelectedDate(null)
     setDialogOpen(true)
-  }
+  }, [])
 
-  const handleNewEvent = () => {
+  const handleNewEvent = useCallback(() => {
     setSelectedDate(new Date())
     setEventoToEdit(null)
     setDialogOpen(true)
-  }
+  }, [])
 
-  const refresh = () => {
+  const refresh = useCallback(() => {
     if (user) fetchEventos(currentDate, isAdmin, user.id, filtroUsuario)
-  }
+  }, [user, currentDate, isAdmin, filtroUsuario, fetchEventos])
 
   return (
     <div className="flex-1 w-full bg-transparent min-h-full flex flex-col p-4 sm:p-6 lg:p-8">
@@ -134,7 +134,7 @@ export default function Agenda() {
           </div>
         </div>
 
-        <div className="flex items-center justify-between bg-card/60 backdrop-blur-md p-2 rounded-lg border border-border/50 shadow-sm">
+        <div className="flex items-center justify-between bg-card/80 glass-optimized p-2 rounded-lg border border-border/50 shadow-sm hardware-accelerated">
           <div className="flex items-center gap-2">
             <Button variant="outline" size="icon" onClick={handlePrevMonth}>
               <ChevronLeft className="w-5 h-5" />

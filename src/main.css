@@ -301,4 +301,16 @@
   .animate-loading-bar {
     animation: loading-bar 1.5s cubic-bezier(0.42, 0, 0.58, 1) forwards;
   }
+
+  .hardware-accelerated {
+    transform: translateZ(0);
+    will-change: transform;
+    backface-visibility: hidden;
+  }
+
+  .glass-optimized {
+    backdrop-filter: blur(8px);
+    transform: translateZ(0);
+    will-change: transform, backdrop-filter;
+  }
 }

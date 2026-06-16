@@ -54,7 +54,7 @@ export function Header() {
   const unreadCount = notifications.filter((n) => !n.read).length
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-2 sm:gap-4 border-b border-border/50 bg-background/60 backdrop-blur-xl px-4 sm:px-6 shadow-sm">
+    <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-2 sm:gap-4 border-b border-border/50 bg-background/80 glass-optimized px-4 sm:px-6 shadow-sm hardware-accelerated">
       <SidebarTrigger className="-ml-2 md:hidden text-foreground" />
       <div className="flex-1 flex items-center justify-between gap-2">
         <Breadcrumb className="hidden sm:block shrink-0">

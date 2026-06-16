@@ -30,15 +30,15 @@ export default function Layout() {
 
   return (
     <SidebarProvider>
-      <div className="fixed inset-0 pointer-events-none z-[-1] bg-background">
-        <div className="absolute inset-0 bg-gradient-to-br from-background via-background/95 to-background/90 backdrop-blur-3xl"></div>
+      <div className="fixed inset-0 pointer-events-none z-[-1] bg-background hardware-accelerated">
+        <div className="absolute inset-0 bg-gradient-to-br from-background via-background/95 to-background/90 opacity-90"></div>
         <div className="absolute inset-0 bg-grid-pattern opacity-[0.02] dark:opacity-[0.04] mix-blend-screen"></div>
-        <div className="absolute top-[-10%] right-[-10%] w-[60vw] h-[600px] bg-accent/10 rounded-full blur-[140px] mix-blend-screen pointer-events-none"></div>
-        <div className="absolute bottom-[-10%] left-[-10%] w-[60vw] h-[700px] bg-primary/10 rounded-full blur-[140px] mix-blend-screen pointer-events-none"></div>
+        <div className="absolute top-[-10%] right-[-10%] w-[60vw] h-[600px] bg-accent/10 rounded-full blur-[80px] mix-blend-screen pointer-events-none will-change-transform transform-gpu"></div>
+        <div className="absolute bottom-[-10%] left-[-10%] w-[60vw] h-[700px] bg-primary/10 rounded-full blur-[80px] mix-blend-screen pointer-events-none will-change-transform transform-gpu"></div>
       </div>
       <AppSidebar />
-      <SidebarInset className="flex flex-col flex-1 h-[100dvh] bg-transparent w-full overflow-hidden isolate relative">
-        <div className="flex-shrink-0 z-50 sticky top-0 w-full [&>header]:!bg-transparent [&>header]:backdrop-blur-none bg-background/40 backdrop-blur-xl border-b border-border/30">
+      <SidebarInset className="flex flex-col flex-1 h-[100dvh] bg-transparent w-full overflow-hidden isolate relative hardware-accelerated">
+        <div className="flex-shrink-0 z-50 sticky top-0 w-full [&>header]:!bg-transparent [&>header]:backdrop-blur-none bg-background/70 glass-optimized border-b border-border/30">
           <Header />
         </div>
         <main className="flex-1 overflow-y-auto overflow-x-hidden relative w-full flex flex-col z-0">

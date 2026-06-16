@@ -263,6 +263,15 @@ export default function Demands() {
     setSearchQuery('')
   }
 
+  const columnsDemands = useMemo(() => {
+    const cols: Record<string, typeof filteredDemands> = {}
+    activeColumns.forEach((col) => (cols[col] = []))
+    filteredDemands.forEach((d) => {
+      if (cols[d.status]) cols[d.status].push(d)
+    })
+    return cols
+  }, [filteredDemands, activeColumns])
+
   return (
     <div className="flex flex-col flex-1 w-full min-h-full relative bg-gradient-to-br from-green-950 via-teal-900 to-emerald-950">
       {/* Decorative background blobs */}
@@ -294,7 +303,7 @@ export default function Demands() {
           </div>
         </div>
 
-        <div className="flex flex-col xl:flex-row items-start xl:items-end justify-between gap-4 mb-6 bg-white/10 dark:bg-black/20 backdrop-blur-md border border-white/20 p-4 rounded-xl shadow-lg shrink-0">
+        <div className="flex flex-col xl:flex-row items-start xl:items-end justify-between gap-4 mb-6 bg-white/10 dark:bg-black/20 glass-optimized border border-white/20 p-4 rounded-xl shadow-lg shrink-0 hardware-accelerated">
           <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-end gap-4 sm:gap-6 w-full xl:w-auto relative z-20">
             <div className="space-y-2 w-full sm:w-auto relative z-20">
               <Label className="text-xs font-semibold text-white/80 uppercase tracking-wider">
@@ -559,12 +568,12 @@ export default function Demands() {
         </div>
 
         <div className="w-full overflow-x-auto snap-x snap-mandatory hide-scrollbar pb-4">
-          <div className="flex items-start gap-4 min-w-max [&>div]:!w-[85vw] sm:[&>div]:!w-[320px] [&>div]:!max-w-[400px] [&>div]:snap-center pr-4">
+          <div className="flex items-start gap-4 min-w-max [&>div]:!w-[85vw] sm:[&>div]:!w-[320px] [&>div]:!max-w-[400px] [&>div]:snap-center pr-4 hardware-accelerated">
             {(activeColumns || []).map((colName) => (
               <DemandColumn
                 key={colName}
                 title={colName}
-                demands={(filteredDemands || []).filter((d) => d?.status === colName)}
+                demands={columnsDemands[colName] || []}
                 highlightId={highlightId}
                 onDropDemand={(demandId, newStatus) => {
                   const demand = demands.find((d) => d.id === demandId)

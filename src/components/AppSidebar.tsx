@@ -142,7 +142,7 @@ export function AppSidebar() {
       .length > 0
 
   return (
-    <Sidebar className="backdrop-blur-xl bg-sidebar/60 border-r border-border/50 shadow-md">
+    <Sidebar className="glass-optimized bg-sidebar/80 border-r border-border/50 shadow-md hardware-accelerated">
       <SidebarHeader className="py-6 flex items-center px-6 border-b border-border/30 bg-transparent shrink-0">
         <Link
           to="/"
