@@ -273,7 +273,7 @@ export default function Demands() {
   }, [filteredDemands, activeColumns])
 
   return (
-    <div className="min-h-screen w-full flex flex-col flex-1 p-4 sm:p-6 text-foreground relative z-10">
+    <div className="min-h-screen w-fit min-w-full flex flex-col flex-1 p-4 sm:p-6 text-foreground relative z-10">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 shrink-0 gap-4">
         <div>
           <h1 className="text-2xl sm:text-2xl font-bold tracking-tight drop-shadow-sm text-foreground">
@@ -526,7 +526,7 @@ export default function Demands() {
         </DropdownMenu>
       </div>
 
-      <div className="w-full pb-12 flex-1 overflow-x-auto snap-x snap-mandatory scroll-smooth">
+      <div className="w-full pb-12 flex-1">
         <div className="flex items-start gap-4 min-w-max pr-4 hardware-accelerated h-fit">
           {(activeColumns || []).map((colName) => (
             <DemandColumn
