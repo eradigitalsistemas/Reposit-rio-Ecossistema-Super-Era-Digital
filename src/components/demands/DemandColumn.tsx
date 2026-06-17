@@ -15,7 +15,7 @@ export const DemandColumn = memo(
   function DemandColumn({ title, demands, highlightId, onDropDemand }: DemandColumnProps) {
     return (
       <div
-        className="flex flex-col shrink-0 min-w-[85vw] sm:min-w-[320px] max-w-[400px] bg-white/10 dark:bg-black/20 glass-optimized rounded-xl border border-white/20 h-fit snap-center shadow-lg overflow-hidden transition-[background-color,border-color] data-[drag-over=true]:bg-white/20 data-[drag-over=true]:border-emerald-400/50 hardware-accelerated"
+        className="flex flex-col shrink-0 min-w-[85vw] sm:min-w-[320px] max-w-[400px] bg-white/10 dark:bg-black/20 glass-optimized rounded-[12px] border border-white/20 h-fit snap-center shadow-lg transition-[background-color,border-color] data-[drag-over=true]:bg-white/20 data-[drag-over=true]:border-emerald-400/50 hardware-accelerated relative overflow-visible"
         onDragOver={(e) => {
           e.preventDefault()
           e.dataTransfer.dropEffect = 'move'
@@ -33,7 +33,7 @@ export const DemandColumn = memo(
           }
         }}
       >
-        <div className="p-4 border-b border-white/10 shrink-0 flex items-center justify-between bg-white/5 dark:bg-black/10 z-10 sticky top-0 glass-optimized">
+        <div className="p-4 border-b border-white/10 shrink-0 flex items-center justify-between bg-white/5 dark:bg-black/10 z-10 sticky top-0 glass-optimized rounded-t-[11px]">
           <h3 className="font-semibold text-white text-lg sm:text-base tracking-tight">{title}</h3>
           <Badge
             variant="secondary"
