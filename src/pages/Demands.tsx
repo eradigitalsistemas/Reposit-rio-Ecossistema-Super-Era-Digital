@@ -273,7 +273,7 @@ export default function Demands() {
   }, [filteredDemands, activeColumns])
 
   return (
-    <div className="min-h-screen w-fit min-w-full flex flex-col flex-1 p-4 sm:p-6 text-foreground relative z-10 overflow-visible">
+    <div className="min-h-screen w-full flex flex-col flex-1 p-4 sm:p-6 text-foreground relative z-10">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 shrink-0 gap-4">
         <div>
           <h1 className="text-2xl sm:text-2xl font-bold tracking-tight drop-shadow-sm text-foreground">
@@ -296,7 +296,7 @@ export default function Demands() {
         </div>
       </div>
 
-      <div className="flex flex-col xl:flex-row items-start xl:items-end justify-between gap-4 mb-6 bg-card/60 border border-border/50 p-4 rounded-xl shadow-sm shrink-0 hardware-accelerated backdrop-blur-sm">
+      <div className="flex flex-col xl:flex-row items-start xl:items-end justify-between gap-4 mb-6 bg-card/60 border border-border/50 p-4 rounded-xl shadow-sm shrink-0 hardware-accelerated backdrop-blur-sm w-full">
         <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-end gap-4 sm:gap-6 w-full xl:w-auto relative z-20">
           <div className="space-y-2 w-full sm:w-auto relative z-20">
             <Label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
@@ -526,8 +526,8 @@ export default function Demands() {
         </DropdownMenu>
       </div>
 
-      <div className="w-full pb-12 flex-1">
-        <div className="flex items-start gap-4 min-w-max [&>div]:!w-[85vw] sm:[&>div]:!w-[320px] [&>div]:!max-w-[400px] pr-4 hardware-accelerated h-fit">
+      <div className="w-full pb-12 flex-1 overflow-x-auto snap-x snap-mandatory scroll-smooth">
+        <div className="flex items-start gap-4 min-w-max pr-4 hardware-accelerated h-fit">
           {(activeColumns || []).map((colName) => (
             <DemandColumn
               key={colName}
