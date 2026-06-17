@@ -203,9 +203,9 @@ export function DemandDetailsModal({
   const canAccept = currentDemand.status === 'Pendente'
   const canComplete = currentDemand.status === 'Em Andamento'
 
-  const sortedLogs = currentDemand.logs
+  const sortedLogs = currentDemand?.logs
     ? [...currentDemand.logs].sort(
-        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+        (a, b) => new Date(a?.createdAt || 0).getTime() - new Date(b?.createdAt || 0).getTime(),
       )
     : []
 
@@ -216,7 +216,7 @@ export function DemandDetailsModal({
         <div className="shrink-0 p-4 sm:p-6 border-b border-gray-200 dark:border-border bg-white dark:bg-card z-10 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div className="flex-1">
             <div className="flex flex-wrap items-center gap-2 mb-3">
-              {currentDemand.protocolo && (
+              {currentDemand?.protocolo && (
                 <div className="flex items-center">
                   <Badge
                     variant="outline"
@@ -253,7 +253,7 @@ export function DemandDetailsModal({
                   </Button>
                 </div>
               )}
-              {!currentDemand.protocolo && (
+              {!currentDemand?.protocolo && currentDemand?.id && (
                 <Badge
                   variant="outline"
                   className="bg-gray-100 dark:bg-muted text-gray-800 dark:text-foreground border-gray-300 font-mono text-xs"
@@ -265,17 +265,17 @@ export function DemandDetailsModal({
                 variant="outline"
                 className={cn(
                   'border-gray-200 text-xs font-semibold',
-                  currentDemand.status === 'Pendente' &&
+                  currentDemand?.status === 'Pendente' &&
                     'text-amber-600 bg-amber-50 border-amber-200',
-                  currentDemand.status === 'Em Andamento' &&
+                  currentDemand?.status === 'Em Andamento' &&
                     'text-blue-600 bg-blue-50 border-blue-200',
-                  currentDemand.status === 'Concluído' &&
+                  currentDemand?.status === 'Concluído' &&
                     'text-green-600 bg-green-50 border-green-200',
                 )}
               >
-                {currentDemand.status}
+                {currentDemand?.status || 'Desconhecido'}
               </Badge>
-              {currentDemand.clientName && (
+              {currentDemand?.clientName && (
                 <Badge
                   variant="secondary"
                   className="bg-gray-100 text-gray-700 hover:bg-gray-200 gap-1 border-transparent px-2"
@@ -286,7 +286,7 @@ export function DemandDetailsModal({
               )}
             </div>
             <DialogTitle className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-foreground pr-6">
-              {currentDemand.title}
+              {currentDemand?.title || 'Sem título'}
             </DialogTitle>
           </div>
 
@@ -311,9 +311,9 @@ export function DemandDetailsModal({
                 Concluir Tarefa
               </Button>
             )}
-            {currentDemand.status === 'Concluído' && (
+            {currentDemand?.status === 'Concluído' && (
               <Button
-                onClick={() => reopenDemand(currentDemand.id)}
+                onClick={() => currentDemand?.id && reopenDemand(currentDemand.id)}
                 variant="outline"
                 className="gap-2 bg-orange-50 hover:bg-orange-100 text-orange-600 border-orange-200 dark:bg-orange-950/20 dark:hover:bg-orange-900/40 dark:text-orange-500 dark:border-orange-800/50 shadow-sm font-bold"
               >
@@ -329,7 +329,7 @@ export function DemandDetailsModal({
           {/* Left Panel: Primary Information & Checklist */}
           <div className="flex-1 overflow-y-auto lg:border-r border-gray-200 dark:border-border bg-white dark:bg-card">
             <div className="p-4 sm:p-6 space-y-6">
-              {currentDemand.workflowTipo === 'implantacao_pos_venda' && (
+              {currentDemand?.workflowTipo === 'implantacao_pos_venda' && (
                 <div className="p-5 bg-purple-50/50 dark:bg-purple-950/20 border border-purple-100 dark:border-purple-900/30 rounded-xl shadow-sm">
                   <h4 className="text-sm font-bold text-purple-900 dark:text-purple-300 mb-4 uppercase tracking-wider">
                     Workflow de Implantação e Pós-Venda
@@ -338,8 +338,8 @@ export function DemandDetailsModal({
                     <div className="absolute top-1/2 left-4 right-4 h-1 bg-purple-200 dark:bg-purple-900/50 -translate-y-1/2 z-0" />
                     {STEPS.map((step, idx) => {
                       const isTargetRetraining =
-                        currentDemand.posVendaAlvo && currentDemand.posVendaFase === 'treinamento'
-                      const targetIdx = currentDemand.posVendaAlvo
+                        currentDemand?.posVendaAlvo && currentDemand?.posVendaFase === 'treinamento'
+                      const targetIdx = currentDemand?.posVendaAlvo
                         ? STEPS.indexOf(currentDemand.posVendaAlvo)
                         : currentStepIndex
 
@@ -404,22 +404,24 @@ export function DemandDetailsModal({
                     })}
                   </div>
 
-                  {currentDemand.status !== 'Concluído' && (
+                  {currentDemand?.status !== 'Concluído' && (
                     <div className="mt-6">
-                      {currentDemand.posVendaFase === 'treinamento' && (
+                      {currentDemand?.posVendaFase === 'treinamento' && (
                         <Button
-                          onClick={() => advancePostSalesWorkflow(currentDemand.id)}
+                          onClick={() =>
+                            currentDemand?.id && advancePostSalesWorkflow(currentDemand.id)
+                          }
                           className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white font-bold shadow-sm"
                         >
                           <Check className="w-4 h-4 mr-2" />
-                          {currentDemand.posVendaAlvo
+                          {currentDemand?.posVendaAlvo
                             ? 'Concluir Retreinamento'
                             : 'Concluir Treinamento'}
                         </Button>
                       )}
 
                       {['pos_venda_5d', 'pos_venda_20d', 'pos_venda_35d'].includes(
-                        currentDemand.posVendaFase || '',
+                        currentDemand?.posVendaFase || '',
                       ) && (
                         <div className="flex flex-col sm:flex-row gap-3">
                           {showFailInput ? (
@@ -441,7 +443,8 @@ export function DemandDetailsModal({
                                       description: 'Informe o motivo',
                                       variant: 'destructive',
                                     })
-                                  failPostSalesWorkflow(currentDemand.id, failReason)
+                                  if (currentDemand?.id)
+                                    failPostSalesWorkflow(currentDemand.id, failReason)
                                   setShowFailInput(false)
                                   setFailReason('')
                                 }}
@@ -460,7 +463,9 @@ export function DemandDetailsModal({
                           ) : (
                             <>
                               <Button
-                                onClick={() => advancePostSalesWorkflow(currentDemand.id)}
+                                onClick={() =>
+                                  currentDemand?.id && advancePostSalesWorkflow(currentDemand.id)
+                                }
                                 className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold shadow-sm"
                               >
                                 <Check className="w-4 h-4 mr-2" />
@@ -491,7 +496,8 @@ export function DemandDetailsModal({
                   </span>
                   <div className="flex items-center gap-2 font-medium text-sm text-gray-900 dark:text-white">
                     <User2 className="w-4 h-4 text-gray-400" />
-                    {collaborators.find((c) => c.id === currentDemand.creatorId)?.nome || 'Sistema'}
+                    {collaborators.find((c) => c.id === currentDemand?.creatorId)?.nome ||
+                      'Sistema'}
                   </div>
                 </div>
                 <div className="space-y-1">
@@ -500,7 +506,7 @@ export function DemandDetailsModal({
                   </span>
                   <div className="flex items-center gap-2 font-medium text-sm text-gray-900 dark:text-white">
                     <User2 className="w-4 h-4 text-gray-400" />
-                    {currentDemand.assignee}
+                    {currentDemand?.assignee || 'Sem responsável'}
                   </div>
                 </div>
                 <div className="space-y-1">
@@ -508,11 +514,11 @@ export function DemandDetailsModal({
                     Prioridade
                   </span>
                   <div className="flex items-center gap-2 font-medium text-sm text-gray-900 dark:text-white">
-                    {currentDemand.priority === 'Urgente' ? (
+                    {currentDemand?.priority === 'Urgente' ? (
                       <Badge className="bg-red-600 text-white hover:bg-red-700 border-transparent px-1.5 py-0 font-bold">
                         Urgente
                       </Badge>
-                    ) : currentDemand.priority === 'Durante o Dia' ? (
+                    ) : currentDemand?.priority === 'Durante o Dia' ? (
                       <Badge
                         variant="outline"
                         className="text-orange-600 bg-orange-50 border-orange-200 px-1.5 py-0 font-bold"
@@ -535,7 +541,9 @@ export function DemandDetailsModal({
                   </span>
                   <div className="flex items-center gap-2 font-medium text-sm text-gray-900 dark:text-white">
                     <Calendar className="w-4 h-4 text-gray-400" />
-                    {format(new Date(currentDemand.createdAt), 'dd/MM/yyyy')}
+                    {currentDemand?.createdAt
+                      ? format(new Date(currentDemand.createdAt), 'dd/MM/yyyy')
+                      : '--/--/----'}
                   </div>
                 </div>
                 <div className="space-y-1">
@@ -544,14 +552,14 @@ export function DemandDetailsModal({
                   </span>
                   <div className="flex items-center gap-2 font-medium text-sm text-gray-900 dark:text-white">
                     <Clock className="w-4 h-4 text-gray-400" />
-                    {currentDemand.dueDate
+                    {currentDemand?.dueDate
                       ? format(new Date(currentDemand.dueDate), 'dd/MM/yyyy')
                       : 'Sem prazo'}
                   </div>
                 </div>
               </div>
 
-              <DemandMetrics demand={currentDemand} />
+              {currentDemand && <DemandMetrics demand={currentDemand} />}
 
               {/* Description Container */}
               <div className="space-y-3">
@@ -559,7 +567,7 @@ export function DemandDetailsModal({
                   Descrição da Tarefa
                 </h3>
                 <div className="bg-gray-50 dark:bg-white/5 p-4 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
-                  {currentDemand.description || (
+                  {currentDemand?.description || (
                     <span className="italic text-gray-400">Nenhuma descrição fornecida.</span>
                   )}
                 </div>
@@ -574,7 +582,7 @@ export function DemandDetailsModal({
                     <CheckSquare className="w-5 h-5 text-primary" />
                     Checklist Dinâmico
                   </h3>
-                  {currentDemand.status !== 'Concluído' && (
+                  {currentDemand?.status !== 'Concluído' && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button
@@ -625,7 +633,7 @@ export function DemandDetailsModal({
                         <Checkbox
                           checked={item.completed}
                           onCheckedChange={() => handleToggleChecklist(item)}
-                          disabled={currentDemand.status === 'Concluído'}
+                          disabled={currentDemand?.status === 'Concluído'}
                           className="mt-0.5 border-gray-400 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                         />
                         <span
@@ -638,7 +646,7 @@ export function DemandDetailsModal({
                         >
                           {item.text}
                         </span>
-                        {currentDemand.status !== 'Concluído' && (
+                        {currentDemand?.status !== 'Concluído' && (
                           <Button
                             variant="ghost"
                             size="icon"
@@ -657,7 +665,7 @@ export function DemandDetailsModal({
                     )}
                   </div>
 
-                  {currentDemand.status !== 'Concluído' && (
+                  {currentDemand?.status !== 'Concluído' && (
                     <div className="flex gap-2 mt-5 pt-4 border-t border-gray-100 dark:border-white/10">
                       <Input
                         placeholder="Adicionar nova etapa no checklist..."
@@ -867,7 +875,7 @@ export function DemandDetailsModal({
             </ScrollArea>
 
             {/* Input Section at the Root of Timeline */}
-            {currentDemand.status !== 'Concluído' && (
+            {currentDemand?.status !== 'Concluído' && (
               <div className="p-4 sm:p-5 border-t border-gray-200 dark:border-border bg-white dark:bg-card shrink-0 space-y-3 z-10 shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.05)]">
                 {pendingFiles.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-2">

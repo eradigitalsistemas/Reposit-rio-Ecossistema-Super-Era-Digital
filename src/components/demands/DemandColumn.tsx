@@ -48,19 +48,21 @@ export const DemandColumn = memo(
               <span className="text-sm text-white/60 font-medium">Sem demandas</span>
             </div>
           ) : (
-            (demands || []).map((demand) => (
-              <div
-                key={demand.id}
-                id={`demand-card-${demand.id}`}
-                className={
-                  highlightId === demand.id
-                    ? 'ring-2 ring-primary ring-offset-2 ring-offset-background rounded-lg transition-all duration-1000 shadow-[0_0_20px_rgba(34,197,94,0.4)] hardware-accelerated'
-                    : 'transition-opacity duration-300 hardware-accelerated'
-                }
-              >
-                <DemandCard demand={demand} />
-              </div>
-            ))
+            (demands || [])
+              .filter((d) => d && d.id)
+              .map((demand) => (
+                <div
+                  key={demand.id}
+                  id={`demand-card-${demand.id}`}
+                  className={
+                    highlightId === demand.id
+                      ? 'ring-2 ring-primary ring-offset-2 ring-offset-background rounded-lg transition-all duration-1000 shadow-[0_0_20px_rgba(34,197,94,0.4)] hardware-accelerated'
+                      : 'transition-opacity duration-300 hardware-accelerated'
+                  }
+                >
+                  <DemandCard demand={demand} />
+                </div>
+              ))
           )}
         </div>
       </div>

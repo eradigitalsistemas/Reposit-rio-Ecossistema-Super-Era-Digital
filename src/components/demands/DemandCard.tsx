@@ -76,8 +76,10 @@ export const DemandCard = memo(
     }
 
     const handleDelete = () => {
-      deleteDemand(demand.id)
+      if (demand?.id) deleteDemand(demand.id)
     }
+
+    if (!demand || !demand.id) return null
 
     const formatPhaseName = (phase: string) => {
       switch (phase) {

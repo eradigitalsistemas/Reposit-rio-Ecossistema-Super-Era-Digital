@@ -179,37 +179,42 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   const parseDemandRow = useCallback((d: any): Demand => {
+    if (!d || !d.id) return d as Demand // Fallback for extremely malformed rows
+
     const logsToMap = d.logs || d.logs_auditoria || []
     const sortedLogs = Array.isArray(logsToMap)
       ? [...logsToMap].sort((a: any, b: any) => {
-          const timeA = a.data_criacao
+          const timeA = a?.data_criacao
             ? new Date(a.data_criacao).getTime()
-            : a.createdAt
+            : a?.createdAt
               ? new Date(a.createdAt).getTime()
               : 0
-          const timeB = b.data_criacao
+          const timeB = b?.data_criacao
             ? new Date(b.data_criacao).getTime()
-            : b.createdAt
+            : b?.createdAt
               ? new Date(b.createdAt).getTime()
               : 0
           return timeB - timeA
         })
       : []
 
-    const mappedLogs: DemandLog[] = sortedLogs.map((l: any) => {
-      if (l.userName !== undefined) return l // already mapped
-      return {
-        id: l.id || crypto.randomUUID(),
-        acao: l.acao,
-        detalhes: l.detalhes,
-        createdAt: l.data_criacao || l.createdAt,
-        usuario_id: l.usuario_id,
-        userName: l.usuario?.nome || 'Sistema',
-        dados_novos: l.dados_novos,
-      }
-    })
+    const mappedLogs: DemandLog[] = sortedLogs
+      .map((l: any) => {
+        if (!l) return null
+        if (l.userName !== undefined) return l // already mapped
+        return {
+          id: l.id || crypto.randomUUID(),
+          acao: l.acao || 'Desconhecido',
+          detalhes: l.detalhes || '',
+          createdAt: l.data_criacao || l.createdAt || new Date().toISOString(),
+          usuario_id: l.usuario_id,
+          userName: l.usuario?.nome || 'Sistema',
+          dados_novos: l.dados_novos,
+        }
+      })
+      .filter(Boolean) as DemandLog[]
 
-    const latestPriorityChange = sortedLogs.find((l: any) => l.acao === 'Alteração de Prioridade')
+    const latestPriorityChange = sortedLogs.find((l: any) => l?.acao === 'Alteração de Prioridade')
     const systemEscalated =
       latestPriorityChange &&
       latestPriorityChange.usuario_id === null &&
@@ -218,7 +223,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
     return {
       id: d.id,
-      protocolo: d.protocolo,
+      protocolo: d.protocolo || '',
       title: d.titulo || 'Sem título',
       description: d.descricao || '',
       priority: (d.prioridade as DemandPriority) || 'Pode Ficar para Amanhã',
@@ -262,10 +267,11 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         .eq('id', id)
         .single()
 
-      if (d && !error) {
+      if (d && !error && d.id) {
         setDemands((prev) => {
           const existing = prev.find((x) => x.id === d.id)
           const parsed = parseDemandRow({ ...d, logs: existing?.logs || [] })
+          if (!parsed || !parsed.id) return prev
           if (existing) return prev.map((x) => (x.id === parsed.id ? parsed : x))
           return [parsed, ...prev]
         })
@@ -320,7 +326,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       if (error) return
 
       if (data) {
-        setDemands(data.map(parseDemandRow))
+        setDemands(data.map(parseDemandRow).filter((d) => d && d.id))
       }
     } catch (e) {
       // Silently handle
@@ -340,11 +346,11 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       if (!error && data) {
         setChecklistTemplates(
           data.map((t: any) => ({
-            id: t.id,
-            nome: t.nome,
-            itens: t.itens,
+            id: t.id || crypto.randomUUID(),
+            nome: t.nome || 'Template',
+            itens: Array.isArray(t.itens) ? t.itens : [],
             usuario_id: t.usuario_id,
-            data_criacao: t.data_criacao,
+            data_criacao: t.data_criacao || new Date().toISOString(),
           })),
         )
       }
@@ -495,11 +501,11 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       if (!error && data) {
         setNotifications(
           data.map((n: any) => ({
-            id: n.id,
-            title: n.titulo,
-            message: n.mensagem,
-            read: n.lida,
-            createdAt: n.data_criacao,
+            id: n.id || crypto.randomUUID(),
+            title: n.titulo || 'Notificação',
+            message: n.mensagem || '',
+            read: Boolean(n.lida),
+            createdAt: n.data_criacao || new Date().toISOString(),
             demandId: n.demanda_id,
           })),
         )
@@ -573,6 +579,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             setDemands((prev) => prev.filter((d) => d.id !== payload.old.id))
           } else {
             const d = payload.new as any
+            if (!d || !d.id) return
 
             // Fast optimistic update for UI fluidity
             setDemands((prev) => {

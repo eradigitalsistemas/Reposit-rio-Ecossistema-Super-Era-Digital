@@ -67,8 +67,11 @@ export default function Demands() {
       .from('clientes_externos')
       .select('id, nome')
       .order('nome')
-      .then(({ data }) => {
-        if (data) setClientsList(data)
+      .then(({ data, error }) => {
+        if (!error && data) setClientsList(data)
+      })
+      .catch(() => {
+        // Silently handle
       })
   }, [])
 
@@ -120,7 +123,7 @@ export default function Demands() {
       const date = parseISO(dateToTestStr)
       if (!isValid(date)) return false
 
-      if (exact) {
+      if (exact && isValid(exact)) {
         return (
           date.getDate() === exact.getDate() &&
           date.getMonth() === exact.getMonth() &&
@@ -159,7 +162,7 @@ export default function Demands() {
         const q = searchQuery.toLowerCase().trim()
         if (
           !d.protocolo?.toLowerCase().includes(q) &&
-          !d.title.toLowerCase().includes(q) &&
+          !d.title?.toLowerCase().includes(q) &&
           !d.clientName?.toLowerCase().includes(q)
         ) {
           return false
@@ -212,6 +215,7 @@ export default function Demands() {
 
     return filtered.sort((a, b) => {
       const getLatestDate = (demand: any) => {
+        if (!demand) return 0
         let latest = demand.updatedAt
           ? new Date(demand.updatedAt).getTime()
           : demand.createdAt
@@ -224,7 +228,7 @@ export default function Demands() {
         }
         if (demand.logs && demand.logs.length > 0) {
           const logLatest = Math.max(
-            ...demand.logs.map((l: any) => (l.createdAt ? new Date(l.createdAt).getTime() : 0)),
+            ...demand.logs.map((l: any) => (l?.createdAt ? new Date(l.createdAt).getTime() : 0)),
           )
           if (!isNaN(logLatest) && logLatest > latest) latest = logLatest
         }
@@ -266,8 +270,8 @@ export default function Demands() {
   const columnsDemands = useMemo(() => {
     const cols: Record<string, typeof filteredDemands> = {}
     activeColumns.forEach((col) => (cols[col] = []))
-    filteredDemands.forEach((d) => {
-      if (cols[d.status]) cols[d.status].push(d)
+    ;(filteredDemands || []).forEach((d) => {
+      if (d?.status && cols[d.status]) cols[d.status].push(d)
     })
     return cols
   }, [filteredDemands, activeColumns])
@@ -531,7 +535,7 @@ export default function Demands() {
           {isLoading && demands.length === 0
             ? (activeColumns || []).map((colName) => (
                 <div
-                  key={colName}
+                  key={colName || 'unknown'}
                   className="flex flex-col shrink-0 w-[85vw] sm:w-[320px] lg:w-[350px] bg-white/10 dark:bg-black/20 glass-optimized rounded-[12px] border border-white/20 h-fit shadow-lg p-3 gap-3"
                 >
                   <div className="flex justify-between items-center mb-2 px-1">
@@ -543,14 +547,15 @@ export default function Demands() {
                   <Skeleton className="h-[140px] w-full rounded-xl bg-white/10" />
                 </div>
               ))
-            : (activeColumns || []).map((colName) => (
+            : (activeColumns || []).filter(Boolean).map((colName) => (
                 <DemandColumn
                   key={colName}
                   title={colName}
                   demands={columnsDemands[colName] || []}
                   highlightId={highlightId}
                   onDropDemand={(demandId, newStatus) => {
-                    const demand = demands.find((d) => d.id === demandId)
+                    if (!demandId || !newStatus) return
+                    const demand = demands.find((d) => d?.id === demandId)
                     if (demand && demand.status !== newStatus) {
                       updateStatus(demandId, newStatus as DemandStatus)
                     }
