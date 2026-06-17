@@ -10,8 +10,8 @@
     "dedupe-lid-contacts": 31,
     "employees": 30,
     "functions": 29,
+    "manage-client-documents": 30,
     "monthly-timesheets": 30,
-    "notifications": 30,
     "notify-automation": 30,
     "notify-push": 30,
     "onboarding": 30,
@@ -29,10 +29,9 @@
     "send-message": 14,
     "mark-read": 5,
     "process-media": 6,
-    "uazapi-debug": 1,
+    "uazapi-send-message": 1,
     "uazapi-sync-messages-trace": 1,
     "uazapi-webhook": 2,
-    "whatsapp-integration": 1,
-    "send-media": 5
+    "whatsapp-integration": 1
   }
 }
