@@ -14,6 +14,7 @@ import { toast } from '@/hooks/use-toast'
 
 interface ClientStoreState {
   clients: Client[]
+  isLoading: boolean
   addClient: (client: Omit<Client, 'id' | 'createdAt' | 'documents' | 'history'>) => Promise<void>
   updateClient: (id: string, data: Partial<Client>) => Promise<void>
   addDocument: (
@@ -32,50 +33,81 @@ const ClientContext = createContext<ClientStoreState | null>(null)
 
 export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
   const [clients, setClients] = useState<Client[]>([])
-  const { user, role } = useAuthStore()
+  const [isLoading, setIsLoading] = useState(true)
+  const { user } = useAuthStore()
   const hasFetched = useRef(false)
 
   const fetchClients = useCallback(async () => {
-    if (!user || role !== 'Admin') return
+    if (!user) {
+      setIsLoading(false)
+      return
+    }
+    setIsLoading(true)
     const { data, error } = await supabase
       .from('clientes_externos' as any)
       .select('*')
       .order('data_criacao', { ascending: false })
 
-    if (error) return
+    if (error) {
+      setIsLoading(false)
+      return
+    }
 
     if (data) {
       setClients(
-        data.map((d: any) => ({
-          id: d.id,
-          name: d.nome,
-          company: d.empresa || '',
-          email: d.email,
-          phone: d.telefone || '',
-          cnpj: d.cnpj || '',
-          address: {
-            cep: d.endereco_cep || '',
-            logradouro: d.endereco_logradouro || '',
-            numero: d.endereco_numero || '',
-            bairro: d.endereco_bairro || '',
-            cidade: d.endereco_cidade || '',
-            estado: d.endereco_estado || '',
-          },
-          services: d.servicos || [],
-          documents: d.documentos || [],
-          history: [],
-          createdAt: d.data_criacao,
-        })),
+        data.map((d: any) => {
+          let parsedServices = []
+          if (Array.isArray(d.servicos)) parsedServices = d.servicos
+          else if (typeof d.servicos === 'string') {
+            try {
+              parsedServices = JSON.parse(d.servicos)
+            } catch {
+              /* intentionally ignored */
+            }
+          }
+
+          let parsedDocs = []
+          if (Array.isArray(d.documentos)) parsedDocs = d.documentos
+          else if (typeof d.documentos === 'string') {
+            try {
+              parsedDocs = JSON.parse(d.documentos)
+            } catch {
+              /* intentionally ignored */
+            }
+          }
+
+          return {
+            id: d.id,
+            name: d.nome || 'Sem nome',
+            company: d.empresa || '',
+            email: d.email || '',
+            phone: d.telefone || '',
+            cnpj: d.cnpj || '',
+            address: {
+              cep: d.endereco_cep || '',
+              logradouro: d.endereco_logradouro || '',
+              numero: d.endereco_numero || '',
+              bairro: d.endereco_bairro || '',
+              cidade: d.endereco_cidade || '',
+              estado: d.endereco_estado || '',
+            },
+            services: parsedServices,
+            documents: parsedDocs,
+            history: [],
+            createdAt: d.data_criacao || new Date().toISOString(),
+          }
+        }),
       )
     }
-  }, [user, role])
+    setIsLoading(false)
+  }, [user])
 
   useEffect(() => {
-    if (user && role === 'Admin' && !hasFetched.current) {
+    if (user && !hasFetched.current) {
       hasFetched.current = true
       fetchClients()
     }
-  }, [user, role, fetchClients])
+  }, [user, fetchClients])
 
   const addClient = useCallback(
     async (newClient: Omit<Client, 'id' | 'createdAt' | 'documents' | 'history'>) => {
@@ -107,9 +139,9 @@ export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
         setClients((prev) => [
           {
             id: data.id,
-            name: data.nome,
+            name: data.nome || 'Sem nome',
             company: data.empresa || '',
-            email: data.email,
+            email: data.email || '',
             phone: data.telefone || '',
             cnpj: data.cnpj || '',
             address: {
@@ -120,10 +152,10 @@ export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
               cidade: data.endereco_cidade || '',
               estado: data.endereco_estado || '',
             },
-            services: data.servicos || [],
+            services: Array.isArray(data.servicos) ? data.servicos : [],
             documents: [],
             history: [],
-            createdAt: data.data_criacao,
+            createdAt: data.data_criacao || new Date().toISOString(),
           },
           ...prev,
         ])
@@ -341,9 +373,9 @@ export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
       if (data) {
         const imported = data.map((d: any) => ({
           id: d.id,
-          name: d.nome,
+          name: d.nome || 'Sem nome',
           company: d.empresa || '',
-          email: d.email,
+          email: d.email || '',
           phone: d.telefone || '',
           cnpj: d.cnpj || '',
           address: {
@@ -354,10 +386,10 @@ export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
             cidade: d.endereco_cidade || '',
             estado: d.endereco_estado || '',
           },
-          services: d.servicos || [],
-          documents: d.documentos || [],
+          services: Array.isArray(d.servicos) ? d.servicos : [],
+          documents: Array.isArray(d.documentos) ? d.documentos : [],
           history: [],
-          createdAt: d.data_criacao,
+          createdAt: d.data_criacao || new Date().toISOString(),
         }))
         setClients((prev) => [...imported, ...prev])
         toast({ title: 'Sucesso', description: `${data.length} clientes importados com sucesso.` })
@@ -369,6 +401,7 @@ export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
   const value = useMemo(
     () => ({
       clients,
+      isLoading,
       addClient,
       updateClient,
       addDocument,
@@ -376,7 +409,16 @@ export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
       deleteClient,
       importClients,
     }),
-    [clients, addClient, updateClient, addDocument, deleteDocument, deleteClient, importClients],
+    [
+      clients,
+      isLoading,
+      addClient,
+      updateClient,
+      addDocument,
+      deleteDocument,
+      deleteClient,
+      importClients,
+    ],
   )
 
   return <ClientContext.Provider value={value}>{children}</ClientContext.Provider>
