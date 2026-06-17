@@ -47,11 +47,11 @@ export default function Layout() {
         ></div>
       </div>
       <AppSidebar />
-      <SidebarInset className="flex flex-col flex-1 h-[100dvh] bg-transparent w-full overflow-hidden isolate relative hardware-accelerated">
+      <SidebarInset className="flex flex-col flex-1 min-h-[100dvh] bg-transparent w-full isolate relative hardware-accelerated">
         <div className="flex-shrink-0 z-50 sticky top-0 w-full [&>header]:!bg-transparent [&>header]:backdrop-blur-none bg-background/70 glass-optimized border-b border-border/30">
           <Header />
         </div>
-        <main className="flex-1 overflow-y-auto overflow-x-hidden relative w-full flex flex-col z-0">
+        <main className="flex-1 overflow-x-hidden relative w-full flex flex-col z-0">
           <ErrorBoundary>
             <Outlet />
           </ErrorBoundary>
