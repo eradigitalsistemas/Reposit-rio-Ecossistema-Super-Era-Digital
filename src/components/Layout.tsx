@@ -28,6 +28,8 @@ export default function Layout() {
     return <Navigate to="/portal/demandas" replace />
   }
 
+  const isDemands = location.pathname === '/demandas'
+
   return (
     <SidebarProvider>
       <div className="fixed inset-0 pointer-events-none z-[-1] bg-background hardware-accelerated">
@@ -47,11 +49,17 @@ export default function Layout() {
         ></div>
       </div>
       <AppSidebar />
-      <SidebarInset className="flex flex-col flex-1 min-h-[100dvh] bg-transparent w-full isolate relative hardware-accelerated">
-        <div className="flex-shrink-0 z-50 sticky top-0 w-full [&>header]:!bg-transparent [&>header]:backdrop-blur-none bg-background/70 glass-optimized border-b border-border/30">
+      <SidebarInset
+        className={`flex flex-col flex-1 min-h-[100dvh] bg-transparent isolate relative hardware-accelerated ${isDemands ? 'w-full min-w-fit' : 'w-full'}`}
+      >
+        <div
+          className={`flex-shrink-0 z-50 sticky top-0 [&>header]:!bg-transparent [&>header]:backdrop-blur-none bg-background/70 glass-optimized border-b border-border/30 ${isDemands ? 'w-full min-w-fit' : 'w-full'}`}
+        >
           <Header />
         </div>
-        <main className="flex-1 overflow-x-hidden relative w-full flex flex-col z-0">
+        <main
+          className={`flex-1 relative flex flex-col z-0 ${isDemands ? 'w-fit min-w-full overflow-visible' : 'w-full overflow-x-hidden'}`}
+        >
           <ErrorBoundary>
             <Outlet />
           </ErrorBoundary>
