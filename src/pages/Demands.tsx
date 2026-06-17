@@ -273,325 +273,275 @@ export default function Demands() {
   }, [filteredDemands, activeColumns])
 
   return (
-    <div className="flex flex-col flex-1 w-full min-h-full relative bg-gradient-to-br from-green-950 via-teal-900 to-emerald-950">
-      {/* Decorative background blobs */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div
-          className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(5,150,105,0.2) 0%, transparent 70%)' }}
-        />
-        <div
-          className="absolute top-[60%] -right-[10%] w-[40%] h-[60%] rounded-full"
-          style={{
-            background: 'radial-gradient(circle, rgba(13,148,136,0.2) 0%, transparent 70%)',
-          }}
-        />
+    <div className="h-full w-full flex flex-col flex-1 p-4 sm:p-6 text-foreground relative z-10">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 shrink-0 gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-2xl font-bold tracking-tight drop-shadow-sm text-foreground">
+            Gestão de Demandas
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            {role === 'Admin'
+              ? 'Acompanhe as tarefas e atribuições de toda a equipe'
+              : 'Acompanhe suas tarefas e atribuições no Kanban'}
+          </p>
+        </div>
+        <div className="w-full sm:w-auto flex flex-col sm:flex-row items-center gap-2">
+          {role === 'Admin' && (
+            <>
+              <DemandTemplateBuilderModal />
+              <ChecklistBuilderModal />
+              <AddDemandModal />
+            </>
+          )}
+        </div>
       </div>
 
-      <div className="flex flex-col flex-1 p-4 sm:p-6 relative z-10">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 shrink-0 gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-2xl font-bold tracking-tight text-white drop-shadow-sm">
-              Gestão de Demandas
-            </h1>
-            <p className="text-emerald-100/80 text-sm mt-1">
-              {role === 'Admin'
-                ? 'Acompanhe as tarefas e atribuições de toda a equipe'
-                : 'Acompanhe suas tarefas e atribuições no Kanban'}
-            </p>
-          </div>
-          <div className="w-full sm:w-auto flex flex-col sm:flex-row items-center gap-2">
-            {role === 'Admin' && (
-              <>
-                <DemandTemplateBuilderModal />
-                <ChecklistBuilderModal />
-                <AddDemandModal />
-              </>
-            )}
-          </div>
-        </div>
-
-        <div className="flex flex-col xl:flex-row items-start xl:items-end justify-between gap-4 mb-6 bg-white/10 dark:bg-black/20 glass-optimized border border-white/20 p-4 rounded-xl shadow-lg shrink-0 hardware-accelerated">
-          <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-end gap-4 sm:gap-6 w-full xl:w-auto relative z-20">
-            <div className="space-y-2 w-full sm:w-auto relative z-20">
-              <Label className="text-xs font-semibold text-white/80 uppercase tracking-wider">
-                Buscar
-              </Label>
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-white/50" />
-                <Input
-                  placeholder="Protocolo, título..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full sm:w-[200px] pl-9 h-11 sm:h-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 shadow-sm focus-visible:ring-emerald-500/50"
-                />
-              </div>
+      <div className="flex flex-col xl:flex-row items-start xl:items-end justify-between gap-4 mb-6 bg-card/60 border border-border/50 p-4 rounded-xl shadow-sm shrink-0 hardware-accelerated backdrop-blur-sm">
+        <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-end gap-4 sm:gap-6 w-full xl:w-auto relative z-20">
+          <div className="space-y-2 w-full sm:w-auto relative z-20">
+            <Label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+              Buscar
+            </Label>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Protocolo, título..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full sm:w-[200px] pl-9 h-11 sm:h-10 bg-background/50 border-border/50 text-foreground placeholder:text-muted-foreground shadow-sm focus-visible:ring-primary/50"
+              />
             </div>
+          </div>
 
-            {role === 'Admin' && (
-              <div className="space-y-2 w-full sm:w-auto relative z-20">
-                <Label className="text-xs font-semibold text-white/80 uppercase tracking-wider">
-                  Responsável
-                </Label>
-                <Select value={collaboratorFilter} onValueChange={setCollaboratorFilter}>
-                  <SelectTrigger className="w-full sm:w-[180px] h-11 sm:h-10 bg-white/10 border-white/20 text-white shadow-sm focus:ring-emerald-500/50">
-                    <SelectValue placeholder="Todos" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-emerald-950/95 border-emerald-800/50 text-white">
-                    <SelectItem value="all" className="focus:bg-emerald-800/50 focus:text-white">
-                      Todos
-                    </SelectItem>
-                    {(collaborators || []).map((c) => (
-                      <SelectItem
-                        key={c.id}
-                        value={c.id || Math.random().toString()}
-                        className="focus:bg-emerald-800/50 focus:text-white"
-                      >
-                        {c.nome || 'Sem Nome'}
-                      </SelectItem>
-                    ))}
-                    <SelectItem
-                      value="unassigned"
-                      className="focus:bg-emerald-800/50 focus:text-white"
-                    >
-                      Não Atribuído
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
+          {role === 'Admin' && (
             <div className="space-y-2 w-full sm:w-auto relative z-20">
-              <Label className="text-xs font-semibold text-white/80 uppercase tracking-wider">
-                Cliente
+              <Label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+                Responsável
               </Label>
-              <Popover open={clientFilterOpen} onOpenChange={setClientFilterOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={clientFilterOpen}
-                    className="w-full sm:w-[220px] justify-between h-11 sm:h-10 bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white shadow-sm focus-visible:ring-emerald-500/50"
-                  >
-                    {clientFilter === 'all'
-                      ? 'Todos os clientes'
-                      : clientsList.find((c) => c.id === clientFilter)?.nome || 'Todos os clientes'}
-                    <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent
-                  className="w-[220px] p-0 border-emerald-800/50 bg-emerald-950/95 text-white"
-                  align="start"
+              <Select value={collaboratorFilter} onValueChange={setCollaboratorFilter}>
+                <SelectTrigger className="w-full sm:w-[180px] h-11 sm:h-10 bg-background/50 border-border/50 text-foreground shadow-sm focus:ring-primary/50">
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent className="border-border">
+                  <SelectItem value="all">Todos</SelectItem>
+                  {(collaborators || []).map((c) => (
+                    <SelectItem key={c.id} value={c.id || Math.random().toString()}>
+                      {c.nome || 'Sem Nome'}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="unassigned">Não Atribuído</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <div className="space-y-2 w-full sm:w-auto relative z-20">
+            <Label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+              Cliente
+            </Label>
+            <Popover open={clientFilterOpen} onOpenChange={setClientFilterOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={clientFilterOpen}
+                  className="w-full sm:w-[220px] justify-between h-11 sm:h-10 bg-background/50 border-border/50 text-foreground shadow-sm focus-visible:ring-primary/50"
                 >
-                  <Command className="bg-transparent text-white">
-                    <CommandInput
-                      placeholder="Buscar cliente..."
-                      className="text-white placeholder:text-white/50"
-                    />
-                    <CommandList>
-                      <CommandEmpty className="py-6 text-center text-sm text-white/50">
-                        Nenhum cliente encontrado.
-                      </CommandEmpty>
-                      <CommandGroup>
+                  {clientFilter === 'all'
+                    ? 'Todos os clientes'
+                    : clientsList.find((c) => c.id === clientFilter)?.nome || 'Todos os clientes'}
+                  <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[220px] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Buscar cliente..." />
+                  <CommandList>
+                    <CommandEmpty className="py-6 text-center text-sm">
+                      Nenhum cliente encontrado.
+                    </CommandEmpty>
+                    <CommandGroup>
+                      <CommandItem
+                        key="all"
+                        value="todos os clientes"
+                        onSelect={() => {
+                          setClientFilter('all')
+                          setClientFilterOpen(false)
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                            'mr-2 h-4 w-4',
+                            clientFilter === 'all' ? 'opacity-100' : 'opacity-0',
+                          )}
+                        />
+                        Todos os clientes
+                      </CommandItem>
+                      {clientsList.map((client) => (
                         <CommandItem
-                          key="all"
-                          value="todos os clientes"
-                          className="data-[selected=true]:bg-emerald-800/50 data-[selected=true]:text-white text-white"
+                          key={client.id}
+                          value={client.nome}
                           onSelect={() => {
-                            setClientFilter('all')
+                            setClientFilter(client.id)
                             setClientFilterOpen(false)
                           }}
                         >
                           <Check
                             className={cn(
                               'mr-2 h-4 w-4',
-                              clientFilter === 'all' ? 'opacity-100' : 'opacity-0',
+                              clientFilter === client.id ? 'opacity-100' : 'opacity-0',
                             )}
                           />
-                          Todos os clientes
+                          {client.nome}
                         </CommandItem>
-                        {clientsList.map((client) => (
-                          <CommandItem
-                            key={client.id}
-                            value={client.nome}
-                            className="data-[selected=true]:bg-emerald-800/50 data-[selected=true]:text-white text-white"
-                            onSelect={() => {
-                              setClientFilter(client.id)
-                              setClientFilterOpen(false)
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                'mr-2 h-4 w-4',
-                                clientFilter === client.id ? 'opacity-100' : 'opacity-0',
-                              )}
-                            />
-                            {client.nome}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="space-y-2 w-full sm:w-auto relative z-20 pointer-events-auto">
-              <Label className="text-xs font-semibold text-white/80 uppercase tracking-wider">
-                Período
-              </Label>
-              <Select
-                value={dateFilter}
-                onValueChange={setDateFilter}
-                disabled={exactDateFilter !== undefined}
-              >
-                <SelectTrigger className="w-full sm:w-[160px] h-11 sm:h-10 bg-white/10 border-white/20 text-white shadow-sm disabled:opacity-50 focus:ring-emerald-500/50">
-                  <SelectValue placeholder="Qualquer data" />
-                </SelectTrigger>
-                <SelectContent className="bg-emerald-950/95 border-emerald-800/50 text-white">
-                  <SelectItem value="all" className="focus:bg-emerald-800/50 focus:text-white">
-                    Qualquer data
-                  </SelectItem>
-                  <SelectItem value="today" className="focus:bg-emerald-800/50 focus:text-white">
-                    Hoje
-                  </SelectItem>
-                  <SelectItem value="week" className="focus:bg-emerald-800/50 focus:text-white">
-                    Esta semana
-                  </SelectItem>
-                  <SelectItem value="month" className="focus:bg-emerald-800/50 focus:text-white">
-                    Este mês
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2 w-full sm:w-auto relative z-20 pointer-events-auto">
-              <Label className="text-xs font-semibold text-white/80 uppercase tracking-wider">
-                Data Específica
-              </Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      'w-full sm:w-[160px] h-11 sm:h-10 justify-start text-left font-normal bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white shadow-sm focus-visible:ring-emerald-500/50',
-                      !exactDateFilter && 'text-white/50',
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4 opacity-70" />
-                    {exactDateFilter && isValid(exactDateFilter)
-                      ? format(exactDateFilter, 'dd/MM/yyyy')
-                      : 'Selecionar data'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent
-                  className="w-auto p-0 border-emerald-800/50 bg-emerald-950/95 text-white"
-                  align="start"
-                >
-                  <Calendar
-                    mode="single"
-                    selected={exactDateFilter}
-                    onSelect={setExactDateFilter}
-                    initialFocus
-                    className="text-white"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="space-y-2 w-full sm:w-auto">
-              <Label className="text-xs font-semibold text-white/80 uppercase tracking-wider flex items-center gap-1">
-                <Columns className="w-3 h-3" />
-                Colunas Visíveis
-              </Label>
-              <ToggleGroup
-                type="multiple"
-                variant="outline"
-                value={statusFilter}
-                onValueChange={(val) => setStatusFilter(val || [])}
-                className="bg-black/20 rounded-md min-h-[40px] p-1 border border-white/10 justify-start flex-wrap sm:flex-nowrap w-full shadow-inner"
-              >
-                <ToggleGroupItem
-                  value="Pendente"
-                  className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none text-white/70 hover:text-white data-[state=on]:bg-white/20 data-[state=on]:text-white data-[state=on]:shadow-sm border-transparent"
-                >
-                  Pendente
-                </ToggleGroupItem>
-                <ToggleGroupItem
-                  value="Em Andamento"
-                  className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none text-white/70 hover:text-white data-[state=on]:bg-white/20 data-[state=on]:text-white data-[state=on]:shadow-sm border-transparent"
-                >
-                  Em Andamento
-                </ToggleGroupItem>
-                <ToggleGroupItem
-                  value="Concluído"
-                  className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none text-white/70 hover:text-white data-[state=on]:bg-white/20 data-[state=on]:text-white data-[state=on]:shadow-sm border-transparent"
-                >
-                  Concluído
-                </ToggleGroupItem>
-              </ToggleGroup>
-            </div>
-
-            {hasFilters && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearFilters}
-                className="h-11 sm:h-10 text-white/70 hover:text-white hover:bg-white/10 w-full sm:w-auto mb-[1px]"
-              >
-                <FilterX className="w-4 h-4 mr-2" />
-                Limpar
-              </Button>
-            )}
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="gap-2 w-full xl:w-auto bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white shadow-sm transition-colors focus-visible:ring-emerald-500/50"
-              >
-                <Download className="w-4 h-4" />
-                Exportar Relatório
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-[90vw] max-w-[220px] sm:w-56 bg-emerald-950/95 border-emerald-800/50 text-white"
+          <div className="space-y-2 w-full sm:w-auto relative z-20 pointer-events-auto">
+            <Label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+              Período
+            </Label>
+            <Select
+              value={dateFilter}
+              onValueChange={setDateFilter}
+              disabled={exactDateFilter !== undefined}
             >
-              <DropdownMenuItem
-                onClick={() => exportToCSV(filteredDemands || [], `demandas_${Date.now()}.csv`)}
-                className="min-h-[44px] focus:bg-emerald-800/50 focus:text-white"
+              <SelectTrigger className="w-full sm:w-[160px] h-11 sm:h-10 bg-background/50 border-border/50 text-foreground shadow-sm disabled:opacity-50 focus:ring-primary/50">
+                <SelectValue placeholder="Qualquer data" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Qualquer data</SelectItem>
+                <SelectItem value="today">Hoje</SelectItem>
+                <SelectItem value="week">Esta semana</SelectItem>
+                <SelectItem value="month">Este mês</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2 w-full sm:w-auto relative z-20 pointer-events-auto">
+            <Label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+              Data Específica
+            </Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    'w-full sm:w-[160px] h-11 sm:h-10 justify-start text-left font-normal bg-background/50 border-border/50 text-foreground shadow-sm focus-visible:ring-primary/50',
+                    !exactDateFilter && 'text-muted-foreground',
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4 opacity-70" />
+                  {exactDateFilter && isValid(exactDateFilter)
+                    ? format(exactDateFilter, 'dd/MM/yyyy')
+                    : 'Selecionar data'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={exactDateFilter}
+                  onSelect={setExactDateFilter}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="space-y-2 w-full sm:w-auto">
+            <Label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider flex items-center gap-1">
+              <Columns className="w-3 h-3" />
+              Colunas Visíveis
+            </Label>
+            <ToggleGroup
+              type="multiple"
+              variant="outline"
+              value={statusFilter}
+              onValueChange={(val) => setStatusFilter(val || [])}
+              className="bg-background/20 rounded-md min-h-[40px] p-1 border border-border/50 justify-start flex-wrap sm:flex-nowrap w-full shadow-inner"
+            >
+              <ToggleGroupItem
+                value="Pendente"
+                className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none text-muted-foreground hover:text-foreground data-[state=on]:bg-background/50 data-[state=on]:text-foreground data-[state=on]:shadow-sm border-transparent"
               >
-                Exportar como CSV
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => exportToPDF(filteredDemands || [])}
-                className="min-h-[44px] focus:bg-emerald-800/50 focus:text-white"
+                Pendente
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                value="Em Andamento"
+                className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none text-muted-foreground hover:text-foreground data-[state=on]:bg-background/50 data-[state=on]:text-foreground data-[state=on]:shadow-sm border-transparent"
               >
-                Exportar como PDF
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                Em Andamento
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                value="Concluído"
+                className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none text-muted-foreground hover:text-foreground data-[state=on]:bg-background/50 data-[state=on]:text-foreground data-[state=on]:shadow-sm border-transparent"
+              >
+                Concluído
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+
+          {hasFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearFilters}
+              className="h-11 sm:h-10 text-muted-foreground hover:text-foreground w-full sm:w-auto mb-[1px]"
+            >
+              <FilterX className="w-4 h-4 mr-2" />
+              Limpar
+            </Button>
+          )}
         </div>
 
-        <div className="w-full overflow-x-auto snap-x snap-mandatory hide-scrollbar pb-4">
-          <div className="flex items-start gap-4 min-w-max [&>div]:!w-[85vw] sm:[&>div]:!w-[320px] [&>div]:!max-w-[400px] [&>div]:snap-center pr-4 hardware-accelerated">
-            {(activeColumns || []).map((colName) => (
-              <DemandColumn
-                key={colName}
-                title={colName}
-                demands={columnsDemands[colName] || []}
-                highlightId={highlightId}
-                onDropDemand={(demandId, newStatus) => {
-                  const demand = demands.find((d) => d.id === demandId)
-                  if (demand && demand.status !== newStatus) {
-                    updateStatus(demandId, newStatus as DemandStatus)
-                  }
-                }}
-              />
-            ))}
-          </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              className="gap-2 w-full xl:w-auto bg-background/50 border-border/50 text-foreground shadow-sm transition-colors focus-visible:ring-primary/50"
+            >
+              <Download className="w-4 h-4" />
+              Exportar Relatório
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-[90vw] max-w-[220px] sm:w-56">
+            <DropdownMenuItem
+              onClick={() => exportToCSV(filteredDemands || [], `demandas_${Date.now()}.csv`)}
+              className="min-h-[44px]"
+            >
+              Exportar como CSV
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => exportToPDF(filteredDemands || [])}
+              className="min-h-[44px]"
+            >
+              Exportar como PDF
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      <div className="w-full overflow-x-auto snap-x snap-mandatory hide-scrollbar pb-4 flex-1">
+        <div className="flex items-start gap-4 min-w-max [&>div]:!w-[85vw] sm:[&>div]:!w-[320px] [&>div]:!max-w-[400px] [&>div]:snap-center pr-4 hardware-accelerated h-full">
+          {(activeColumns || []).map((colName) => (
+            <DemandColumn
+              key={colName}
+              title={colName}
+              demands={columnsDemands[colName] || []}
+              highlightId={highlightId}
+              onDropDemand={(demandId, newStatus) => {
+                const demand = demands.find((d) => d.id === demandId)
+                if (demand && demand.status !== newStatus) {
+                  updateStatus(demandId, newStatus as DemandStatus)
+                }
+              }}
+            />
+          ))}
         </div>
       </div>
     </div>
