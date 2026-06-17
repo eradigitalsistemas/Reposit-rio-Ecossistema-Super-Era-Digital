@@ -106,7 +106,7 @@ export function AppSidebar() {
                 asChild
                 isActive={isActive}
                 className={cn(
-                  'transition-all duration-300 h-11 md:h-10 px-4 md:px-3 rounded-xl group relative overflow-hidden border border-transparent',
+                  'transition-[transform,opacity,background-color,color,box-shadow] duration-300 h-11 md:h-10 px-4 md:px-3 rounded-xl group relative overflow-hidden border border-transparent',
                   isActive
                     ? 'bg-primary/10 text-primary dark:text-white border-primary/30 dark:border-primary/50 shadow-[0_0_15px_rgba(34,197,94,0.15)] dark:shadow-[0_0_20px_rgba(34,197,94,0.25)] before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/20 before:to-transparent before:opacity-100'
                     : 'hover:bg-sidebar-accent/50 text-sidebar-foreground/70 dark:text-white/70 hover:text-sidebar-foreground dark:hover:text-white hover:border-border/50',
@@ -188,7 +188,7 @@ export function AppSidebar() {
             <SidebarMenuButton
               asChild
               variant="outline"
-              className="w-full justify-center text-sidebar-foreground dark:text-white border-border/50 hover:bg-sidebar-accent/50 hover:border-primary/50 dark:hover:border-primary/50 hover:text-primary dark:hover:text-white transition-all h-12 md:h-10 rounded-xl"
+              className="w-full justify-center text-sidebar-foreground dark:text-white border-border/50 hover:bg-sidebar-accent/50 hover:border-primary/50 dark:hover:border-primary/50 hover:text-primary dark:hover:text-white transition-colors h-12 md:h-10 rounded-xl"
             >
               <Link
                 to="/portal/login"

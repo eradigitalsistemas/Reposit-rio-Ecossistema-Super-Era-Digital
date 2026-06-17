@@ -151,16 +151,15 @@
   }
 
   button {
-    @apply transition-all duration-300;
+    @apply transition-[transform,opacity,background-color,border-color,color] duration-300;
+    will-change: transform, opacity;
   }
 
   button.bg-primary:not(:disabled):hover {
-    box-shadow: 0 0 15px hsl(var(--primary) / 0.4);
     transform: translateY(-1px);
   }
 
   .dark button.bg-primary:not(:disabled):hover {
-    box-shadow: 0 0 20px hsl(var(--primary) / 0.6);
     transform: translateY(-1px);
   }
 }
@@ -309,8 +308,8 @@
   }
 
   .glass-optimized {
-    backdrop-filter: blur(8px);
+    /* Optimized glassmorphism: removed heavy backdrop-filter for better non-GPU performance */
     transform: translateZ(0);
-    will-change: transform, backdrop-filter;
+    will-change: transform;
   }
 }

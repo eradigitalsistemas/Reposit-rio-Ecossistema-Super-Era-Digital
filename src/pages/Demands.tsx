@@ -276,8 +276,16 @@ export default function Demands() {
     <div className="flex flex-col flex-1 w-full min-h-full relative bg-gradient-to-br from-green-950 via-teal-900 to-emerald-950">
       {/* Decorative background blobs */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-emerald-600/20 blur-[120px]" />
-        <div className="absolute top-[60%] -right-[10%] w-[40%] h-[60%] rounded-full bg-teal-600/20 blur-[120px]" />
+        <div
+          className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(5,150,105,0.2) 0%, transparent 70%)' }}
+        />
+        <div
+          className="absolute top-[60%] -right-[10%] w-[40%] h-[60%] rounded-full"
+          style={{
+            background: 'radial-gradient(circle, rgba(13,148,136,0.2) 0%, transparent 70%)',
+          }}
+        />
       </div>
 
       <div className="flex flex-col flex-1 p-4 sm:p-6 relative z-10">
@@ -329,7 +337,7 @@ export default function Demands() {
                   <SelectTrigger className="w-full sm:w-[180px] h-11 sm:h-10 bg-white/10 border-white/20 text-white shadow-sm focus:ring-emerald-500/50">
                     <SelectValue placeholder="Todos" />
                   </SelectTrigger>
-                  <SelectContent className="bg-emerald-950/95 backdrop-blur-xl border-emerald-800/50 text-white">
+                  <SelectContent className="bg-emerald-950/95 border-emerald-800/50 text-white">
                     <SelectItem value="all" className="focus:bg-emerald-800/50 focus:text-white">
                       Todos
                     </SelectItem>
@@ -372,7 +380,7 @@ export default function Demands() {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent
-                  className="w-[220px] p-0 border-emerald-800/50 bg-emerald-950/95 backdrop-blur-xl text-white"
+                  className="w-[220px] p-0 border-emerald-800/50 bg-emerald-950/95 text-white"
                   align="start"
                 >
                   <Command className="bg-transparent text-white">
@@ -440,7 +448,7 @@ export default function Demands() {
                 <SelectTrigger className="w-full sm:w-[160px] h-11 sm:h-10 bg-white/10 border-white/20 text-white shadow-sm disabled:opacity-50 focus:ring-emerald-500/50">
                   <SelectValue placeholder="Qualquer data" />
                 </SelectTrigger>
-                <SelectContent className="bg-emerald-950/95 backdrop-blur-xl border-emerald-800/50 text-white">
+                <SelectContent className="bg-emerald-950/95 border-emerald-800/50 text-white">
                   <SelectItem value="all" className="focus:bg-emerald-800/50 focus:text-white">
                     Qualquer data
                   </SelectItem>
@@ -477,7 +485,7 @@ export default function Demands() {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent
-                  className="w-auto p-0 border-emerald-800/50 bg-emerald-950/95 backdrop-blur-xl text-white"
+                  className="w-auto p-0 border-emerald-800/50 bg-emerald-950/95 text-white"
                   align="start"
                 >
                   <Calendar
@@ -541,7 +549,7 @@ export default function Demands() {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                className="gap-2 w-full xl:w-auto bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white shadow-sm transition-all focus-visible:ring-emerald-500/50"
+                className="gap-2 w-full xl:w-auto bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white shadow-sm transition-colors focus-visible:ring-emerald-500/50"
               >
                 <Download className="w-4 h-4" />
                 Exportar Relatório
@@ -549,7 +557,7 @@ export default function Demands() {
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="w-[90vw] max-w-[220px] sm:w-56 bg-emerald-950/95 backdrop-blur-xl border-emerald-800/50 text-white"
+              className="w-[90vw] max-w-[220px] sm:w-56 bg-emerald-950/95 border-emerald-800/50 text-white"
             >
               <DropdownMenuItem
                 onClick={() => exportToCSV(filteredDemands || [], `demandas_${Date.now()}.csv`)}

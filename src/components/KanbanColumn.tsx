@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import { StageConfig, Lead } from '@/types/crm'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
@@ -10,7 +10,7 @@ interface KanbanColumnProps {
   leads: Lead[]
 }
 
-export function KanbanColumn({ stage, leads }: KanbanColumnProps) {
+export const KanbanColumn = memo(function KanbanColumn({ stage, leads }: KanbanColumnProps) {
   const { moveLead } = useLeadStore()
   const [isDragOver, setIsDragOver] = useState(false)
 
@@ -58,7 +58,7 @@ export function KanbanColumn({ stage, leads }: KanbanColumnProps) {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={cn(
-          'flex-1 bg-muted/50 border border-t-0 border-border rounded-b-lg p-3 overflow-y-auto space-y-3 transition-all duration-200 hide-scrollbar',
+          'flex-1 bg-muted/50 border border-t-0 border-border rounded-b-lg p-3 overflow-y-auto space-y-3 transition-colors duration-200 hide-scrollbar hardware-accelerated',
           isDragOver && 'bg-muted border-dashed border-2',
           isDragOver && stage.bgColor,
         )}
@@ -75,4 +75,4 @@ export function KanbanColumn({ stage, leads }: KanbanColumnProps) {
       </div>
     </div>
   )
-}
+})

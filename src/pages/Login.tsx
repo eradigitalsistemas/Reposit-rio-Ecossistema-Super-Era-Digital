@@ -54,8 +54,18 @@ export default function Login() {
     <div className="min-h-screen bg-[#0f172a] flex flex-col relative overflow-hidden">
       {/* Premium Tech Dashboard Background */}
       <div className="absolute inset-0 pointer-events-none z-0">
-        <div className="absolute top-[-10%] right-[-5%] w-[800px] h-[800px] bg-primary/10 rounded-full blur-[150px] mix-blend-screen"></div>
-        <div className="absolute bottom-[-10%] left-[-5%] w-[800px] h-[800px] bg-[#0070f3]/10 rounded-full blur-[150px] mix-blend-screen"></div>
+        <div
+          className="absolute top-[-10%] right-[-5%] w-[800px] h-[800px] rounded-full mix-blend-screen"
+          style={{
+            background: 'radial-gradient(circle, hsl(var(--primary) / 0.1) 0%, transparent 70%)',
+          }}
+        ></div>
+        <div
+          className="absolute bottom-[-10%] left-[-5%] w-[800px] h-[800px] rounded-full mix-blend-screen"
+          style={{
+            background: 'radial-gradient(circle, rgba(0, 112, 243, 0.1) 0%, transparent 70%)',
+          }}
+        ></div>
         <div className="absolute inset-0 bg-grid-pattern opacity-10 mix-blend-overlay"></div>
       </div>
 
@@ -79,7 +89,7 @@ export default function Login() {
 
           <form
             onSubmit={handleLogin}
-            className="space-y-6 bg-slate-900/50 backdrop-blur-2xl p-8 rounded-3xl border border-slate-800/80 shadow-[0_8px_40px_rgba(0,0,0,0.4)] relative overflow-hidden"
+            className="space-y-6 bg-slate-900/80 p-8 rounded-3xl border border-slate-800/80 shadow-[0_8px_40px_rgba(0,0,0,0.4)] relative overflow-hidden"
           >
             {loading && (
               <div className="absolute top-0 left-0 w-full h-1 bg-slate-800/50">
@@ -98,7 +108,7 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="bg-slate-950/50 border-slate-800 text-white placeholder:text-slate-500 focus:bg-slate-900 focus-visible:bg-slate-900 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 h-12 rounded-xl transition-all"
+                  className="bg-slate-950/50 border-slate-800 text-white placeholder:text-slate-500 focus:bg-slate-900 focus-visible:bg-slate-900 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 h-12 rounded-xl transition-colors"
                 />
               </div>
               <div className="space-y-2">
@@ -112,7 +122,7 @@ export default function Login() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="bg-slate-950/50 border-slate-800 text-white pr-10 focus:bg-slate-900 focus-visible:bg-slate-900 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 h-12 rounded-xl transition-all"
+                    className="bg-slate-950/50 border-slate-800 text-white pr-10 focus:bg-slate-900 focus-visible:bg-slate-900 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 h-12 rounded-xl transition-colors"
                   />
                   <button
                     type="button"
@@ -127,7 +137,7 @@ export default function Login() {
 
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-primary to-[#0070f3] hover:from-primary/90 hover:to-[#0070f3]/90 text-white font-bold h-12 rounded-xl border-0 shadow-[0_0_20px_rgba(34,197,94,0.2)] hover:shadow-[0_0_30px_rgba(34,197,94,0.4)] transition-all duration-300 text-base"
+              className="w-full bg-gradient-to-r from-primary to-[#0070f3] hover:from-primary/90 hover:to-[#0070f3]/90 text-white font-bold h-12 rounded-xl border-0 shadow-[0_0_20px_rgba(34,197,94,0.2)] hover:shadow-[0_0_30px_rgba(34,197,94,0.4)] transition-shadow duration-300 text-base will-change-[box-shadow]"
               disabled={loading}
             >
               {loading ? (

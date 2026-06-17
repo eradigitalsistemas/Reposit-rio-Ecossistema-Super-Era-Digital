@@ -8,12 +8,13 @@ import { DeleteLeadAlert } from './DeleteLeadAlert'
 import { NewInteractionModal } from './NewInteractionModal'
 import { LeadHistorySheet } from './LeadHistorySheet'
 import { WhatsAppChatSheet } from './WhatsAppChatSheet'
+import React, { memo } from 'react'
 
 interface KanbanCardProps {
   lead: Lead
 }
 
-export function KanbanCard({ lead }: KanbanCardProps) {
+export const KanbanCard = memo(function KanbanCard({ lead }: KanbanCardProps) {
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
     e.dataTransfer.setData('leadId', lead.id)
     e.dataTransfer.effectAllowed = 'move'
@@ -23,7 +24,7 @@ export function KanbanCard({ lead }: KanbanCardProps) {
     <Card
       draggable
       onDragStart={handleDragStart}
-      className="cursor-grab active:cursor-grabbing hover:border-primary/50 transition-all duration-200 bg-card border-border shadow-sm hover:shadow-md dark:hover:shadow-[0_0_10px_rgba(34,197,94,0.1)] relative group touch-manipulation"
+      className="cursor-grab active:cursor-grabbing hover:border-primary/50 transition-[border-color,box-shadow,transform] duration-200 bg-card border-border shadow-sm hover:shadow-md dark:hover:shadow-[0_0_10px_rgba(34,197,94,0.1)] relative group touch-manipulation will-change-transform"
     >
       <CardContent className="p-4 sm:p-3 pb-2 sm:pb-2 flex flex-col gap-2.5 sm:gap-2">
         <div className="flex justify-between items-start gap-2 w-full">
@@ -96,4 +97,4 @@ export function KanbanCard({ lead }: KanbanCardProps) {
       </div>
     </Card>
   )
-}
+})
