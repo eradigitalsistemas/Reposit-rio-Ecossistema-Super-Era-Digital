@@ -33,7 +33,7 @@ export const DemandColumn = memo(
           }
         }}
       >
-        <div className="p-4 border-b border-white/10 shrink-0 flex items-center justify-between bg-white/5 dark:bg-black/10 z-10 sticky top-0 glass-optimized rounded-t-[11px]">
+        <div className="p-4 border-b border-white/10 shrink-0 flex items-center justify-between bg-white/5 dark:bg-black/10 glass-optimized rounded-t-[11px]">
           <h3 className="font-semibold text-white text-lg sm:text-base tracking-tight">{title}</h3>
           <Badge
             variant="secondary"
