@@ -42,6 +42,7 @@ import useAuthStore from '@/stores/useAuthStore'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from '@/hooks/use-toast'
 import { sanitizeFilename, cn } from '@/lib/utils'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface DemandDetailsModalProps {
   open: boolean
@@ -79,7 +80,20 @@ export function DemandDetailsModal({
   const [showFailInput, setShowFailInput] = useState(false)
   const [failReason, setFailReason] = useState('')
 
-  const { advancePostSalesWorkflow, failPostSalesWorkflow } = useDemandStore()
+  const { advancePostSalesWorkflow, failPostSalesWorkflow, fetchDemandLogs } = useDemandStore()
+
+  const [isLogsLoading, setIsLogsLoading] = useState(false)
+
+  useEffect(() => {
+    if (open && currentDemand) {
+      if (!currentDemand.logs || currentDemand.logs.length === 0) {
+        setIsLogsLoading(true)
+      }
+      fetchDemandLogs(currentDemand.id).finally(() => {
+        setIsLogsLoading(false)
+      })
+    }
+  }, [open, currentDemand.id, fetchDemandLogs])
 
   const handleAccept = () => acceptDemand(currentDemand.id)
 
@@ -677,7 +691,19 @@ export function DemandDetailsModal({
 
             <ScrollArea className="flex-1 p-4 sm:p-6 relative">
               <div className="space-y-6 pb-6" ref={scrollAreaRef}>
-                {sortedLogs.length === 0 ? (
+                {isLogsLoading ? (
+                  <div className="space-y-5 py-2">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="flex gap-4">
+                        <Skeleton className="w-8 h-8 rounded-full shrink-0" />
+                        <div className="space-y-2 flex-1 pt-1">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-16 w-full rounded-xl" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : sortedLogs.length === 0 ? (
                   <div className="flex flex-col items-center justify-center text-center py-10 opacity-50">
                     <History className="w-8 h-8 mb-2 text-gray-400" />
                     <p className="text-sm text-gray-500">

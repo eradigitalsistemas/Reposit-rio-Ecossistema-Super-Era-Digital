@@ -83,6 +83,8 @@ interface DemandStoreState {
   deleteDemandTemplate: (id: string) => Promise<void>
   advancePostSalesWorkflow: (demandId: string) => Promise<void>
   failPostSalesWorkflow: (demandId: string, reason: string) => Promise<void>
+  isLoading: boolean
+  fetchDemandLogs: (demandId: string) => Promise<void>
 }
 
 const DemandContext = createContext<DemandStoreState | null>(null)
@@ -110,6 +112,7 @@ export function playNotificationSound() {
 
 export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   const [demands, setDemands] = useState<Demand[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [collaborators, setCollaborators] = useState<Collaborator[]>([])
   const [notifications, setNotifications] = useState<DemandNotification[]>([])
   const [checklistTemplates, setChecklistTemplates] = useState<ChecklistTemplate[]>([])
@@ -176,23 +179,35 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   const parseDemandRow = useCallback((d: any): Demand => {
-    const sortedLogs = Array.isArray(d.logs_auditoria)
-      ? [...d.logs_auditoria].sort((a: any, b: any) => {
-          const timeA = a.data_criacao ? new Date(a.data_criacao).getTime() : 0
-          const timeB = b.data_criacao ? new Date(b.data_criacao).getTime() : 0
+    const logsToMap = d.logs || d.logs_auditoria || []
+    const sortedLogs = Array.isArray(logsToMap)
+      ? [...logsToMap].sort((a: any, b: any) => {
+          const timeA = a.data_criacao
+            ? new Date(a.data_criacao).getTime()
+            : a.createdAt
+              ? new Date(a.createdAt).getTime()
+              : 0
+          const timeB = b.data_criacao
+            ? new Date(b.data_criacao).getTime()
+            : b.createdAt
+              ? new Date(b.createdAt).getTime()
+              : 0
           return timeB - timeA
         })
       : []
 
-    const mappedLogs: DemandLog[] = sortedLogs.map((l: any) => ({
-      id: l.id || crypto.randomUUID(),
-      acao: l.acao,
-      detalhes: l.detalhes,
-      createdAt: l.data_criacao,
-      usuario_id: l.usuario_id,
-      userName: l.usuario?.nome || 'Sistema',
-      dados_novos: l.dados_novos,
-    }))
+    const mappedLogs: DemandLog[] = sortedLogs.map((l: any) => {
+      if (l.userName !== undefined) return l // already mapped
+      return {
+        id: l.id || crypto.randomUUID(),
+        acao: l.acao,
+        detalhes: l.detalhes,
+        createdAt: l.data_criacao || l.createdAt,
+        usuario_id: l.usuario_id,
+        userName: l.usuario?.nome || 'Sistema',
+        dados_novos: l.dados_novos,
+      }
+    })
 
     const latestPriorityChange = sortedLogs.find((l: any) => l.acao === 'Alteração de Prioridade')
     const systemEscalated =
@@ -242,16 +257,16 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       const { data: d, error } = await supabase
         .from('demandas')
         .select(
-          '*, responsavel:usuarios!demandas_responsavel_id_fkey(nome), cliente:clientes_externos(id, nome), logs_auditoria(id, acao, detalhes, usuario_id, dados_novos, data_criacao, usuario:usuarios(nome))',
+          '*, responsavel:usuarios!demandas_responsavel_id_fkey(nome), cliente:clientes_externos(id, nome)',
         )
         .eq('id', id)
         .single()
 
       if (d && !error) {
-        const parsed = parseDemandRow(d)
         setDemands((prev) => {
-          const exists = prev.some((x) => x.id === parsed.id)
-          if (exists) return prev.map((x) => (x.id === parsed.id ? parsed : x))
+          const existing = prev.find((x) => x.id === d.id)
+          const parsed = parseDemandRow({ ...d, logs: existing?.logs || [] })
+          if (existing) return prev.map((x) => (x.id === parsed.id ? parsed : x))
           return [parsed, ...prev]
         })
       }
@@ -259,15 +274,42 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
     [parseDemandRow],
   )
 
+  const fetchDemandLogs = useCallback(async (demandId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('logs_auditoria')
+        .select('id, acao, detalhes, usuario_id, dados_novos, data_criacao, usuario:usuarios(nome)')
+        .eq('demanda_id', demandId)
+        .order('data_criacao', { ascending: false })
+
+      if (data && !error) {
+        const mappedLogs: DemandLog[] = data.map((l: any) => ({
+          id: l.id || crypto.randomUUID(),
+          acao: l.acao,
+          detalhes: l.detalhes,
+          createdAt: l.data_criacao,
+          usuario_id: l.usuario_id,
+          userName: l.usuario?.nome || 'Sistema',
+          dados_novos: l.dados_novos,
+        }))
+        setDemands((prev) => prev.map((d) => (d.id === demandId ? { ...d, logs: mappedLogs } : d)))
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }, [])
+
   const fetchDemands = useCallback(async () => {
     if (!user) return
+    setIsLoading(true)
     try {
       let query = supabase
         .from('demandas')
         .select(
-          '*, responsavel:usuarios!demandas_responsavel_id_fkey(nome), cliente:clientes_externos(id, nome), logs_auditoria(id, acao, detalhes, usuario_id, dados_novos, data_criacao, usuario:usuarios(nome))',
+          '*, responsavel:usuarios!demandas_responsavel_id_fkey(nome), cliente:clientes_externos(id, nome)',
         )
         .order('data_criacao', { ascending: false })
+        .limit(500)
 
       if (role !== 'Admin') {
         query = query.eq('responsavel_id', user.id)
@@ -282,6 +324,8 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       }
     } catch (e) {
       // Silently handle
+    } finally {
+      setIsLoading(false)
     }
   }, [user, role, parseDemandRow])
 
@@ -1514,6 +1558,8 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       deleteDemandTemplate,
       advancePostSalesWorkflow,
       failPostSalesWorkflow,
+      isLoading,
+      fetchDemandLogs,
     }),
     [
       demands,
@@ -1541,6 +1587,8 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       deleteDemandTemplate,
       advancePostSalesWorkflow,
       failPostSalesWorkflow,
+      isLoading,
+      fetchDemandLogs,
     ],
   )
 

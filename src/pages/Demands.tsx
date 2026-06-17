@@ -46,9 +46,11 @@ import {
 import { Calendar } from '@/components/ui/calendar'
 import { cn } from '@/lib/utils'
 import { useSearchParams } from 'react-router-dom'
+import { supabase } from '@/lib/supabase/client'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function Demands() {
-  const { demands, collaborators, updateStatus } = useDemandStore()
+  const { demands, collaborators, updateStatus, isLoading } = useDemandStore()
   const { role, user } = useAuthStore()
 
   const [collaboratorFilter, setCollaboratorFilter] = useState<string>('all')
@@ -61,15 +63,13 @@ export default function Demands() {
   const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
-    import('@/lib/supabase/client').then(({ supabase }) => {
-      supabase
-        .from('clientes_externos')
-        .select('id, nome')
-        .order('nome')
-        .then(({ data }) => {
-          if (data) setClientsList(data)
-        })
-    })
+    supabase
+      .from('clientes_externos')
+      .select('id, nome')
+      .order('nome')
+      .then(({ data }) => {
+        if (data) setClientsList(data)
+      })
   }, [])
 
   const [searchParams] = useSearchParams()
@@ -528,20 +528,35 @@ export default function Demands() {
 
       <div className="w-full pb-12 flex-1">
         <div className="flex items-start gap-4 min-w-max pr-4 hardware-accelerated h-fit">
-          {(activeColumns || []).map((colName) => (
-            <DemandColumn
-              key={colName}
-              title={colName}
-              demands={columnsDemands[colName] || []}
-              highlightId={highlightId}
-              onDropDemand={(demandId, newStatus) => {
-                const demand = demands.find((d) => d.id === demandId)
-                if (demand && demand.status !== newStatus) {
-                  updateStatus(demandId, newStatus as DemandStatus)
-                }
-              }}
-            />
-          ))}
+          {isLoading && demands.length === 0
+            ? (activeColumns || []).map((colName) => (
+                <div
+                  key={colName}
+                  className="flex flex-col shrink-0 w-[85vw] sm:w-[320px] lg:w-[350px] bg-white/10 dark:bg-black/20 glass-optimized rounded-[12px] border border-white/20 h-fit shadow-lg p-3 gap-3"
+                >
+                  <div className="flex justify-between items-center mb-2 px-1">
+                    <Skeleton className="h-5 w-24 bg-white/20" />
+                    <Skeleton className="h-5 w-8 rounded-full bg-white/20" />
+                  </div>
+                  <Skeleton className="h-[140px] w-full rounded-xl bg-white/10" />
+                  <Skeleton className="h-[140px] w-full rounded-xl bg-white/10" />
+                  <Skeleton className="h-[140px] w-full rounded-xl bg-white/10" />
+                </div>
+              ))
+            : (activeColumns || []).map((colName) => (
+                <DemandColumn
+                  key={colName}
+                  title={colName}
+                  demands={columnsDemands[colName] || []}
+                  highlightId={highlightId}
+                  onDropDemand={(demandId, newStatus) => {
+                    const demand = demands.find((d) => d.id === demandId)
+                    if (demand && demand.status !== newStatus) {
+                      updateStatus(demandId, newStatus as DemandStatus)
+                    }
+                  }}
+                />
+              ))}
         </div>
       </div>
     </div>
