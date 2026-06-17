@@ -23,6 +23,7 @@ interface AgendaGridProps {
 const getGMT3LocalDate = (isoString: string) => {
   if (!isoString) return new Date()
   const d = new Date(isoString)
+  if (isNaN(d.getTime())) return new Date()
   // Ajusta estritamente para GMT-3 ignorando timezone do navegador
   const gmt3Date = new Date(d.getTime() - 3 * 60 * 60 * 1000)
   return new Date(
@@ -92,10 +93,10 @@ const AgendaDay = memo(
                 'text-xs px-1.5 py-1 rounded border truncate cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-1 hardware-accelerated',
                 getEventColor(evento.tipo),
               )}
-              title={`${format(getGMT3LocalDate(evento.data_inicio), 'HH:mm')} - ${evento.titulo}`}
+              title={`${evento.data_inicio ? format(getGMT3LocalDate(evento.data_inicio), 'HH:mm') : ''} - ${evento.titulo}`}
             >
               <span className="font-semibold shrink-0">
-                {format(getGMT3LocalDate(evento.data_inicio), 'HH:mm')}
+                {evento.data_inicio ? format(getGMT3LocalDate(evento.data_inicio), 'HH:mm') : ''}
               </span>
               <span className="truncate">{evento.titulo}</span>
             </div>
@@ -135,10 +136,14 @@ export const AgendaGrid = memo(function AgendaGrid({
   const eventsByDay = useMemo(() => {
     const map = new Map<string, EventoAgenda[]>()
     days.forEach((day) => {
-      const isSameDayEvents = eventos.filter((e) => isSameDay(getGMT3LocalDate(e.data_inicio), day))
-      isSameDayEvents.sort(
-        (a, b) => new Date(a.data_inicio).getTime() - new Date(b.data_inicio).getTime(),
+      const isSameDayEvents = (eventos || []).filter(
+        (e) => e && e.data_inicio && isSameDay(getGMT3LocalDate(e.data_inicio), day),
       )
+      isSameDayEvents.sort((a, b) => {
+        const timeA = new Date(a.data_inicio).getTime()
+        const timeB = new Date(b.data_inicio).getTime()
+        return (isNaN(timeA) ? 0 : timeA) - (isNaN(timeB) ? 0 : timeB)
+      })
       map.set(day.toISOString(), isSameDayEvents)
     })
     return map

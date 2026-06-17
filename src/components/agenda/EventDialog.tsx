@@ -299,7 +299,7 @@ export function EventDialog({
                   <SelectItem value="none" className="text-black dark:text-white">
                     Nenhum cliente
                   </SelectItem>
-                  {clientes.map((c) => (
+                  {(clientes || []).map((c) => (
                     <SelectItem key={c.id} value={c.id} className="text-black dark:text-white">
                       {c.nome}
                     </SelectItem>

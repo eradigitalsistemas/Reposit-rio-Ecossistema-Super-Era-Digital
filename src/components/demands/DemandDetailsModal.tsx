@@ -496,7 +496,7 @@ export function DemandDetailsModal({
                   </span>
                   <div className="flex items-center gap-2 font-medium text-sm text-gray-900 dark:text-white">
                     <User2 className="w-4 h-4 text-gray-400" />
-                    {collaborators.find((c) => c.id === currentDemand?.creatorId)?.nome ||
+                    {(collaborators || []).find((c) => c.id === currentDemand?.creatorId)?.nome ||
                       'Sistema'}
                   </div>
                 </div>
@@ -541,7 +541,7 @@ export function DemandDetailsModal({
                   </span>
                   <div className="flex items-center gap-2 font-medium text-sm text-gray-900 dark:text-white">
                     <Calendar className="w-4 h-4 text-gray-400" />
-                    {currentDemand?.createdAt
+                    {currentDemand?.createdAt && isValid(new Date(currentDemand.createdAt))
                       ? format(new Date(currentDemand.createdAt), 'dd/MM/yyyy')
                       : '--/--/----'}
                   </div>
@@ -552,7 +552,7 @@ export function DemandDetailsModal({
                   </span>
                   <div className="flex items-center gap-2 font-medium text-sm text-gray-900 dark:text-white">
                     <Clock className="w-4 h-4 text-gray-400" />
-                    {currentDemand?.dueDate
+                    {currentDemand?.dueDate && isValid(new Date(currentDemand.dueDate))
                       ? format(new Date(currentDemand.dueDate), 'dd/MM/yyyy')
                       : 'Sem prazo'}
                   </div>
@@ -595,12 +595,12 @@ export function DemandDetailsModal({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-56">
-                        {checklistTemplates.map((t) => (
+                        {(checklistTemplates || []).map((t) => (
                           <DropdownMenuItem key={t.id} onClick={() => handleApplyTemplateDb(t)}>
                             {t.nome}
                           </DropdownMenuItem>
                         ))}
-                        {checklistTemplates.length === 0 && (
+                        {(!checklistTemplates || checklistTemplates.length === 0) && (
                           <DropdownMenuItem disabled>Nenhum modelo salvo</DropdownMenuItem>
                         )}
                       </DropdownMenuContent>
@@ -775,7 +775,9 @@ export function DemandDetailsModal({
                                   {log.userName || 'Sistema'}
                                 </span>
                                 <span className="text-[11px] font-medium text-gray-500 whitespace-nowrap bg-white/50 dark:bg-black/50 px-1.5 py-0.5 rounded">
-                                  {format(new Date(log.createdAt), 'dd/MM/yy HH:mm')}
+                                  {log.createdAt && isValid(new Date(log.createdAt))
+                                    ? format(new Date(log.createdAt), 'dd/MM/yy HH:mm')
+                                    : ''}
                                 </span>
                               </div>
 
@@ -861,7 +863,9 @@ export function DemandDetailsModal({
                                 </span>
                                 {log.detalhes}
                                 <span className="text-xs text-gray-400 ml-2 whitespace-nowrap">
-                                  {format(new Date(log.createdAt), 'HH:mm')}
+                                  {log.createdAt && isValid(new Date(log.createdAt))
+                                    ? format(new Date(log.createdAt), 'HH:mm')
+                                    : ''}
                                 </span>
                               </p>
                             </div>

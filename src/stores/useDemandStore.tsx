@@ -133,7 +133,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
     assigneeId: string,
     checklist: ChecklistItem[],
   ) => {
-    const updatedChecklist = [...checklist]
+    const updatedChecklist = Array.isArray(checklist) ? [...checklist] : []
     for (let i = 0; i < updatedChecklist.length; i++) {
       const item = updatedChecklist[i]
       if (item.dueDate && !item.completed) {
@@ -194,7 +194,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             : b?.createdAt
               ? new Date(b.createdAt).getTime()
               : 0
-          return timeB - timeA
+          return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA)
         })
       : []
 
@@ -1018,7 +1018,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         if (selectErr && selectErr.code !== 'PGRST116') throw selectErr
 
         const existingAnexos = Array.isArray(data?.anexos) ? data.anexos : []
-        const updatedAttachments = [...existingAnexos, ...newAttachments]
+        const updatedAttachments = [...existingAnexos, ...(newAttachments || [])]
 
         const nowIso = new Date().toISOString()
         const { error } = await supabase
@@ -1123,7 +1123,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           if (fetchErr && fetchErr.code !== 'PGRST116') throw fetchErr
 
           const existingAnexos = Array.isArray(data?.anexos) ? data.anexos : []
-          finalAttachments = [...existingAnexos, ...attachments]
+          finalAttachments = [...existingAnexos, ...(attachments || [])]
           const { error: updateErr } = await supabase
             .from('demandas')
             .update({ anexos: finalAttachments, data_atualizacao: nowIso })
@@ -1319,7 +1319,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           prev.map((d) => {
             if (d.id === demandId) {
               const existingList = Array.isArray(d.attachments) ? d.attachments : []
-              const updatedAttachments = [...existingList, ...newAttachments]
+              const updatedAttachments = [...existingList, ...(newAttachments || [])]
               return {
                 ...d,
                 attachments: updatedAttachments,
@@ -1337,7 +1337,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           .eq('id', demandId)
           .single()
         const existingAnexos = Array.isArray(data?.anexos) ? data.anexos : []
-        const updatedAttachments = [...existingAnexos, ...newAttachments]
+        const updatedAttachments = [...existingAnexos, ...(newAttachments || [])]
         await supabase
           .from('demandas')
           .update({ anexos: updatedAttachments, data_atualizacao: nowIso })

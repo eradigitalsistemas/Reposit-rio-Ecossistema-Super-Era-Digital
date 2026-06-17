@@ -216,23 +216,32 @@ export default function Demands() {
     return filtered.sort((a, b) => {
       const getLatestDate = (demand: any) => {
         if (!demand) return 0
-        let latest = demand.updatedAt
-          ? new Date(demand.updatedAt).getTime()
-          : demand.createdAt
-            ? new Date(demand.createdAt).getTime()
-            : 0
+        let latest = 0
+        if (demand.updatedAt) {
+          const t = new Date(demand.updatedAt).getTime()
+          if (!isNaN(t)) latest = t
+        } else if (demand.createdAt) {
+          const t = new Date(demand.createdAt).getTime()
+          if (!isNaN(t)) latest = t
+        }
 
         if (demand.completedAt) {
           const comp = new Date(demand.completedAt).getTime()
           if (!isNaN(comp) && comp > latest) latest = comp
         }
-        if (demand.logs && demand.logs.length > 0) {
+        if (demand.logs && Array.isArray(demand.logs) && demand.logs.length > 0) {
           const logLatest = Math.max(
-            ...demand.logs.map((l: any) => (l?.createdAt ? new Date(l.createdAt).getTime() : 0)),
+            ...demand.logs.map((l: any) => {
+              if (l && l.createdAt) {
+                const t = new Date(l.createdAt).getTime()
+                return isNaN(t) ? 0 : t
+              }
+              return 0
+            }),
           )
           if (!isNaN(logLatest) && logLatest > latest) latest = logLatest
         }
-        return isNaN(latest) ? 0 : latest
+        return latest
       }
 
       const timeA = getLatestDate(a)
@@ -381,7 +390,7 @@ export default function Demands() {
                         />
                         Todos os clientes
                       </CommandItem>
-                      {clientsList.map((client) => (
+                      {(clientsList || []).map((client) => (
                         <CommandItem
                           key={client.id}
                           value={client.nome}
@@ -532,7 +541,7 @@ export default function Demands() {
 
       <div className="w-full pb-12 flex-1">
         <div className="flex items-start gap-4 min-w-max pr-4 hardware-accelerated h-fit">
-          {isLoading && demands.length === 0
+          {isLoading && (!demands || demands.length === 0)
             ? (activeColumns || []).map((colName) => (
                 <div
                   key={colName || 'unknown'}

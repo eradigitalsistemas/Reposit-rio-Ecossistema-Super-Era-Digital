@@ -120,7 +120,7 @@ export default function Agenda() {
                 </SelectTrigger>
                 <SelectContent className="bg-card/80 backdrop-blur-xl text-foreground border-border/50">
                   <SelectItem value="todos">Todos os Usuários</SelectItem>
-                  {usuarios.map((u) => (
+                  {(usuarios || []).map((u) => (
                     <SelectItem key={u.id} value={u.id}>
                       {u.nome}
                     </SelectItem>
@@ -159,8 +159,8 @@ export default function Agenda() {
             </div>
           )}
           <AgendaGrid
-            currentDate={currentDate}
-            eventos={eventos}
+            currentDate={currentDate || new Date()}
+            eventos={eventos || []}
             onDayClick={handleDayClick}
             onEventClick={handleEventClick}
           />
