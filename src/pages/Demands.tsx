@@ -411,7 +411,7 @@ export default function Demands() {
   }, [filteredDemands, activeColumns])
 
   return (
-    <div className="min-h-screen w-fit min-w-full flex flex-col flex-1 p-4 sm:p-6 text-foreground relative z-10">
+    <div className="min-h-screen w-full flex flex-col flex-1 p-4 sm:p-6 text-foreground relative z-10 overflow-x-hidden">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 shrink-0 gap-4">
         <div>
           <h1 className="text-2xl sm:text-2xl font-bold tracking-tight drop-shadow-sm text-foreground">
@@ -722,12 +722,12 @@ export default function Demands() {
       </div>
 
       <div className="w-full pb-12 flex-1">
-        <div className="flex items-start gap-4 min-w-max pr-4 hardware-accelerated h-fit">
+        <div className="flex flex-col lg:flex-row items-start gap-4 w-full hardware-accelerated h-fit">
           {isLoading && (!demands || demands.length === 0)
             ? (activeColumns || []).map((colName) => (
                 <div
                   key={colName || 'unknown'}
-                  className="flex flex-col shrink-0 w-[85vw] sm:w-[320px] lg:w-[350px] bg-white/10 dark:bg-black/20 glass-optimized rounded-[12px] border border-white/20 h-fit shadow-lg p-3 gap-3"
+                  className="flex flex-col flex-1 w-full bg-white/10 dark:bg-black/20 glass-optimized rounded-[12px] border border-white/20 h-fit shadow-lg p-3 gap-3"
                 >
                   <div className="flex justify-between items-center mb-2 px-1">
                     <Skeleton className="h-5 w-24 bg-white/20" />

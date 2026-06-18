@@ -15,7 +15,7 @@ export const DemandColumn = memo(
   function DemandColumn({ title, demands, highlightId, onDropDemand }: DemandColumnProps) {
     return (
       <div
-        className="flex flex-col shrink-0 w-[85vw] sm:w-[320px] lg:w-[350px] bg-white/10 dark:bg-black/20 glass-optimized rounded-[12px] border border-white/20 h-fit shadow-lg transition-[background-color,border-color] data-[drag-over=true]:bg-white/20 data-[drag-over=true]:border-emerald-400/50 hardware-accelerated relative overflow-visible"
+        className="flex flex-col flex-1 w-full bg-white/10 dark:bg-black/20 glass-optimized rounded-[12px] border border-white/20 h-fit shadow-lg transition-[background-color,border-color] data-[drag-over=true]:bg-white/20 data-[drag-over=true]:border-emerald-400/50 hardware-accelerated relative overflow-visible"
         onDragOver={(e) => {
           e.preventDefault()
           e.dataTransfer.dropEffect = 'move'
