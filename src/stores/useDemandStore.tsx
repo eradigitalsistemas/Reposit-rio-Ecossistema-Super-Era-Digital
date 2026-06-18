@@ -84,6 +84,9 @@ interface DemandStoreState {
   advancePostSalesWorkflow: (demandId: string) => Promise<void>
   failPostSalesWorkflow: (demandId: string, reason: string) => Promise<void>
   isLoading: boolean
+  isLoadingMore: boolean
+  hasMore: boolean
+  loadMoreDemands: () => Promise<void>
   fetchDemandLogs: (demandId: string) => Promise<void>
 }
 
@@ -117,6 +120,9 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   const [notifications, setNotifications] = useState<DemandNotification[]>([])
   const [checklistTemplates, setChecklistTemplates] = useState<ChecklistTemplate[]>([])
   const [demandTemplates, setDemandTemplates] = useState<DemandTemplate[]>([])
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(false)
+  const [page, setPage] = useState(0)
 
   const { user, role, userName } = useAuthStore()
   const navigate = useNavigate()
@@ -315,7 +321,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           '*, responsavel:usuarios!demandas_responsavel_id_fkey(nome), cliente:clientes_externos(id, nome)',
         )
         .order('data_criacao', { ascending: false })
-        .limit(500)
+        .range(0, 99)
 
       if (role !== 'Admin') {
         query = query.eq('responsavel_id', user.id)
@@ -327,6 +333,8 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (data) {
         setDemands(data.map(parseDemandRow).filter((d) => d && d.id))
+        setHasMore(data.length === 100)
+        setPage(1)
       }
     } catch (e) {
       // Silently handle
@@ -334,6 +342,43 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       setIsLoading(false)
     }
   }, [user, role, parseDemandRow])
+
+  const loadMoreDemands = useCallback(async () => {
+    if (!user || !hasMore || isLoadingMore) return
+    setIsLoadingMore(true)
+    try {
+      const currentPage = page
+      let query = supabase
+        .from('demandas')
+        .select(
+          '*, responsavel:usuarios!demandas_responsavel_id_fkey(nome), cliente:clientes_externos(id, nome)',
+        )
+        .order('data_criacao', { ascending: false })
+        .range(currentPage * 100, (currentPage + 1) * 100 - 1)
+
+      if (role !== 'Admin') {
+        query = query.eq('responsavel_id', user.id)
+      }
+
+      const { data, error } = await query
+
+      if (error) return
+
+      if (data) {
+        const newDemands = data.map(parseDemandRow).filter((d) => d && d.id)
+        setDemands((prev) => {
+          const existingIds = new Set(prev.map((d) => d.id))
+          return [...prev, ...newDemands.filter((d) => !existingIds.has(d.id))]
+        })
+        setHasMore(data.length === 100)
+        setPage(currentPage + 1)
+      }
+    } catch (e) {
+      // Silently handle
+    } finally {
+      setIsLoadingMore(false)
+    }
+  }, [user, role, page, hasMore, isLoadingMore, parseDemandRow])
 
   const fetchChecklistTemplates = useCallback(async () => {
     if (!user) return
@@ -1566,6 +1611,9 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       advancePostSalesWorkflow,
       failPostSalesWorkflow,
       isLoading,
+      isLoadingMore,
+      hasMore,
+      loadMoreDemands,
       fetchDemandLogs,
     }),
     [
@@ -1595,6 +1643,9 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       advancePostSalesWorkflow,
       failPostSalesWorkflow,
       isLoading,
+      isLoadingMore,
+      hasMore,
+      loadMoreDemands,
       fetchDemandLogs,
     ],
   )

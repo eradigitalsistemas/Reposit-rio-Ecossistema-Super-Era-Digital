@@ -14,10 +14,30 @@ import { Trash2, Building2, Phone, Mail, FileText, Eye } from 'lucide-react'
 import { AddClientModal } from '@/components/AddClientModal'
 import { ImportClientModal } from '@/components/ImportClientModal'
 import { EditClientModal } from '@/components/EditClientModal'
+import { Search } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { useDebounce } from '@/hooks/use-debounce'
+import { useState, useMemo } from 'react'
 
 export default function Clients() {
-  const { clients, isLoading, deleteClient } = useClientStore()
+  const { clients, isLoading, hasMore, isLoadingMore, loadMoreClients, deleteClient } =
+    useClientStore()
   const navigate = useNavigate()
+
+  const [searchQuery, setSearchQuery] = useState('')
+  const debouncedSearchQuery = useDebounce(searchQuery, 300)
+
+  const filteredClients = useMemo(() => {
+    if (!debouncedSearchQuery) return clients
+    const q = debouncedSearchQuery.toLowerCase()
+    return clients.filter(
+      (c) =>
+        c.name?.toLowerCase().includes(q) ||
+        c.company?.toLowerCase().includes(q) ||
+        c.email?.toLowerCase().includes(q) ||
+        c.cnpj?.toLowerCase().includes(q),
+    )
+  }, [clients, debouncedSearchQuery])
 
   return (
     <div className="h-full w-full bg-background flex flex-col p-4 sm:p-6 overflow-y-auto sm:overflow-hidden text-foreground">
@@ -28,7 +48,17 @@ export default function Clients() {
             Gerencie seus contatos externos e parceiros.
           </p>
         </div>
+
         <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-2">
+          <div className="relative w-full sm:w-[250px] mr-2">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar cliente..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 h-10 bg-background/50 border-border/50 focus-visible:ring-primary/50"
+            />
+          </div>
           <ImportClientModal />
           <AddClientModal />
         </div>
@@ -73,8 +103,8 @@ export default function Clients() {
                     <TableCell></TableCell>
                   </TableRow>
                 ))
-              ) : clients.length > 0 ? (
-                clients.map((client) => (
+              ) : filteredClients.length > 0 ? (
+                filteredClients.map((client) => (
                   <TableRow
                     key={client.id}
                     className="cursor-pointer hover:bg-muted/50 border-border transition-colors"
@@ -163,8 +193,8 @@ export default function Clients() {
               </CardContent>
             </Card>
           ))
-        ) : clients.length > 0 ? (
-          clients.map((client) => (
+        ) : filteredClients.length > 0 ? (
+          filteredClients.map((client) => (
             <Card
               key={client.id}
               className="cursor-pointer border-border hover:border-primary/50 bg-card transition-colors shadow-sm"
@@ -245,6 +275,19 @@ export default function Clients() {
           </div>
         )}
       </div>
+
+      {hasMore && (
+        <div className="flex justify-center py-6 w-full">
+          <Button
+            variant="outline"
+            onClick={loadMoreClients}
+            disabled={isLoadingMore}
+            className="bg-card/80 backdrop-blur shadow-sm min-w-[200px]"
+          >
+            {isLoadingMore ? 'Carregando...' : 'Carregar mais clientes'}
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

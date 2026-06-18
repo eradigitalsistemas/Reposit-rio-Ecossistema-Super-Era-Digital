@@ -22,7 +22,16 @@ export interface EventoAgenda {
 interface AgendaState {
   eventos: EventoAgenda[]
   loading: boolean
+  isLoadingMore: boolean
+  hasMore: boolean
+  page: number
   fetchEventos: (
+    mes: Date,
+    isAdmin: boolean,
+    currentUserId: string,
+    filtroUsuario?: string,
+  ) => Promise<void>
+  loadMoreEventos: (
     mes: Date,
     isAdmin: boolean,
     currentUserId: string,
@@ -39,6 +48,9 @@ let agendaChannel: any = null
 export const useAgendaStore = create<AgendaState>((set, get) => ({
   eventos: [],
   loading: false,
+  isLoadingMore: false,
+  hasMore: false,
+  page: 0,
 
   setupRealtime: (currentUserId, isAdmin) => {
     if (agendaChannel) return
@@ -109,7 +121,7 @@ export const useAgendaStore = create<AgendaState>((set, get) => ({
   },
 
   fetchEventos: async (mes, isAdmin, currentUserId, filtroUsuario) => {
-    set({ loading: true })
+    set({ loading: true, page: 0, hasMore: false })
     try {
       const monthStart = startOfMonth(mes)
       const monthEnd = endOfMonth(monthStart)
@@ -121,6 +133,8 @@ export const useAgendaStore = create<AgendaState>((set, get) => ({
         .select('*')
         .gte('data_inicio', startDate)
         .lte('data_inicio', endDate)
+        .order('data_inicio', { ascending: true })
+        .limit(100)
 
       if (!isAdmin) {
         qEventos = qEventos.eq('usuario_id', currentUserId)
@@ -149,12 +163,74 @@ export const useAgendaStore = create<AgendaState>((set, get) => ({
       const startOfToday = new Date()
       startOfToday.setHours(0, 0, 0, 0)
 
-      const filteredEventos = mappedEventos.filter((e) => new Date(e.data_inicio) >= startOfToday)
-
-      set({ eventos: filteredEventos, loading: false })
+      // Not filtering by startOfToday here so we can see past events of the month
+      set({
+        eventos: mappedEventos,
+        loading: false,
+        hasMore: mappedEventos.length === 100,
+        page: 1,
+      })
     } catch (error) {
       console.error('Erro ao buscar eventos:', error)
       set({ loading: false })
+    }
+  },
+
+  loadMoreEventos: async (mes, isAdmin, currentUserId, filtroUsuario) => {
+    const { hasMore, isLoadingMore, page, eventos } = get()
+    if (!hasMore || isLoadingMore) return
+
+    set({ isLoadingMore: true })
+    try {
+      const monthStart = startOfMonth(mes)
+      const monthEnd = endOfMonth(monthStart)
+      const startDate = startOfWeek(monthStart).toISOString()
+      const endDate = endOfWeek(monthEnd).toISOString()
+
+      let qEventos = supabase
+        .from('agenda_eventos')
+        .select('*')
+        .gte('data_inicio', startDate)
+        .lte('data_inicio', endDate)
+        .order('data_inicio', { ascending: true })
+        .range(page * 100, (page + 1) * 100 - 1)
+
+      if (!isAdmin) {
+        qEventos = qEventos.eq('usuario_id', currentUserId)
+      } else if (filtroUsuario && filtroUsuario !== 'todos') {
+        qEventos = qEventos.eq('usuario_id', filtroUsuario)
+      }
+
+      const { data: dataEventos, error } = await qEventos
+      if (error) throw error
+
+      const mappedEventos: EventoAgenda[] = (dataEventos || []).map((e: any) => ({
+        id: e.id,
+        usuario_id: e.usuario_id,
+        titulo: e.titulo,
+        descricao: e.descricao,
+        data_inicio: e.data_inicio,
+        data_fim: e.data_fim,
+        tipo: e.tipo,
+        privado: e.privado,
+        cliente_id: e.cliente_id,
+        lead_id: e.lead_id,
+        demanda_id: e.demanda_id,
+        criado_por: e.criado_por,
+      }))
+
+      const existingIds = new Set(eventos.map((e) => e.id))
+      const newEventos = mappedEventos.filter((e) => !existingIds.has(e.id))
+
+      set({
+        eventos: [...eventos, ...newEventos],
+        isLoadingMore: false,
+        hasMore: dataEventos.length === 100,
+        page: page + 1,
+      })
+    } catch (error) {
+      console.error('Erro ao carregar mais eventos:', error)
+      set({ isLoadingMore: false })
     }
   },
 

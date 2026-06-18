@@ -48,9 +48,18 @@ import { cn } from '@/lib/utils'
 import { useSearchParams } from 'react-router-dom'
 import { supabase } from '@/lib/supabase/client'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useDebounce } from '@/hooks/use-debounce'
 
 export default function Demands() {
-  const { demands, collaborators, updateStatus, isLoading } = useDemandStore()
+  const {
+    demands,
+    collaborators,
+    updateStatus,
+    isLoading,
+    hasMore,
+    isLoadingMore,
+    loadMoreDemands,
+  } = useDemandStore()
   const { role, user } = useAuthStore()
 
   const [collaboratorFilter, setCollaboratorFilter] = useState<string>('all')
@@ -61,6 +70,7 @@ export default function Demands() {
   const [clientsList, setClientsList] = useState<{ id: string; nome: string }[]>([])
   const [clientFilterOpen, setClientFilterOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const debouncedSearchQuery = useDebounce(searchQuery, 300)
 
   useEffect(() => {
     supabase
@@ -158,8 +168,8 @@ export default function Demands() {
         return false
       }
 
-      if (searchQuery.trim() !== '') {
-        const q = searchQuery.toLowerCase().trim()
+      if (debouncedSearchQuery.trim() !== '') {
+        const q = debouncedSearchQuery.toLowerCase().trim()
         if (
           !d.protocolo?.toLowerCase().includes(q) &&
           !d.title?.toLowerCase().includes(q) &&
@@ -256,7 +266,7 @@ export default function Demands() {
     dateFilter,
     exactDateFilter,
     clientFilter,
-    searchQuery,
+    debouncedSearchQuery,
   ])
 
   const hasFilters =
@@ -265,7 +275,7 @@ export default function Demands() {
     (statusFilter && statusFilter.length > 0) ||
     dateFilter !== 'all' ||
     exactDateFilter !== undefined ||
-    searchQuery.trim() !== ''
+    debouncedSearchQuery.trim() !== ''
 
   const clearFilters = () => {
     setCollaboratorFilter('all')
@@ -572,6 +582,18 @@ export default function Demands() {
                 />
               ))}
         </div>
+        {hasMore && (
+          <div className="flex justify-center mt-6 sticky left-0 right-0">
+            <Button
+              variant="outline"
+              onClick={loadMoreDemands}
+              disabled={isLoadingMore}
+              className="bg-card/80 backdrop-blur shadow-sm min-w-[200px]"
+            >
+              {isLoadingMore ? 'Carregando...' : 'Carregar mais demandas'}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   )

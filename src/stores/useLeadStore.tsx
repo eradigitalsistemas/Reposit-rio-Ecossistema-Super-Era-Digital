@@ -20,6 +20,10 @@ interface LeadStoreState {
   updateLead: (id: string, updates: Partial<Omit<Lead, 'id' | 'createdAt'>>) => Promise<void>
   moveLead: (id: string, newStage: LeadStage) => Promise<void>
   deleteLead: (id: string) => Promise<void>
+  isLoading: boolean
+  isLoadingMore: boolean
+  hasMore: boolean
+  loadMoreLeads: () => Promise<void>
 }
 
 const LeadContext = createContext<LeadStoreState | null>(null)
@@ -29,15 +33,22 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
   const [searchQuery, setSearchQuery] = useState('')
   const { user, role } = useAuthStore()
   const hasFetched = useRef(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(false)
+  const [page, setPage] = useState(0)
 
   const fetchLeads = useCallback(async () => {
     if (!user) return
+    setIsLoading(true)
     const { data, error } = await supabase
       .from('leads')
       .select('*')
       .order('created_at', { ascending: false })
+      .range(0, 99)
 
     if (error) {
+      setIsLoading(false)
       toast({
         title: 'Erro',
         description: 'Não foi possível carregar os leads.',
@@ -61,8 +72,44 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
           createdAt: d.created_at,
         })),
       )
+      setHasMore(data.length === 100)
+      setPage(1)
     }
+    setIsLoading(false)
   }, [user])
+
+  const loadMoreLeads = useCallback(async () => {
+    if (!user || !hasMore || isLoadingMore) return
+    setIsLoadingMore(true)
+    const currentPage = page
+    const { data, error } = await supabase
+      .from('leads')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .range(currentPage * 100, (currentPage + 1) * 100 - 1)
+
+    if (data) {
+      const newLeads = data.map((d: any) => ({
+        id: d.id,
+        name: d.name,
+        company: d.company || '',
+        email: d.email,
+        phone: d.phone || '',
+        address: d.endereco || '',
+        notes: d.observacoes || d.details || '',
+        stage: (d.estagio as LeadStage) || 'Novo Lead',
+        interestStatus: (d.status_interesse as InterestStatus) || 'Interessado',
+        createdAt: d.created_at,
+      }))
+      setLeads((prev) => {
+        const existingIds = new Set(prev.map((l) => l.id))
+        return [...prev, ...newLeads.filter((l) => !existingIds.has(l.id))]
+      })
+      setHasMore(data.length === 100)
+      setPage(currentPage + 1)
+    }
+    setIsLoadingMore(false)
+  }, [user, hasMore, isLoadingMore, page])
 
   useEffect(() => {
     if (role && role !== 'Client' && !hasFetched.current && user) {
@@ -180,8 +227,23 @@ export const LeadProvider = ({ children }: { children: React.ReactNode }) => {
       updateLead,
       moveLead,
       deleteLead,
+      isLoading,
+      isLoadingMore,
+      hasMore,
+      loadMoreLeads,
     }),
-    [leads, searchQuery, addLead, updateLead, moveLead, deleteLead],
+    [
+      leads,
+      searchQuery,
+      addLead,
+      updateLead,
+      moveLead,
+      deleteLead,
+      isLoading,
+      isLoadingMore,
+      hasMore,
+      loadMoreLeads,
+    ],
   )
 
   return <LeadContext.Provider value={value}>{children}</LeadContext.Provider>

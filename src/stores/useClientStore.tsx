@@ -15,6 +15,9 @@ import { toast } from '@/hooks/use-toast'
 interface ClientStoreState {
   clients: Client[]
   isLoading: boolean
+  isLoadingMore: boolean
+  hasMore: boolean
+  loadMoreClients: () => Promise<void>
   addClient: (client: Omit<Client, 'id' | 'createdAt' | 'documents' | 'history'>) => Promise<void>
   updateClient: (id: string, data: Partial<Client>) => Promise<void>
   addDocument: (
@@ -34,6 +37,9 @@ const ClientContext = createContext<ClientStoreState | null>(null)
 export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
   const [clients, setClients] = useState<Client[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(false)
+  const [page, setPage] = useState(0)
   const { user } = useAuthStore()
   const hasFetched = useRef(false)
 
@@ -47,6 +53,7 @@ export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
       .from('clientes_externos' as any)
       .select('*')
       .order('data_criacao', { ascending: false })
+      .range(0, 99)
 
     if (error) {
       setIsLoading(false)
@@ -98,9 +105,73 @@ export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
           }
         }),
       )
+      setHasMore(data.length === 100)
+      setPage(1)
     }
     setIsLoading(false)
   }, [user])
+
+  const loadMoreClients = useCallback(async () => {
+    if (!user || !hasMore || isLoadingMore) return
+    setIsLoadingMore(true)
+    const currentPage = page
+    const { data, error } = await supabase
+      .from('clientes_externos' as any)
+      .select('*')
+      .order('data_criacao', { ascending: false })
+      .range(currentPage * 100, (currentPage + 1) * 100 - 1)
+
+    if (data) {
+      const newClients = data.map((d: any) => {
+        let parsedServices = []
+        if (Array.isArray(d.servicos)) parsedServices = d.servicos
+        else if (typeof d.servicos === 'string') {
+          try {
+            parsedServices = JSON.parse(d.servicos)
+          } catch {
+            /* intentionally ignored */
+          }
+        }
+        let parsedDocs = []
+        if (Array.isArray(d.documentos)) parsedDocs = d.documentos
+        else if (typeof d.documentos === 'string') {
+          try {
+            parsedDocs = JSON.parse(d.documentos)
+          } catch {
+            /* intentionally ignored */
+          }
+        }
+        return {
+          id: d.id,
+          name: d.nome || 'Sem nome',
+          company: d.empresa || '',
+          email: d.email || '',
+          phone: d.telefone || '',
+          cnpj: d.cnpj || '',
+          address: {
+            cep: d.endereco_cep || '',
+            logradouro: d.endereco_logradouro || '',
+            numero: d.endereco_numero || '',
+            bairro: d.endereco_bairro || '',
+            cidade: d.endereco_cidade || '',
+            estado: d.endereco_estado || '',
+          },
+          services: parsedServices,
+          documents: parsedDocs,
+          history: [],
+          createdAt: d.data_criacao || new Date().toISOString(),
+        }
+      })
+
+      setClients((prev) => {
+        const existingIds = new Set(prev.map((c) => c.id))
+        return [...prev, ...newClients.filter((c: any) => !existingIds.has(c.id))]
+      })
+      setHasMore(data.length === 100)
+      setPage(currentPage + 1)
+    }
+    setIsLoadingMore(false)
+  }, [user, hasMore, isLoadingMore, page])
 
   useEffect(() => {
     if (user && !hasFetched.current) {
@@ -402,6 +473,9 @@ export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
     () => ({
       clients,
       isLoading,
+      isLoadingMore,
+      hasMore,
+      loadMoreClients,
       addClient,
       updateClient,
       addDocument,
@@ -412,6 +486,9 @@ export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
     [
       clients,
       isLoading,
+      isLoadingMore,
+      hasMore,
+      loadMoreClients,
       addClient,
       updateClient,
       addDocument,

@@ -18,7 +18,8 @@ import { EventDialog } from '@/components/agenda/EventDialog'
 
 export default function Agenda() {
   const { user, role } = useAuthStore()
-  const { eventos, fetchEventos, loading } = useAgendaStore()
+  const { eventos, fetchEventos, loading, hasMore, isLoadingMore, loadMoreEventos } =
+    useAgendaStore()
 
   const [currentDate, setCurrentDate] = useState(new Date())
   const [usuarios, setUsuarios] = useState<{ id: string; nome: string }[]>([])
@@ -165,6 +166,21 @@ export default function Agenda() {
             onEventClick={handleEventClick}
           />
         </div>
+
+        {hasMore && (
+          <div className="flex justify-center mt-4 pb-8">
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (user) loadMoreEventos(currentDate, isAdmin, user.id, filtroUsuario)
+              }}
+              disabled={isLoadingMore}
+              className="bg-card/80 backdrop-blur shadow-sm min-w-[200px]"
+            >
+              {isLoadingMore ? 'Carregando...' : 'Carregar mais eventos do mês'}
+            </Button>
+          </div>
+        )}
       </div>
 
       <EventDialog
