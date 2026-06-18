@@ -35,7 +35,7 @@ export function Header() {
       case '/':
         return 'Dashboard Geral'
       case '/vendas':
-        return 'Era Digital Vendas'
+        return 'CRM Era Digital'
       case '/demandas':
         return 'Gestão de Demandas'
       case '/colaboradores':
@@ -47,7 +47,7 @@ export function Header() {
       case '/configuracoes':
         return 'Configurações'
       default:
-        return 'Era Digital Vendas'
+        return 'CRM Era Digital'
     }
   })()
 
