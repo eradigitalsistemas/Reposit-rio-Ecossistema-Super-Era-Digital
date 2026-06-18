@@ -215,9 +215,9 @@ export function DemandDetailsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[98vw] max-w-[1300px] h-[95vh] sm:h-[90vh] flex flex-col p-0 overflow-hidden bg-white dark:bg-card border border-gray-300 dark:border-border shadow-xl rounded-xl">
+      <DialogContent className="w-[98vw] max-w-[1300px] h-[95vh] sm:h-[90vh] flex flex-col p-0 overflow-hidden bg-background border border-border shadow-xl rounded-xl">
         {/* Header Section */}
-        <div className="shrink-0 p-4 sm:p-6 border-b border-gray-200 dark:border-border bg-white dark:bg-card z-10 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        <div className="shrink-0 p-4 sm:p-6 border-b border-border bg-background z-10 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div className="flex-1">
             <div className="flex flex-wrap items-center gap-2 mb-3">
               {currentDemand?.protocolo && (
@@ -260,8 +260,9 @@ export function DemandDetailsModal({
               {!currentDemand?.protocolo && currentDemand?.id && (
                 <Badge
                   variant="outline"
-                  className="bg-gray-100 dark:bg-muted text-gray-800 dark:text-foreground border-gray-300 font-mono text-xs"
+                  className="bg-muted text-foreground border-border font-mono text-xs"
                 >
+                  {' '}
                   #{currentDemand.id.toUpperCase().slice(0, 8)}
                 </Badge>
               )}
@@ -289,7 +290,7 @@ export function DemandDetailsModal({
                 </Badge>
               )}
             </div>
-            <DialogTitle className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-foreground pr-6">
+            <DialogTitle className="text-xl sm:text-2xl font-bold text-foreground pr-6">
               {currentDemand?.title || 'Sem título'}
             </DialogTitle>
           </div>
@@ -331,7 +332,7 @@ export function DemandDetailsModal({
         {/* Content Section */}
         <div className="flex-1 overflow-hidden flex flex-col lg:flex-row">
           {/* Left Panel: Primary Information & Checklist */}
-          <div className="flex-1 overflow-y-auto lg:border-r border-gray-200 dark:border-border bg-white dark:bg-card">
+          <div className="flex-1 overflow-y-auto lg:border-r border-border bg-background">
             <div className="p-4 sm:p-6 space-y-6">
               {currentDemand?.workflowTipo === 'implantacao_pos_venda' && (
                 <div className="p-5 bg-purple-50/50 dark:bg-purple-950/20 border border-purple-100 dark:border-purple-900/30 rounded-xl shadow-sm">
@@ -493,31 +494,31 @@ export function DemandDetailsModal({
               )}
 
               {/* Properties Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 p-4 bg-gray-50 dark:bg-[rgba(255,255,255,0.02)] rounded-xl border border-gray-200 dark:border-white/10 shadow-sm">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 p-4 bg-muted/30 dark:bg-[rgba(255,255,255,0.02)] rounded-xl border border-border dark:border-white/10 shadow-sm">
                 <div className="space-y-1">
-                  <span className="text-xs font-semibold text-gray-500 dark:text-white/50 uppercase tracking-wider">
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Criado por
                   </span>
-                  <div className="flex items-center gap-2 font-medium text-sm text-gray-900 dark:text-white">
-                    <User2 className="w-4 h-4 text-gray-400" />
+                  <div className="flex items-center gap-2 font-medium text-sm text-foreground">
+                    <User2 className="w-4 h-4 text-muted-foreground" />
                     {(collaborators || []).find((c) => c.id === currentDemand?.creatorId)?.nome ||
                       'Sistema'}
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-xs font-semibold text-gray-500 dark:text-white/50 uppercase tracking-wider">
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Responsável
                   </span>
-                  <div className="flex items-center gap-2 font-medium text-sm text-gray-900 dark:text-white">
-                    <User2 className="w-4 h-4 text-gray-400" />
+                  <div className="flex items-center gap-2 font-medium text-sm text-foreground">
+                    <User2 className="w-4 h-4 text-muted-foreground" />
                     {currentDemand?.assignee || 'Sem responsável'}
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-xs font-semibold text-gray-500 dark:text-white/50 uppercase tracking-wider">
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Prioridade
                   </span>
-                  <div className="flex items-center gap-2 font-medium text-sm text-gray-900 dark:text-white">
+                  <div className="flex items-center gap-2 font-medium text-sm text-foreground">
                     {currentDemand?.priority === 'Urgente' ? (
                       <Badge className="bg-red-600 text-white hover:bg-red-700 border-transparent px-1.5 py-0 font-bold">
                         Urgente
@@ -540,22 +541,22 @@ export function DemandDetailsModal({
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-xs font-semibold text-gray-500 dark:text-white/50 uppercase tracking-wider">
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Criado em
                   </span>
-                  <div className="flex items-center gap-2 font-medium text-sm text-gray-900 dark:text-white">
-                    <Calendar className="w-4 h-4 text-gray-400" />
+                  <div className="flex items-center gap-2 font-medium text-sm text-foreground">
+                    <Calendar className="w-4 h-4 text-muted-foreground" />
                     {currentDemand?.createdAt && isValid(new Date(currentDemand.createdAt))
                       ? format(new Date(currentDemand.createdAt), 'dd/MM/yyyy')
                       : '--/--/----'}
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-xs font-semibold text-gray-500 dark:text-white/50 uppercase tracking-wider">
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Vencimento
                   </span>
-                  <div className="flex items-center gap-2 font-medium text-sm text-gray-900 dark:text-white">
-                    <Clock className="w-4 h-4 text-gray-400" />
+                  <div className="flex items-center gap-2 font-medium text-sm text-foreground">
+                    <Clock className="w-4 h-4 text-muted-foreground" />
                     {currentDemand?.dueDate && isValid(new Date(currentDemand.dueDate))
                       ? format(new Date(currentDemand.dueDate), 'dd/MM/yyyy')
                       : 'Sem prazo'}
@@ -567,22 +568,24 @@ export function DemandDetailsModal({
 
               {/* Description Container */}
               <div className="space-y-3">
-                <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wide">
+                <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">
                   Descrição da Tarefa
                 </h3>
-                <div className="bg-gray-50 dark:bg-white/5 p-4 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
+                <div className="bg-muted/30 dark:bg-white/5 p-4 rounded-xl border border-border dark:border-white/10 shadow-sm text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed">
                   {currentDemand?.description || (
-                    <span className="italic text-gray-400">Nenhuma descrição fornecida.</span>
+                    <span className="italic text-muted-foreground">
+                      Nenhuma descrição fornecida.
+                    </span>
                   )}
                 </div>
               </div>
 
-              <Separator className="bg-gray-200 dark:bg-white/10" />
+              <Separator className="bg-border dark:bg-white/10" />
 
               {/* Dynamic Checklist */}
               <div className="space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <h3 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <h3 className="text-base font-bold text-foreground flex items-center gap-2">
                     <CheckSquare className="w-5 h-5 text-primary" />
                     Checklist Dinâmico
                   </h3>
@@ -592,7 +595,7 @@ export function DemandDetailsModal({
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-8 gap-2 shadow-sm bg-white dark:bg-transparent border-gray-300 dark:border-white/20 text-gray-900 dark:text-white"
+                          className="h-8 gap-2 shadow-sm bg-background dark:bg-transparent border-border dark:border-white/20 text-foreground"
                         >
                           <LayoutTemplate className="w-4 h-4" />
                           Importar Modelo
@@ -612,10 +615,10 @@ export function DemandDetailsModal({
                   )}
                 </div>
 
-                <div className="bg-white dark:bg-white/5 p-4 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm">
+                <div className="bg-card dark:bg-white/5 p-4 rounded-xl border border-border dark:border-white/10 shadow-sm">
                   {totalCount > 0 && (
                     <div className="space-y-2 mb-5">
-                      <div className="flex justify-between text-xs font-bold text-gray-600 dark:text-gray-400">
+                      <div className="flex justify-between text-xs font-bold text-muted-foreground">
                         <span>
                           Progresso ({completedCount}/{totalCount})
                         </span>
@@ -623,7 +626,7 @@ export function DemandDetailsModal({
                       </div>
                       <Progress
                         value={progress}
-                        className="h-2.5 bg-gray-100 dark:bg-white/10 [&>div]:bg-primary"
+                        className="h-2.5 bg-muted dark:bg-white/10 [&>div]:bg-primary"
                       />
                     </div>
                   )}
@@ -644,8 +647,8 @@ export function DemandDetailsModal({
                           className={cn(
                             'flex-1 text-sm font-medium leading-tight transition-colors whitespace-pre-wrap break-words',
                             item.completed
-                              ? 'line-through text-gray-400 dark:text-gray-500'
-                              : 'text-gray-800 dark:text-gray-200',
+                              ? 'line-through text-muted-foreground dark:text-gray-500'
+                              : 'text-foreground/90 dark:text-gray-200',
                           )}
                         >
                           {item.text}
@@ -655,7 +658,7 @@ export function DemandDetailsModal({
                             variant="ghost"
                             size="icon"
                             onClick={() => handleRemoveChecklist(item)}
-                            className="h-6 w-6 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 shrink-0 transition-opacity"
+                            className="h-6 w-6 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive shrink-0 transition-opacity"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -663,20 +666,20 @@ export function DemandDetailsModal({
                       </div>
                     ))}
                     {checklist.length === 0 && (
-                      <p className="text-sm text-gray-500 dark:text-gray-400 italic p-2 text-center">
+                      <p className="text-sm text-muted-foreground italic p-2 text-center">
                         Nenhum passo adicionado. Use os modelos ou crie abaixo.
                       </p>
                     )}
                   </div>
 
                   {currentDemand?.status !== 'Concluído' && (
-                    <div className="flex gap-2 mt-5 pt-4 border-t border-gray-100 dark:border-white/10">
+                    <div className="flex gap-2 mt-5 pt-4 border-t border-border/50 dark:border-white/10">
                       <Input
                         placeholder="Adicionar nova etapa no checklist..."
                         value={newChecklistText}
                         onChange={(e) => setNewChecklistText(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleAddChecklist()}
-                        className="h-10 bg-gray-50 dark:bg-black shadow-inner border-gray-300 dark:border-white/10 text-gray-900 dark:text-white focus-visible:ring-1"
+                        className="h-10 bg-muted/50 dark:bg-black shadow-inner border-border dark:border-white/10 text-foreground focus-visible:ring-1"
                       />
                       <Button
                         onClick={handleAddChecklist}
@@ -693,9 +696,9 @@ export function DemandDetailsModal({
           </div>
 
           {/* Right Panel: Interactive Timeline Log */}
-          <div className="w-full lg:w-[450px] xl:w-[500px] flex flex-col bg-gray-50/50 dark:bg-black/20 border-t lg:border-t-0 border-gray-200 dark:border-border shrink-0">
-            <div className="p-4 border-b border-gray-200 dark:border-border bg-white dark:bg-card shrink-0 flex items-center justify-between shadow-sm z-10">
-              <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <div className="w-full lg:w-[450px] xl:w-[500px] flex flex-col bg-muted/20 dark:bg-black/20 border-t lg:border-t-0 border-border shrink-0">
+            <div className="p-4 border-b border-border bg-background shrink-0 flex items-center justify-between shadow-sm z-10">
+              <h3 className="font-bold text-foreground flex items-center gap-2">
                 <History className="w-4 h-4 text-primary" />
                 Linha do Tempo (Auditoria)
               </h3>
@@ -717,8 +720,8 @@ export function DemandDetailsModal({
                   </div>
                 ) : sortedLogs.length === 0 ? (
                   <div className="flex flex-col items-center justify-center text-center py-10 opacity-50">
-                    <History className="w-8 h-8 mb-2 text-gray-400" />
-                    <p className="text-sm text-gray-500">
+                    <History className="w-8 h-8 mb-2 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">
                       Nenhum registro de auditoria encontrado.
                     </p>
                   </div>
@@ -735,24 +738,24 @@ export function DemandDetailsModal({
                       <div key={log.id || index} className="relative pl-7 animate-fade-in">
                         {/* Timeline Connector Line */}
                         {index !== sortedLogs.length - 1 && (
-                          <div className="absolute left-[13px] top-7 bottom-[-28px] w-px bg-gray-300 dark:bg-white/10" />
+                          <div className="absolute left-[13px] top-7 bottom-[-28px] w-px bg-border dark:bg-white/10" />
                         )}
 
                         {/* Timeline Icon/Dot */}
                         <div
                           className={cn(
-                            'absolute left-0 top-1.5 w-7 h-7 rounded-full border-[3px] border-gray-50 dark:border-card flex items-center justify-center shadow-sm z-10',
+                            'absolute left-0 top-1.5 w-7 h-7 rounded-full border-[3px] border-background dark:border-card flex items-center justify-center shadow-sm z-10',
                             isConclusion
-                              ? 'bg-green-100 text-green-600 border-white'
+                              ? 'bg-green-100 text-green-600 border-background'
                               : isReopen
-                                ? 'bg-orange-100 text-orange-600 border-white'
+                                ? 'bg-orange-100 text-orange-600 border-background'
                                 : isComment
-                                  ? 'bg-blue-100 text-blue-600 border-white'
+                                  ? 'bg-blue-100 text-blue-600 border-background'
                                   : isAttachment
-                                    ? 'bg-amber-100 text-amber-600 border-white'
+                                    ? 'bg-amber-100 text-amber-600 border-background'
                                     : isChecklist
-                                      ? 'bg-green-100 text-green-600 border-white'
-                                      : 'bg-gray-200 text-gray-600 dark:bg-white/20 dark:text-white/70',
+                                      ? 'bg-green-100 text-green-600 border-background'
+                                      : 'bg-muted text-muted-foreground border-background dark:bg-white/20 dark:text-white/70',
                           )}
                         >
                           {isConclusion ? (
@@ -775,10 +778,10 @@ export function DemandDetailsModal({
                           {isComment || isAttachment || isChecklist || isConclusion || isReopen ? (
                             <>
                               <div className="flex items-baseline justify-between gap-2">
-                                <span className="font-bold text-sm text-gray-900 dark:text-white">
+                                <span className="font-bold text-sm text-foreground">
                                   {log.userName || 'Sistema'}
                                 </span>
-                                <span className="text-[11px] font-medium text-gray-500 whitespace-nowrap bg-white/50 dark:bg-black/50 px-1.5 py-0.5 rounded">
+                                <span className="text-[11px] font-medium text-muted-foreground whitespace-nowrap bg-background/50 dark:bg-black/50 px-1.5 py-0.5 rounded">
                                   {log.createdAt && isValid(new Date(log.createdAt))
                                     ? format(new Date(log.createdAt), 'dd/MM/yy HH:mm')
                                     : ''}
@@ -787,8 +790,8 @@ export function DemandDetailsModal({
 
                               {/* Render specifics based on log type */}
                               {isChecklist ? (
-                                <p className="text-sm text-gray-700 dark:text-gray-400 bg-white/50 dark:bg-white/5 p-2 rounded-lg border border-gray-100 dark:border-transparent whitespace-pre-wrap break-words mt-1">
-                                  <span className="font-bold mr-1 text-gray-900 dark:text-white">
+                                <p className="text-sm text-foreground/80 dark:text-gray-400 bg-background/50 dark:bg-white/5 p-2 rounded-lg border border-border/50 dark:border-transparent whitespace-pre-wrap break-words mt-1">
+                                  <span className="font-bold mr-1 text-foreground">
                                     {log.acao}:
                                   </span>
                                   {log.detalhes}
@@ -807,7 +810,7 @@ export function DemandDetailsModal({
                                             ? 'bg-green-50 border-green-200 text-green-900 dark:bg-green-900/20 dark:border-green-800 dark:text-green-100'
                                             : isReopen
                                               ? 'bg-orange-50 border-orange-200 text-orange-900 dark:bg-orange-900/20 dark:border-orange-800 dark:text-orange-100'
-                                              : 'bg-gray-50 border-gray-200 text-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100',
+                                              : 'bg-muted/30 border-border text-foreground dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100',
                                         )}
                                       >
                                         {isConclusion && (
@@ -839,16 +842,16 @@ export function DemandDetailsModal({
                                               href={fileUrl}
                                               target="_blank"
                                               rel="noopener noreferrer"
-                                              className="flex items-center gap-3 bg-white dark:bg-white/5 p-2.5 rounded-lg border border-gray-200 dark:border-white/10 hover:border-primary/50 hover:bg-primary/5 transition-colors shadow-sm group overflow-hidden"
+                                              className="flex items-center gap-3 bg-background dark:bg-white/5 p-2.5 rounded-lg border border-border dark:border-white/10 hover:border-primary/50 hover:bg-primary/5 transition-colors shadow-sm group overflow-hidden"
                                             >
-                                              <div className="p-2 rounded bg-gray-100 dark:bg-black/50 text-gray-500 group-hover:text-primary transition-colors shrink-0">
+                                              <div className="p-2 rounded bg-muted dark:bg-black/50 text-muted-foreground group-hover:text-primary transition-colors shrink-0">
                                                 {att.type?.startsWith('image/') ? (
                                                   <ImageIcon className="w-4 h-4" />
                                                 ) : (
                                                   <FileIcon className="w-4 h-4" />
                                                 )}
                                               </div>
-                                              <span className="text-sm font-bold text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors whitespace-pre-wrap break-words">
+                                              <span className="text-sm font-bold text-foreground/80 dark:text-gray-300 group-hover:text-primary transition-colors whitespace-pre-wrap break-words">
                                                 {att.name}
                                               </span>
                                             </a>
@@ -861,12 +864,12 @@ export function DemandDetailsModal({
                             </>
                           ) : (
                             <div className="flex items-start gap-2 pt-0.5">
-                              <p className="text-sm text-gray-600 dark:text-gray-400 leading-tight break-words whitespace-pre-wrap">
-                                <span className="font-semibold text-gray-900 dark:text-gray-200 mr-1">
+                              <p className="text-sm text-muted-foreground dark:text-gray-400 leading-tight break-words whitespace-pre-wrap">
+                                <span className="font-semibold text-foreground dark:text-gray-200 mr-1">
                                   {log.userName || 'Sistema'}
                                 </span>
                                 {log.detalhes}
-                                <span className="text-xs text-gray-400 ml-2 whitespace-nowrap">
+                                <span className="text-xs text-muted-foreground/60 ml-2 whitespace-nowrap">
                                   {log.createdAt && isValid(new Date(log.createdAt))
                                     ? format(new Date(log.createdAt), 'HH:mm')
                                     : ''}
@@ -884,21 +887,21 @@ export function DemandDetailsModal({
 
             {/* Input Section at the Root of Timeline */}
             {currentDemand?.status !== 'Concluído' && (
-              <div className="p-4 sm:p-5 border-t border-gray-200 dark:border-border bg-white dark:bg-card shrink-0 space-y-3 z-10 shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.05)]">
+              <div className="p-4 sm:p-5 border-t border-border bg-background shrink-0 space-y-3 z-10 shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.05)]">
                 {pendingFiles.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-2">
                     {pendingFiles.map((file, i) => (
                       <Badge
                         key={i}
                         variant="secondary"
-                        className="gap-1 pr-1 bg-gray-100 dark:bg-white/10"
+                        className="gap-1 pr-1 bg-muted dark:bg-white/10"
                       >
-                        <Paperclip className="w-3 h-3 text-gray-500" />
+                        <Paperclip className="w-3 h-3 text-muted-foreground" />
                         <span className="max-w-[150px] truncate text-xs">{file.name}</span>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-4 w-4 rounded-full hover:bg-gray-200 dark:hover:bg-white/20 ml-1 p-0.5"
+                          className="h-4 w-4 rounded-full hover:bg-muted-foreground/20 dark:hover:bg-white/20 ml-1 p-0.5"
                           onClick={() => removePendingFile(i)}
                           disabled={isSubmitting}
                         >
@@ -914,7 +917,7 @@ export function DemandDetailsModal({
                   value={responseText}
                   onChange={(e) => setResponseText(e.target.value)}
                   disabled={isSubmitting}
-                  className="min-h-[80px] bg-gray-50 dark:bg-black resize-none border-gray-300 dark:border-white/20 text-sm shadow-inner text-gray-900 dark:text-white focus-visible:ring-1 focus-visible:ring-primary disabled:opacity-50"
+                  className="min-h-[80px] bg-muted/30 dark:bg-black resize-none border-border dark:border-white/20 text-sm shadow-inner text-foreground focus-visible:ring-1 focus-visible:ring-primary disabled:opacity-50"
                 />
                 <div className="flex items-center justify-between gap-2">
                   <input
@@ -929,7 +932,7 @@ export function DemandDetailsModal({
                     size="sm"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isSubmitting}
-                    className="bg-white dark:bg-transparent shadow-sm border-gray-300 dark:border-white/20 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-700 dark:text-white font-medium h-9"
+                    className="bg-background dark:bg-transparent shadow-sm border-border dark:border-white/20 hover:bg-muted dark:hover:bg-white/5 text-foreground font-medium h-9"
                   >
                     <Paperclip className="w-4 h-4 mr-2" /> Anexar Arquivo
                   </Button>

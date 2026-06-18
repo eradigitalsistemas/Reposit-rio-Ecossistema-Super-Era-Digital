@@ -152,7 +152,7 @@ export function AppSidebar() {
           <img
             src={logoUrl}
             alt="Era Digital Logo"
-            className="w-32 h-32 object-contain shrink-0 drop-shadow-[0_0_10px_rgba(34,197,94,0.2)]"
+            className="w-32 h-32 object-contain shrink-0 drop-shadow-md dark:drop-shadow-[0_0_10px_rgba(34,197,94,0.2)]"
           />
         </Link>
       </SidebarHeader>

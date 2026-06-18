@@ -60,13 +60,13 @@ export function Header() {
         <Breadcrumb className="hidden sm:block shrink-0">
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbPage className="text-xl md:text-2xl font-display font-bold text-slate-900 dark:text-white drop-shadow-sm">
+              <BreadcrumbPage className="text-xl md:text-2xl font-display font-bold text-foreground drop-shadow-sm">
                 {pageTitle}
               </BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-        <div className="sm:hidden font-display font-bold text-xl truncate w-full pl-2 text-slate-900 dark:text-white">
+        <div className="sm:hidden font-display font-bold text-xl truncate w-full pl-2 text-foreground">
           {pageTitle}
         </div>
 

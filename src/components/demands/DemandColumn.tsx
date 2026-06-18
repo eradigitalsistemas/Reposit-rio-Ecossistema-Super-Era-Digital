@@ -15,7 +15,7 @@ export const DemandColumn = memo(
   function DemandColumn({ title, demands, highlightId, onDropDemand }: DemandColumnProps) {
     return (
       <div
-        className="flex flex-col flex-1 w-full bg-white/10 dark:bg-black/20 glass-optimized rounded-[12px] border border-white/20 h-fit shadow-lg transition-[background-color,border-color] data-[drag-over=true]:bg-white/20 data-[drag-over=true]:border-emerald-400/50 hardware-accelerated relative overflow-visible"
+        className="flex flex-col flex-1 w-full bg-muted/50 dark:bg-black/20 glass-optimized rounded-[12px] border border-border/50 dark:border-white/20 h-fit shadow-lg transition-[background-color,border-color] data-[drag-over=true]:bg-muted data-[drag-over=true]:border-primary/50 hardware-accelerated relative overflow-visible"
         onDragOver={(e) => {
           e.preventDefault()
           e.dataTransfer.dropEffect = 'move'
@@ -33,19 +33,23 @@ export const DemandColumn = memo(
           }
         }}
       >
-        <div className="p-4 border-b border-white/10 shrink-0 flex items-center justify-between bg-white/5 dark:bg-black/10 glass-optimized rounded-t-[11px]">
-          <h3 className="font-semibold text-white text-lg sm:text-base tracking-tight">{title}</h3>
+        <div className="p-4 border-b border-border/50 dark:border-white/10 shrink-0 flex items-center justify-between bg-background/50 dark:bg-black/10 glass-optimized rounded-t-[11px]">
+          <h3 className="font-semibold text-foreground dark:text-white text-lg sm:text-base tracking-tight">
+            {title}
+          </h3>
           <Badge
             variant="secondary"
-            className="px-2 font-medium text-sm sm:text-xs text-emerald-950 bg-emerald-100/90 dark:bg-emerald-900/50 dark:text-emerald-100 border-none"
+            className="px-2 font-medium text-sm sm:text-xs text-primary-foreground bg-primary/80 dark:bg-emerald-900/50 dark:text-emerald-100 border-none"
           >
             {(demands || []).length}
           </Badge>
         </div>
         <div className="p-3 space-y-3 bg-transparent">
           {!(demands && demands.length > 0) ? (
-            <div className="h-24 flex items-center justify-center border-2 border-dashed border-white/20 rounded-lg m-2 bg-white/5">
-              <span className="text-sm text-white/60 font-medium">Sem demandas</span>
+            <div className="h-24 flex items-center justify-center border-2 border-dashed border-border/50 dark:border-white/20 rounded-lg m-2 bg-background/50 dark:bg-white/5">
+              <span className="text-sm text-muted-foreground dark:text-white/60 font-medium">
+                Sem demandas
+              </span>
             </div>
           ) : (
             (demands || [])

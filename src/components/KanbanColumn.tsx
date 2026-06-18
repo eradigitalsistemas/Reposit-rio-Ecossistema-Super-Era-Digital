@@ -38,16 +38,17 @@ export const KanbanColumn = memo(function KanbanColumn({ stage, leads }: KanbanC
     <div className="w-[85vw] sm:w-[300px] flex-shrink-0 flex flex-col h-full snap-center">
       <div
         className={cn(
-          'px-4 py-3 rounded-t-lg font-semibold text-sm flex justify-between items-center',
-          stage.color,
+          'px-4 py-3 rounded-t-lg font-semibold text-sm flex justify-between items-center relative overflow-hidden',
+          stage.bgColor || 'bg-muted/50 dark:bg-muted',
         )}
       >
-        <span className="tracking-wide uppercase text-xs text-white drop-shadow-sm">
+        <div className={cn('absolute inset-x-0 top-0 h-1', stage.color)}></div>
+        <span className="tracking-wide uppercase text-xs text-foreground dark:text-white drop-shadow-sm relative z-10">
           {stage.title}
         </span>
         <Badge
           variant="secondary"
-          className="bg-white/20 text-white hover:bg-white/30 px-2 h-5 text-xs border-0 transition-colors font-bold shadow-sm"
+          className="bg-background/60 dark:bg-white/20 text-foreground dark:text-white hover:bg-background/80 dark:hover:bg-white/30 px-2 h-5 text-xs border-0 transition-colors font-bold shadow-sm relative z-10"
         >
           {leads.length}
         </Badge>

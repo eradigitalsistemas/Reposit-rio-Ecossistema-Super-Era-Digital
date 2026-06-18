@@ -149,7 +149,7 @@ export const DemandCard = memo(
             const el = document.getElementById(`demand-card-${demand.id}`)
             if (el) el.style.opacity = '1'
           }}
-          className="cursor-grab active:cursor-grabbing transition-[opacity,transform,border-color,box-shadow] duration-200 group bg-white dark:bg-card border-gray-300 dark:border-border shadow-md dark:shadow-sm hover:shadow-lg dark:hover:shadow-md hover:border-primary/50 dark:hover:shadow-[0_0_15px_rgba(34,197,94,0.1)] overflow-hidden hardware-accelerated will-change-transform"
+          className="cursor-grab active:cursor-grabbing transition-[opacity,transform,border-color,box-shadow] duration-200 group bg-card border-border shadow-md hover:shadow-lg hover:border-primary/50 dark:hover:shadow-[0_0_15px_rgba(34,197,94,0.1)] overflow-hidden hardware-accelerated will-change-transform"
         >
           <CardContent className="p-4 flex flex-col gap-3 relative">
             {demand.systemEscalated && (
@@ -165,12 +165,12 @@ export const DemandCard = memo(
                     {demand.protocolo}
                   </span>
                 )}
-                <h4 className="font-semibold sm:font-medium text-base sm:text-sm leading-tight text-gray-900 dark:text-card-foreground group-hover:text-primary transition-colors">
+                <h4 className="font-semibold sm:font-medium text-base sm:text-sm leading-tight text-foreground dark:text-card-foreground group-hover:text-primary transition-colors">
                   {demand.title}
                 </h4>
               </div>
 
-              <div className="absolute right-2 top-2 flex items-center gap-1 bg-white dark:bg-background rounded-md p-0.5 border border-gray-200 dark:border-border sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10 shadow-sm">
+              <div className="absolute right-2 top-2 flex items-center gap-1 bg-card dark:bg-background rounded-md p-0.5 border border-border sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10 shadow-sm">
                 {demand.status !== 'Concluído' ? (
                   <Button
                     variant="ghost"
