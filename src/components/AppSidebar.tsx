@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
-import logoUrl from '@/assets/logo-principal-sem-fundo-f3fe7.png'
+import logoUrlDark from '@/assets/logo-principal-sem-fundo-f3fe7.png'
+import logoUrlLight from '@/assets/logo-principal-verde-sem-fundo-cbe9f.png'
 import {
   LayoutDashboard,
   Users,
@@ -150,9 +151,14 @@ export function AppSidebar() {
           className="flex items-center gap-3 font-bold text-xl text-sidebar-foreground dark:text-white hover:text-sidebar-foreground/80 transition-colors"
         >
           <img
-            src={logoUrl}
+            src={logoUrlLight}
             alt="Era Digital Logo"
-            className="w-32 h-32 object-contain shrink-0 drop-shadow-md dark:drop-shadow-[0_0_10px_rgba(34,197,94,0.2)]"
+            className="w-32 h-32 object-contain shrink-0 drop-shadow-md dark:hidden"
+          />
+          <img
+            src={logoUrlDark}
+            alt="Era Digital Logo"
+            className="hidden dark:block w-32 h-32 object-contain shrink-0 drop-shadow-[0_0_10px_rgba(34,197,94,0.2)]"
           />
         </Link>
       </SidebarHeader>
