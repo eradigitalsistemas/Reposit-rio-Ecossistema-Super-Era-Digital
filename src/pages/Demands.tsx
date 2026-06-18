@@ -49,17 +49,41 @@ import { useSearchParams } from 'react-router-dom'
 import { supabase } from '@/lib/supabase/client'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useDebounce } from '@/hooks/use-debounce'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
+import { DemandCard } from '@/components/demands/DemandCard'
+import { ArchiveRestore, History } from 'lucide-react'
 
 export default function Demands() {
   const {
     demands,
+    completedDemands,
     collaborators,
     updateStatus,
     isLoading,
     hasMore,
     isLoadingMore,
     loadMoreDemands,
+    fetchCompletedDemands,
+    loadMoreCompletedDemands,
+    hasMoreCompleted,
+    isLoadingCompleted,
+    isLoadingMoreCompleted,
   } = useDemandStore()
+
+  const [historyOpen, setHistoryOpen] = useState(false)
+
+  useEffect(() => {
+    if (historyOpen && completedDemands.length === 0) {
+      fetchCompletedDemands()
+    }
+  }, [historyOpen, completedDemands.length, fetchCompletedDemands])
   const { role, user } = useAuthStore()
 
   const [collaboratorFilter, setCollaboratorFilter] = useState<string>('all')
@@ -120,7 +144,7 @@ export default function Demands() {
     if (statusFilter && statusFilter.length > 0) {
       return statusFilter as DemandStatus[]
     }
-    return ['Pendente', 'Em Andamento', 'Concluído'] as DemandStatus[]
+    return ['Pendente', 'Em Andamento'] as DemandStatus[]
   }, [statusFilter])
 
   const matchDate = (
@@ -260,6 +284,97 @@ export default function Demands() {
     })
   }, [
     demands,
+    role,
+    user?.id,
+    collaboratorFilter,
+    dateFilter,
+    exactDateFilter,
+    clientFilter,
+    debouncedSearchQuery,
+  ])
+
+  const filteredCompletedDemands = useMemo(() => {
+    let filtered = (completedDemands || []).filter((d) => {
+      if (!d) return false
+
+      if (role !== 'Admin' && d.assigneeId !== user?.id) {
+        return false
+      }
+      if (role === 'Admin' && collaboratorFilter !== 'all') {
+        if (collaboratorFilter === 'Não Atribuído' || collaboratorFilter === 'unassigned') {
+          if (d.assigneeId !== null) return false
+        } else {
+          if (d.assigneeId !== collaboratorFilter) return false
+        }
+      }
+      if (clientFilter !== 'all' && d.clientId !== clientFilter) {
+        return false
+      }
+
+      if (debouncedSearchQuery.trim() !== '') {
+        const q = debouncedSearchQuery.toLowerCase().trim()
+        if (
+          !d.protocolo?.toLowerCase().includes(q) &&
+          !d.title?.toLowerCase().includes(q) &&
+          !d.clientName?.toLowerCase().includes(q)
+        ) {
+          return false
+        }
+      }
+
+      if (exactDateFilter || dateFilter !== 'all') {
+        const matchesCreated = matchDate(d.createdAt, exactDateFilter, dateFilter)
+        const matchesCompleted = matchDate(d.completedAt, exactDateFilter, dateFilter)
+        const matchesUpdated = matchDate(d.updatedAt, exactDateFilter, dateFilter)
+        const matchesLogs = (d.logs || []).some((l) =>
+          matchDate(l.createdAt, exactDateFilter, dateFilter),
+        )
+
+        if (!matchesCreated && !matchesCompleted && !matchesUpdated && !matchesLogs) {
+          return false
+        }
+      }
+
+      return true
+    })
+
+    return filtered.sort((a, b) => {
+      const getLatestDate = (demand: any) => {
+        if (!demand) return 0
+        let latest = 0
+        if (demand.updatedAt) {
+          const t = new Date(demand.updatedAt).getTime()
+          if (!isNaN(t)) latest = t
+        } else if (demand.createdAt) {
+          const t = new Date(demand.createdAt).getTime()
+          if (!isNaN(t)) latest = t
+        }
+
+        if (demand.completedAt) {
+          const comp = new Date(demand.completedAt).getTime()
+          if (!isNaN(comp) && comp > latest) latest = comp
+        }
+        if (demand.logs && Array.isArray(demand.logs) && demand.logs.length > 0) {
+          const logLatest = Math.max(
+            ...demand.logs.map((l: any) => {
+              if (l && l.createdAt) {
+                const t = new Date(l.createdAt).getTime()
+                return isNaN(t) ? 0 : t
+              }
+              return 0
+            }),
+          )
+          if (!isNaN(logLatest) && logLatest > latest) latest = logLatest
+        }
+        return latest
+      }
+
+      const timeA = getLatestDate(a)
+      const timeB = getLatestDate(b)
+      return timeB - timeA
+    })
+  }, [
+    completedDemands,
     role,
     user?.id,
     collaboratorFilter,
@@ -500,12 +615,6 @@ export default function Demands() {
               >
                 Em Andamento
               </ToggleGroupItem>
-              <ToggleGroupItem
-                value="Concluído"
-                className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none text-muted-foreground hover:text-foreground data-[state=on]:bg-background/50 data-[state=on]:text-foreground data-[state=on]:shadow-sm border-transparent"
-              >
-                Concluído
-              </ToggleGroupItem>
             </ToggleGroup>
           </div>
 
@@ -522,31 +631,94 @@ export default function Demands() {
           )}
         </div>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              className="gap-2 w-full xl:w-auto bg-background/50 border-border/50 text-foreground shadow-sm transition-colors focus-visible:ring-primary/50"
-            >
-              <Download className="w-4 h-4" />
-              Exportar Relatório
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[90vw] max-w-[220px] sm:w-56">
-            <DropdownMenuItem
-              onClick={() => exportToCSV(filteredDemands || [], `demandas_${Date.now()}.csv`)}
-              className="min-h-[44px]"
-            >
-              Exportar como CSV
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => exportToPDF(filteredDemands || [])}
-              className="min-h-[44px]"
-            >
-              Exportar como PDF
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex flex-col sm:flex-row gap-2 w-full xl:w-auto">
+          <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
+            <SheetTrigger asChild>
+              <Button
+                variant="outline"
+                className="gap-2 w-full sm:w-auto bg-background/50 border-border/50 text-foreground shadow-sm transition-colors focus-visible:ring-primary/50"
+              >
+                <History className="w-4 h-4" />
+                Histórico
+              </Button>
+            </SheetTrigger>
+            <SheetContent className="w-full sm:max-w-md lg:max-w-xl overflow-hidden flex flex-col p-0">
+              <SheetHeader className="p-6 pb-2 border-b">
+                <SheetTitle className="flex items-center gap-2">
+                  <ArchiveRestore className="w-5 h-5 text-muted-foreground" />
+                  Demandas Concluídas
+                </SheetTitle>
+                <SheetDescription>
+                  Histórico de tarefas finalizadas. Pesquise ou use os filtros principais para
+                  refinar.
+                </SheetDescription>
+              </SheetHeader>
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                {isLoadingCompleted && completedDemands.length === 0 ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-32 w-full rounded-xl" />
+                    ))}
+                  </div>
+                ) : filteredCompletedDemands.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    Nenhuma demanda concluída encontrada.
+                  </div>
+                ) : (
+                  <>
+                    {filteredCompletedDemands.map((demand) => (
+                      <DemandCard key={demand.id} demand={demand} onDropDemand={() => {}} />
+                    ))}
+                    {hasMoreCompleted && (
+                      <div className="pt-4 pb-8 flex justify-center">
+                        <Button
+                          variant="outline"
+                          onClick={loadMoreCompletedDemands}
+                          disabled={isLoadingMoreCompleted}
+                        >
+                          {isLoadingMoreCompleted ? 'Carregando...' : 'Carregar Mais'}
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="gap-2 w-full sm:w-auto bg-background/50 border-border/50 text-foreground shadow-sm transition-colors focus-visible:ring-primary/50"
+              >
+                <Download className="w-4 h-4" />
+                Exportar
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-[90vw] max-w-[220px] sm:w-56">
+              <DropdownMenuItem
+                onClick={() =>
+                  exportToCSV(
+                    [...(filteredDemands || []), ...(filteredCompletedDemands || [])],
+                    `demandas_${Date.now()}.csv`,
+                  )
+                }
+                className="min-h-[44px]"
+              >
+                Exportar como CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  exportToPDF([...(filteredDemands || []), ...(filteredCompletedDemands || [])])
+                }
+                className="min-h-[44px]"
+              >
+                Exportar como PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       <div className="w-full pb-12 flex-1">

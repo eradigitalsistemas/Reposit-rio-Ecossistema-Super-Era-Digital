@@ -31,6 +31,7 @@ interface Collaborator {
 
 interface DemandStoreState {
   demands: Demand[]
+  completedDemands: Demand[]
   collaborators: Collaborator[]
   notifications: DemandNotification[]
   checklistTemplates: ChecklistTemplate[]
@@ -87,6 +88,11 @@ interface DemandStoreState {
   isLoadingMore: boolean
   hasMore: boolean
   loadMoreDemands: () => Promise<void>
+  fetchCompletedDemands: () => Promise<void>
+  loadMoreCompletedDemands: () => Promise<void>
+  hasMoreCompleted: boolean
+  isLoadingCompleted: boolean
+  isLoadingMoreCompleted: boolean
   fetchDemandLogs: (demandId: string) => Promise<void>
 }
 
@@ -115,18 +121,24 @@ export function playNotificationSound() {
 
 export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   const [demands, setDemands] = useState<Demand[]>([])
+  const [completedDemands, setCompletedDemands] = useState<Demand[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingCompleted, setIsLoadingCompleted] = useState(false)
   const [collaborators, setCollaborators] = useState<Collaborator[]>([])
   const [notifications, setNotifications] = useState<DemandNotification[]>([])
   const [checklistTemplates, setChecklistTemplates] = useState<ChecklistTemplate[]>([])
   const [demandTemplates, setDemandTemplates] = useState<DemandTemplate[]>([])
   const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [isLoadingMoreCompleted, setIsLoadingMoreCompleted] = useState(false)
   const [hasMore, setHasMore] = useState(false)
+  const [hasMoreCompleted, setHasMoreCompleted] = useState(false)
   const [page, setPage] = useState(0)
+  const [pageCompleted, setPageCompleted] = useState(0)
 
   const { user, role, userName } = useAuthStore()
   const navigate = useNavigate()
   const hasFetched = useRef(false)
+  const hasFetchedCompleted = useRef(false)
   const collaboratorsRef = useRef(collaborators)
 
   useEffect(() => {
@@ -274,13 +286,27 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         .single()
 
       if (d && !error && d.id) {
-        setDemands((prev) => {
-          const existing = prev.find((x) => x.id === d.id)
-          const parsed = parseDemandRow({ ...d, logs: existing?.logs || [] })
-          if (!parsed || !parsed.id) return prev
-          if (existing) return prev.map((x) => (x.id === parsed.id ? parsed : x))
-          return [parsed, ...prev]
-        })
+        const parsed = parseDemandRow({ ...d })
+        if (!parsed || !parsed.id) return
+
+        if (parsed.status === 'Concluído') {
+          setDemands((prev) => prev.filter((x) => x.id !== parsed.id))
+          setCompletedDemands((prev) => {
+            const existing = prev.find((x) => x.id === parsed.id)
+            if (existing)
+              return prev.map((x) => (x.id === parsed.id ? { ...parsed, logs: existing.logs } : x))
+            if (hasFetchedCompleted.current) return [parsed, ...prev]
+            return prev
+          })
+        } else {
+          setCompletedDemands((prev) => prev.filter((x) => x.id !== parsed.id))
+          setDemands((prev) => {
+            const existing = prev.find((x) => x.id === parsed.id)
+            if (existing)
+              return prev.map((x) => (x.id === parsed.id ? { ...parsed, logs: existing.logs } : x))
+            return [parsed, ...prev]
+          })
+        }
       }
     },
     [parseDemandRow],
@@ -305,6 +331,9 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           dados_novos: l.dados_novos,
         }))
         setDemands((prev) => prev.map((d) => (d.id === demandId ? { ...d, logs: mappedLogs } : d)))
+        setCompletedDemands((prev) =>
+          prev.map((d) => (d.id === demandId ? { ...d, logs: mappedLogs } : d)),
+        )
       }
     } catch (e) {
       console.error(e)
@@ -320,6 +349,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         .select(
           '*, responsavel:usuarios!demandas_responsavel_id_fkey(nome), cliente:clientes_externos(id, nome)',
         )
+        .in('status', ['Pendente', 'Em Andamento'])
         .order('data_criacao', { ascending: false })
         .range(0, 99)
 
@@ -343,6 +373,78 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [user, role, parseDemandRow])
 
+  const fetchCompletedDemands = useCallback(async () => {
+    if (!user) return
+    setIsLoadingCompleted(true)
+    try {
+      let query = supabase
+        .from('demandas')
+        .select(
+          '*, responsavel:usuarios!demandas_responsavel_id_fkey(nome), cliente:clientes_externos(id, nome)',
+        )
+        .eq('status', 'Concluído')
+        .order('data_conclusao', { ascending: false, nullsFirst: false })
+        .range(0, 49)
+
+      if (role !== 'Admin') {
+        query = query.eq('responsavel_id', user.id)
+      }
+
+      const { data, error } = await query
+
+      if (error) return
+
+      if (data) {
+        setCompletedDemands(data.map(parseDemandRow).filter((d) => d && d.id))
+        setHasMoreCompleted(data.length === 50)
+        setPageCompleted(1)
+        hasFetchedCompleted.current = true
+      }
+    } catch (e) {
+      // Silently handle
+    } finally {
+      setIsLoadingCompleted(false)
+    }
+  }, [user, role, parseDemandRow])
+
+  const loadMoreCompletedDemands = useCallback(async () => {
+    if (!user || !hasMoreCompleted || isLoadingMoreCompleted) return
+    setIsLoadingMoreCompleted(true)
+    try {
+      const currentPage = pageCompleted
+      let query = supabase
+        .from('demandas')
+        .select(
+          '*, responsavel:usuarios!demandas_responsavel_id_fkey(nome), cliente:clientes_externos(id, nome)',
+        )
+        .eq('status', 'Concluído')
+        .order('data_conclusao', { ascending: false, nullsFirst: false })
+        .range(currentPage * 50, (currentPage + 1) * 50 - 1)
+
+      if (role !== 'Admin') {
+        query = query.eq('responsavel_id', user.id)
+      }
+
+      const { data, error } = await query
+
+      if (error) return
+
+      if (data) {
+        const newDemands = data.map(parseDemandRow).filter((d) => d && d.id)
+        setCompletedDemands((prev) => {
+          const existingIds = new Set(prev.map((d) => d.id))
+          return [...prev, ...newDemands.filter((d) => !existingIds.has(d.id))]
+        })
+        setHasMoreCompleted(data.length === 50)
+        setPageCompleted(currentPage + 1)
+      }
+    } catch (e) {
+      // Silently handle
+    } finally {
+      setIsLoadingMoreCompleted(false)
+    }
+  }, [user, role, pageCompleted, hasMoreCompleted, isLoadingMoreCompleted, parseDemandRow])
+
   const loadMoreDemands = useCallback(async () => {
     if (!user || !hasMore || isLoadingMore) return
     setIsLoadingMore(true)
@@ -353,6 +455,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         .select(
           '*, responsavel:usuarios!demandas_responsavel_id_fkey(nome), cliente:clientes_externos(id, nome)',
         )
+        .in('status', ['Pendente', 'Em Andamento'])
         .order('data_criacao', { ascending: false })
         .range(currentPage * 100, (currentPage + 1) * 100 - 1)
 
@@ -622,6 +725,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           if (!isSubscribed) return
           if (payload.eventType === 'DELETE') {
             setDemands((prev) => prev.filter((d) => d.id !== payload.old.id))
+            setCompletedDemands((prev) => prev.filter((d) => d.id !== payload.old.id))
           } else {
             const d = payload.new as any
             if (!d || !d.id) return
@@ -926,7 +1030,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           updateData.checklist = updates.checklist
         }
 
-        // Optimistic update
+        // Let fetchSingleDemand handle moving if status changed
         setDemands((prev) =>
           prev.map((d) => {
             if (d.id === demandId) {
@@ -952,6 +1056,34 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             return d
           }),
         )
+        setCompletedDemands((prev) =>
+          prev.map((d) => {
+            if (d.id === demandId) {
+              return {
+                ...d,
+                title: updates.title !== undefined ? updates.title : d.title,
+                description:
+                  updates.description !== undefined ? updates.description : d.description,
+                priority: updates.priority !== undefined ? updates.priority : d.priority,
+                dueDate: updates.dueDate !== undefined ? updates.dueDate : d.dueDate,
+                attachments:
+                  updates.attachments !== undefined ? updates.attachments : d.attachments,
+                clientId: updates.clientId !== undefined ? updates.clientId : d.clientId,
+                assigneeId:
+                  updateData.responsavel_id !== undefined
+                    ? updateData.responsavel_id
+                    : d.assigneeId,
+                status: updateData.status !== undefined ? updateData.status : d.status,
+                checklist: updateData.checklist !== undefined ? updateData.checklist : d.checklist,
+                updatedAt: updateData.data_atualizacao,
+              }
+            }
+            return d
+          }),
+        )
+        if (updateData.status) {
+          setTimeout(() => fetchSingleDemand(demandId), 100)
+        }
 
         const { error } = await supabase.from('demandas').update(updateData).eq('id', demandId)
         if (error) throw error
@@ -972,11 +1104,19 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   const updateStatus = useCallback(
     async (demandId: string, status: DemandStatus) => {
       const updatedAt = new Date().toISOString()
-      setDemands((prev) =>
-        prev.map((d) =>
-          d.id === demandId ? { ...d, status, updatedAt, lastStatusChangeAt: updatedAt } : d,
-        ),
-      )
+
+      let targetDemand =
+        demands.find((d) => d.id === demandId) || completedDemands.find((d) => d.id === demandId)
+      if (targetDemand) {
+        const updatedDemand = { ...targetDemand, status, updatedAt, lastStatusChangeAt: updatedAt }
+        if (status === 'Concluído') {
+          setDemands((prev) => prev.filter((d) => d.id !== demandId))
+          setCompletedDemands((prev) => [updatedDemand, ...prev.filter((d) => d.id !== demandId)])
+        } else {
+          setCompletedDemands((prev) => prev.filter((d) => d.id !== demandId))
+          setDemands((prev) => [updatedDemand, ...prev.filter((d) => d.id !== demandId)])
+        }
+      }
 
       const { error } = await supabase
         .from('demandas')
@@ -995,6 +1135,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
     const { error } = await supabase.from('demandas').delete().eq('id', demandId)
     if (!error) {
       setDemands((prev) => prev.filter((d) => d.id !== demandId))
+      setCompletedDemands((prev) => prev.filter((d) => d.id !== demandId))
       toast({ title: 'Demanda Excluída', description: 'Removida com sucesso.' })
     }
   }, [])
@@ -1003,27 +1144,29 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
     async (demandId: string) => {
       if (!user) return
 
-      const demand = demands.find((d) => d.id === demandId)
+      const demand =
+        demands.find((d) => d.id === demandId) || completedDemands.find((d) => d.id === demandId)
       if (!demand) return
 
       const newAssigneeId = demand.assigneeId || user.id
       const newAssigneeName = demand.assigneeId ? demand.assignee : userName || 'Você'
       const updatedAt = new Date().toISOString()
 
-      setDemands((prev) =>
-        prev.map((d) =>
-          d.id === demandId
-            ? {
-                ...d,
-                status: 'Em Andamento',
-                assigneeId: newAssigneeId,
-                assignee: newAssigneeName,
-                updatedAt,
-                lastStatusChangeAt: updatedAt,
-              }
-            : d,
-        ),
-      )
+      const updatedDemand = {
+        ...demand,
+        status: 'Em Andamento' as DemandStatus,
+        assigneeId: newAssigneeId,
+        assignee: newAssigneeName,
+        updatedAt,
+        lastStatusChangeAt: updatedAt,
+      }
+
+      setCompletedDemands((prev) => prev.filter((d) => d.id !== demandId))
+      setDemands((prev) => {
+        if (prev.some((d) => d.id === demandId))
+          return prev.map((d) => (d.id === demandId ? updatedDemand : d))
+        return [updatedDemand, ...prev]
+      })
       const { error } = await supabase
         .from('demandas')
         .update({
@@ -1104,22 +1247,8 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           dados_novos: newAttachments.length > 0 ? { anexos: newAttachments } : undefined,
         }
 
-        setDemands((prev) =>
-          prev.map((d) =>
-            d.id === demandId
-              ? {
-                  ...d,
-                  status: 'Concluído',
-                  updatedAt: nowIso,
-                  completedAt: nowIso,
-                  lastStatusChangeAt: nowIso,
-                  responses: d.responses ? [...d.responses, resposta] : [resposta],
-                  attachments: updatedAttachments,
-                  logs: [...(d.logs || []), newLog],
-                }
-              : d,
-          ),
-        )
+        setDemands((prev) => prev.filter((d) => d.id !== demandId))
+        setTimeout(() => fetchSingleDemand(demandId), 100)
 
         toast({
           title: 'Demanda Concluída',
@@ -1210,6 +1339,18 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
               : d,
           ),
         )
+        setCompletedDemands((prev) =>
+          prev.map((d) =>
+            d.id === demandId
+              ? {
+                  ...d,
+                  logs: [...(d.logs || []), newLog],
+                  attachments: hasAttachments ? finalAttachments : d.attachments,
+                  updatedAt: nowIso,
+                }
+              : d,
+          ),
+        )
 
         toast({
           title: 'Sucesso',
@@ -1233,7 +1374,8 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
     async (demandId: string, checklist: ChecklistItem[], actionText?: string) => {
       if (!user) return
 
-      const currentDemand = demands.find((d) => d.id === demandId)
+      const currentDemand =
+        demands.find((d) => d.id === demandId) || completedDemands.find((d) => d.id === demandId)
       if (currentDemand?.assigneeId) {
         checklist = await syncChecklistAgenda(
           demandId,
@@ -1245,6 +1387,9 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
       const updatedAt = new Date().toISOString()
       setDemands((prev) =>
+        prev.map((d) => (d.id === demandId ? { ...d, checklist, updatedAt } : d)),
+      )
+      setCompletedDemands((prev) =>
         prev.map((d) => (d.id === demandId ? { ...d, checklist, updatedAt } : d)),
       )
 
@@ -1274,25 +1419,12 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   const reopenDemand = useCallback(
     async (demandId: string) => {
       if (!user) return
-      const demand = demands.find((d) => d.id === demandId)
+      const demand =
+        demands.find((d) => d.id === demandId) || completedDemands.find((d) => d.id === demandId)
       if (!demand) return
 
       const nowIso = new Date().toISOString()
 
-      setDemands((prev) =>
-        prev.map((d) => {
-          if (d.id === demandId) {
-            return {
-              ...d,
-              status: 'Em Andamento',
-              updatedAt: nowIso,
-              lastStatusChangeAt: nowIso,
-              logs: [...(d.logs || []), newLog],
-            } as Demand
-          }
-          return d
-        }),
-      )
       const { error } = await supabase
         .from('demandas')
         .update({ status: 'Em Andamento', data_atualizacao: nowIso })
@@ -1308,25 +1440,8 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           detalhes: 'Demanda reaberta',
         })
 
-        const newLog: DemandLog = {
-          id: newLogId,
-          acao: 'Reabertura',
-          detalhes: 'Demanda reaberta',
-          createdAt: nowIso,
-          usuario_id: user.id,
-          userName: userName || 'Você',
-        }
-
-        setDemands((prev) =>
-          prev.map((d) =>
-            d.id === demandId
-              ? {
-                  ...d,
-                  logs: [...(d.logs || []), newLog],
-                }
-              : d,
-          ),
-        )
+        setCompletedDemands((prev) => prev.filter((d) => d.id !== demandId))
+        setTimeout(() => fetchSingleDemand(demandId), 100)
 
         toast({
           title: 'Demanda Reaberta',
@@ -1361,6 +1476,21 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         setDemands((prev) =>
+          prev.map((d) => {
+            if (d.id === demandId) {
+              const existingList = Array.isArray(d.attachments) ? d.attachments : []
+              const updatedAttachments = [...existingList, ...(newAttachments || [])]
+              return {
+                ...d,
+                attachments: updatedAttachments,
+                logs: [...(d.logs || []), newLog],
+                updatedAt: nowIso,
+              }
+            }
+            return d
+          }),
+        )
+        setCompletedDemands((prev) =>
           prev.map((d) => {
             if (d.id === demandId) {
               const existingList = Array.isArray(d.attachments) ? d.attachments : []
@@ -1466,23 +1596,28 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         updates.data_conclusao = new Date().toISOString()
       }
 
-      setDemands((prev) =>
-        prev.map((d) =>
-          d.id === demandId
-            ? {
-                ...d,
-                posVendaFase: newFase as any,
-                posVendaAlvo: posVendaAlvo as any,
-                dataProximaAcao: updates.data_proxima_acao,
-                status: newStatus as any,
-                assigneeId: assigneeId,
-                dataConclusaoTreinamento: dataConclusao,
-                updatedAt: updates.data_atualizacao,
-                completedAt: newStatus === 'Concluído' ? updates.data_atualizacao : d.completedAt,
-              }
-            : d,
-        ),
-      )
+      if (newStatus === 'Concluído') {
+        setDemands((prev) => prev.filter((d) => d.id !== demandId))
+        setTimeout(() => fetchSingleDemand(demandId), 100)
+      } else {
+        setDemands((prev) =>
+          prev.map((d) =>
+            d.id === demandId
+              ? {
+                  ...d,
+                  posVendaFase: newFase as any,
+                  posVendaAlvo: posVendaAlvo as any,
+                  dataProximaAcao: updates.data_proxima_acao,
+                  status: newStatus as any,
+                  assigneeId: assigneeId,
+                  dataConclusaoTreinamento: dataConclusao,
+                  updatedAt: updates.data_atualizacao,
+                  completedAt: newStatus === 'Concluído' ? updates.data_atualizacao : d.completedAt,
+                }
+              : d,
+          ),
+        )
+      }
 
       const { error } = await supabase.from('demandas').update(updates).eq('id', demandId)
       if (error) {
@@ -1586,6 +1721,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
   const value = useMemo(
     () => ({
       demands,
+      completedDemands,
       collaborators,
       notifications,
       checklistTemplates,
@@ -1614,10 +1750,16 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       isLoadingMore,
       hasMore,
       loadMoreDemands,
+      fetchCompletedDemands,
+      loadMoreCompletedDemands,
+      hasMoreCompleted,
+      isLoadingCompleted,
+      isLoadingMoreCompleted,
       fetchDemandLogs,
     }),
     [
       demands,
+      completedDemands,
       collaborators,
       notifications,
       checklistTemplates,
@@ -1646,6 +1788,11 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       isLoadingMore,
       hasMore,
       loadMoreDemands,
+      fetchCompletedDemands,
+      loadMoreCompletedDemands,
+      hasMoreCompleted,
+      isLoadingCompleted,
+      isLoadingMoreCompleted,
       fetchDemandLogs,
     ],
   )
