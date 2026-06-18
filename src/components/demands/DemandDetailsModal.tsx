@@ -59,6 +59,7 @@ export function DemandDetailsModal({
 }: DemandDetailsModalProps) {
   const {
     demands,
+    completedDemands,
     acceptDemand,
     addResponse,
     addAttachments,
@@ -75,7 +76,10 @@ export function DemandDetailsModal({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
 
-  const currentDemand = demands.find((d) => d.id === demand.id) || demand
+  const currentDemand =
+    demands.find((d) => d.id === demand.id) ||
+    completedDemands.find((d) => d.id === demand.id) ||
+    demand
 
   const [showFailInput, setShowFailInput] = useState(false)
   const [failReason, setFailReason] = useState('')
