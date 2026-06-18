@@ -36,7 +36,7 @@ const MAIN_MENU = [
   { title: 'Dashboard Geral', icon: Home, url: '/', roles: ['Admin', 'Colaborador'] },
   { title: 'WhatsApp', icon: MessageCircle, url: '/whatsapp', roles: ['Admin', 'Colaborador'] },
   {
-    title: 'Era Digital Vendas',
+    title: 'CRM Era Digital',
     icon: LayoutDashboard,
     url: '/vendas',
     roles: ['Admin', 'Colaborador'],
