@@ -151,16 +151,15 @@
   }
 
   button {
-    @apply transition-[transform,opacity,background-color,border-color,color] duration-300;
-    will-change: transform, opacity;
+    @apply transition-[transform,opacity,background-color,border-color,color] duration-200;
   }
 
   button.bg-primary:not(:disabled):hover {
-    transform: translateY(-1px);
+    transform: translate3d(0, -1px, 0);
   }
 
   .dark button.bg-primary:not(:disabled):hover {
-    transform: translateY(-1px);
+    transform: translate3d(0, -1px, 0);
   }
 }
 
@@ -183,45 +182,45 @@
   }
   @keyframes fade-in-up {
     from {
-      transform: translateY(10px);
+      transform: translate3d(0, 10px, 0);
       opacity: 0;
     }
     to {
-      transform: translateY(0);
+      transform: translate3d(0, 0, 0);
       opacity: 1;
     }
   }
   @keyframes slide-up {
     from {
-      transform: translateY(10px);
+      transform: translate3d(0, 10px, 0);
       opacity: 0;
     }
     to {
-      transform: translateY(0);
+      transform: translate3d(0, 0, 0);
       opacity: 1;
     }
   }
   @keyframes float {
     0%,
     100% {
-      transform: translateY(0);
+      transform: translate3d(0, 0, 0);
     }
     50% {
-      transform: translateY(-10px);
+      transform: translate3d(0, -5px, 0);
     }
   }
 
   .animate-fade-in {
-    animation: fade-in 0.5s ease-out;
+    animation: fade-in 0.2s ease-out both;
   }
   .animate-fade-out {
-    animation: fade-out 0.5s ease-out;
+    animation: fade-out 0.2s ease-out both;
   }
   .animate-fade-in-up {
-    animation: fade-in-up 0.6s cubic-bezier(0.42, 0, 0.58, 1) both;
+    animation: fade-in-up 0.25s cubic-bezier(0.42, 0, 0.58, 1) both;
   }
   .animate-slide-up {
-    animation: slide-up 0.6s ease-out;
+    animation: slide-up 0.25s ease-out both;
   }
   .animate-float {
     animation: float 6s ease-in-out infinite;
@@ -262,54 +261,53 @@
   }
 
   main > div > * {
-    animation: fade-in-up 0.6s cubic-bezier(0.42, 0, 0.58, 1) both;
+    animation: fade-in-up 0.25s cubic-bezier(0.42, 0, 0.58, 1) both;
   }
   main > div > *:nth-child(1) {
-    animation-delay: 50ms;
+    animation-delay: 0ms;
   }
   main > div > *:nth-child(2) {
-    animation-delay: 100ms;
+    animation-delay: 30ms;
   }
   main > div > *:nth-child(3) {
-    animation-delay: 150ms;
+    animation-delay: 60ms;
   }
   main > div > *:nth-child(4) {
-    animation-delay: 200ms;
+    animation-delay: 90ms;
   }
   main > div > *:nth-child(5) {
-    animation-delay: 250ms;
+    animation-delay: 120ms;
   }
   main > div > *:nth-child(6) {
-    animation-delay: 300ms;
+    animation-delay: 150ms;
   }
   main > div > *:nth-child(n + 7) {
-    animation-delay: 350ms;
+    animation-delay: 180ms;
   }
 
   @keyframes loading-bar {
     0% {
-      transform: scaleX(0);
+      transform: scale3d(0, 1, 1);
     }
     50% {
-      transform: scaleX(0.7);
+      transform: scale3d(0.7, 1, 1);
     }
     100% {
-      transform: scaleX(1);
+      transform: scale3d(1, 1, 1);
     }
   }
   .animate-loading-bar {
-    animation: loading-bar 1.5s cubic-bezier(0.42, 0, 0.58, 1) forwards;
+    animation: loading-bar 1s cubic-bezier(0.42, 0, 0.58, 1) forwards;
   }
 
   .hardware-accelerated {
-    transform: translateZ(0);
-    will-change: transform;
+    transform: translate3d(0, 0, 0);
     backface-visibility: hidden;
   }
 
   .glass-optimized {
     /* Optimized glassmorphism: removed heavy backdrop-filter for better non-GPU performance */
-    transform: translateZ(0);
-    will-change: transform;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
   }
 }

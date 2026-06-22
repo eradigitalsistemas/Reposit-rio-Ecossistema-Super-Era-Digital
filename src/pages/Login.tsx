@@ -137,7 +137,7 @@ export default function Login() {
 
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-primary to-[#0070f3] hover:from-primary/90 hover:to-[#0070f3]/90 text-white font-bold h-12 rounded-xl border-0 shadow-[0_0_20px_rgba(34,197,94,0.2)] hover:shadow-[0_0_30px_rgba(34,197,94,0.4)] transition-shadow duration-300 text-base will-change-[box-shadow]"
+              className="w-full bg-gradient-to-r from-primary to-[#0070f3] hover:from-primary/90 hover:to-[#0070f3]/90 text-white font-bold h-12 rounded-xl border-0 shadow-[0_0_20px_rgba(34,197,94,0.2)] hover:shadow-[0_0_30px_rgba(34,197,94,0.4)] transition-shadow duration-200 text-base hardware-accelerated"
               disabled={loading}
             >
               {loading ? (
