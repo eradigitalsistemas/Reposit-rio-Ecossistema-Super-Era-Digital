@@ -653,36 +653,143 @@ export default function Demands() {
                   refinar.
                 </SheetDescription>
               </SheetHeader>
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                {isLoadingCompleted && completedDemands.length === 0 ? (
-                  <div className="space-y-4">
-                    {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-32 w-full rounded-xl" />
-                    ))}
-                  </div>
-                ) : filteredCompletedDemands.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground">
-                    Nenhuma demanda concluída encontrada.
-                  </div>
-                ) : (
-                  <>
-                    {filteredCompletedDemands.map((demand) => (
-                      <DemandCard key={demand.id} demand={demand} onDropDemand={() => {}} />
-                    ))}
-                    {hasMoreCompleted && (
-                      <div className="pt-4 pb-8 flex justify-center">
-                        <Button
-                          variant="outline"
-                          onClick={loadMoreCompletedDemands}
-                          disabled={isLoadingMoreCompleted}
-                        >
-                          {isLoadingMoreCompleted ? 'Carregando...' : 'Carregar Mais'}
-                        </Button>
+              {(() => {
+                if (!(window as any)._DeferredHistoryList) {
+                  ;(window as any)._DeferredHistoryList = function DeferredHistoryList({
+                    historyOpen,
+                    isLoadingCompleted,
+                    completedDemands,
+                    filteredCompletedDemands,
+                    hasMoreCompleted,
+                    loadMoreCompletedDemands,
+                    isLoadingMoreCompleted,
+                  }: any) {
+                    const [render, setRender] = useState(false)
+
+                    useEffect(() => {
+                      if (historyOpen) {
+                        const timer = setTimeout(() => setRender(true), 250)
+                        return () => clearTimeout(timer)
+                      } else {
+                        setRender(false)
+                      }
+                    }, [historyOpen])
+
+                    const grouped = useMemo(() => {
+                      const groups: any = { Hoje: [], Ontem: [], 'Esta Semana': [], Anteriores: [] }
+                      const today = new Date()
+                      today.setHours(0, 0, 0, 0)
+                      const yesterday = new Date(today)
+                      yesterday.setDate(yesterday.getDate() - 1)
+                      const weekStart = new Date(today)
+                      const day = weekStart.getDay()
+                      const diff = weekStart.getDate() - day + (day === 0 ? -6 : 1)
+                      weekStart.setDate(diff)
+
+                      ;(filteredCompletedDemands || []).forEach((d: any) => {
+                        if (!d.completedAt) {
+                          groups.Anteriores.push(d)
+                          return
+                        }
+                        const dDate = new Date(d.completedAt)
+                        dDate.setHours(0, 0, 0, 0)
+                        const dTime = dDate.getTime()
+
+                        if (dTime === today.getTime()) groups.Hoje.push(d)
+                        else if (dTime === yesterday.getTime()) groups.Ontem.push(d)
+                        else if (dTime >= weekStart.getTime()) groups['Esta Semana'].push(d)
+                        else groups.Anteriores.push(d)
+                      })
+                      return groups
+                    }, [filteredCompletedDemands])
+
+                    if (!render) {
+                      return (
+                        <div className="flex-1 p-6 flex items-center justify-center hardware-accelerated">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary/50 transition-opacity duration-200"></div>
+                        </div>
+                      )
+                    }
+
+                    if (
+                      isLoadingCompleted &&
+                      (!completedDemands || completedDemands.length === 0)
+                    ) {
+                      return (
+                        <div className="flex-1 overflow-y-auto p-6 space-y-4 hardware-accelerated will-change-transform">
+                          {[1, 2, 3].map((i) => (
+                            <Skeleton
+                              key={i}
+                              className="h-32 w-full rounded-xl transition-[opacity,transform] duration-200"
+                            />
+                          ))}
+                        </div>
+                      )
+                    }
+
+                    if (!filteredCompletedDemands || filteredCompletedDemands.length === 0) {
+                      return (
+                        <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center justify-center text-center text-muted-foreground h-full hardware-accelerated transition-opacity duration-200">
+                          <p>Nenhuma demanda concluída encontrada.</p>
+                        </div>
+                      )
+                    }
+
+                    return (
+                      <div className="flex-1 overflow-y-auto p-6 space-y-8 hardware-accelerated will-change-transform pb-24">
+                        {Object.entries(grouped).map(([groupName, groupDemands]: [string, any]) => {
+                          if (!groupDemands || groupDemands.length === 0) return null
+                          return (
+                            <div
+                              key={groupName}
+                              className="space-y-4 animate-fade-in-up duration-200"
+                            >
+                              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider sticky top-0 bg-background/95 backdrop-blur z-10 py-1.5 transition-colors duration-200">
+                                {groupName}{' '}
+                                <span className="text-xs ml-2 bg-muted/80 text-muted-foreground px-2 py-0.5 rounded-full border border-border/50">
+                                  {groupDemands.length}
+                                </span>
+                              </h3>
+                              <div className="space-y-3">
+                                {groupDemands.map((demand: any) => (
+                                  <div key={demand.id} className="animate-fade-in-up duration-200">
+                                    <DemandCard demand={demand} onDropDemand={() => {}} />
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )
+                        })}
+
+                        {hasMoreCompleted && (
+                          <div className="pt-6 flex justify-center animate-fade-in-up duration-200">
+                            <Button
+                              variant="outline"
+                              onClick={loadMoreCompletedDemands}
+                              disabled={isLoadingMoreCompleted}
+                              className="transition-[opacity,transform,background-color] duration-200 shadow-sm hover:shadow active:scale-95"
+                            >
+                              {isLoadingMoreCompleted ? 'Carregando...' : 'Carregar Mais Histórico'}
+                            </Button>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </>
-                )}
-              </div>
+                    )
+                  }
+                }
+                const Component = (window as any)._DeferredHistoryList
+                return (
+                  <Component
+                    historyOpen={historyOpen}
+                    isLoadingCompleted={isLoadingCompleted}
+                    completedDemands={completedDemands}
+                    filteredCompletedDemands={filteredCompletedDemands}
+                    hasMoreCompleted={hasMoreCompleted}
+                    loadMoreCompletedDemands={loadMoreCompletedDemands}
+                    isLoadingMoreCompleted={isLoadingMoreCompleted}
+                  />
+                )
+              })()}
             </SheetContent>
           </Sheet>
 

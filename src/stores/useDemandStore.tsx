@@ -383,6 +383,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           '*, responsavel:usuarios!demandas_responsavel_id_fkey(nome), cliente:clientes_externos(id, nome)',
         )
         .eq('status', 'Concluído')
+        .not('data_conclusao', 'is', null)
         .order('data_conclusao', { ascending: false, nullsFirst: false })
         .range(0, 49)
 
@@ -418,6 +419,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           '*, responsavel:usuarios!demandas_responsavel_id_fkey(nome), cliente:clientes_externos(id, nome)',
         )
         .eq('status', 'Concluído')
+        .not('data_conclusao', 'is', null)
         .order('data_conclusao', { ascending: false, nullsFirst: false })
         .range(currentPage * 50, (currentPage + 1) * 50 - 1)
 
