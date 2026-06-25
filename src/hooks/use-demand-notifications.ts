@@ -1,44 +1,32 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import useAuthStore from '@/stores/useAuthStore'
-import { toast } from 'sonner'
 import { playNotificationSound } from '@/lib/sounds'
-import { useNavigate } from 'react-router-dom'
 
 export function useDemandNotifications() {
   const { user } = useAuthStore()
-  const navigate = useNavigate()
   const initialized = useRef(false)
+  const [activeNotification, setActiveNotification] = useState<any>(null)
+
+  const fetchNextUnread = async () => {
+    if (!user?.id) return
+    const { data, error } = await supabase
+      .from('notificacoes')
+      .select('*')
+      .eq('usuario_id', user.id)
+      .eq('lida', false)
+      .order('data_criacao', { ascending: false })
+      .limit(1)
+
+    if (!error && data && data.length > 0) {
+      setActiveNotification(data[0])
+    }
+  }
 
   useEffect(() => {
     if (!user?.id) return
 
     let isMounted = true
-
-    async function markAsRead(id: string) {
-      await supabase.from('notificacoes').update({ lida: true }).eq('id', id)
-    }
-
-    function showNotification(notif: any, playSound = false) {
-      if (playSound) playNotificationSound()
-
-      toast(notif.titulo, {
-        description: notif.mensagem,
-        action: {
-          label: 'Ver',
-          onClick: () => {
-            markAsRead(notif.id)
-            if (notif.demanda_id) {
-              navigate(`/?highlight=${notif.demanda_id}`)
-            }
-          },
-        },
-        onDismiss: () => {
-          markAsRead(notif.id)
-        },
-        duration: 10000,
-      })
-    }
 
     const fetchUnread = async () => {
       const { data, error } = await supabase
@@ -46,19 +34,15 @@ export function useDemandNotifications() {
         .select('*')
         .eq('usuario_id', user.id)
         .eq('lida', false)
+        .order('data_criacao', { ascending: false })
+        .limit(1)
 
       if (error || !data || !isMounted) return
 
       if (data.length > 0) {
         playNotificationSound()
+        setActiveNotification(data[0])
       }
-
-      // Show limited amount of unread notifications to avoid filling up the screen
-      const toShow = data.slice(0, 5)
-
-      toShow.forEach((notif) => {
-        showNotification(notif, false)
-      })
     }
 
     if (!initialized.current) {
@@ -80,7 +64,8 @@ export function useDemandNotifications() {
           if (!isMounted) return
           const newNotif = payload.new
           if (!newNotif.lida) {
-            showNotification(newNotif, true)
+            playNotificationSound()
+            setActiveNotification(newNotif)
           }
         },
       )
@@ -90,5 +75,19 @@ export function useDemandNotifications() {
       isMounted = false
       supabase.removeChannel(channel)
     }
-  }, [user?.id, navigate])
+  }, [user?.id])
+
+  const markAsRead = async (id: string) => {
+    setActiveNotification(null)
+    await supabase.from('notificacoes').update({ lida: true }).eq('id', id)
+    setTimeout(() => {
+      fetchNextUnread()
+    }, 500)
+  }
+
+  const closeNotification = () => {
+    setActiveNotification(null)
+  }
+
+  return { activeNotification, markAsRead, closeNotification }
 }
