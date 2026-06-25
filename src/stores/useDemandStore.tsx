@@ -262,6 +262,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       checklist: d.checklist || [],
       createdAt: d.data_criacao || new Date().toISOString(),
       updatedAt: d.data_atualizacao || d.data_criacao || new Date().toISOString(),
+      acceptedAt: d.data_aceite || null,
       completedAt: d.data_conclusao || null,
       systemEscalated: !!systemEscalated,
       workflowTipo: d.workflow_tipo || 'geral',
@@ -1153,6 +1154,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       const newAssigneeId = demand.assigneeId || user.id
       const newAssigneeName = demand.assigneeId ? demand.assignee : userName || 'Você'
       const updatedAt = new Date().toISOString()
+      const newAcceptedAt = demand.acceptedAt || updatedAt
 
       const updatedDemand = {
         ...demand,
@@ -1160,6 +1162,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
         assigneeId: newAssigneeId,
         assignee: newAssigneeName,
         updatedAt,
+        acceptedAt: newAcceptedAt,
         lastStatusChangeAt: updatedAt,
       }
 
@@ -1175,6 +1178,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
           status: 'Em Andamento',
           responsavel_id: newAssigneeId,
           data_atualizacao: updatedAt,
+          data_aceite: newAcceptedAt,
         })
         .eq('id', demandId)
 
