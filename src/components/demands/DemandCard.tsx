@@ -225,20 +225,7 @@ export const DemandCard = memo(
                 )}
                 {demand.priority}
               </Badge>
-              {demand.status === 'Concluído' && demand.completedAt ? (
-                <div className="flex items-center text-[10px] sm:text-xs text-muted-foreground/80 font-medium bg-secondary/30 px-1.5 py-0.5 rounded border border-border/40 transition-[opacity,transform] duration-200">
-                  <Clock className="w-3 h-3 mr-1 opacity-70" />
-                  {new Date(demand.completedAt).toLocaleString('pt-BR', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </div>
-              ) : (
-                <DemandTimer demand={demand} />
-              )}
+              <DemandTimer demand={demand} />
             </div>
 
             <div className="flex flex-col gap-1.5 mt-2">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Demand } from '@/types/demand'
-import { Clock } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Clock, Timer } from 'lucide-react'
 
 interface DemandMetricsProps {
   demand: Demand
@@ -11,7 +12,7 @@ export function DemandMetrics({ demand }: DemandMetricsProps) {
 
   useEffect(() => {
     if (!demand || demand.status === 'Concluído') return
-    const interval = setInterval(() => setNow(Date.now()), 60000)
+    const interval = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(interval)
   }, [demand?.status])
 
@@ -24,70 +25,65 @@ export function DemandMetrics({ demand }: DemandMetricsProps) {
   }
 
   const createdAt = safeGetTime(demand.createdAt) || now
-  const lastChange = safeGetTime(demand.lastStatusChangeAt) || createdAt
-  const completedAt =
-    safeGetTime(demand.completedAt) ||
-    safeGetTime((demand as any).data_conclusao) ||
-    safeGetTime(demand.lastStatusChangeAt) ||
-    now
+  const acceptedAt = safeGetTime(demand.acceptedAt) || safeGetTime((demand as any).data_aceite)
+  const completedAt = safeGetTime(demand.completedAt) || safeGetTime((demand as any).data_conclusao)
 
-  const currentPhaseElapsed = demand.status === 'Concluído' ? 0 : Math.max(0, now - lastChange)
+  const timePendingMs =
+    demand.status === 'Pendente'
+      ? Math.max(0, now - createdAt)
+      : acceptedAt
+        ? Math.max(0, acceptedAt - createdAt)
+        : demand.timePendingMs ||
+          Math.max(0, (safeGetTime(demand.lastStatusChangeAt) || now) - createdAt)
 
-  const timePending =
-    (demand.timePendingMs || 0) + (demand.status === 'Pendente' ? currentPhaseElapsed : 0)
-  const timeInProgress =
-    (demand.timeInProgressMs || 0) + (demand.status === 'Em Andamento' ? currentPhaseElapsed : 0)
-
-  const leadTime =
-    demand.status === 'Concluído'
+  const leadtimeTotalMs =
+    demand.status === 'Concluído' && completedAt
       ? Math.max(0, completedAt - createdAt)
       : Math.max(0, now - createdAt)
 
   const formatTime = (ms: number) => {
-    if (isNaN(ms) || ms < 0) return '0m'
-    const totalMinutes = Math.floor(ms / 60000)
+    if (isNaN(ms) || ms < 0) return '00:00:00'
+    const totalSeconds = Math.floor(ms / 1000)
+    const hours = Math.floor(totalSeconds / 3600)
+    const minutes = Math.floor((totalSeconds % 3600) / 60)
+    const seconds = totalSeconds % 60
 
-    const days = Math.floor(totalMinutes / 1440)
-    const hours = Math.floor((totalMinutes % 1440) / 60)
-    const minutes = totalMinutes % 60
+    const h = hours.toString().padStart(2, '0')
+    const m = minutes.toString().padStart(2, '0')
+    const s = seconds.toString().padStart(2, '0')
 
-    if (days > 0) return `${days}d ${hours}h ${minutes}m`
-    if (hours > 0) return `${hours}h ${minutes}m`
-    return `${minutes}m`
+    return `${h}:${m}:${s}`
   }
 
   return (
-    <div className="space-y-3">
-      <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wide flex items-center gap-2">
-        <Clock className="w-4 h-4 text-primary" />
-        Métricas de Tempo
-      </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-3 bg-amber-50 dark:bg-amber-500/10 border border-amber-200/50 rounded-lg shadow-sm">
-          <p className="text-xs text-amber-700 dark:text-amber-400 font-semibold mb-0.5">
-            Tempo em Pendência
-          </p>
-          <p className="text-lg font-bold text-amber-900 dark:text-amber-300">
-            {formatTime(timePending)}
-          </p>
-        </div>
-        <div className="p-3 bg-blue-50 dark:bg-blue-500/10 border border-blue-200/50 rounded-lg shadow-sm">
-          <p className="text-xs text-blue-700 dark:text-blue-400 font-semibold mb-0.5">
-            Tempo em Andamento
-          </p>
-          <p className="text-lg font-bold text-blue-900 dark:text-blue-300">
-            {formatTime(timeInProgress)}
-          </p>
-        </div>
-        <div className="p-3 bg-green-50 dark:bg-green-500/10 border border-green-200/50 rounded-lg shadow-sm">
-          <p className="text-xs text-green-700 dark:text-green-400 font-semibold mb-0.5">
-            Lead Time Total
-          </p>
-          <p className="text-lg font-bold text-green-900 dark:text-green-300">
-            {formatTime(leadTime)}
-          </p>
-        </div>
-      </div>
+    <div className="grid grid-cols-2 gap-4">
+      <Card className="bg-amber-50 dark:bg-amber-500/10 border-amber-200/50 shadow-sm">
+        <CardContent className="p-4 flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-amber-700 dark:text-amber-500 uppercase tracking-wider mb-1">
+              Tempo Pendente
+            </p>
+            <p className="text-2xl font-bold font-mono text-amber-900 dark:text-amber-400">
+              {formatTime(timePendingMs)}
+            </p>
+          </div>
+          <Timer className="w-8 h-8 text-amber-500/50" />
+        </CardContent>
+      </Card>
+
+      <Card className="bg-blue-50 dark:bg-blue-500/10 border-blue-200/50 shadow-sm">
+        <CardContent className="p-4 flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-blue-700 dark:text-blue-500 uppercase tracking-wider mb-1">
+              Lead Time Total
+            </p>
+            <p className="text-2xl font-bold font-mono text-blue-900 dark:text-blue-400">
+              {formatTime(leadtimeTotalMs)}
+            </p>
+          </div>
+          <Clock className="w-8 h-8 text-blue-500/50" />
+        </CardContent>
+      </Card>
     </div>
   )
 }

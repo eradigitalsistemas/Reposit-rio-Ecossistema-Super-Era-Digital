@@ -58,6 +58,7 @@ export interface Demand {
   checklist?: ChecklistItem[]
   createdAt: string
   updatedAt?: string
+  acceptedAt?: string | null
   completedAt?: string | null
   systemEscalated?: boolean
   workflowTipo?: WorkflowTipo
