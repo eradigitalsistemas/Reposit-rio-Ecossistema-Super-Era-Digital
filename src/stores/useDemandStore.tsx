@@ -94,6 +94,7 @@ interface DemandStoreState {
   isLoadingCompleted: boolean
   isLoadingMoreCompleted: boolean
   fetchDemandLogs: (demandId: string) => Promise<void>
+  fetchSingleDemand: (demandId: string) => Promise<Demand | undefined>
 }
 
 const DemandContext = createContext<DemandStoreState | null>(null)
@@ -166,7 +167,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
               .from('agenda_eventos')
               .insert({
                 titulo: `[Checklist] ${item.text} - ${demandTitle}`,
-                descricao: `Link para demanda original: /demandas?highlight=${demandId}`,
+                descricao: `Link para demanda original: /demandas?id=${demandId}`,
                 data_inicio: startDate.toISOString(),
                 data_fim: endDate.toISOString(),
                 tipo: 'Tarefa',
@@ -288,7 +289,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (d && !error && d.id) {
         const parsed = parseDemandRow({ ...d })
-        if (!parsed || !parsed.id) return
+        if (!parsed || !parsed.id) return undefined
 
         if (parsed.status === 'Concluído') {
           setDemands((prev) => prev.filter((x) => x.id !== parsed.id))
@@ -308,7 +309,9 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
             return [parsed, ...prev]
           })
         }
+        return parsed
       }
+      return undefined
     },
     [parseDemandRow],
   )
@@ -801,7 +804,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
               action: newNotif.demanda_id ? (
                 <ToastAction
                   altText="Ver"
-                  onClick={() => navigate(`/demandas?highlight=${newNotif.demanda_id}`)}
+                  onClick={() => navigate(`/demandas?id=${newNotif.demanda_id}`)}
                 >
                   Ver
                 </ToastAction>
@@ -1762,6 +1765,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       isLoadingCompleted,
       isLoadingMoreCompleted,
       fetchDemandLogs,
+      fetchSingleDemand,
     }),
     [
       demands,
@@ -1800,6 +1804,7 @@ export const DemandProvider = ({ children }: { children: React.ReactNode }) => {
       isLoadingCompleted,
       isLoadingMoreCompleted,
       fetchDemandLogs,
+      fetchSingleDemand,
     ],
   )
 

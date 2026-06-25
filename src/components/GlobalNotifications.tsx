@@ -58,7 +58,7 @@ export function GlobalNotifications() {
               onClick={() => {
                 if (activeNotification) {
                   markAsRead(activeNotification.id)
-                  navigate(`/?highlight=${activeNotification.demanda_id}`)
+                  navigate(`/demandas?id=${activeNotification.demanda_id}`)
                 }
               }}
             >

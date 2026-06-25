@@ -59,6 +59,8 @@ import {
 } from '@/components/ui/sheet'
 import { DemandCard } from '@/components/demands/DemandCard'
 import { ArchiveRestore, History } from 'lucide-react'
+import { DemandDetailsModal } from '@/components/demands/DemandDetailsModal'
+import { toast } from '@/hooks/use-toast'
 
 export default function Demands() {
   const {
@@ -75,6 +77,7 @@ export default function Demands() {
     hasMoreCompleted,
     isLoadingCompleted,
     isLoadingMoreCompleted,
+    fetchSingleDemand,
   } = useDemandStore()
 
   const [historyOpen, setHistoryOpen] = useState(false)
@@ -109,8 +112,47 @@ export default function Demands() {
       })
   }, [])
 
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const highlightId = searchParams.get('highlight')
+  const urlDemandId = searchParams.get('id') || searchParams.get('highlight')
+
+  const [selectedDemand, setSelectedDemand] = useState<any>(null)
+  const [selectedDemandId, setSelectedDemandId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (urlDemandId) {
+      const existing =
+        demands.find((d) => d.id === urlDemandId) ||
+        completedDemands.find((d) => d.id === urlDemandId)
+
+      if (existing) {
+        setSelectedDemand(existing)
+        setSelectedDemandId(urlDemandId)
+      } else {
+        fetchSingleDemand(urlDemandId).then((d) => {
+          if (d) {
+            setSelectedDemand(d)
+            setSelectedDemandId(urlDemandId)
+          } else {
+            toast({
+              title: 'Erro',
+              description: 'Demanda não encontrada.',
+              variant: 'destructive',
+            })
+            setSearchParams((prev) => {
+              const newParams = new URLSearchParams(prev)
+              newParams.delete('id')
+              newParams.delete('highlight')
+              return newParams
+            })
+          }
+        })
+      }
+    } else {
+      setSelectedDemand(null)
+      setSelectedDemandId(null)
+    }
+  }, [urlDemandId, demands, completedDemands, fetchSingleDemand, setSearchParams])
 
   useEffect(() => {
     const protocoloParam = searchParams.get('protocolo')
@@ -874,6 +916,33 @@ export default function Demands() {
           </div>
         )}
       </div>
+
+      {selectedDemand && selectedDemandId && (
+        <DemandDetailsModal
+          demand={selectedDemand}
+          demandId={selectedDemandId}
+          open={!!selectedDemandId}
+          isOpen={!!selectedDemandId}
+          onOpenChange={(open: boolean) => {
+            if (!open) {
+              setSearchParams((prev) => {
+                const newParams = new URLSearchParams(prev)
+                newParams.delete('id')
+                newParams.delete('highlight')
+                return newParams
+              })
+            }
+          }}
+          onClose={() => {
+            setSearchParams((prev) => {
+              const newParams = new URLSearchParams(prev)
+              newParams.delete('id')
+              newParams.delete('highlight')
+              return newParams
+            })
+          }}
+        />
+      )}
     </div>
   )
 }
