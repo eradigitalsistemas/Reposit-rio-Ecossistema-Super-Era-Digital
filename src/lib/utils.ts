@@ -17,6 +17,36 @@ export function cn(...inputs: ClassValue[]) {
  * @param filename - Original filename
  * @returns Sanitized filename safe for storage
  */
+/**
+ * Formats time in milliseconds to a hierarchical string: Months > Days > Hours > Minutes > Seconds
+ * Example: 1mo 5d 10h 30m 15s
+ */
+export function formatHierarchicalTime(ms: number): string {
+  if (isNaN(ms) || ms <= 0) return '0s'
+
+  const totalSeconds = Math.floor(ms / 1000)
+  const months = Math.floor(totalSeconds / (30 * 24 * 3600))
+  let rem = totalSeconds % (30 * 24 * 3600)
+
+  const days = Math.floor(rem / (24 * 3600))
+  rem %= 24 * 3600
+
+  const hours = Math.floor(rem / 3600)
+  rem %= 3600
+
+  const minutes = Math.floor(rem / 60)
+  const seconds = rem % 60
+
+  const parts = []
+  if (months > 0) parts.push(`${months}mo`)
+  if (days > 0 || parts.length > 0) parts.push(`${days}d`)
+  if (hours > 0 || parts.length > 0) parts.push(`${hours}h`)
+  if (minutes > 0 || parts.length > 0) parts.push(`${minutes}m`)
+  parts.push(`${seconds}s`)
+
+  return parts.join(' ')
+}
+
 export function sanitizeFilename(filename: string): string {
   return filename
     .normalize('NFD') // Decompose combined characters

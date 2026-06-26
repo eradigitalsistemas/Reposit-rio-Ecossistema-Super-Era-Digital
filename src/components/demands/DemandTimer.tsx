@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { cn } from '@/lib/utils'
+import { cn, formatHierarchicalTime } from '@/lib/utils'
 import { Play, Pause, CheckCircle, Clock } from 'lucide-react'
 import { Demand } from '@/types/demand'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -56,20 +56,6 @@ export function DemandTimer({ demand, className }: DemandTimerProps) {
   else if (demand.status === 'Em Andamento') displayedTimeMs = timeInProgressMs
   else displayedTimeMs = leadtimeTotalMs
 
-  const formatTime = (ms: number) => {
-    if (isNaN(ms) || ms < 0) return '00:00:00'
-    const totalSeconds = Math.floor(ms / 1000)
-    const hours = Math.floor(totalSeconds / 3600)
-    const minutes = Math.floor((totalSeconds % 3600) / 60)
-    const seconds = totalSeconds % 60
-
-    const h = hours.toString().padStart(2, '0')
-    const m = minutes.toString().padStart(2, '0')
-    const s = seconds.toString().padStart(2, '0')
-
-    return `${h}:${m}:${s}`
-  }
-
   const isPending = demand.status === 'Pendente'
   const isProgress = demand.status === 'Em Andamento'
   const Icon = demand.status === 'Concluído' ? CheckCircle : isPending ? Pause : Play
@@ -97,7 +83,9 @@ export function DemandTimer({ demand, className }: DemandTimerProps) {
           )}
         >
           <Icon className="w-3 h-3" />
-          <span className="font-mono tracking-tight">{formatTime(displayedTimeMs)}</span>
+          <span className="font-mono tracking-tight whitespace-nowrap">
+            {formatHierarchicalTime(displayedTimeMs)}
+          </span>
         </div>
       </TooltipTrigger>
       <TooltipContent className="p-3 bg-card border shadow-lg w-56 flex flex-col gap-2">
@@ -106,21 +94,25 @@ export function DemandTimer({ demand, className }: DemandTimerProps) {
           <span className="text-muted-foreground flex items-center gap-1">
             <Pause className="w-3 h-3" /> Pendente:
           </span>
-          <span className="font-mono font-medium text-foreground">{formatTime(timePendingMs)}</span>
+          <span className="font-mono font-medium text-foreground">
+            {formatHierarchicalTime(timePendingMs)}
+          </span>
         </div>
         <div className="flex justify-between items-center text-xs">
           <span className="text-muted-foreground flex items-center gap-1">
             <Play className="w-3 h-3" /> Execução:
           </span>
           <span className="font-mono font-medium text-foreground">
-            {formatTime(timeInProgressMs)}
+            {formatHierarchicalTime(timeInProgressMs)}
           </span>
         </div>
         <div className="flex justify-between items-center text-xs border-t border-border pt-1 mt-1">
           <span className="text-muted-foreground flex items-center gap-1">
             <Clock className="w-3 h-3" /> Lead Time:
           </span>
-          <span className="font-mono font-bold text-foreground">{formatTime(leadtimeTotalMs)}</span>
+          <span className="font-mono font-bold text-foreground">
+            {formatHierarchicalTime(leadtimeTotalMs)}
+          </span>
         </div>
       </TooltipContent>
     </Tooltip>

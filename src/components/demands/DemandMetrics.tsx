@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Demand } from '@/types/demand'
 import { Card, CardContent } from '@/components/ui/card'
 import { Clock, Timer, Play, Pause, CheckCircle } from 'lucide-react'
+import { formatHierarchicalTime } from '@/lib/utils'
 
 interface DemandMetricsProps {
   demand: Demand
@@ -49,20 +50,6 @@ export function DemandMetrics({ demand }: DemandMetricsProps) {
       ? Math.max(0, completedAt - createdAt)
       : Math.max(0, now - createdAt)
 
-  const formatTime = (ms: number) => {
-    if (isNaN(ms) || ms < 0) return '00:00:00'
-    const totalSeconds = Math.floor(ms / 1000)
-    const hours = Math.floor(totalSeconds / 3600)
-    const minutes = Math.floor((totalSeconds % 3600) / 60)
-    const seconds = totalSeconds % 60
-
-    const h = hours.toString().padStart(2, '0')
-    const m = minutes.toString().padStart(2, '0')
-    const s = seconds.toString().padStart(2, '0')
-
-    return `${h}:${m}:${s}`
-  }
-
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
       <Card className="bg-amber-50 dark:bg-amber-500/10 border-amber-200/50 shadow-sm">
@@ -72,7 +59,7 @@ export function DemandMetrics({ demand }: DemandMetricsProps) {
               <Pause className="w-3 h-3" /> Tempo Pendente
             </p>
             <p className="text-xl sm:text-2xl font-bold font-mono text-amber-900 dark:text-amber-400">
-              {formatTime(timePendingMs)}
+              {formatHierarchicalTime(timePendingMs)}
             </p>
           </div>
           <Timer className="w-8 h-8 text-amber-500/50 hidden sm:block" />
@@ -86,7 +73,7 @@ export function DemandMetrics({ demand }: DemandMetricsProps) {
               <Play className="w-3 h-3" /> Tempo em Execução
             </p>
             <p className="text-xl sm:text-2xl font-bold font-mono text-blue-900 dark:text-blue-400">
-              {formatTime(timeInProgressMs)}
+              {formatHierarchicalTime(timeInProgressMs)}
             </p>
           </div>
           <Clock className="w-8 h-8 text-blue-500/50 hidden sm:block" />
@@ -100,7 +87,7 @@ export function DemandMetrics({ demand }: DemandMetricsProps) {
               <CheckCircle className="w-3 h-3" /> Lead Time Total
             </p>
             <p className="text-xl sm:text-2xl font-bold font-mono text-green-900 dark:text-green-400">
-              {formatTime(leadtimeTotalMs)}
+              {formatHierarchicalTime(leadtimeTotalMs)}
             </p>
           </div>
           <CheckCircle className="w-8 h-8 text-green-500/50 hidden sm:block" />
