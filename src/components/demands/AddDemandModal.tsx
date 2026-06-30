@@ -334,10 +334,10 @@ export function AddDemandModal() {
       <DialogTrigger asChild>
         <Button
           variant="default"
-          className="gap-2 w-full sm:w-auto h-11 sm:h-10 text-primary-foreground"
+          className="h-10 gap-2 w-full sm:w-auto text-primary-foreground font-bold"
         >
-          <Plus className="w-5 h-5 sm:w-4 sm:h-4" />
-          <span className="sm:inline font-bold">Nova Demanda</span>
+          <Plus className="w-4 h-4" />
+          <span>Nova Demanda</span>
         </Button>
       </DialogTrigger>
       <DialogContent
@@ -346,9 +346,11 @@ export function AddDemandModal() {
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <form onSubmit={handleSubmit} className="flex flex-col max-h-[90vh]">
-          <div className="p-6 pb-4 border-b border-border">
+          <div className="px-6 py-5 border-b border-border bg-muted/10">
             <DialogHeader>
-              <DialogTitle className="text-foreground">Criar Nova Demanda</DialogTitle>
+              <DialogTitle className="text-xl font-semibold text-foreground">
+                Criar Nova Demanda
+              </DialogTitle>
               <DialogDescription>
                 Adicione uma nova tarefa e planeje as próximas ações.
               </DialogDescription>
@@ -357,7 +359,7 @@ export function AddDemandModal() {
           <ScrollArea className="flex-1 p-6">
             <div className="grid gap-4">
               {demandTemplates.length > 0 && (
-                <div className="grid gap-2 mb-2 p-3 bg-muted/30 border border-border rounded-md">
+                <div className="grid gap-2 mb-2 p-4 bg-muted/30 border border-border rounded-lg shadow-sm">
                   <Label className="text-foreground font-medium text-primary">
                     Carregar Demanda Recorrente
                   </Label>
@@ -407,7 +409,7 @@ export function AddDemandModal() {
                   onChange={(e) => setTitle(e.target.value)}
                   required
                   disabled={loading}
-                  className="bg-background text-foreground border-input"
+                  className="h-10 bg-background text-foreground border-input"
                 />
               </div>
 
@@ -419,7 +421,7 @@ export function AddDemandModal() {
                       variant="outline"
                       role="combobox"
                       aria-expanded={clientOpen}
-                      className="w-full justify-between bg-background text-foreground border-input"
+                      className="h-10 w-full justify-between bg-background text-foreground border-input"
                       disabled={loading}
                     >
                       {selectedClient === 'none'
@@ -489,7 +491,7 @@ export function AddDemandModal() {
                     onValueChange={setPriority}
                     disabled={loading}
                   >
-                    <SelectTrigger className="bg-background text-foreground border-input">
+                    <SelectTrigger className="h-10 bg-background text-foreground border-input">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -504,7 +506,7 @@ export function AddDemandModal() {
                     Status Inicial
                   </Label>
                   <Select name="status" value={status} onValueChange={setStatus} disabled={loading}>
-                    <SelectTrigger className="bg-background text-foreground border-input">
+                    <SelectTrigger className="h-10 bg-background text-foreground border-input">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -526,7 +528,7 @@ export function AddDemandModal() {
                   onValueChange={setCategory}
                   disabled={loading}
                 >
-                  <SelectTrigger className="bg-background text-foreground border-input">
+                  <SelectTrigger className="h-10 bg-background text-foreground border-input">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -551,7 +553,7 @@ export function AddDemandModal() {
                     onValueChange={setAssigneeId}
                     disabled={loading}
                   >
-                    <SelectTrigger className="bg-background text-foreground border-input">
+                    <SelectTrigger className="h-10 bg-background text-foreground border-input">
                       <SelectValue placeholder="Selecione..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -572,7 +574,7 @@ export function AddDemandModal() {
                     id="dueDate"
                     name="dueDate"
                     type="date"
-                    className="bg-background text-foreground border-input"
+                    className="h-10 bg-background text-foreground border-input"
                     disabled={loading}
                   />
                 </div>
@@ -585,7 +587,7 @@ export function AddDemandModal() {
                   onValueChange={handleTemplateChange}
                   disabled={loading}
                 >
-                  <SelectTrigger className="bg-background text-foreground border-input">
+                  <SelectTrigger className="h-10 bg-background text-foreground border-input">
                     <SelectValue placeholder="Sem checklist" />
                   </SelectTrigger>
                   <SelectContent>
@@ -736,8 +738,8 @@ export function AddDemandModal() {
               </div>
             </div>
           </ScrollArea>
-          <div className="p-6 pt-4 border-t border-border">
-            <DialogFooter>
+          <div className="px-6 py-4 border-t border-border bg-muted/10">
+            <DialogFooter className="gap-2 sm:gap-0">
               <Button
                 type="button"
                 variant="ghost"

@@ -220,9 +220,11 @@ export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalP
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <form onSubmit={handleSubmit} className="flex flex-col max-h-[90vh]">
-          <div className="p-6 pb-4 border-b border-border">
+          <div className="px-6 py-5 border-b border-border bg-muted/10">
             <DialogHeader>
-              <DialogTitle className="text-foreground">Editar Demanda</DialogTitle>
+              <DialogTitle className="text-xl font-semibold text-foreground">
+                Editar Demanda
+              </DialogTitle>
               <DialogDescription>
                 Modifique as informações e agende os próximos passos.
               </DialogDescription>
@@ -240,7 +242,7 @@ export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalP
                   defaultValue={demand.title}
                   required
                   disabled={loading}
-                  className="bg-background text-foreground"
+                  className="h-10 bg-background text-foreground border-input"
                 />
               </div>
 
@@ -252,7 +254,7 @@ export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalP
                       variant="outline"
                       role="combobox"
                       aria-expanded={clientOpen}
-                      className="w-full justify-between bg-background text-foreground border-input"
+                      className="h-10 w-full justify-between bg-background text-foreground border-input"
                       disabled={loading}
                     >
                       {selectedClient === 'none'
@@ -317,7 +319,7 @@ export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalP
                     Prioridade
                   </Label>
                   <Select name="priority" defaultValue={demand.priority} disabled={loading}>
-                    <SelectTrigger className="bg-background text-foreground">
+                    <SelectTrigger className="h-10 bg-background text-foreground border-input">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -336,7 +338,7 @@ export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalP
                     name="dueDate"
                     type="date"
                     defaultValue={defaultDueDate}
-                    className="bg-background text-foreground"
+                    className="h-10 bg-background text-foreground border-input"
                     disabled={loading}
                   />
                 </div>
@@ -351,7 +353,7 @@ export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalP
                   defaultValue={demand.assigneeId || 'none'}
                   disabled={loading}
                 >
-                  <SelectTrigger className="bg-background text-foreground">
+                  <SelectTrigger className="h-10 bg-background text-foreground border-input">
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -535,8 +537,8 @@ export function EditDemandModal({ open, onOpenChange, demand }: EditDemandModalP
               </div>
             </div>
           </ScrollArea>
-          <div className="p-6 pt-4 border-t border-border">
-            <DialogFooter>
+          <div className="px-6 py-4 border-t border-border bg-muted/10">
+            <DialogFooter className="gap-2 sm:gap-0">
               <Button
                 type="button"
                 variant="ghost"

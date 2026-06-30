@@ -215,9 +215,9 @@ export function DemandDetailsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[98vw] max-w-[1300px] h-[95vh] sm:h-[90vh] flex flex-col p-0 overflow-hidden bg-background border border-border shadow-xl rounded-xl">
+      <DialogContent className="w-[98vw] max-w-[1300px] h-[95vh] sm:h-[90vh] flex flex-col p-0 overflow-hidden bg-background border border-border shadow-xl rounded-xl gap-0">
         {/* Header Section */}
-        <div className="shrink-0 p-4 sm:p-6 border-b border-border bg-background z-10 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        <div className="shrink-0 px-6 py-5 border-b border-border bg-background z-10 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div className="flex-1">
             <div className="flex flex-wrap items-center gap-2 mb-3">
               {currentDemand?.protocolo && (
@@ -330,10 +330,10 @@ export function DemandDetailsModal({
         </div>
 
         {/* Content Section */}
-        <div className="flex-1 overflow-hidden flex flex-col lg:flex-row">
+        <div className="flex-1 overflow-hidden flex flex-col lg:flex-row bg-muted/10">
           {/* Left Panel: Primary Information & Checklist */}
           <div className="flex-1 overflow-y-auto lg:border-r border-border bg-background">
-            <div className="p-4 sm:p-6 space-y-6">
+            <div className="p-6 space-y-8">
               {currentDemand?.workflowTipo === 'implantacao_pos_venda' && (
                 <div className="p-5 bg-purple-50/50 dark:bg-purple-950/20 border border-purple-100 dark:border-purple-900/30 rounded-xl shadow-sm">
                   <h4 className="text-sm font-bold text-purple-900 dark:text-purple-300 mb-4 uppercase tracking-wider">
@@ -494,7 +494,7 @@ export function DemandDetailsModal({
               )}
 
               {/* Properties Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 p-4 bg-muted/30 dark:bg-[rgba(255,255,255,0.02)] rounded-xl border border-border dark:border-white/10 shadow-sm">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 p-5 bg-muted/30 dark:bg-[rgba(255,255,255,0.02)] rounded-xl border border-border dark:border-white/10 shadow-sm">
                 <div className="space-y-1">
                   <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Criado por
@@ -567,11 +567,11 @@ export function DemandDetailsModal({
               {currentDemand && <DemandMetrics demand={currentDemand} />}
 
               {/* Description Container */}
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">
                   Descrição da Tarefa
                 </h3>
-                <div className="bg-muted/30 dark:bg-white/5 p-4 rounded-xl border border-border dark:border-white/10 shadow-sm text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed">
+                <div className="bg-muted/30 dark:bg-white/5 p-5 rounded-xl border border-border dark:border-white/10 shadow-sm text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed">
                   {currentDemand?.description || (
                     <span className="italic text-muted-foreground">
                       Nenhuma descrição fornecida.
@@ -583,7 +583,7 @@ export function DemandDetailsModal({
               <Separator className="bg-border dark:bg-white/10" />
 
               {/* Dynamic Checklist */}
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <h3 className="text-base font-bold text-foreground flex items-center gap-2">
                     <CheckSquare className="w-5 h-5 text-primary" />
@@ -615,7 +615,7 @@ export function DemandDetailsModal({
                   )}
                 </div>
 
-                <div className="bg-card dark:bg-white/5 p-4 rounded-xl border border-border dark:border-white/10 shadow-sm">
+                <div className="bg-card dark:bg-white/5 p-5 rounded-xl border border-border dark:border-white/10 shadow-sm">
                   {totalCount > 0 && (
                     <div className="space-y-2 mb-5">
                       <div className="flex justify-between text-xs font-bold text-muted-foreground">
@@ -697,7 +697,7 @@ export function DemandDetailsModal({
 
           {/* Right Panel: Interactive Timeline Log */}
           <div className="w-full lg:w-[450px] xl:w-[500px] flex flex-col bg-muted/20 dark:bg-black/20 border-t lg:border-t-0 border-border shrink-0">
-            <div className="p-4 border-b border-border bg-background shrink-0 flex items-center justify-between shadow-sm z-10">
+            <div className="px-6 py-4 border-b border-border bg-background shrink-0 flex items-center justify-between shadow-sm z-10">
               <h3 className="font-bold text-foreground flex items-center gap-2">
                 <History className="w-4 h-4 text-primary" />
                 Linha do Tempo (Auditoria)

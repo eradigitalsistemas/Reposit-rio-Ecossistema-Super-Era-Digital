@@ -488,7 +488,7 @@ export default function Demands() {
                 placeholder="Protocolo, título..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full sm:w-[200px] pl-9 h-11 sm:h-10 bg-background/50 border-border/50 text-foreground placeholder:text-muted-foreground shadow-sm focus-visible:ring-primary/50"
+                className="w-full sm:w-[200px] pl-9 h-10 bg-background/50 border-border/50 text-foreground placeholder:text-muted-foreground shadow-sm focus-visible:ring-primary/50"
               />
             </div>
           </div>
@@ -499,7 +499,7 @@ export default function Demands() {
                 Responsável
               </Label>
               <Select value={collaboratorFilter} onValueChange={setCollaboratorFilter}>
-                <SelectTrigger className="w-full sm:w-[180px] h-11 sm:h-10 bg-background/50 border-border/50 text-foreground shadow-sm focus:ring-primary/50">
+                <SelectTrigger className="w-full sm:w-[180px] h-10 bg-background/50 border-border/50 text-foreground shadow-sm focus:ring-primary/50 text-base md:text-sm">
                   <SelectValue placeholder="Todos" />
                 </SelectTrigger>
                 <SelectContent className="border-border">
@@ -515,8 +515,8 @@ export default function Demands() {
             </div>
           )}
 
-          <div className="space-y-2 w-full sm:w-auto relative z-20">
-            <Label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+          <div className="space-y-2 w-full sm:w-auto relative z-20 px-2 sm:px-0">
+            <Label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider block text-left">
               Cliente
             </Label>
             <Popover open={clientFilterOpen} onOpenChange={setClientFilterOpen}>
@@ -525,11 +525,13 @@ export default function Demands() {
                   variant="outline"
                   role="combobox"
                   aria-expanded={clientFilterOpen}
-                  className="w-full sm:w-[220px] justify-between h-11 sm:h-10 bg-background/50 border-border/50 text-foreground shadow-sm focus-visible:ring-primary/50"
+                  className="w-full sm:w-[220px] justify-between items-center h-10 bg-background/50 border-border/50 text-foreground shadow-sm focus-visible:ring-primary/50 text-base md:text-sm"
                 >
-                  {clientFilter === 'all'
-                    ? 'Todos os clientes'
-                    : clientsList.find((c) => c.id === clientFilter)?.nome || 'Todos os clientes'}
+                  <span className="truncate">
+                    {clientFilter === 'all'
+                      ? 'Todos os clientes'
+                      : clientsList.find((c) => c.id === clientFilter)?.nome || 'Todos os clientes'}
+                  </span>
                   <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
@@ -582,8 +584,8 @@ export default function Demands() {
             </Popover>
           </div>
 
-          <div className="space-y-2 w-full sm:w-auto relative z-20 pointer-events-auto">
-            <Label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+          <div className="space-y-2 w-full sm:w-auto relative z-20 pointer-events-auto px-2 sm:px-0">
+            <Label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider block text-left">
               Período
             </Label>
             <Select
@@ -591,7 +593,7 @@ export default function Demands() {
               onValueChange={setDateFilter}
               disabled={exactDateFilter !== undefined}
             >
-              <SelectTrigger className="w-full sm:w-[160px] h-11 sm:h-10 bg-background/50 border-border/50 text-foreground shadow-sm disabled:opacity-50 focus:ring-primary/50">
+              <SelectTrigger className="w-full sm:w-[160px] h-10 bg-background/50 border-border/50 text-foreground shadow-sm disabled:opacity-50 focus:ring-primary/50 text-base md:text-sm">
                 <SelectValue placeholder="Qualquer data" />
               </SelectTrigger>
               <SelectContent>
@@ -603,8 +605,8 @@ export default function Demands() {
             </Select>
           </div>
 
-          <div className="space-y-2 w-full sm:w-auto relative z-20 pointer-events-auto">
-            <Label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+          <div className="space-y-2 w-full sm:w-auto relative z-20 pointer-events-auto px-2 sm:px-0">
+            <Label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider block text-left">
               Data Específica
             </Label>
             <Popover>
@@ -612,14 +614,16 @@ export default function Demands() {
                 <Button
                   variant="outline"
                   className={cn(
-                    'w-full sm:w-[160px] h-11 sm:h-10 justify-start text-left font-normal bg-background/50 border-border/50 text-foreground shadow-sm focus-visible:ring-primary/50',
+                    'w-full sm:w-[160px] h-10 flex justify-start items-center gap-2 px-4 text-left font-normal bg-background/50 border-border/50 text-foreground shadow-sm focus-visible:ring-primary/50 text-base md:text-sm whitespace-nowrap overflow-hidden text-ellipsis',
                     !exactDateFilter && 'text-muted-foreground',
                   )}
                 >
-                  <CalendarIcon className="mr-2 h-4 w-4 opacity-70" />
-                  {exactDateFilter && isValid(exactDateFilter)
-                    ? format(exactDateFilter, 'dd/MM/yyyy')
-                    : 'Selecionar data'}
+                  <CalendarIcon className="h-4 w-4 shrink-0 opacity-70" />
+                  <span className="truncate">
+                    {exactDateFilter && isValid(exactDateFilter)
+                      ? format(exactDateFilter, 'dd/MM/yyyy')
+                      : 'Selecionar data'}
+                  </span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -643,17 +647,17 @@ export default function Demands() {
               variant="outline"
               value={statusFilter}
               onValueChange={(val) => setStatusFilter(val || [])}
-              className="bg-background/20 rounded-md min-h-[40px] p-1 border border-border/50 justify-start flex-wrap sm:flex-nowrap w-full shadow-inner"
+              className="bg-background/50 h-10 rounded-md p-1 border border-border/50 justify-start flex-wrap sm:flex-nowrap w-full shadow-sm"
             >
               <ToggleGroupItem
                 value="Pendente"
-                className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none text-muted-foreground hover:text-foreground data-[state=on]:bg-background/50 data-[state=on]:text-foreground data-[state=on]:shadow-sm border-transparent"
+                className="h-8 px-3 text-xs flex-1 sm:flex-none text-muted-foreground hover:text-foreground data-[state=on]:bg-background/50 data-[state=on]:text-foreground data-[state=on]:shadow-sm border-transparent"
               >
                 Pendente
               </ToggleGroupItem>
               <ToggleGroupItem
                 value="Em Andamento"
-                className="h-10 sm:h-8 px-3 text-sm sm:text-xs flex-1 sm:flex-none text-muted-foreground hover:text-foreground data-[state=on]:bg-background/50 data-[state=on]:text-foreground data-[state=on]:shadow-sm border-transparent"
+                className="h-8 px-3 text-xs flex-1 sm:flex-none text-muted-foreground hover:text-foreground data-[state=on]:bg-background/50 data-[state=on]:text-foreground data-[state=on]:shadow-sm border-transparent"
               >
                 Em Andamento
               </ToggleGroupItem>
@@ -665,7 +669,7 @@ export default function Demands() {
               variant="ghost"
               size="sm"
               onClick={clearFilters}
-              className="h-11 sm:h-10 text-muted-foreground hover:text-foreground w-full sm:w-auto mb-[1px]"
+              className="h-10 text-muted-foreground hover:text-foreground w-full sm:w-auto"
             >
               <FilterX className="w-4 h-4 mr-2" />
               Limpar
@@ -678,7 +682,7 @@ export default function Demands() {
             <SheetTrigger asChild>
               <Button
                 variant="outline"
-                className="gap-2 w-full sm:w-auto bg-background/50 border-border/50 text-foreground shadow-sm transition-colors focus-visible:ring-primary/50"
+                className="h-10 gap-2 w-full sm:w-auto bg-background/50 border-border/50 text-foreground shadow-sm transition-colors focus-visible:ring-primary/50"
               >
                 <History className="w-4 h-4" />
                 Histórico
@@ -839,7 +843,7 @@ export default function Demands() {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                className="gap-2 w-full sm:w-auto bg-background/50 border-border/50 text-foreground shadow-sm transition-colors focus-visible:ring-primary/50"
+                className="h-10 gap-2 w-full sm:w-auto bg-background/50 border-border/50 text-foreground shadow-sm transition-colors focus-visible:ring-primary/50"
               >
                 <Download className="w-4 h-4" />
                 Exportar
