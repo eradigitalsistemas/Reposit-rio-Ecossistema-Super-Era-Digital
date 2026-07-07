@@ -21,7 +21,7 @@ import RH from './pages/RH'
 import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
 import FolhaPonto from './pages/FolhaPonto'
-import WhatsApp from './pages/WhatsApp'
+import CompanyDocuments from './pages/CompanyDocuments'
 import Certificados from './pages/Certificados'
 
 import PortalLogin from './pages/portal/PortalLogin'
@@ -113,7 +113,7 @@ const App = () => (
                       <Route path="/configuracoes" element={<Settings />} />
                       <Route path="/meu-ponto" element={<MeuPonto />} />
                       <Route path="/folha-ponto" element={<FolhaPonto />} />
-                      <Route path="/whatsapp" element={<WhatsApp />} />
+                      <Route path="/documentos-empresa" element={<CompanyDocuments />} />
                       <Route path="/certificados" element={<Certificados />} />
                     </Route>
                     {/* External Portal Routes */}

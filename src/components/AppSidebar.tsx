@@ -16,7 +16,7 @@ import {
   Clock,
   Briefcase,
   UserCog,
-  MessageCircle,
+  FolderOpen,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -35,7 +35,12 @@ import useAuthStore from '@/stores/useAuthStore'
 
 const MAIN_MENU = [
   { title: 'Dashboard Geral', icon: Home, url: '/', roles: ['Admin', 'Colaborador'] },
-  { title: 'WhatsApp', icon: MessageCircle, url: '/whatsapp', roles: ['Admin', 'Colaborador'] },
+  {
+    title: 'Documentos da Empresa',
+    icon: FolderOpen,
+    url: '/documentos-empresa',
+    roles: ['Admin'],
+  },
   {
     title: 'CRM Era Digital',
     icon: LayoutDashboard,
