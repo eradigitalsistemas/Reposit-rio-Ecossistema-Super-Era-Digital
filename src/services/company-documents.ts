@@ -8,16 +8,43 @@ export interface CompanyDocument {
   createdAt: string
 }
 
+export interface CredentialEntry {
+  identificacao: string
+  senha: string
+}
+
 export interface CompanyInfo {
   id: string
   empresa: string
   cnpj: string
+  cpf_socio: string
+  senhas_acesso: CredentialEntry[]
   responsavel: string
   telefone: string
   email: string
   documentos: CompanyDocument[]
   created_at: string
   updated_at: string
+}
+
+const EMPTY_CREDENTIALS: CredentialEntry[] = Array.from({ length: 6 }, () => ({
+  identificacao: '',
+  senha: '',
+}))
+
+function normalizeCredentials(raw: unknown): CredentialEntry[] {
+  if (!Array.isArray(raw)) return [...EMPTY_CREDENTIALS]
+  const result = [...EMPTY_CREDENTIALS]
+  for (let i = 0; i < Math.min(raw.length, 6); i++) {
+    const entry = raw[i]
+    if (entry && typeof entry === 'object') {
+      result[i] = {
+        identificacao: String((entry as Record<string, unknown>).identificacao ?? ''),
+        senha: String((entry as Record<string, unknown>).senha ?? ''),
+      }
+    }
+  }
+  return result
 }
 
 export async function fetchCompanyInfo(): Promise<CompanyInfo | null> {
@@ -35,6 +62,8 @@ export async function fetchCompanyInfo(): Promise<CompanyInfo | null> {
     id: data.id,
     empresa: data.empresa || '',
     cnpj: data.cnpj || '',
+    cpf_socio: data.cpf_socio || '',
+    senhas_acesso: normalizeCredentials(data.senhas_acesso),
     responsavel: data.responsavel || '',
     telefone: data.telefone || '',
     email: data.email || '',
@@ -50,6 +79,8 @@ export async function createCompanyInfo(payload: Partial<CompanyInfo>): Promise<
     .insert({
       empresa: payload.empresa || '',
       cnpj: payload.cnpj || null,
+      cpf_socio: payload.cpf_socio || null,
+      senhas_acesso: payload.senhas_acesso || EMPTY_CREDENTIALS,
       responsavel: payload.responsavel || null,
       telefone: payload.telefone || null,
       email: payload.email || null,
@@ -59,18 +90,30 @@ export async function createCompanyInfo(payload: Partial<CompanyInfo>): Promise<
     .single()
 
   if (error) throw error
-  return data as CompanyInfo
+  return {
+    ...data,
+    cpf_socio: data.cpf_socio || '',
+    senhas_acesso: normalizeCredentials(data.senhas_acesso),
+    documentos: Array.isArray(data.documentos) ? data.documentos : [],
+  } as CompanyInfo
 }
 
 export async function updateCompanyInfo(
   id: string,
-  payload: Partial<Pick<CompanyInfo, 'empresa' | 'cnpj' | 'responsavel' | 'telefone' | 'email'>>,
+  payload: Partial<
+    Pick<
+      CompanyInfo,
+      'empresa' | 'cnpj' | 'cpf_socio' | 'senhas_acesso' | 'responsavel' | 'telefone' | 'email'
+    >
+  >,
 ): Promise<void> {
   const { error } = await supabase
     .from('documentos_empresa')
     .update({
       empresa: payload.empresa,
       cnpj: payload.cnpj,
+      cpf_socio: payload.cpf_socio,
+      senhas_acesso: payload.senhas_acesso,
       responsavel: payload.responsavel,
       telefone: payload.telefone,
       email: payload.email,
