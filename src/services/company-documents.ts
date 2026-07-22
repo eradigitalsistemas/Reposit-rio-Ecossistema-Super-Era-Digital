@@ -1,11 +1,15 @@
 import { supabase } from '@/lib/supabase/client'
 
+export type DocumentCategory = 'Constituição' | 'Certidões e Afins'
+
 export interface CompanyDocument {
   id: string
   name: string
   path: string
   type: string
   createdAt: string
+  category?: DocumentCategory
+  expiryDate?: string | null
 }
 
 export interface CredentialEntry {
@@ -127,6 +131,8 @@ export async function uploadCompanyDocument(
   companyId: string,
   file: File,
   onProgress?: (pct: number) => void,
+  category?: DocumentCategory,
+  expiryDate?: string | null,
 ): Promise<CompanyDocument> {
   const ext = file.name.split('.').pop()
   const filePath = `${companyId}/${crypto.randomUUID()}.${ext}`
@@ -149,6 +155,8 @@ export async function uploadCompanyDocument(
     path: filePath,
     type: file.type || 'application/octet-stream',
     createdAt: new Date().toISOString(),
+    category: category || 'Constituição',
+    expiryDate: expiryDate || null,
   }
 
   const { data: current, error: fetchErr } = await supabase
@@ -211,4 +219,10 @@ export async function getDocumentSignedUrl(path: string): Promise<string | null>
 
   if (error) return null
   return data?.signedUrl ?? null
+}
+
+export async function syncToGoogleDrive(companyId: string): Promise<void> {
+  await supabase.functions.invoke('google-drive-sync', {
+    body: { companyId },
+  })
 }

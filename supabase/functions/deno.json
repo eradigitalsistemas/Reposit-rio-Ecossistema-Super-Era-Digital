@@ -10,7 +10,7 @@
     "dedupe-lid-contacts": 31,
     "employees": 30,
     "functions": 29,
-    "manage-client-documents": 30,
+    "manage-client-documents": 31,
     "monthly-timesheets": 30,
     "notifications": 30,
     "notify-automation": 30,
@@ -35,6 +35,7 @@
     "uazapi-sync-messages-trace": 1,
     "uazapi-webhook": 2,
     "whatsapp-integration": 1,
-    "send-media": 5
+    "send-media": 5,
+    "google-drive-sync": 1
   }
 }
