@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Building2, Upload, Loader2, FileText, Cloud } from 'lucide-react'
+import { Building2, Upload, Loader2, FileText, Cloud, UserPlus } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
+import { InsertClientDialog } from '@/components/company-documents/InsertClientDialog'
 import {
   fetchCompanyInfo,
   createCompanyInfo,
@@ -32,6 +34,8 @@ export default function CompanyDocuments() {
   const [pendingFiles, setPendingFiles] = useState<File[]>([])
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
   const [driveSyncing, setDriveSyncing] = useState(false)
+  const [showInsertButton, setShowInsertButton] = useState(false)
+  const [insertDialogOpen, setInsertDialogOpen] = useState(false)
 
   const loadCompany = useCallback(async () => {
     setLoading(true)
@@ -133,6 +137,7 @@ export default function CompanyDocuments() {
     try {
       await updateCompanyInfo(company.id, data)
       toast({ title: 'Sucesso', description: 'Dados da empresa atualizados.' })
+      setShowInsertButton(true)
       setDriveSyncing(true)
       syncToGoogleDrive(company.id)
         .then(() => toast({ title: 'Google Drive', description: 'Sincronização concluída.' }))
@@ -176,6 +181,20 @@ export default function CompanyDocuments() {
           </div>
         )}
       </div>
+
+      {showInsertButton && (
+        <Alert className="mb-4 border-primary/30 bg-primary/5">
+          <AlertDescription className="flex items-center justify-between gap-4 flex-wrap">
+            <span className="text-sm">
+              Dados da empresa salvos! Deseja inserir este registro como cliente?
+            </span>
+            <Button size="sm" className="gap-2 shrink-0" onClick={() => setInsertDialogOpen(true)}>
+              <UserPlus className="w-4 h-4" />
+              Inserir no Cliente
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="grid lg:grid-cols-2 gap-6 w-full pb-12">
         <CompanyInfoForm company={company} onSave={handleSave} />
@@ -239,6 +258,12 @@ export default function CompanyDocuments() {
         onConfirm={handleUploadConfirm}
         uploading={uploading}
         uploadProgress={uploadProgress}
+      />
+
+      <InsertClientDialog
+        open={insertDialogOpen}
+        onOpenChange={setInsertDialogOpen}
+        company={company}
       />
     </div>
   )

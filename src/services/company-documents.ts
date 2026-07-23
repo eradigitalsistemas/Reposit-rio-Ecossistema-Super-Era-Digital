@@ -226,3 +226,73 @@ export async function syncToGoogleDrive(companyId: string): Promise<void> {
     body: { companyId },
   })
 }
+
+export async function checkClientByCnpj(
+  cnpj: string,
+): Promise<{ id: string; nome: string } | null> {
+  const cleanCnpj = cnpj.replace(/\D/g, '')
+  if (cleanCnpj.length < 14) return null
+
+  const { data: d1 } = await supabase
+    .from('clientes_externos')
+    .select('id, nome')
+    .eq('cnpj', cnpj)
+    .maybeSingle()
+  if (d1) return { id: d1.id, nome: d1.nome }
+
+  const { data: d2 } = await supabase
+    .from('clientes_externos')
+    .select('id, nome')
+    .eq('cnpj', cleanCnpj)
+    .maybeSingle()
+  if (d2) return { id: d2.id, nome: d2.nome }
+
+  return null
+}
+
+export async function createClientFromCompany(data: {
+  nome: string
+  empresa: string
+  cnpj: string
+  email: string
+  telefone: string
+}): Promise<string> {
+  const { data: result, error } = await supabase
+    .from('clientes_externos')
+    .insert({
+      nome: data.nome,
+      empresa: data.empresa,
+      cnpj: data.cnpj || null,
+      email: data.email || null,
+      telefone: data.telefone || null,
+    })
+    .select('id')
+    .single()
+
+  if (error) throw error
+  return result.id
+}
+
+export async function updateClientFromCompany(
+  clientId: string,
+  data: {
+    nome: string
+    empresa: string
+    cnpj: string
+    email: string
+    telefone: string
+  },
+): Promise<void> {
+  const { error } = await supabase
+    .from('clientes_externos')
+    .update({
+      nome: data.nome,
+      empresa: data.empresa,
+      cnpj: data.cnpj || null,
+      email: data.email || null,
+      telefone: data.telefone || null,
+    })
+    .eq('id', clientId)
+
+  if (error) throw error
+}
