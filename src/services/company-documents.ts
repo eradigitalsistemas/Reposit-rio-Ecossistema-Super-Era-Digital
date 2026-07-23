@@ -51,6 +51,28 @@ function normalizeCredentials(raw: unknown): CredentialEntry[] {
   return result
 }
 
+export async function fetchAllCompanies(): Promise<CompanyInfo[]> {
+  const { data, error } = await supabase
+    .from('documentos_empresa')
+    .select('*')
+    .order('created_at', { ascending: true })
+  if (error) throw error
+  if (!data) return []
+  return data.map((item) => ({
+    id: item.id,
+    empresa: item.empresa || '',
+    cnpj: item.cnpj || '',
+    cpf_socio: item.cpf_socio || '',
+    senhas_acesso: normalizeCredentials(item.senhas_acesso),
+    responsavel: item.responsavel || '',
+    telefone: item.telefone || '',
+    email: item.email || '',
+    documentos: Array.isArray(item.documentos) ? item.documentos : [],
+    created_at: item.created_at,
+    updated_at: item.updated_at,
+  }))
+}
+
 export async function fetchCompanyInfo(): Promise<CompanyInfo | null> {
   const { data, error } = await supabase
     .from('documentos_empresa')
