@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase/client'
+import { extractDateFromFilename } from '@/lib/validity-date'
 
 export type DocumentCategory = 'Constituição' | 'Certidões e Afins'
 
@@ -167,6 +168,8 @@ export async function uploadCompanyDocument(
 
   if (uploadError) throw uploadError
 
+  const detectedDate =
+    expiryDate || (category === 'Certidões e Afins' ? extractDateFromFilename(file.name) : null)
   const newDoc: CompanyDocument = {
     id: crypto.randomUUID(),
     name: file.name,
@@ -174,7 +177,7 @@ export async function uploadCompanyDocument(
     type: file.type || 'application/octet-stream',
     createdAt: new Date().toISOString(),
     category: category || 'Constituição',
-    expiryDate: expiryDate || null,
+    expiryDate: detectedDate,
   }
 
   const { data: current, error: fetchErr } = await supabase

@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Upload, Loader2 } from 'lucide-react'
+import { extractDateFromFilename } from '@/lib/validity-date'
 import {
   Dialog,
   DialogContent,
@@ -40,6 +41,15 @@ export function UploadDialog({
 }: UploadDialogProps) {
   const [category, setCategory] = useState<DocumentCategory>('Constituição')
   const [expiryDate, setExpiryDate] = useState('')
+
+  useEffect(() => {
+    if (category === 'Certidões e Afins' && files.length > 0) {
+      const detected = extractDateFromFilename(files[0].name)
+      if (detected) {
+        setExpiryDate(detected)
+      }
+    }
+  }, [category, files])
 
   const handleConfirm = () => {
     onConfirm(category, category === 'Certidões e Afins' && expiryDate ? expiryDate : null)

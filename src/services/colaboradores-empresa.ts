@@ -18,6 +18,7 @@ export interface ColaboradorDocumento {
   url: string
   nome_arquivo: string | null
   created_at: string
+  validade: string | null
 }
 
 export async function fetchColaboradores(empresaDocId: string): Promise<ColaboradorEmpresa[]> {
@@ -92,6 +93,7 @@ export async function uploadColaboradorDocument(
   file: File,
   tipo: 'pessoal' | 'admissional',
   onProgress?: (pct: number) => void,
+  validade?: string | null,
 ): Promise<ColaboradorDocumento> {
   const ext = file.name.split('.').pop()
   const filePath = `empresas/${empresaDocId}/colaboradores/${colaboradorId}/${tipo}/${crypto.randomUUID()}.${ext}`
@@ -114,6 +116,7 @@ export async function uploadColaboradorDocument(
       tipo,
       url: filePath,
       nome_arquivo: file.name,
+      validade: validade || null,
     })
     .select('*')
     .single()
@@ -133,4 +136,30 @@ export async function getDocumentoUrl(path: string): Promise<string | null> {
     .createSignedUrl(path, 3600)
   if (error) return null
   return data?.signedUrl ?? null
+}
+
+export async function updateColaboradorDocumentoValidade(
+  docId: string,
+  validade: string | null,
+): Promise<void> {
+  const { error } = await supabase
+    .from('colaborador_documentos')
+    .update({ validade })
+    .eq('id', docId)
+  if (error) throw error
+}
+
+export async function extractValidityDateViaOCR(
+  filename: string,
+  filePath: string,
+): Promise<string | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke('extract-validity-date', {
+      body: { filename, filePath, bucket: 'documentos-empresa' },
+    })
+    if (error || !data) return null
+    return data.date || null
+  } catch {
+    return null
+  }
 }

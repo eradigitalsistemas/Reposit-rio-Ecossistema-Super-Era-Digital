@@ -1,5 +1,16 @@
-import { useState, useEffect, useCallback } from 'react'
-import { UserPlus, Pencil, Trash2, FileText, Users, Loader2, Download, Upload } from 'lucide-react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import {
+  UserPlus,
+  Pencil,
+  Trash2,
+  FileText,
+  Users,
+  Loader2,
+  Download,
+  Upload,
+  X,
+  Calendar,
+} from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -20,12 +31,17 @@ import {
   fetchColaboradorDocumentos,
   deleteColaboradorDocumento,
   getDocumentoUrl,
+  uploadColaboradorDocument,
+  updateColaboradorDocumentoValidade,
+  extractValidityDateViaOCR,
   type ColaboradorEmpresa,
   type ColaboradorDocumento,
 } from '@/services/colaboradores-empresa'
 import { ColaboradorFormModal } from '@/components/company-documents/ColaboradorFormModal'
+import { ManualValidityDialog } from '@/components/company-documents/ManualValidityDialog'
+import { extractDateFromFilename, isExpiryFilename } from '@/lib/validity-date'
+import { getExpiryStatus, getStatusConfig } from '@/lib/document-status'
 import { formatCPF } from '@/lib/utils/cpf'
-import { isValidCPF } from '@/lib/utils/cpf'
 
 interface ColaboradorSectionProps {
   empresaDocId: string
@@ -33,6 +49,8 @@ interface ColaboradorSectionProps {
 
 export function ColaboradorSection({ empresaDocId }: ColaboradorSectionProps) {
   const { toast } = useToast()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   const [colaboradores, setColaboradores] = useState<ColaboradorEmpresa[]>([])
   const [loading, setLoading] = useState(true)
   const [formOpen, setFormOpen] = useState(false)
@@ -40,6 +58,11 @@ export function ColaboradorSection({ empresaDocId }: ColaboradorSectionProps) {
   const [deleting, setDeleting] = useState<ColaboradorEmpresa | null>(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [docMap, setDocMap] = useState<Record<string, ColaboradorDocumento[]>>({})
+  const [uploadColabId, setUploadColabId] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [manualDoc, setManualDoc] = useState<{ doc: ColaboradorDocumento; colabId: string } | null>(
+    null,
+  )
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -103,7 +126,92 @@ export function ColaboradorSection({ empresaDocId }: ColaboradorSectionProps) {
     }
   }
 
+  const handleUploadClick = (colabId: string) => {
+    setUploadColabId(colabId)
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0 || !uploadColabId) return
+    if (fileInputRef.current) fileInputRef.current.value = ''
+
+    setUploading(true)
+    try {
+      for (const file of Array.from(files)) {
+        const shouldDetect = isExpiryFilename(file.name)
+        let validade: string | null = extractDateFromFilename(file.name)
+
+        const doc = await uploadColaboradorDocument(
+          empresaDocId,
+          uploadColabId,
+          file,
+          'pessoal',
+          undefined,
+          validade,
+        )
+
+        if (!validade && shouldDetect) {
+          const ocrDate = await extractValidityDateViaOCR(file.name, doc.url)
+          if (ocrDate) {
+            validade = ocrDate
+            await updateColaboradorDocumentoValidade(doc.id, validade)
+            toast({
+              title: 'Validade detectada',
+              description: `Data: ${new Date(validade).toLocaleDateString('pt-BR')}`,
+            })
+          }
+        }
+
+        if (!validade && shouldDetect) {
+          setManualDoc({ doc: { ...doc, validade }, colabId: uploadColabId })
+        }
+
+        setDocMap((prev) => ({
+          ...prev,
+          [uploadColabId]: [...(prev[uploadColabId] || []), { ...doc, validade }],
+        }))
+      }
+      toast({ title: 'Sucesso', description: 'Documento(s) enviado(s).' })
+    } catch {
+      toast({ title: 'Erro', description: 'Falha no upload.', variant: 'destructive' })
+    } finally {
+      setUploading(false)
+      setUploadColabId(null)
+    }
+  }
+
+  const handleSaveManualDate = async (date: string) => {
+    if (!manualDoc) return
+    try {
+      await updateColaboradorDocumentoValidade(manualDoc.doc.id, date)
+      setDocMap((prev) => ({
+        ...prev,
+        [manualDoc.colabId]: (prev[manualDoc.colabId] || []).map((d) =>
+          d.id === manualDoc.doc.id ? { ...d, validade: date } : d,
+        ),
+      }))
+      toast({ title: 'Sucesso', description: 'Data de validade salva.' })
+    } catch {
+      toast({ title: 'Erro', description: 'Falha ao salvar data.', variant: 'destructive' })
+    } finally {
+      setManualDoc(null)
+    }
+  }
+
   const countDocs = (id: string) => (docMap[id] || []).length
+
+  const renderValidadeBadge = (doc: ColaboradorDocumento) => {
+    if (!doc.validade) return null
+    const status = getExpiryStatus(doc.validade)
+    const config = getStatusConfig(status)
+    return (
+      <Badge variant="outline" className={`text-[10px] gap-1 ${config.badgeClass}`}>
+        <Calendar className="w-2.5 h-2.5" />
+        {new Date(doc.validade).toLocaleDateString('pt-BR')}
+      </Badge>
+    )
+  }
 
   return (
     <Card className="bg-card/60 border-border/50 shadow-sm backdrop-blur-sm">
@@ -123,11 +231,18 @@ export function ColaboradorSection({ empresaDocId }: ColaboradorSectionProps) {
               setFormOpen(true)
             }}
           >
-            <UserPlus className="w-4 h-4" /> Adicionar Colaborador
+            <UserPlus className="w-4 h-4" /> Adicionar
           </Button>
         </div>
       </CardHeader>
       <CardContent>
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          className="hidden"
+          onChange={handleFileChange}
+        />
         {loading ? (
           <div className="flex justify-center py-8">
             <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -156,6 +271,20 @@ export function ColaboradorSection({ empresaDocId }: ColaboradorSectionProps) {
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8"
+                      onClick={() => handleUploadClick(colab.id)}
+                      disabled={uploading}
+                      title="Upload documento"
+                    >
+                      {uploading && uploadColabId === colab.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Upload className="w-4 h-4" />
+                      )}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
                       onClick={() => {
                         setEditing(colab)
                         setFormOpen(true)
@@ -178,12 +307,15 @@ export function ColaboradorSection({ empresaDocId }: ColaboradorSectionProps) {
                 {docMap[colab.id] && docMap[colab.id].length > 0 && (
                   <div className="border-t border-border/30 pt-2 space-y-1">
                     {docMap[colab.id].map((doc) => (
-                      <div key={doc.id} className="flex items-center gap-2 text-xs">
+                      <div key={doc.id} className="flex items-center gap-2 text-xs flex-wrap">
                         <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                        <span className="truncate flex-1">{doc.nome_arquivo || doc.url}</span>
+                        <span className="truncate flex-1 min-w-0">
+                          {doc.nome_arquivo || doc.url}
+                        </span>
                         <Badge variant="outline" className="text-[10px]">
                           {doc.tipo === 'pessoal' ? 'Pessoal' : 'Admissional'}
                         </Badge>
+                        {renderValidadeBadge(doc)}
                         <button type="button" onClick={() => handleDownload(doc)} title="Baixar">
                           <Download className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground" />
                         </button>
@@ -212,13 +344,21 @@ export function ColaboradorSection({ empresaDocId }: ColaboradorSectionProps) {
         onSuccess={load}
       />
 
+      <ManualValidityDialog
+        open={!!manualDoc}
+        onOpenChange={(v) => !v && setManualDoc(null)}
+        fileName={manualDoc?.doc.nome_arquivo || manualDoc?.doc.url || ''}
+        onSave={handleSaveManualDate}
+        onSkip={() => setManualDoc(null)}
+      />
+
       <AlertDialog open={!!deleting} onOpenChange={(v) => !v && setDeleting(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Remover Colaborador</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja remover o colaborador "{deleting?.nome}"? Os documentos
-              associados também serão excluídos.
+              Tem certeza que deseja remover o colaborador &ldquo;{deleting?.nome}&rdquo;? Os
+              documentos associados também serão excluídos.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -239,5 +379,3 @@ export function ColaboradorSection({ empresaDocId }: ColaboradorSectionProps) {
     </Card>
   )
 }
-
-import { X } from 'lucide-react'
