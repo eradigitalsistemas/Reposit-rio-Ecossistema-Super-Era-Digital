@@ -13,7 +13,7 @@ export interface CompanyDocument {
 }
 
 export interface CredentialEntry {
-  identificacao: string
+  nome_orgao: string
   senha: string
 }
 
@@ -31,24 +31,20 @@ export interface CompanyInfo {
   updated_at: string
 }
 
-const EMPTY_CREDENTIALS: CredentialEntry[] = Array.from({ length: 6 }, () => ({
-  identificacao: '',
-  senha: '',
-}))
-
 function normalizeCredentials(raw: unknown): CredentialEntry[] {
-  if (!Array.isArray(raw)) return [...EMPTY_CREDENTIALS]
-  const result = [...EMPTY_CREDENTIALS]
-  for (let i = 0; i < Math.min(raw.length, 6); i++) {
-    const entry = raw[i]
+  if (!Array.isArray(raw)) return []
+  const result: CredentialEntry[] = []
+  for (const entry of raw) {
     if (entry && typeof entry === 'object') {
-      result[i] = {
-        identificacao: String((entry as Record<string, unknown>).identificacao ?? ''),
-        senha: String((entry as Record<string, unknown>).senha ?? ''),
+      const obj = entry as Record<string, unknown>
+      const nomeOrgao = String(obj.nome_orgao ?? obj.identificacao ?? '').trim()
+      const senha = String(obj.senha ?? '').trim()
+      if (nomeOrgao || senha) {
+        result.push({ nome_orgao: nomeOrgao, senha })
       }
     }
   }
-  return result
+  return result.slice(0, 6)
 }
 
 export async function fetchAllCompanies(): Promise<CompanyInfo[]> {
@@ -106,7 +102,7 @@ export async function createCompanyInfo(payload: Partial<CompanyInfo>): Promise<
       empresa: payload.empresa || '',
       cnpj: payload.cnpj || null,
       cpf_socio: payload.cpf_socio || null,
-      senhas_acesso: payload.senhas_acesso || EMPTY_CREDENTIALS,
+      senhas_acesso: payload.senhas_acesso || [],
       responsavel: payload.responsavel || null,
       telefone: payload.telefone || null,
       email: payload.email || null,

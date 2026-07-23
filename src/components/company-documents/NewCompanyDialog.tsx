@@ -17,11 +17,6 @@ import { formatCPF, isValidCPF } from '@/lib/utils/cpf'
 import { type CredentialEntry, type CompanyInfo } from '@/services/company-documents'
 import { CredentialVault } from '@/components/company-documents/CredentialVault'
 
-const EMPTY_CREDENTIALS: CredentialEntry[] = Array.from({ length: 6 }, () => ({
-  identificacao: '',
-  senha: '',
-}))
-
 interface NewCompanyDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -45,26 +40,10 @@ export function NewCompanyDialog({ open, onOpenChange, onCreate }: NewCompanyDia
     telefone: '',
     email: '',
   })
-  const [credentials, setCredentials] = useState<CredentialEntry[]>([...EMPTY_CREDENTIALS])
-  const [visiblePasswords, setVisiblePasswords] = useState<Record<number, boolean>>({})
+  const [credentials, setCredentials] = useState<CredentialEntry[]>([])
   const [cnpjError, setCnpjError] = useState('')
   const [cpfError, setCpfError] = useState('')
   const [saving, setSaving] = useState(false)
-
-  const handleCredentialChange = (
-    index: number,
-    field: 'identificacao' | 'senha',
-    value: string,
-  ) => {
-    setCredentials((prev) => {
-      const updated = [...prev]
-      updated[index] = { ...updated[index], [field]: value }
-      return updated
-    })
-  }
-  const togglePasswordVisibility = (index: number) => {
-    setVisiblePasswords((prev) => ({ ...prev, [index]: !prev[index] }))
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -89,7 +68,7 @@ export function NewCompanyDialog({ open, onOpenChange, onCreate }: NewCompanyDia
         telefone: '',
         email: '',
       })
-      setCredentials([...EMPTY_CREDENTIALS])
+      setCredentials([])
       onOpenChange(false)
     } finally {
       setSaving(false)
@@ -178,12 +157,7 @@ export function NewCompanyDialog({ open, onOpenChange, onCreate }: NewCompanyDia
               />
             </div>
           </div>
-          <CredentialVault
-            credentials={credentials}
-            onCredentialChange={handleCredentialChange}
-            visiblePasswords={visiblePasswords}
-            onTogglePassword={togglePasswordVisibility}
-          />
+          <CredentialVault credentials={credentials} onCredentialsChange={setCredentials} />
           <DialogFooter>
             <Button
               type="button"

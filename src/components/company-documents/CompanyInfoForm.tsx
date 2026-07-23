@@ -10,11 +10,6 @@ import { formatCPF, isValidCPF } from '@/lib/utils/cpf'
 import { type CompanyInfo, type CredentialEntry } from '@/services/company-documents'
 import { CredentialVault } from '@/components/company-documents/CredentialVault'
 
-const EMPTY_CREDENTIALS: CredentialEntry[] = Array.from({ length: 6 }, () => ({
-  identificacao: '',
-  senha: '',
-}))
-
 interface CompanyFormData {
   empresa: string
   cnpj: string
@@ -39,8 +34,7 @@ export function CompanyInfoForm({ company, onSave }: CompanyInfoFormProps) {
     telefone: '',
     email: '',
   })
-  const [credentials, setCredentials] = useState<CredentialEntry[]>([...EMPTY_CREDENTIALS])
-  const [visiblePasswords, setVisiblePasswords] = useState<Record<number, boolean>>({})
+  const [credentials, setCredentials] = useState<CredentialEntry[]>([])
   const [cnpjError, setCnpjError] = useState('')
   const [cpfError, setCpfError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -55,27 +49,9 @@ export function CompanyInfoForm({ company, onSave }: CompanyInfoFormProps) {
         telefone: company.telefone,
         email: company.email,
       })
-      setCredentials(
-        company.senhas_acesso.length === 6 ? company.senhas_acesso : [...EMPTY_CREDENTIALS],
-      )
+      setCredentials(company.senhas_acesso)
     }
   }, [company])
-
-  const handleCredentialChange = (
-    index: number,
-    field: 'identificacao' | 'senha',
-    value: string,
-  ) => {
-    setCredentials((prev) => {
-      const updated = [...prev]
-      updated[index] = { ...updated[index], [field]: value }
-      return updated
-    })
-  }
-
-  const togglePasswordVisibility = (index: number) => {
-    setVisiblePasswords((prev) => ({ ...prev, [index]: !prev[index] }))
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -177,12 +153,7 @@ export function CompanyInfoForm({ company, onSave }: CompanyInfoFormProps) {
               />
             </div>
           </div>
-          <CredentialVault
-            credentials={credentials}
-            onCredentialChange={handleCredentialChange}
-            visiblePasswords={visiblePasswords}
-            onTogglePassword={togglePasswordVisibility}
-          />
+          <CredentialVault credentials={credentials} onCredentialsChange={setCredentials} />
           <div className="flex justify-end pt-2">
             <Button type="submit" disabled={saving} className="gap-2">
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
