@@ -17,6 +17,7 @@ import { ColaboradoresTab } from '@/components/empresa-tabs/ColaboradoresTab'
 import { RescisaoTab } from '@/components/empresa-tabs/RescisaoTab'
 import { CertidoesTab } from '@/components/empresa-tabs/CertidoesTab'
 import { ValidadesTab } from '@/components/empresa-tabs/ValidadesTab'
+import { ComplianceReportTab } from '@/components/empresa-tabs/ComplianceReportTab'
 import { CompanyDossierButton } from '@/components/empresa-tabs/CompanyDossierButton'
 import { Link } from 'react-router-dom'
 
@@ -25,6 +26,7 @@ export default function CompanyDocuments() {
   const [empresas, setEmpresas] = useState<Empresa[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('constituicao')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -42,6 +44,8 @@ export default function CompanyDocuments() {
   useEffect(() => {
     load()
   }, [load])
+
+  const selectedEmpresa = empresas.find((e) => e.id === selectedId)
 
   if (loading) {
     return (
@@ -93,14 +97,15 @@ export default function CompanyDocuments() {
           </div>
 
           {selectedId && (
-            <Tabs defaultValue="constituicao" className="w-full">
-              <TabsList className="grid grid-cols-2 sm:grid-cols-6 w-full sm:w-auto mb-6">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid grid-cols-2 sm:grid-cols-7 w-full sm:w-auto mb-6">
                 <TabsTrigger value="constituicao">Constituição</TabsTrigger>
                 <TabsTrigger value="certidoes">Certidões</TabsTrigger>
                 <TabsTrigger value="sst">SST</TabsTrigger>
                 <TabsTrigger value="colaboradores">Colaboradores</TabsTrigger>
                 <TabsTrigger value="rescisao">Rescisão</TabsTrigger>
                 <TabsTrigger value="validades">Validades</TabsTrigger>
+                <TabsTrigger value="compliance">Compliance</TabsTrigger>
               </TabsList>
               <TabsContent value="constituicao" className="mt-0">
                 <ConstituicaoTab empresaId={selectedId} />
@@ -119,6 +124,14 @@ export default function CompanyDocuments() {
               </TabsContent>
               <TabsContent value="validades" className="mt-0">
                 <ValidadesTab empresaId={selectedId} />
+              </TabsContent>
+              <TabsContent value="compliance" className="mt-0">
+                <ComplianceReportTab
+                  empresaId={selectedId}
+                  empresaNome={selectedEmpresa?.nome || selectedEmpresa?.empresa || ''}
+                  empresaCnpj={selectedEmpresa?.cnpj || null}
+                  onNavigateTab={setActiveTab}
+                />
               </TabsContent>
             </Tabs>
           )}
