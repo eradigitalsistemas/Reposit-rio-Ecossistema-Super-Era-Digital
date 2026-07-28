@@ -2,7 +2,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { Loader2, Trash2, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
+import { cn } from '@/lib/utils'
 import { SectionCard, FileUploadButton, DownloadButton } from '@/components/empresa-tabs/shared'
+import { ManualValidityDialog } from '@/components/company-documents/ManualValidityDialog'
 import {
   fetchCertidoes,
   uploadCertidao,
@@ -11,6 +13,7 @@ import {
   type CertidaoDoc,
 } from '@/services/empresa-certidoes'
 import { extractDateFromFilename } from '@/lib/validity-date'
+import { getExpiryStatus } from '@/lib/document-status'
 
 const TIPOS: { value: CertidaoTipo; label: string }[] = [
   { value: 'Federal', label: 'Federal' },
@@ -26,6 +29,9 @@ export function CertidoesTab({ empresaId }: { empresaId: string }) {
   const [docs, setDocs] = useState<CertidaoDoc[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState<string | null>(null)
+  const [pendingFile, setPendingFile] = useState<File | null>(null)
+  const [pendingTipo, setPendingTipo] = useState<CertidaoTipo | null>(null)
+  const [manualOpen, setManualOpen] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -42,10 +48,10 @@ export function CertidoesTab({ empresaId }: { empresaId: string }) {
     load()
   }, [load])
 
-  const handleUpload = async (tipo: CertidaoTipo, file: File) => {
+  const doUpload = async (tipo: CertidaoTipo, file: File, dataValidade?: string | null) => {
     setUploading(tipo)
     try {
-      await uploadCertidao(empresaId, tipo, file)
+      await uploadCertidao(empresaId, tipo, file, dataValidade)
       toast({ title: 'Sucesso', description: 'Certidão enviada.' })
       await load()
     } catch {
@@ -53,6 +59,35 @@ export function CertidoesTab({ empresaId }: { empresaId: string }) {
     } finally {
       setUploading(null)
     }
+  }
+
+  const handleFileSelect = async (tipo: CertidaoTipo, file: File) => {
+    const detectedDate = extractDateFromFilename(file.name)
+    if (detectedDate) {
+      await doUpload(tipo, file, detectedDate)
+    } else {
+      setPendingFile(file)
+      setPendingTipo(tipo)
+      setManualOpen(true)
+    }
+  }
+
+  const handleManualSave = (date: string) => {
+    if (pendingFile && pendingTipo) {
+      doUpload(pendingTipo, pendingFile, date)
+    }
+    setManualOpen(false)
+    setPendingFile(null)
+    setPendingTipo(null)
+  }
+
+  const handleManualSkip = () => {
+    if (pendingFile && pendingTipo) {
+      doUpload(pendingTipo, pendingFile, null)
+    }
+    setManualOpen(false)
+    setPendingFile(null)
+    setPendingTipo(null)
   }
 
   const handleDelete = async (doc: CertidaoDoc) => {
@@ -63,6 +98,29 @@ export function CertidoesTab({ empresaId }: { empresaId: string }) {
     } catch {
       toast({ title: 'Erro', description: 'Falha ao remover.', variant: 'destructive' })
     }
+  }
+
+  const renderStatus = (dataValidade: string | null) => {
+    if (!dataValidade) {
+      return (
+        <span className="text-xs font-medium text-red-600 flex items-center gap-1">
+          <span className="w-2 h-2 rounded-full bg-red-500" /> Vencido
+        </span>
+      )
+    }
+    const status = getExpiryStatus(dataValidade)
+    const isExpired = status === 'expired'
+    return (
+      <span
+        className={cn(
+          'text-xs font-medium flex items-center gap-1',
+          isExpired ? 'text-red-600' : 'text-emerald-600',
+        )}
+      >
+        <span className={cn('w-2 h-2 rounded-full', isExpired ? 'bg-red-500' : 'bg-emerald-500')} />
+        {isExpired ? 'Vencido' : 'Vigente'}
+      </span>
+    )
   }
 
   if (loading)
@@ -82,7 +140,6 @@ export function CertidoesTab({ empresaId }: { empresaId: string }) {
               <div className="space-y-2 mb-3">
                 {tipoDocs.map((doc) => {
                   const fileName = doc.arquivo_url?.split('/').pop() || 'Sem arquivo'
-                  const extractedDate = doc.arquivo_url ? extractDateFromFilename(fileName) : null
                   return (
                     <div
                       key={doc.id}
@@ -92,11 +149,12 @@ export function CertidoesTab({ empresaId }: { empresaId: string }) {
                       <span className="text-muted-foreground">
                         Enviado: {new Date(doc.created_at).toLocaleDateString('pt-BR')}
                       </span>
-                      {extractedDate && (
+                      {doc.data_validade && (
                         <span className="text-muted-foreground">
-                          Validade: {new Date(extractedDate).toLocaleDateString('pt-BR')}
+                          Validade: {new Date(doc.data_validade).toLocaleDateString('pt-BR')}
                         </span>
                       )}
+                      {renderStatus(doc.data_validade)}
                       {doc.arquivo_url && <DownloadButton path={doc.arquivo_url} />}
                       <Button
                         variant="ghost"
@@ -112,13 +170,27 @@ export function CertidoesTab({ empresaId }: { empresaId: string }) {
               </div>
             )}
             <FileUploadButton
-              onFile={(f) => handleUpload(value, f)}
+              onFile={(f) => handleFileSelect(value, f)}
               label="Enviar PDF"
               disabled={uploading === value}
             />
           </SectionCard>
         )
       })}
+
+      <ManualValidityDialog
+        open={manualOpen}
+        onOpenChange={(open) => {
+          setManualOpen(open)
+          if (!open) {
+            setPendingFile(null)
+            setPendingTipo(null)
+          }
+        }}
+        fileName={pendingFile?.name || ''}
+        onSave={handleManualSave}
+        onSkip={handleManualSkip}
+      />
     </div>
   )
 }

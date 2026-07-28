@@ -236,14 +236,7 @@ export function ColaboradorDocSections({ colaboradorId }: { colaboradorId: strin
         </div>
       </SectionCard>
 
-      <SectionCard title="S-2240" icon={FileCheck2}>
-        <div className="space-y-1">{renderSimpleRow('S2240', 'S-2240')}</div>
-      </SectionCard>
-      <SectionCard title="S-2220" icon={FileCheck2}>
-        <div className="space-y-1">{renderSimpleRow('S2220', 'S-2220')}</div>
-      </SectionCard>
-
-      <SectionCard title="Documentos eSocial" icon={FolderOpen}>
+      <SectionCard title="Recibos SST" icon={FolderOpen}>
         <div className="space-y-2">
           <div className="text-sm font-semibold py-1">CAT</div>
           {cats.map((c) => (
@@ -302,6 +295,13 @@ export function ColaboradorDocSections({ colaboradorId }: { colaboradorId: strin
             </Button>
           </div>
         </div>
+      </SectionCard>
+
+      <SectionCard title="S-2240" icon={FileCheck2}>
+        <div className="space-y-1">{renderSimpleRow('S2240', 'S-2240')}</div>
+      </SectionCard>
+      <SectionCard title="S-2220" icon={FileCheck2}>
+        <div className="space-y-1">{renderSimpleRow('S2220', 'S-2220')}</div>
       </SectionCard>
     </div>
   )

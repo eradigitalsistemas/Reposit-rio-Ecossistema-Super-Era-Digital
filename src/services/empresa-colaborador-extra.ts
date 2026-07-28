@@ -18,14 +18,7 @@ export interface Atestado {
 
 export interface AtestadoInput {
   file: File
-  tipo: string
-  dataExame: string
-  medico: string
   dataVencimento: string
-  emailEmpresa: string
-  whatsappEmpresa: string
-  emailFuncionario: string
-  whatsappFuncionario: string
 }
 
 export interface Periodico {
@@ -66,14 +59,7 @@ export async function createAtestado(
     .insert({
       colaborador_id: colaboradorId,
       aso_url: path,
-      data: input.dataExame || null,
-      medico: input.medico || null,
-      tipo: input.tipo || 'Admissional',
       data_vencimento: input.dataVencimento || null,
-      email_empresa: input.emailEmpresa || null,
-      whatsapp_empresa: input.whatsappEmpresa || null,
-      email_funcionario: input.emailFuncionario || null,
-      whatsapp_funcionario: input.whatsappFuncionario || null,
     })
     .select('*')
     .single()

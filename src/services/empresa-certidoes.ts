@@ -14,6 +14,7 @@ export interface CertidaoDoc {
   empresa_id: string
   tipo_certidao: string
   arquivo_url: string | null
+  data_validade: string | null
   created_at: string
 }
 
@@ -31,11 +32,17 @@ export async function uploadCertidao(
   empresaId: string,
   tipo: CertidaoTipo,
   file: File,
+  dataValidade?: string | null,
 ): Promise<CertidaoDoc> {
   const path = await uploadEmpresaFile(empresaId, file, `certidoes/${tipo}`)
   const { data, error } = await supabase
     .from('certidoes_empresa')
-    .insert({ empresa_id: empresaId, tipo_certidao: tipo, arquivo_url: path })
+    .insert({
+      empresa_id: empresaId,
+      tipo_certidao: tipo,
+      arquivo_url: path,
+      data_validade: dataValidade || null,
+    })
     .select('*')
     .single()
   if (error) throw error
