@@ -11,11 +11,25 @@ import {
 import { Button } from '@/components/ui/button'
 import { useNavigate } from 'react-router-dom'
 import { BellRing } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
+import { createReminderNotification } from '@/services/notificacoes-expiracao'
 
 export function GlobalNotifications() {
   useAgendaNotifications()
+  const { toast } = useToast()
   const { activeNotification, markAsRead } = useDemandNotifications()
   const navigate = useNavigate()
+
+  const handleReminder = async (days: number) => {
+    if (!activeNotification) return
+    try {
+      await createReminderNotification(activeNotification, days)
+      markAsRead(activeNotification.id)
+      toast({ title: 'Lembrete criado', description: `Você será notificado em ${days} dias.` })
+    } catch {
+      toast({ title: 'Erro', description: 'Falha ao criar lembrete.', variant: 'destructive' })
+    }
+  }
 
   return (
     <Dialog
@@ -44,7 +58,7 @@ export function GlobalNotifications() {
         <div className="py-2">
           <p className="text-muted-foreground">{activeNotification?.mensagem}</p>
         </div>
-        <DialogFooter className="flex flex-row justify-end gap-2 sm:justify-end">
+        <DialogFooter className="flex flex-row justify-end gap-2 sm:justify-end flex-wrap">
           <Button
             variant="outline"
             onClick={() => {
@@ -53,6 +67,16 @@ export function GlobalNotifications() {
           >
             Fechar
           </Button>
+          {activeNotification?.tipo === 'vencimento_documento' && (
+            <>
+              <Button variant="outline" size="sm" onClick={() => handleReminder(5)}>
+                Lembrar em 5 dias
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => handleReminder(15)}>
+                Lembrar em 15 dias
+              </Button>
+            </>
+          )}
           {activeNotification?.demanda_id && (
             <Button
               onClick={() => {

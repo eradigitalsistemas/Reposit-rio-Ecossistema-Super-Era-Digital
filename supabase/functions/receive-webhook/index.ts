@@ -197,20 +197,31 @@ async function updateMessageStatus(messageIds, newStatus, tsIso) {
 
   const upd = await rest('PATCH', path, patch, { Prefer: 'return=representation' })
   if (!upd.ok) {
-    console.error('[receive-webhook] PATCH status failed', { newStatus, messageIds, error: safeErr(upd.error) })
+    console.error('[receive-webhook] PATCH status failed', {
+      newStatus,
+      messageIds,
+      error: safeErr(upd.error),
+    })
   }
 }
 
 async function processStatusUpdate(payload) {
   // Handle Evolution API `messages.update` array format
-  if ((payload?.event === 'messages.update' || payload?.event === 'messages_update') && Array.isArray(payload.data)) {
+  if (
+    (payload?.event === 'messages.update' || payload?.event === 'messages_update') &&
+    Array.isArray(payload.data)
+  ) {
     for (const item of payload.data) {
       const messageId = item?.key?.id
       const statusNum = item?.update?.status
       if (messageId && statusNum) {
         const newStatus = mapEvolutionStatus(statusNum)
         if (newStatus) {
-          await updateMessageStatus([messageId], newStatus, parseTimestamp(payload.date_time ?? payload.timestamp))
+          await updateMessageStatus(
+            [messageId],
+            newStatus,
+            parseTimestamp(payload.date_time ?? payload.timestamp),
+          )
         }
       }
     }
@@ -228,7 +239,7 @@ async function processStatusUpdate(payload) {
     return
   }
   const tsIso = parseTimestamp(evt?.Timestamp ?? payload?.timestamp)
-  
+
   await updateMessageStatus(messageIds, newStatus, tsIso)
 }
 

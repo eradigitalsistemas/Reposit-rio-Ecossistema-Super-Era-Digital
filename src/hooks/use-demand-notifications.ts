@@ -15,6 +15,7 @@ export function useDemandNotifications() {
       .select('*')
       .eq('usuario_id', user.id)
       .eq('lida', false)
+      .lte('data_criacao', new Date().toISOString())
       .order('data_criacao', { ascending: false })
       .limit(1)
 
@@ -34,6 +35,7 @@ export function useDemandNotifications() {
         .select('*')
         .eq('usuario_id', user.id)
         .eq('lida', false)
+        .lte('data_criacao', new Date().toISOString())
         .order('data_criacao', { ascending: false })
         .limit(1)
 
@@ -64,8 +66,11 @@ export function useDemandNotifications() {
           if (!isMounted) return
           const newNotif = payload.new
           if (!newNotif.lida) {
-            playNotificationSound()
-            setActiveNotification(newNotif)
+            const notifDate = new Date(newNotif.data_criacao)
+            if (notifDate <= new Date()) {
+              playNotificationSound()
+              setActiveNotification(newNotif)
+            }
           }
         },
       )

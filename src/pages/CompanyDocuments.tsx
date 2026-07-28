@@ -16,6 +16,8 @@ import { SSTTab } from '@/components/empresa-tabs/SSTTab'
 import { ColaboradoresTab } from '@/components/empresa-tabs/ColaboradoresTab'
 import { RescisaoTab } from '@/components/empresa-tabs/RescisaoTab'
 import { CertidoesTab } from '@/components/empresa-tabs/CertidoesTab'
+import { ValidadesTab } from '@/components/empresa-tabs/ValidadesTab'
+import { CompanyDossierButton } from '@/components/empresa-tabs/CompanyDossierButton'
 import { Link } from 'react-router-dom'
 
 export default function CompanyDocuments() {
@@ -74,7 +76,7 @@ export default function CompanyDocuments() {
         </div>
       ) : (
         <>
-          <div className="mb-6 shrink-0">
+          <div className="mb-6 shrink-0 flex items-center gap-2 flex-wrap">
             <Select value={selectedId || ''} onValueChange={setSelectedId}>
               <SelectTrigger className="w-full sm:w-[400px]">
                 <SelectValue placeholder="Selecione uma empresa" />
@@ -87,16 +89,18 @@ export default function CompanyDocuments() {
                 ))}
               </SelectContent>
             </Select>
+            {selectedId && <CompanyDossierButton empresaId={selectedId} />}
           </div>
 
           {selectedId && (
             <Tabs defaultValue="constituicao" className="w-full">
-              <TabsList className="grid grid-cols-2 sm:grid-cols-5 w-full sm:w-auto mb-6">
+              <TabsList className="grid grid-cols-2 sm:grid-cols-6 w-full sm:w-auto mb-6">
                 <TabsTrigger value="constituicao">Constituição</TabsTrigger>
                 <TabsTrigger value="certidoes">Certidões</TabsTrigger>
                 <TabsTrigger value="sst">SST</TabsTrigger>
                 <TabsTrigger value="colaboradores">Colaboradores</TabsTrigger>
                 <TabsTrigger value="rescisao">Rescisão</TabsTrigger>
+                <TabsTrigger value="validades">Validades</TabsTrigger>
               </TabsList>
               <TabsContent value="constituicao" className="mt-0">
                 <ConstituicaoTab empresaId={selectedId} />
@@ -112,6 +116,9 @@ export default function CompanyDocuments() {
               </TabsContent>
               <TabsContent value="rescisao" className="mt-0">
                 <RescisaoTab empresaId={selectedId} />
+              </TabsContent>
+              <TabsContent value="validades" className="mt-0">
+                <ValidadesTab empresaId={selectedId} />
               </TabsContent>
             </Tabs>
           )}

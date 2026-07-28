@@ -28,6 +28,7 @@ import {
 } from '@/services/empresas'
 import { ColaboradorDocSections } from '@/components/empresa-tabs/colaborador/ColaboradorDocSections'
 import { ColaboradorHealthSections } from '@/components/empresa-tabs/colaborador/ColaboradorHealthSections'
+import { ColaboradorDossierButton } from '@/components/empresa-tabs/ColaboradorDossierButton'
 
 export function ColaboradoresTab({ empresaId }: { empresaId: string }) {
   const { toast } = useToast()
@@ -105,6 +106,12 @@ export function ColaboradoresTab({ empresaId }: { empresaId: string }) {
 
       {selectedId ? (
         <div className="space-y-6">
+          <div className="flex justify-end">
+            <ColaboradorDossierButton
+              colaboradorId={selectedId}
+              colaboradorNome={colaboradores.find((c) => c.id === selectedId)?.nome || ''}
+            />
+          </div>
           <ColaboradorDocSections colaboradorId={selectedId} />
           <ColaboradorHealthSections
             colaboradorId={selectedId}
