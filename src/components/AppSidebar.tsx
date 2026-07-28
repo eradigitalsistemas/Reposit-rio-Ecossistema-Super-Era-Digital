@@ -36,7 +36,7 @@ import useAuthStore from '@/stores/useAuthStore'
 const MAIN_MENU = [
   { title: 'Dashboard Geral', icon: Home, url: '/', roles: ['Admin', 'Colaborador'] },
   {
-    title: 'Documentos da Empresa',
+    title: 'Empresa',
     icon: FolderOpen,
     url: '/documentos-empresa',
     roles: ['Admin'],
