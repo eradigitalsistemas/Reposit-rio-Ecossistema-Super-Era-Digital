@@ -1,11 +1,7 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
-import {
-  getGoogleAccessToken,
-  findOrCreateFolder,
-  uploadFileToDrive,
-} from '../_shared/google-drive.ts'
+import { getGoogleAccessToken, findOrCreateFolder, uploadFileToDrive } from '../_shared/google-drive.ts'
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
@@ -34,13 +30,10 @@ Deno.serve(async (req: Request) => {
     const parentFolderId = Deno.env.get('GOOGLE_DRIVE_PARENT_FOLDER_ID') || null
 
     if (!clientEmail || !privateKey) {
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: 'Google Drive not configured. Skipping sync.',
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      )
+      return new Response(JSON.stringify({
+        success: true,
+        message: 'Google Drive not configured. Skipping sync.',
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
     const token = await getGoogleAccessToken(clientEmail, privateKey)
@@ -69,8 +62,7 @@ Deno.serve(async (req: Request) => {
 
       const fileContent = new Uint8Array(await fileRes.arrayBuffer())
       const mimeType = doc.type || 'application/octet-stream'
-      const targetFolderId =
-        doc.category === 'Certidões e Afins' ? certidoesFolderId : constituirFolderId
+      const targetFolderId = doc.category === 'Certidões e Afins' ? certidoesFolderId : constituirFolderId
       const safeName = doc.name.replace(/[^\w.\-]/g, '_')
 
       await uploadFileToDrive(safeName, fileContent, mimeType, targetFolderId, token)
@@ -87,14 +79,11 @@ Deno.serve(async (req: Request) => {
       await uploadFileToDrive('senhas.txt', content, 'text/plain', senhasFolderId, token)
     }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: `Synced ${uploadedCount} document(s) to Google Drive.`,
-        rootFolder: rootFolderName,
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    )
+    return new Response(JSON.stringify({
+      success: true,
+      message: `Synced ${uploadedCount} document(s) to Google Drive.`,
+      rootFolder: rootFolderName,
+    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
     return new Response(JSON.stringify({ error: message }), {
