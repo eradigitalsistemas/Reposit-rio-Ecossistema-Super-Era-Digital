@@ -9,6 +9,23 @@ export interface Atestado {
   data: string | null
   medico: string | null
   created_at: string
+  data_vencimento: string | null
+  email_empresa: string | null
+  whatsapp_empresa: string | null
+  email_funcionario: string | null
+  whatsapp_funcionario: string | null
+}
+
+export interface AtestadoInput {
+  file: File
+  tipo: string
+  dataExame: string
+  medico: string
+  dataVencimento: string
+  emailEmpresa: string
+  whatsappEmpresa: string
+  emailFuncionario: string
+  whatsappFuncionario: string
 }
 
 export interface Periodico {
@@ -41,18 +58,22 @@ export async function fetchAtestados(colaboradorId: string): Promise<Atestado[]>
 
 export async function createAtestado(
   colaboradorId: string,
-  file: File,
-  data: string,
-  medico: string,
+  input: AtestadoInput,
 ): Promise<Atestado> {
-  const path = await uploadColaboradorFile(colaboradorId, file, 'atestado')
+  const path = await uploadColaboradorFile(colaboradorId, input.file, 'atestado')
   const { data: result, error } = await supabase
     .from('colaborador_atestados')
     .insert({
       colaborador_id: colaboradorId,
       aso_url: path,
-      data: data || null,
-      medico: medico || null,
+      data: input.dataExame || null,
+      medico: input.medico || null,
+      tipo: input.tipo || 'Admissional',
+      data_vencimento: input.dataVencimento || null,
+      email_empresa: input.emailEmpresa || null,
+      whatsapp_empresa: input.whatsappEmpresa || null,
+      email_funcionario: input.emailFuncionario || null,
+      whatsapp_funcionario: input.whatsappFuncionario || null,
     })
     .select('*')
     .single()
@@ -63,6 +84,26 @@ export async function createAtestado(
 export async function deleteAtestado(id: string, url: string | null): Promise<void> {
   if (url) await deleteEmpresaFile(url)
   const { error } = await supabase.from('colaborador_atestados').delete().eq('id', id)
+  if (error) throw error
+}
+
+export async function createAtestadoNotification(
+  colaboradorNome: string,
+  atestadoId: string,
+  diasParaVencer: number,
+): Promise<void> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('User not authenticated')
+  const mensagem = `O Atestado Ocupacional do colaborador (${colaboradorNome}) vencerá em ${diasParaVencer} dias`
+  const { error } = await supabase.from('notificacoes').insert({
+    usuario_id: user.id,
+    titulo: 'Vencimento de Atestado',
+    mensagem,
+    tipo: 'atestado_vencimento',
+    referencia_id: `atestado_${atestadoId}_${diasParaVencer}`,
+  })
   if (error) throw error
 }
 

@@ -113,7 +113,7 @@ const App = () => (
                       <Route path="/configuracoes" element={<Settings />} />
                       <Route path="/meu-ponto" element={<MeuPonto />} />
                       <Route path="/folha-ponto" element={<FolhaPonto />} />
-                      <Route path="/documentos-empresa" element={<CompanyDocuments />} />
+                      <Route path="/empresa" element={<CompanyDocuments />} />
                       <Route path="/certificados" element={<Certificados />} />
                     </Route>
                     {/* External Portal Routes */}

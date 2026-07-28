@@ -38,7 +38,7 @@ const MAIN_MENU = [
   {
     title: 'Empresa',
     icon: FolderOpen,
-    url: '/documentos-empresa',
+    url: '/empresa',
     roles: ['Admin'],
   },
   {

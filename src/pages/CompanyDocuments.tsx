@@ -15,6 +15,7 @@ import { ConstituicaoTab } from '@/components/empresa-tabs/ConstituicaoTab'
 import { SSTTab } from '@/components/empresa-tabs/SSTTab'
 import { ColaboradoresTab } from '@/components/empresa-tabs/ColaboradoresTab'
 import { RescisaoTab } from '@/components/empresa-tabs/RescisaoTab'
+import { CertidoesTab } from '@/components/empresa-tabs/CertidoesTab'
 import { Link } from 'react-router-dom'
 
 export default function CompanyDocuments() {
@@ -90,14 +91,18 @@ export default function CompanyDocuments() {
 
           {selectedId && (
             <Tabs defaultValue="constituicao" className="w-full">
-              <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full sm:w-auto mb-6">
+              <TabsList className="grid grid-cols-2 sm:grid-cols-5 w-full sm:w-auto mb-6">
                 <TabsTrigger value="constituicao">Constituição</TabsTrigger>
+                <TabsTrigger value="certidoes">Certidões</TabsTrigger>
                 <TabsTrigger value="sst">SST</TabsTrigger>
                 <TabsTrigger value="colaboradores">Colaboradores</TabsTrigger>
                 <TabsTrigger value="rescisao">Rescisão</TabsTrigger>
               </TabsList>
               <TabsContent value="constituicao" className="mt-0">
                 <ConstituicaoTab empresaId={selectedId} />
+              </TabsContent>
+              <TabsContent value="certidoes" className="mt-0">
+                <CertidoesTab empresaId={selectedId} />
               </TabsContent>
               <TabsContent value="sst" className="mt-0">
                 <SSTTab empresaId={selectedId} />

@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase/client'
 import { uploadEmpresaFile } from '@/services/empresa-files'
 
-export type ConstituicaoTipo = 'CNPJ' | 'CONTRATO_SOCIAL' | 'ALTERACOES_CONTRATUAIS'
+export type ConstituicaoTipo = 'CNPJ' | 'CONTRATO_SOCIAL' | 'ALTERACOES_CONTRATUAIS' | 'Alvará'
 
 export interface ConstituicaoDoc {
   id: string

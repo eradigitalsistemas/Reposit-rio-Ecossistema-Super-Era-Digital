@@ -19,6 +19,7 @@ const TYPES: { tipo: ConstituicaoTipo; label: string }[] = [
   { tipo: 'CNPJ', label: 'CNPJ' },
   { tipo: 'CONTRATO_SOCIAL', label: 'Contrato Social' },
   { tipo: 'ALTERACOES_CONTRATUAIS', label: 'Alterações Contratuais' },
+  { tipo: 'Alvará', label: 'Alvará' },
 ]
 
 export function ConstituicaoTab({ empresaId }: { empresaId: string }) {

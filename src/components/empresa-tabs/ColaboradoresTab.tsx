@@ -106,7 +106,10 @@ export function ColaboradoresTab({ empresaId }: { empresaId: string }) {
       {selectedId ? (
         <div className="space-y-6">
           <ColaboradorDocSections colaboradorId={selectedId} />
-          <ColaboradorHealthSections colaboradorId={selectedId} />
+          <ColaboradorHealthSections
+            colaboradorId={selectedId}
+            colaboradorNome={colaboradores.find((c) => c.id === selectedId)?.nome || ''}
+          />{' '}
         </div>
       ) : (
         <div className="text-center py-12 text-muted-foreground">

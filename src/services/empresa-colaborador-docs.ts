@@ -12,7 +12,7 @@ export interface ColabDoc {
   validade: string | null
 }
 
-const DOC_TYPES = ['RG', 'CPF', 'CTPS', 'CNH', 'COMPROVANTE', 'S2240', 'S2220']
+const DOC_TYPES = ['Pessoal', 'S2240', 'S2220']
 
 export async function fetchColaboradorDocs(colaboradorId: string): Promise<ColabDoc[]> {
   const { data, error } = await supabase
@@ -61,6 +61,21 @@ export async function upsertColaboradorDoc(
 export async function updateColaboradorDocStatus(docId: string, status: string): Promise<void> {
   const { error } = await supabase.from('colaborador_documentos').update({ status }).eq('id', docId)
   if (error) throw error
+}
+
+export async function createColaboradorDocPersonal(
+  colaboradorId: string,
+  title: string,
+  file: File,
+): Promise<ColabDoc> {
+  const path = await uploadColaboradorFile(colaboradorId, file, 'Pessoal')
+  const { data, error } = await supabase
+    .from('colaborador_documentos')
+    .insert({ colaborador_id: colaboradorId, tipo: 'Pessoal', url: path, nome_arquivo: title })
+    .select('*')
+    .single()
+  if (error) throw error
+  return data as ColabDoc
 }
 
 export async function deleteColaboradorDoc(doc: ColabDoc): Promise<void> {
