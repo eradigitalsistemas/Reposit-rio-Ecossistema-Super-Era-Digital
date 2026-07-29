@@ -3,6 +3,7 @@ import { Loader2, UserPlus, Users, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import {
   Select,
   SelectContent,
@@ -19,7 +20,6 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { useToast } from '@/hooks/use-toast'
-import { cn } from '@/lib/utils'
 import { formatCPF } from '@/lib/utils/cpf'
 import {
   fetchColaboradoresByEmpresaId,
@@ -30,6 +30,7 @@ import { ColaboradorDocSections } from '@/components/empresa-tabs/colaborador/Co
 import { ColaboradorHealthSections } from '@/components/empresa-tabs/colaborador/ColaboradorHealthSections'
 import { ColaboradorDossierButton } from '@/components/empresa-tabs/ColaboradorDossierButton'
 import { ImportColaboradoresDialog } from '@/components/empresa-tabs/ImportColaboradoresDialog'
+import { RescisaoTab } from '@/components/empresa-tabs/RescisaoTab'
 
 export function ColaboradoresTab({ empresaId }: { empresaId: string }) {
   const { toast } = useToast()
@@ -41,6 +42,7 @@ export function ColaboradoresTab({ empresaId }: { empresaId: string }) {
   const [cpf, setCpf] = useState('')
   const [saving, setSaving] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
+  const [subTab, setSubTab] = useState('documentos')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -88,49 +90,62 @@ export function ColaboradoresTab({ empresaId }: { empresaId: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 flex-wrap">
-        <Select value={selectedId} onValueChange={setSelectedId}>
-          <SelectTrigger className="w-full sm:w-[300px]">
-            <SelectValue placeholder="Selecione um colaborador" />
-          </SelectTrigger>
-          <SelectContent>
-            {colaboradores.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {c.nome}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button variant="outline" className="gap-1.5" onClick={() => setDialogOpen(true)}>
-          <UserPlus className="w-4 h-4" /> Novo Colaborador
-        </Button>
-        <Button variant="outline" className="gap-1.5" onClick={() => setImportOpen(true)}>
-          <Upload className="w-4 h-4" /> Importar Relatório
-        </Button>
-      </div>
+      <Tabs value={subTab} onValueChange={setSubTab}>
+        <div className="flex items-center gap-2 flex-wrap">
+          <TabsList className="grid grid-cols-2 w-[280px]">
+            <TabsTrigger value="documentos">Documentos</TabsTrigger>
+            <TabsTrigger value="rescisao">Rescisão</TabsTrigger>
+          </TabsList>
+          <Button variant="outline" className="gap-1.5" onClick={() => setDialogOpen(true)}>
+            <UserPlus className="w-4 h-4" /> Novo Colaborador
+          </Button>
+          <Button variant="outline" className="gap-1.5" onClick={() => setImportOpen(true)}>
+            <Upload className="w-4 h-4" /> Importar Relatório
+          </Button>
+        </div>
 
-      {selectedId ? (
-        <div className="space-y-6">
-          <div className="flex justify-end">
-            <ColaboradorDossierButton
-              colaboradorId={selectedId}
-              colaboradorNome={colaboradores.find((c) => c.id === selectedId)?.nome || ''}
-            />
-          </div>
-          <ColaboradorDocSections colaboradorId={selectedId} />
-          <ColaboradorHealthSections
-            colaboradorId={selectedId}
-            colaboradorNome={colaboradores.find((c) => c.id === selectedId)?.nome || ''}
-          />{' '}
-        </div>
-      ) : (
-        <div className="text-center py-12 text-muted-foreground">
-          <Users className="w-10 h-10 mx-auto mb-2 opacity-20" />
-          <p className="text-sm">
-            Selecione ou crie um colaborador para gerenciar seus documentos.
-          </p>
-        </div>
-      )}
+        <TabsContent value="documentos" className="mt-4 space-y-6">
+          <Select value={selectedId} onValueChange={setSelectedId}>
+            <SelectTrigger className="w-full sm:w-[300px]">
+              <SelectValue placeholder="Selecione um colaborador" />
+            </SelectTrigger>
+            <SelectContent>
+              {colaboradores.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {selectedId ? (
+            <>
+              <div className="flex justify-end">
+                <ColaboradorDossierButton
+                  colaboradorId={selectedId}
+                  colaboradorNome={colaboradores.find((c) => c.id === selectedId)?.nome || ''}
+                />
+              </div>
+              <ColaboradorDocSections colaboradorId={selectedId} />
+              <ColaboradorHealthSections
+                colaboradorId={selectedId}
+                colaboradorNome={colaboradores.find((c) => c.id === selectedId)?.nome || ''}
+              />
+            </>
+          ) : (
+            <div className="text-center py-12 text-muted-foreground">
+              <Users className="w-10 h-10 mx-auto mb-2 opacity-20" />
+              <p className="text-sm">
+                Selecione ou crie um colaborador para gerenciar seus documentos.
+              </p>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="rescisao" className="mt-4">
+          <RescisaoTab empresaId={empresaId} />
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-[400px]">

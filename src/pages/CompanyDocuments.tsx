@@ -142,13 +142,11 @@ function CompanyDocumentsContent() {
             <>
               <CompliancePieChart empresaId={selectedId} />
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid grid-cols-2 sm:grid-cols-7 w-full sm:w-auto mb-6">
+                <TabsList className="grid grid-cols-2 sm:grid-cols-5 w-full sm:w-auto mb-6">
                   <TabsTrigger value="constituicao">Constituição</TabsTrigger>
                   <TabsTrigger value="certidoes">Certidões</TabsTrigger>
                   <TabsTrigger value="sst">SST</TabsTrigger>
                   <TabsTrigger value="colaboradores">Colaboradores</TabsTrigger>
-                  <TabsTrigger value="rescisao">Rescisão</TabsTrigger>
-                  <TabsTrigger value="validades">Validades</TabsTrigger>
                   <TabsTrigger value="compliance">Compliance</TabsTrigger>
                 </TabsList>
                 <TabsContent value="constituicao" className="mt-0">
@@ -162,12 +160,6 @@ function CompanyDocumentsContent() {
                 </TabsContent>
                 <TabsContent value="colaboradores" className="mt-0">
                   <ColaboradoresTab empresaId={selectedId} />
-                </TabsContent>
-                <TabsContent value="rescisao" className="mt-0">
-                  <RescisaoTab empresaId={selectedId} />
-                </TabsContent>
-                <TabsContent value="validades" className="mt-0">
-                  <ValidadesTab empresaId={selectedId} />
                 </TabsContent>
                 <TabsContent value="compliance" className="mt-0">
                   <ComplianceReportTab
