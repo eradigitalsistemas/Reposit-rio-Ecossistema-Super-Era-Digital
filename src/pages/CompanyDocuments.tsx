@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Building2, Loader2, Plus } from 'lucide-react'
+import { Building2, Loader2, Plus, LayoutGrid } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import {
   Select,
@@ -9,8 +9,11 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
+import { useSearchParams } from 'react-router-dom'
 import { fetchEmpresas, type Empresa } from '@/services/empresas'
 import { useToast } from '@/hooks/use-toast'
+import { CompanyComplianceDashboard } from '@/components/empresa-tabs/CompanyComplianceDashboard'
+import { NewCompanyCnpjDialog } from '@/components/empresa-tabs/NewCompanyCnpjDialog'
 import { ConstituicaoTab } from '@/components/empresa-tabs/ConstituicaoTab'
 import { SSTTab } from '@/components/empresa-tabs/SSTTab'
 import { ColaboradoresTab } from '@/components/empresa-tabs/ColaboradoresTab'
@@ -19,21 +22,24 @@ import { CertidoesTab } from '@/components/empresa-tabs/CertidoesTab'
 import { ValidadesTab } from '@/components/empresa-tabs/ValidadesTab'
 import { ComplianceReportTab } from '@/components/empresa-tabs/ComplianceReportTab'
 import { CompanyDossierButton } from '@/components/empresa-tabs/CompanyDossierButton'
-import { Link } from 'react-router-dom'
 
 export default function CompanyDocuments() {
   const { toast } = useToast()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [empresas, setEmpresas] = useState<Empresa[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('constituicao')
+  const [view, setView] = useState<'dashboard' | 'detail'>('dashboard')
+  const [newCompanyOpen, setNewCompanyOpen] = useState(false)
+
+  const urlId = searchParams.get('id')
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
       const list = await fetchEmpresas()
       setEmpresas(list)
-      if (list.length > 0) setSelectedId(list[0].id)
     } catch {
       toast({ title: 'Erro', description: 'Falha ao carregar empresas.', variant: 'destructive' })
     } finally {
@@ -44,6 +50,31 @@ export default function CompanyDocuments() {
   useEffect(() => {
     load()
   }, [load])
+
+  useEffect(() => {
+    if (urlId && empresas.some((e) => e.id === urlId)) {
+      setSelectedId(urlId)
+      setView('detail')
+    }
+  }, [urlId, empresas])
+
+  const handleSelectCompany = (id: string) => {
+    setSelectedId(id)
+    setView('detail')
+    setActiveTab('constituicao')
+    setSearchParams({ id })
+  }
+
+  const handleBackToDashboard = () => {
+    setView('dashboard')
+    setSelectedId(null)
+    setSearchParams({})
+  }
+
+  const handleCompanyCreated = async (id: string) => {
+    await load()
+    handleSelectCompany(id)
+  }
 
   const selectedEmpresa = empresas.find((e) => e.id === selectedId)
 
@@ -57,31 +88,48 @@ export default function CompanyDocuments() {
 
   return (
     <div className="min-h-screen w-full flex flex-col flex-1 p-4 sm:p-6 text-foreground relative z-10 overflow-x-hidden">
-      <div className="mb-6 shrink-0">
-        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-          <Building2 className="w-6 h-6 text-primary" />
-          Empresa
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Gerencie documentos de constituição, SST, colaboradores e rescisão.
-        </p>
+      <div className="mb-6 shrink-0 flex items-start justify-between gap-2 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <Building2 className="w-6 h-6 text-primary" />
+            Empresa
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            {view === 'dashboard'
+              ? 'Visão geral de conformidade de todas as empresas.'
+              : 'Gerencie documentos de constituição, SST, colaboradores e rescisão.'}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {view === 'detail' && (
+            <Button variant="outline" className="gap-1.5" onClick={handleBackToDashboard}>
+              <LayoutGrid className="w-4 h-4" /> Visão Geral
+            </Button>
+          )}
+          <Button className="gap-1.5" onClick={() => setNewCompanyOpen(true)}>
+            <Plus className="w-4 h-4" /> Nova Empresa
+          </Button>
+        </div>
       </div>
 
       {empresas.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
           <Building2 className="w-12 h-12 mb-4 opacity-20" />
           <p className="text-lg font-medium mb-2">Nenhuma empresa cadastrada</p>
-          <p className="text-sm mb-4">Cadastre um cliente externo para começar.</p>
-          <Button asChild className="gap-2">
-            <Link to="/clientes">
-              <Plus className="w-4 h-4" /> Ir para Clientes
-            </Link>
-          </Button>
+          <p className="text-sm mb-4">Clique em "Nova Empresa" para começar.</p>
         </div>
+      ) : view === 'dashboard' ? (
+        <CompanyComplianceDashboard onSelectCompany={handleSelectCompany} />
       ) : (
         <>
           <div className="mb-6 shrink-0 flex items-center gap-2 flex-wrap">
-            <Select value={selectedId || ''} onValueChange={setSelectedId}>
+            <Select
+              value={selectedId || ''}
+              onValueChange={(v) => {
+                setSelectedId(v)
+                setSearchParams({ id: v })
+              }}
+            >
               <SelectTrigger className="w-full sm:w-[400px]">
                 <SelectValue placeholder="Selecione uma empresa" />
               </SelectTrigger>
@@ -137,6 +185,12 @@ export default function CompanyDocuments() {
           )}
         </>
       )}
+
+      <NewCompanyCnpjDialog
+        open={newCompanyOpen}
+        onOpenChange={setNewCompanyOpen}
+        onCreated={handleCompanyCreated}
+      />
     </div>
   )
 }

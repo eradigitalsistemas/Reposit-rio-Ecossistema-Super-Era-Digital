@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Loader2, UserPlus, Users } from 'lucide-react'
+import { Loader2, UserPlus, Users, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -29,6 +29,7 @@ import {
 import { ColaboradorDocSections } from '@/components/empresa-tabs/colaborador/ColaboradorDocSections'
 import { ColaboradorHealthSections } from '@/components/empresa-tabs/colaborador/ColaboradorHealthSections'
 import { ColaboradorDossierButton } from '@/components/empresa-tabs/ColaboradorDossierButton'
+import { ImportColaboradoresDialog } from '@/components/empresa-tabs/ImportColaboradoresDialog'
 
 export function ColaboradoresTab({ empresaId }: { empresaId: string }) {
   const { toast } = useToast()
@@ -39,6 +40,7 @@ export function ColaboradoresTab({ empresaId }: { empresaId: string }) {
   const [nome, setNome] = useState('')
   const [cpf, setCpf] = useState('')
   const [saving, setSaving] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -101,6 +103,9 @@ export function ColaboradoresTab({ empresaId }: { empresaId: string }) {
         </Select>
         <Button variant="outline" className="gap-1.5" onClick={() => setDialogOpen(true)}>
           <UserPlus className="w-4 h-4" /> Novo Colaborador
+        </Button>
+        <Button variant="outline" className="gap-1.5" onClick={() => setImportOpen(true)}>
+          <Upload className="w-4 h-4" /> Importar Relatório
         </Button>
       </div>
 
@@ -165,6 +170,13 @@ export function ColaboradoresTab({ empresaId }: { empresaId: string }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ImportColaboradoresDialog
+        empresaId={empresaId}
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onImported={load}
+      />
     </div>
   )
 }
