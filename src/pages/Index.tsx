@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Users, FileBadge, Briefcase, Calendar, BarChart3, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { GlobalComplianceChart } from '@/components/compliance/GlobalComplianceChart'
 
 export default function Index() {
   return (
@@ -16,6 +17,8 @@ export default function Index() {
               eficiente através do nosso painel de controle.
             </p>
           </div>
+
+          <GlobalComplianceChart />
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <AccessCard
