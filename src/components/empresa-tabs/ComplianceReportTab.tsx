@@ -18,6 +18,7 @@ import {
   getComplianceStatusConfig,
 } from '@/lib/compliance-status'
 import { generateCompliancePrintHTML, printComplianceReport } from '@/lib/compliance-print'
+import { CompliancePieChart } from '@/components/empresa-tabs/CompliancePieChart'
 
 const MESES = [
   'Janeiro',
@@ -140,6 +141,8 @@ export function ComplianceReportTab({ empresaId, empresaNome, empresaCnpj, onNav
           </Button>
         </div>
       </div>
+
+      <CompliancePieChart empresaId={empresaId} />
 
       {docs.length === 0 ? (
         <Card>

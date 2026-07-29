@@ -22,6 +22,7 @@ import { CertidoesTab } from '@/components/empresa-tabs/CertidoesTab'
 import { ValidadesTab } from '@/components/empresa-tabs/ValidadesTab'
 import { ComplianceReportTab } from '@/components/empresa-tabs/ComplianceReportTab'
 import { CompanyDossierButton } from '@/components/empresa-tabs/CompanyDossierButton'
+import { CompliancePieChart } from '@/components/empresa-tabs/CompliancePieChart'
 
 export default function CompanyDocuments() {
   const { toast } = useToast()
@@ -145,43 +146,46 @@ export default function CompanyDocuments() {
           </div>
 
           {selectedId && (
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-2 sm:grid-cols-7 w-full sm:w-auto mb-6">
-                <TabsTrigger value="constituicao">Constituição</TabsTrigger>
-                <TabsTrigger value="certidoes">Certidões</TabsTrigger>
-                <TabsTrigger value="sst">SST</TabsTrigger>
-                <TabsTrigger value="colaboradores">Colaboradores</TabsTrigger>
-                <TabsTrigger value="rescisao">Rescisão</TabsTrigger>
-                <TabsTrigger value="validades">Validades</TabsTrigger>
-                <TabsTrigger value="compliance">Compliance</TabsTrigger>
-              </TabsList>
-              <TabsContent value="constituicao" className="mt-0">
-                <ConstituicaoTab empresaId={selectedId} />
-              </TabsContent>
-              <TabsContent value="certidoes" className="mt-0">
-                <CertidoesTab empresaId={selectedId} />
-              </TabsContent>
-              <TabsContent value="sst" className="mt-0">
-                <SSTTab empresaId={selectedId} />
-              </TabsContent>
-              <TabsContent value="colaboradores" className="mt-0">
-                <ColaboradoresTab empresaId={selectedId} />
-              </TabsContent>
-              <TabsContent value="rescisao" className="mt-0">
-                <RescisaoTab empresaId={selectedId} />
-              </TabsContent>
-              <TabsContent value="validades" className="mt-0">
-                <ValidadesTab empresaId={selectedId} />
-              </TabsContent>
-              <TabsContent value="compliance" className="mt-0">
-                <ComplianceReportTab
-                  empresaId={selectedId}
-                  empresaNome={selectedEmpresa?.nome || selectedEmpresa?.empresa || ''}
-                  empresaCnpj={selectedEmpresa?.cnpj || null}
-                  onNavigateTab={setActiveTab}
-                />
-              </TabsContent>
-            </Tabs>
+            <>
+              <CompliancePieChart empresaId={selectedId} />
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid grid-cols-2 sm:grid-cols-7 w-full sm:w-auto mb-6">
+                  <TabsTrigger value="constituicao">Constituição</TabsTrigger>
+                  <TabsTrigger value="certidoes">Certidões</TabsTrigger>
+                  <TabsTrigger value="sst">SST</TabsTrigger>
+                  <TabsTrigger value="colaboradores">Colaboradores</TabsTrigger>
+                  <TabsTrigger value="rescisao">Rescisão</TabsTrigger>
+                  <TabsTrigger value="validades">Validades</TabsTrigger>
+                  <TabsTrigger value="compliance">Compliance</TabsTrigger>
+                </TabsList>
+                <TabsContent value="constituicao" className="mt-0">
+                  <ConstituicaoTab empresaId={selectedId} />
+                </TabsContent>
+                <TabsContent value="certidoes" className="mt-0">
+                  <CertidoesTab empresaId={selectedId} />
+                </TabsContent>
+                <TabsContent value="sst" className="mt-0">
+                  <SSTTab empresaId={selectedId} />
+                </TabsContent>
+                <TabsContent value="colaboradores" className="mt-0">
+                  <ColaboradoresTab empresaId={selectedId} />
+                </TabsContent>
+                <TabsContent value="rescisao" className="mt-0">
+                  <RescisaoTab empresaId={selectedId} />
+                </TabsContent>
+                <TabsContent value="validades" className="mt-0">
+                  <ValidadesTab empresaId={selectedId} />
+                </TabsContent>
+                <TabsContent value="compliance" className="mt-0">
+                  <ComplianceReportTab
+                    empresaId={selectedId}
+                    empresaNome={selectedEmpresa?.nome || selectedEmpresa?.empresa || ''}
+                    empresaCnpj={selectedEmpresa?.cnpj || null}
+                    onNavigateTab={setActiveTab}
+                  />
+                </TabsContent>
+              </Tabs>
+            </>
           )}
         </>
       )}
