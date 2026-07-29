@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { Loader2, FileBarChart, Download, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -10,15 +10,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { useToast } from '@/hooks/use-toast'
-import { fetchComplianceDocs, type ComplianceDoc } from '@/services/empresa-compliance'
+import type { ComplianceDoc } from '@/services/empresa-compliance'
 import {
   getComplianceStatus,
   getDaysFromExpiry,
   getComplianceStatusConfig,
 } from '@/lib/compliance-status'
 import { generateCompliancePrintHTML, printComplianceReport } from '@/lib/compliance-print'
-import { CompliancePieChart } from '@/components/empresa-tabs/CompliancePieChart'
+import { useCompanyCompliance } from '@/hooks/use-company-compliance'
 
 const MESES = [
   'Janeiro',
@@ -52,31 +51,11 @@ interface Props {
 }
 
 export function ComplianceReportTab({ empresaId, empresaNome, empresaCnpj, onNavigateTab }: Props) {
-  const { toast } = useToast()
-  const [docs, setDocs] = useState<ComplianceDoc[]>([])
-  const [loading, setLoading] = useState(true)
+  const { getComplianceDocs, loading } = useCompanyCompliance()
+  const docs: ComplianceDoc[] = getComplianceDocs(empresaId)
   const now = new Date()
   const [mes, setMes] = useState(now.getMonth())
   const [ano, setAno] = useState(now.getFullYear())
-
-  const load = useCallback(async () => {
-    setLoading(true)
-    try {
-      setDocs(await fetchComplianceDocs(empresaId))
-    } catch {
-      toast({
-        title: 'Erro',
-        description: 'Falha ao carregar documentos.',
-        variant: 'destructive',
-      })
-    } finally {
-      setLoading(false)
-    }
-  }, [empresaId, toast])
-
-  useEffect(() => {
-    load()
-  }, [load])
 
   const referenceDate = useMemo(() => new Date(ano, mes, 1), [ano, mes])
 
@@ -141,8 +120,6 @@ export function ComplianceReportTab({ empresaId, empresaNome, empresaCnpj, onNav
           </Button>
         </div>
       </div>
-
-      <CompliancePieChart empresaId={empresaId} />
 
       {docs.length === 0 ? (
         <Card>

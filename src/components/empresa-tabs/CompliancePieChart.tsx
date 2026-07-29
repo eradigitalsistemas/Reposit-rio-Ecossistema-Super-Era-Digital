@@ -1,12 +1,8 @@
-import { useState, useEffect, useCallback } from 'react'
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts'
-import { Loader2, PieChart as PieChartIcon } from 'lucide-react'
+import { PieChart as PieChartIcon } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ChartContainer, type ChartConfig } from '@/components/ui/chart'
-import {
-  fetchComplianceSummary,
-  type ComplianceSummaryItem,
-} from '@/services/empresa-compliance-summary'
+import { useCompanyCompliance } from '@/hooks/use-company-compliance'
 
 const chartConfig = {
   anexado: { label: 'Anexado', color: '#22c55e' },
@@ -16,35 +12,9 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export function CompliancePieChart({ empresaId }: { empresaId: string }) {
-  const [data, setData] = useState<ComplianceSummaryItem[]>([])
-  const [loading, setLoading] = useState(true)
-
-  const load = useCallback(async () => {
-    setLoading(true)
-    try {
-      setData(await fetchComplianceSummary(empresaId))
-    } catch {
-      setData([])
-    } finally {
-      setLoading(false)
-    }
-  }, [empresaId])
-
-  useEffect(() => {
-    load()
-  }, [load])
-
+  const { getComplianceSummary } = useCompanyCompliance()
+  const data = getComplianceSummary(empresaId)
   const total = data.reduce((sum, d) => sum + d.value, 0)
-
-  if (loading) {
-    return (
-      <Card className="bg-card/60 border-border/50">
-        <CardContent className="py-8 flex justify-center">
-          <Loader2 className="w-6 h-6 animate-spin text-primary" />
-        </CardContent>
-      </Card>
-    )
-  }
 
   return (
     <Card className="bg-card/60 border-border/50">

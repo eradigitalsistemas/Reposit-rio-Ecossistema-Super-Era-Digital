@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react'
-import { Building2, Loader2, Plus, LayoutGrid } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Building2, Loader2, Plus, LayoutGrid, AlertCircle } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import {
   Select,
@@ -10,8 +10,6 @@ import {
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { useSearchParams } from 'react-router-dom'
-import { fetchEmpresas, type Empresa } from '@/services/empresas'
-import { useToast } from '@/hooks/use-toast'
 import { CompanyComplianceDashboard } from '@/components/empresa-tabs/CompanyComplianceDashboard'
 import { NewCompanyCnpjDialog } from '@/components/empresa-tabs/NewCompanyCnpjDialog'
 import { ConstituicaoTab } from '@/components/empresa-tabs/ConstituicaoTab'
@@ -23,34 +21,17 @@ import { ValidadesTab } from '@/components/empresa-tabs/ValidadesTab'
 import { ComplianceReportTab } from '@/components/empresa-tabs/ComplianceReportTab'
 import { CompanyDossierButton } from '@/components/empresa-tabs/CompanyDossierButton'
 import { CompliancePieChart } from '@/components/empresa-tabs/CompliancePieChart'
+import { CompanyComplianceProvider, useCompanyCompliance } from '@/hooks/use-company-compliance'
 
-export default function CompanyDocuments() {
-  const { toast } = useToast()
+function CompanyDocumentsContent() {
+  const { empresas, loading, error, refresh } = useCompanyCompliance()
   const [searchParams, setSearchParams] = useSearchParams()
-  const [empresas, setEmpresas] = useState<Empresa[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('constituicao')
   const [view, setView] = useState<'dashboard' | 'detail'>('dashboard')
   const [newCompanyOpen, setNewCompanyOpen] = useState(false)
 
   const urlId = searchParams.get('id')
-
-  const load = useCallback(async () => {
-    setLoading(true)
-    try {
-      const list = await fetchEmpresas()
-      setEmpresas(list)
-    } catch {
-      toast({ title: 'Erro', description: 'Falha ao carregar empresas.', variant: 'destructive' })
-    } finally {
-      setLoading(false)
-    }
-  }, [toast])
-
-  useEffect(() => {
-    load()
-  }, [load])
 
   useEffect(() => {
     if (urlId && empresas.some((e) => e.id === urlId)) {
@@ -73,7 +54,7 @@ export default function CompanyDocuments() {
   }
 
   const handleCompanyCreated = async (id: string) => {
-    await load()
+    await refresh()
     handleSelectCompany(id)
   }
 
@@ -83,6 +64,18 @@ export default function CompanyDocuments() {
     return (
       <div className="min-h-screen w-full flex flex-col flex-1 p-4 sm:p-6 items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen w-full flex flex-col flex-1 p-4 sm:p-6 items-center justify-center">
+        <AlertCircle className="w-10 h-10 mb-3 text-destructive" />
+        <p className="text-sm mb-3 text-muted-foreground">{error}</p>
+        <Button variant="outline" onClick={refresh}>
+          Tentar novamente
+        </Button>
       </div>
     )
   }
@@ -196,5 +189,13 @@ export default function CompanyDocuments() {
         onCreated={handleCompanyCreated}
       />
     </div>
+  )
+}
+
+export default function CompanyDocuments() {
+  return (
+    <CompanyComplianceProvider>
+      <CompanyDocumentsContent />
+    </CompanyComplianceProvider>
   )
 }

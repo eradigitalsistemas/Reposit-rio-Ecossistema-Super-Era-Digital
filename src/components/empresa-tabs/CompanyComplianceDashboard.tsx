@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import { Building2, Loader2, AlertCircle, CheckCircle2, Clock, XCircle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -11,11 +11,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
-import {
-  fetchAllCompaniesCompliance,
-  type CompanyCompliance,
-} from '@/services/empresa-compliance-dashboard'
 import type { ComplianceStatus } from '@/lib/compliance-status'
+import { useCompanyCompliance } from '@/hooks/use-company-compliance'
 
 const STATUS_CONFIG: Record<
   ComplianceStatus,
@@ -48,27 +45,9 @@ export function CompanyComplianceDashboard({
 }: {
   onSelectCompany: (id: string) => void
 }) {
-  const [companies, setCompanies] = useState<CompanyCompliance[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const { dashboardData: companies, loading, error, refresh } = useCompanyCompliance()
   const [filter, setFilter] = useState('all')
   const [sortBy, setSortBy] = useState('name')
-
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError('')
-    try {
-      setCompanies(await fetchAllCompaniesCompliance())
-    } catch {
-      setError('Falha ao carregar dados de conformidade.')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    load()
-  }, [load])
 
   const filtered = companies
     .filter((c) => filter === 'all' || c.status === filter)
@@ -93,7 +72,7 @@ export function CompanyComplianceDashboard({
       <div className="flex flex-col items-center py-20 text-muted-foreground">
         <AlertCircle className="w-10 h-10 mb-3 text-destructive" />
         <p className="text-sm mb-3">{error}</p>
-        <Button variant="outline" onClick={load}>
+        <Button variant="outline" onClick={refresh}>
           Tentar novamente
         </Button>
       </div>
