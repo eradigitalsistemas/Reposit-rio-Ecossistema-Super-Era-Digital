@@ -40,6 +40,7 @@ const MAIN_MENU = [
     icon: FolderOpen,
     url: '/empresa',
     roles: ['Admin'],
+    activeColor: 'red' as const,
   },
   {
     title: 'CRM Era Digital',
@@ -106,6 +107,7 @@ export function AppSidebar() {
             location.pathname.startsWith(item.url) &&
             item.url !== '#' &&
             (item.url === '/' ? location.pathname === '/' : true)
+          const isRedActive = item.activeColor === 'red' && isActive
           return (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton
@@ -113,9 +115,11 @@ export function AppSidebar() {
                 isActive={isActive}
                 className={cn(
                   'transition-[transform,opacity,background-color,color,box-shadow] duration-200 h-11 md:h-10 px-4 md:px-3 rounded-xl group relative overflow-hidden border border-transparent hardware-accelerated',
-                  isActive
-                    ? 'bg-primary/10 text-primary dark:text-white border-primary/30 dark:border-primary/50 shadow-[0_0_15px_rgba(34,197,94,0.15)] dark:shadow-[0_0_20px_rgba(34,197,94,0.25)] before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/20 before:to-transparent before:opacity-100'
-                    : 'hover:bg-sidebar-accent/50 text-sidebar-foreground/70 dark:text-white/70 hover:text-sidebar-foreground dark:hover:text-white hover:border-border/50',
+                  isRedActive
+                    ? 'bg-red-500/10 text-red-500 dark:text-red-400 border-red-500/30 dark:border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.15)] dark:shadow-[0_0_20px_rgba(239,68,68,0.25)] before:absolute before:inset-0 before:bg-gradient-to-r before:from-red-500/20 before:to-transparent before:opacity-100'
+                    : isActive
+                      ? 'bg-primary/10 text-primary dark:text-white border-primary/30 dark:border-primary/50 shadow-[0_0_15px_rgba(34,197,94,0.15)] dark:shadow-[0_0_20px_rgba(34,197,94,0.25)] before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/20 before:to-transparent before:opacity-100'
+                      : 'hover:bg-sidebar-accent/50 text-sidebar-foreground/70 dark:text-white/70 hover:text-sidebar-foreground dark:hover:text-white hover:border-border/50',
                 )}
               >
                 <Link
@@ -126,9 +130,11 @@ export function AppSidebar() {
                   <item.icon
                     className={cn(
                       'w-5 h-5 transition-transform duration-200',
-                      isActive
-                        ? 'opacity-100 drop-shadow-[0_0_8px_rgba(34,197,94,0.6)]'
-                        : 'opacity-80 group-hover:scale-110',
+                      isRedActive
+                        ? 'opacity-100 drop-shadow-[0_0_8px_rgba(239,68,68,0.6)]'
+                        : isActive
+                          ? 'opacity-100 drop-shadow-[0_0_8px_rgba(34,197,94,0.6)]'
+                          : 'opacity-80 group-hover:scale-110',
                     )}
                   />
                   <span className="text-base md:text-sm font-display font-semibold">
