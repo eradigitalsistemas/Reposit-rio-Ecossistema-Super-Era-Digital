@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Building2, Loader2, Plus, AlertCircle } from 'lucide-react'
+import { Building2, Loader2, AlertCircle } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import {
   Select,
@@ -10,22 +10,19 @@ import {
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { useSearchParams } from 'react-router-dom'
-import { NewCompanyCnpjDialog } from '@/components/empresa-tabs/NewCompanyCnpjDialog'
 import { ConstituicaoTab } from '@/components/empresa-tabs/ConstituicaoTab'
 import { SSTTab } from '@/components/empresa-tabs/SSTTab'
 import { ColaboradoresTab } from '@/components/empresa-tabs/ColaboradoresTab'
 import { CertidoesTab } from '@/components/empresa-tabs/CertidoesTab'
 import { ComplianceReportTab } from '@/components/empresa-tabs/ComplianceReportTab'
-import { CompanyDossierButton } from '@/components/empresa-tabs/CompanyDossierButton'
-import { CompliancePieChart } from '@/components/empresa-tabs/CompliancePieChart'
 import { CompanyComplianceProvider, useCompanyCompliance } from '@/hooks/use-company-compliance'
+import { CompaniesByServiceChart } from '@/components/compliance/CompaniesByServiceChart'
 
 function CompanyDocumentsContent() {
   const { empresas, loading, error, refresh } = useCompanyCompliance()
   const [searchParams, setSearchParams] = useSearchParams()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState('constituicao')
-  const [newCompanyOpen, setNewCompanyOpen] = useState(false)
 
   const urlId = searchParams.get('id')
 
@@ -39,11 +36,6 @@ function CompanyDocumentsContent() {
     setSelectedId(id)
     setActiveTab('constituicao')
     setSearchParams({ id })
-  }
-
-  const handleCompanyCreated = async (id: string) => {
-    await refresh()
-    handleSelectCompany(id)
   }
 
   const selectedEmpresa = empresas.find((e) => e.id === selectedId)
@@ -70,21 +62,6 @@ function CompanyDocumentsContent() {
 
   return (
     <div className="min-h-screen w-full flex flex-col flex-1 p-4 sm:p-6 text-foreground relative z-10 overflow-x-hidden">
-      <div className="mb-6 shrink-0 flex items-start justify-between gap-2 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <Building2 className="w-6 h-6 text-primary" />
-            Empresa
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Selecione uma empresa para visualizar seus documentos.
-          </p>
-        </div>
-        <Button className="gap-1.5" onClick={() => setNewCompanyOpen(true)}>
-          <Plus className="w-4 h-4" /> Nova Empresa
-        </Button>
-      </div>
-
       <div className="mb-6 shrink-0 flex items-center gap-2 flex-wrap">
         <Select value={selectedId || ''} onValueChange={(v) => handleSelectCompany(v)}>
           <SelectTrigger className="w-full sm:w-[400px]">
@@ -98,10 +75,9 @@ function CompanyDocumentsContent() {
             ))}
           </SelectContent>
         </Select>
-        {selectedId && <CompanyDossierButton empresaId={selectedId} />}
       </div>
 
-      <CompliancePieChart empresaId={selectedId} />
+      <CompaniesByServiceChart />
       {selectedId && (
         <>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -135,12 +111,6 @@ function CompanyDocumentsContent() {
           </Tabs>
         </>
       )}
-
-      <NewCompanyCnpjDialog
-        open={newCompanyOpen}
-        onOpenChange={setNewCompanyOpen}
-        onCreated={handleCompanyCreated}
-      />
     </div>
   )
 }
