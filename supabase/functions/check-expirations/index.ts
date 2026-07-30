@@ -13,7 +13,10 @@ async function checkExpirations() {
   const todayStr = today.toISOString().split('T')[0]
   const in30Str = in30.toISOString().split('T')[0]
 
-  const { data: admins } = await supabase.from('usuarios').select('id').eq('perfil', 'admin')
+  const { data: admins } = await supabase
+    .from('usuarios')
+    .select('id')
+    .eq('perfil', 'admin')
   const adminIds = (admins || []).map((a: any) => a.id)
   if (adminIds.length === 0) return { processed: 0 }
 
