@@ -11,10 +11,7 @@ function base64ToUint8Array(base64: string): Uint8Array {
   return bytes
 }
 
-export async function getGoogleAccessToken(
-  clientEmail: string,
-  privateKey: string,
-): Promise<string> {
+export async function getGoogleAccessToken(clientEmail: string, privateKey: string): Promise<string> {
   const normalizedKey = privateKey.replace(/\\n/g, '\n')
   const pemContents = normalizedKey
     .replace(/-----BEGIN PRIVATE KEY-----/, '')
