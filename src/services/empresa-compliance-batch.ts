@@ -69,7 +69,7 @@ function worstStatus(dates: (string | null)[]): {
 }
 
 export async function fetchAllComplianceBatch(): Promise<BatchResult> {
-  const [empRes, certRes, sstRes, constRes, colabRes, atestRes, cDocRes, catRes, perRes] =
+  const [empRes, certRes, sstRes, constRes, colabRes, atestRes, cDocRes, catRes, perRes, rescRes] =
     await Promise.all([
       supabase
         .from('clientes_externos')
@@ -83,6 +83,7 @@ export async function fetchAllComplianceBatch(): Promise<BatchResult> {
       supabase.from('colaborador_documentos').select('*').in('tipo', ['S2240', 'S2220']),
       supabase.from('colaborador_cat').select('*'),
       supabase.from('colaborador_periodicos').select('*'),
+      supabase.from('rescisao_checklist').select('*'),
     ])
 
   const empresas = (empRes.data || []) as Empresa[]
@@ -110,6 +111,7 @@ export async function fetchAllComplianceBatch(): Promise<BatchResult> {
   const cDocByCo = groupViaColab((cDocRes.data || []) as any[])
   const catByCo = groupViaColab((catRes.data || []) as any[])
   const perByCo = groupViaColab((perRes.data || []) as any[])
+  const rescByCo = groupBy((rescRes.data || []) as any[], 'empresa_id')
 
   const docsByCompany = new Map<string, ComplianceDoc[]>()
   const summaryByCompany = new Map<string, ComplianceSummaryItem[]>()
@@ -123,6 +125,7 @@ export async function fetchAllComplianceBatch(): Promise<BatchResult> {
     const cDocs = cDocByCo.get(emp.id) || []
     const cats = catByCo.get(emp.id) || []
     const pers = perByCo.get(emp.id) || []
+    const recs = rescByCo.get(emp.id) || []
 
     const docs: ComplianceDoc[] = []
     certs.forEach((c: any) =>
@@ -192,6 +195,16 @@ export async function fetchAllComplianceBatch(): Promise<BatchResult> {
         colaboradorNome: colabMap.get(p.colaborador_id)?.nome,
       }),
     )
+    recs.forEach((r: any) =>
+      docs.push({
+        id: r.id,
+        tipo: `Rescisão - ${r.item}`,
+        categoria: 'Constituição',
+        dataValidade: null,
+        arquivoUrl: r.arquivo_url,
+        colaboradorNome: colabMap.get(r.colaborador_id)?.nome,
+      }),
+    )
     docsByCompany.set(emp.id, docs)
 
     const c = { anexado: 0, vencendo: 0, vencido: 0, pendente: 0 }
@@ -214,6 +227,10 @@ export async function fetchAllComplianceBatch(): Promise<BatchResult> {
     cDocs.forEach((d: any) => catByDate(!!d.url, d.validade, now, c))
     pers.forEach((p: any) => {
       if (p.arquivo_url) c.anexado++
+      else c.pendente++
+    })
+    recs.forEach((r: any) => {
+      if (r.arquivo_url) c.anexado++
       else c.pendente++
     })
 
