@@ -101,9 +101,9 @@ function CompanyDocumentsContent() {
         {selectedId && <CompanyDossierButton empresaId={selectedId} />}
       </div>
 
+      <CompliancePieChart empresaId={selectedId} />
       {selectedId && (
         <>
-          <CompliancePieChart empresaId={selectedId} />
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid grid-cols-2 sm:grid-cols-5 w-full sm:w-auto mb-6">
               <TabsTrigger value="constituicao">Constituição</TabsTrigger>

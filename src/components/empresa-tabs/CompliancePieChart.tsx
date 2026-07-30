@@ -1,19 +1,33 @@
+import { useState, useEffect } from 'react'
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts'
-import { PieChart as PieChartIcon } from 'lucide-react'
+import { PieChart as PieChartIcon, Loader2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ChartContainer, type ChartConfig } from '@/components/ui/chart'
-import { useCompanyCompliance } from '@/hooks/use-company-compliance'
+import { fetchPieChartData, type PieChartSummaryItem } from '@/services/empresa-pie-chart'
 
 const chartConfig = {
-  anexado: { label: 'Anexado', color: '#22c55e' },
-  avencer: { label: 'A vencer', color: '#f59e0b' },
-  vencido: { label: 'Vencido', color: '#ef4444' },
-  pendente: { label: 'Pendente', color: '#9ca3af' },
+  Anexados: { label: 'Anexados', color: '#22c55e' },
+  'A Vencer': { label: 'A Vencer', color: '#f59e0b' },
+  Vencidos: { label: 'Vencidos', color: '#ef4444' },
+  Pendentes: { label: 'Pendentes', color: '#9ca3af' },
 } satisfies ChartConfig
 
-export function CompliancePieChart({ empresaId }: { empresaId: string }) {
-  const { getComplianceSummary } = useCompanyCompliance()
-  const data = getComplianceSummary(empresaId)
+export function CompliancePieChart({ empresaId }: { empresaId: string | null }) {
+  const [data, setData] = useState<PieChartSummaryItem[]>([])
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (!empresaId) {
+      setData([])
+      return
+    }
+    setLoading(true)
+    fetchPieChartData(empresaId)
+      .then(setData)
+      .catch(() => setData([]))
+      .finally(() => setLoading(false))
+  }, [empresaId])
+
   const total = data.reduce((sum, d) => sum + d.value, 0)
 
   return (
@@ -25,7 +39,15 @@ export function CompliancePieChart({ empresaId }: { empresaId: string }) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {total === 0 ? (
+        {!empresaId ? (
+          <p className="text-center text-sm text-muted-foreground py-8">
+            Selecione uma empresa para visualizar o gráfico
+          </p>
+        ) : loading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          </div>
+        ) : total === 0 ? (
           <p className="text-center text-sm text-muted-foreground py-8">
             Nenhum documento encontrado.
           </p>
