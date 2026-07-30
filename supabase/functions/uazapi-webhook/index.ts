@@ -18,31 +18,30 @@ serve(async (req) => {
     fetch(receiveUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(payload)
     }).catch(console.error)
 
     if (event === 'messages.update' || event === 'messages_update') {
       const items = Array.isArray(data) ? data : [data]
       for (const item of items) {
-        const msgId = item?.key?.id || item?.id
-        const statusNum = item?.update?.status || item?.status
+        const msgId = item?.key?.id || item?.id;
+        const statusNum = item?.update?.status || item?.status;
         if (msgId && statusNum) {
-          let status = 'sent'
-          if (statusNum === 2) status = 'delivered'
-          if (statusNum === 3) status = 'read'
-          if (statusNum === 4) status = 'played'
-          if (statusNum === 5) status = 'failed'
+          let status = 'sent';
+          if (statusNum === 2) status = 'delivered';
+          if (statusNum === 3) status = 'read';
+          if (statusNum === 4) status = 'played';
+          if (statusNum === 5) status = 'failed';
 
-          const upd: any = { status, updated_at: new Date().toISOString() }
-          if (status === 'delivered') upd.delivered_at = new Date().toISOString()
+          const upd: any = { status, updated_at: new Date().toISOString() };
+          if (status === 'delivered') upd.delivered_at = new Date().toISOString();
           if (status === 'read' || status === 'played') {
-            upd.is_read = true
-            upd.read_at = new Date().toISOString()
-            upd.delivered_at = new Date().toISOString() // Read implica entregue
+            upd.is_read = true;
+            upd.read_at = new Date().toISOString();
+            upd.delivered_at = new Date().toISOString(); // Read implica entregue
           }
 
-          await supabase
-            .from('whatsapp_messages')
+          await supabase.from('whatsapp_messages')
             .update(upd)
             .or(`message_id.eq.${msgId},uazapi_message_id.eq.${msgId}`)
         }
