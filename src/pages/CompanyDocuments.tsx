@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Building2, Loader2, AlertCircle } from 'lucide-react'
+import { Building2, Loader2, AlertCircle, PieChart as PieChartIcon } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import {
   Select,
@@ -15,11 +15,13 @@ import { SSTTab } from '@/components/empresa-tabs/SSTTab'
 import { ColaboradoresTab } from '@/components/empresa-tabs/ColaboradoresTab'
 import { CertidoesTab } from '@/components/empresa-tabs/CertidoesTab'
 import { ComplianceReportTab } from '@/components/empresa-tabs/ComplianceReportTab'
+import { CompliancePieChart } from '@/components/empresa-tabs/CompliancePieChart'
 import { CompanyComplianceProvider, useCompanyCompliance } from '@/hooks/use-company-compliance'
 import { CompaniesByServiceChart } from '@/components/compliance/CompaniesByServiceChart'
 
 function CompanyDocumentsContent() {
   const { empresas, loading, error, refresh } = useCompanyCompliance()
+  const [showPieChart, setShowPieChart] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState('constituicao')
@@ -62,20 +64,40 @@ function CompanyDocumentsContent() {
 
   return (
     <div className="min-h-screen w-full flex flex-col flex-1 p-4 sm:p-6 text-foreground relative z-10 overflow-x-hidden">
-      <div className="mb-6 shrink-0 flex items-center gap-2 flex-wrap">
-        <Select value={selectedId || ''} onValueChange={(v) => handleSelectCompany(v)}>
-          <SelectTrigger className="w-full sm:w-[400px]">
-            <SelectValue placeholder="Selecione uma empresa" />
-          </SelectTrigger>
-          <SelectContent>
-            {empresas.map((e) => (
-              <SelectItem key={e.id} value={e.id}>
-                {e.nome || e.empresa || 'Sem nome'}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="mb-6 shrink-0 flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3 flex-wrap flex-1">
+          <Select value={selectedId || ''} onValueChange={(v) => handleSelectCompany(v)}>
+            <SelectTrigger className="w-full sm:w-[400px] bg-card/60">
+              <SelectValue placeholder="Selecione uma empresa" />
+            </SelectTrigger>
+            <SelectContent>
+              {empresas.map((e) => (
+                <SelectItem key={e.id} value={e.id}>
+                  {e.nome || e.empresa || 'Sem nome'}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {selectedId && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 text-xs border-border/60"
+            onClick={() => setShowPieChart((v) => !v)}
+          >
+            <PieChartIcon className="w-4 h-4 text-primary" />
+            {showPieChart ? 'Ocultar Gráfico' : 'Gráfico de Conformidade'}
+          </Button>
+        )}
       </div>
+
+      {selectedId && showPieChart && (
+        <div className="mb-6">
+          <CompliancePieChart empresaId={selectedId} />
+        </div>
+      )}
 
       <CompaniesByServiceChart />
       {selectedId && (

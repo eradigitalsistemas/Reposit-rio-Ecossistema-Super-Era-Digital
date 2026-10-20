@@ -1,5 +1,5 @@
 import { useRef, useState, type ReactNode } from 'react'
-import { Upload, Download, Loader2 } from 'lucide-react'
+import { Upload, Download, Loader2, Eye, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
@@ -22,14 +22,22 @@ export function StatusToggle({
       size="sm"
       disabled={disabled}
       className={cn(
-        'gap-1.5 text-xs h-8',
+        'gap-1.5 text-xs h-8 font-medium transition-all',
         done
-          ? 'text-emerald-600 border-emerald-500/30 bg-emerald-500/5'
-          : 'text-amber-600 border-amber-500/30 bg-amber-500/5',
+          ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20'
+          : 'text-amber-400 border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20',
       )}
       onClick={() => onChange(done ? 'Pendente' : 'Concluído')}
+      title={done ? 'Clique para marcar como Pendente' : 'Clique para marcar como Concluído'}
     >
-      <span className={cn('w-2 h-2 rounded-full', done ? 'bg-emerald-500' : 'bg-amber-500')} />
+      <span
+        className={cn(
+          'w-2 h-2 rounded-full ring-2',
+          done
+            ? 'bg-emerald-400 ring-emerald-500/30 animate-pulse'
+            : 'bg-amber-400 ring-amber-500/30',
+        )}
+      />
       {status}
     </Button>
   )
@@ -37,14 +45,18 @@ export function StatusToggle({
 
 export function FileUploadButton({
   onFile,
-  accept = '.pdf',
+  accept = '.pdf,image/*',
   label = 'Enviar',
   disabled,
+  variant = 'outline',
+  size = 'sm',
 }: {
   onFile: (file: File) => void
   accept?: string
   label?: string
   disabled?: boolean
+  variant?: 'outline' | 'default' | 'ghost' | 'secondary'
+  size?: 'sm' | 'default' | 'icon'
 }) {
   const ref = useRef<HTMLInputElement>(null)
   return (
@@ -62,38 +74,88 @@ export function FileUploadButton({
       />
       <Button
         type="button"
-        variant="outline"
-        size="sm"
-        className="gap-1.5 h-8 text-xs"
+        variant={variant}
+        size={size}
+        className={cn('gap-1.5 h-8 text-xs font-medium', size === 'icon' && 'w-8 p-0')}
         disabled={disabled}
         onClick={() => ref.current?.click()}
       >
         <Upload className="w-3.5 h-3.5" />
-        {label}
+        {size !== 'icon' && label}
       </Button>
     </>
   )
 }
 
-export function DownloadButton({ path, disabled }: { path: string; disabled?: boolean }) {
+export function ViewFileButton({
+  path,
+  disabled,
+  title = 'Visualizar documento',
+}: {
+  path: string
+  disabled?: boolean
+  title?: string
+}) {
   const [loading, setLoading] = useState(false)
   const handle = async () => {
     setLoading(true)
-    const url = await getEmpresaFileUrl(path)
-    if (url) window.open(url, '_blank')
-    setLoading(false)
+    try {
+      const url = await getEmpresaFileUrl(path)
+      if (url) window.open(url, '_blank')
+    } finally {
+      setLoading(false)
+    }
   }
   return (
     <Button
       type="button"
       variant="ghost"
       size="icon"
-      className="h-8 w-8"
+      className="h-8 w-8 text-muted-foreground hover:text-foreground"
       disabled={disabled || loading}
       onClick={handle}
+      title={title}
     >
       {loading ? (
-        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+      ) : (
+        <Eye className="w-3.5 h-3.5" />
+      )}
+    </Button>
+  )
+}
+
+export function DownloadButton({
+  path,
+  disabled,
+  title = 'Baixar / Visualizar arquivo',
+}: {
+  path: string
+  disabled?: boolean
+  title?: string
+}) {
+  const [loading, setLoading] = useState(false)
+  const handle = async () => {
+    setLoading(true)
+    try {
+      const url = await getEmpresaFileUrl(path)
+      if (url) window.open(url, '_blank')
+    } finally {
+      setLoading(false)
+    }
+  }
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+      disabled={disabled || loading}
+      onClick={handle}
+      title={title}
+    >
+      {loading ? (
+        <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
       ) : (
         <Download className="w-3.5 h-3.5" />
       )}

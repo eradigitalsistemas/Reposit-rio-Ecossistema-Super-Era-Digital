@@ -63,15 +63,34 @@ export async function updateColaboradorDocStatus(docId: string, status: string):
   if (error) throw error
 }
 
+export async function updateColaboradorDocValidade(
+  docId: string,
+  validade: string | null,
+): Promise<void> {
+  const { error } = await supabase
+    .from('colaborador_documentos')
+    .update({ validade: validade || null })
+    .eq('id', docId)
+  if (error) throw error
+}
+
 export async function createColaboradorDocPersonal(
   colaboradorId: string,
   title: string,
   file: File,
+  validade?: string | null,
 ): Promise<ColabDoc> {
   const path = await uploadColaboradorFile(colaboradorId, file, 'Pessoal')
   const { data, error } = await supabase
     .from('colaborador_documentos')
-    .insert({ colaborador_id: colaboradorId, tipo: 'Pessoal', url: path, nome_arquivo: title })
+    .insert({
+      colaborador_id: colaboradorId,
+      tipo: 'Pessoal',
+      url: path,
+      nome_arquivo: title,
+      validade: validade || null,
+      status: 'Pendente',
+    })
     .select('*')
     .single()
   if (error) throw error

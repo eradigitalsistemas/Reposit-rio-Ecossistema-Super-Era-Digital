@@ -10,6 +10,7 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "oxlint src",
+    "postinstall": "node -e 'const fs=require(\"fs\"); const p=\"tsconfig.app.json\"; try{ if(fs.existsSync(p)){ const t=fs.readFileSync(p,\"utf8\"); fs.writeFileSync(p, t.replace(/\"\\*\\/\\*\":\\s*\\[\"\\.\\/\\*\"\\],?\\s*/g, \"\")); } }catch(e){}'",
     "lint:fix": "oxlint src --fix",
     "format": "oxfmt",
     "format:check": "oxfmt --check",

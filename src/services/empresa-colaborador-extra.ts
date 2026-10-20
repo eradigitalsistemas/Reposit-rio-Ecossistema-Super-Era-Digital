@@ -19,6 +19,9 @@ export interface Atestado {
 export interface AtestadoInput {
   file: File
   dataVencimento: string
+  tipo?: string
+  data?: string
+  medico?: string
 }
 
 export interface Periodico {
@@ -58,13 +61,24 @@ export async function createAtestado(
     .from('colaborador_atestados')
     .insert({
       colaborador_id: colaboradorId,
+      tipo: input.tipo || 'admissional',
       aso_url: path,
+      data: input.data || null,
+      medico: input.medico || null,
       data_vencimento: input.dataVencimento || null,
     })
     .select('*')
     .single()
   if (error) throw error
   return result as Atestado
+}
+
+export async function updateAtestado(
+  id: string,
+  updates: Partial<Pick<Atestado, 'tipo' | 'data' | 'medico' | 'data_vencimento'>>,
+): Promise<void> {
+  const { error } = await supabase.from('colaborador_atestados').update(updates).eq('id', id)
+  if (error) throw error
 }
 
 export async function deleteAtestado(id: string, url: string | null): Promise<void> {
